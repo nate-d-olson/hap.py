@@ -148,7 +148,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                 n_allele_alt_count = 0
             else:
                 n_allele_alt_count = 0
-                for a in range(0, len(alleles_alt)):
+                for a in xrange(0, len(alleles_alt)):
                     n_allele_alt_count += float(rec[n_sample + "AD"][a + 1])
 
             if n_allele_alt_count + n_allele_ref_count == 0:
@@ -163,7 +163,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                 t_allele_alt_count = 0
             else:
                 t_allele_alt_count = 0
-                for a in range(0, len(alleles_alt)):
+                for a in xrange(0, len(alleles_alt)):
                     t_allele_alt_count += float(rec[t_sample + "AD"][a + 1])
 
             if t_allele_alt_count + t_allele_ref_count == 0:
@@ -344,7 +344,7 @@ def extractMutectIndelFeatures(vcfname, tag, avg_depth=None):
                 n_allele_alt_count = 0
             else:
                 n_allele_alt_count = 0
-                for a in range(0, len(alleles_alt)):
+                for a in xrange(0, len(alleles_alt)):
                     n_allele_alt_count += float(rec[n_sample + "AD"][a + 1])
 
             if n_allele_alt_count + n_allele_ref_count == 0:
@@ -359,7 +359,7 @@ def extractMutectIndelFeatures(vcfname, tag, avg_depth=None):
                 t_allele_alt_count = 0
             else:
                 t_allele_alt_count = 0
-                for a in range(0, len(alleles_alt)):
+                for a in xrange(0, len(alleles_alt)):
                     t_allele_alt_count += float(rec[t_sample + "AD"][a + 1])
 
             if t_allele_alt_count + t_allele_ref_count == 0:

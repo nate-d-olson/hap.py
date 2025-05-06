@@ -75,7 +75,7 @@ def parseStats(output, colname="count"):
             count = int(vx[3])
             result[name] = count
 
-    result = pandas.DataFrame(list(result.items()), columns=["type", colname])
+    result = pandas.DataFrame(list(result.iteritems()), columns=["type", colname])
     return result
 
 

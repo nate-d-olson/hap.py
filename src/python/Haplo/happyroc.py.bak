@@ -97,7 +97,7 @@ def roc(roc_table, output_path,
                 header = l.split("\t")
             else:
                 rec = {}
-                for k, v in zip(header, l.split("\t")):
+                for k, v in itertools.izip(header, l.split("\t")):
                     rec[k] = v
 
                 if filter_handling:
@@ -160,13 +160,13 @@ def roc(roc_table, output_path,
 
     if "all" not in result:
         # minimal empty DF
-        minidata = [{"Type": "SNP", "Subtype": "*", "Filter": "ALL", "Genotype": "*", "Subset": "*", "QQ": "*"} for _ in range(2)]
+        minidata = [{"Type": "SNP", "Subtype": "*", "Filter": "ALL", "Genotype": "*", "Subset": "*", "QQ": "*"} for _ in xrange(2)]
         minidata[1]["Type"] = "INDEL"
         result["all"] = pandas.DataFrame(minidata, columns=RESULT_ALLCOLUMNS)
         for i, c in enumerate(RESULT_ALLCOLUMNS):
             result["all"][c] = result["all"][c].astype(RESULT_ALLDTYPES[i], raise_on_error=False)
 
-    for k, v in list(result.items()):
+    for k, v in result.items():
         result[k] = _postprocessRocData(pandas.DataFrame(v, columns=RESULT_ALLCOLUMNS))
 
         # compute ratios

@@ -33,8 +33,8 @@ class CallerInfo(object):
 
     def asDict(self):
         kvd = ["name", "version", "parameters"]
-        return {"aligners": [dict(y for y in zip(kvd, x)) for x in self.aligners],
-                "callers": [dict(y for y in zip(kvd, x)) for x in self.callers]}
+        return {"aligners": [dict(y for y in itertools.izip(kvd, x)) for x in self.aligners],
+                "callers": [dict(y for y in itertools.izip(kvd, x)) for x in self.callers]}
 
     def addVCF(self, vcfname):
         """ Add caller versions from a VCF

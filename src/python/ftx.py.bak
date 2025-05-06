@@ -65,7 +65,7 @@ def main():
                         help="Use to include failing variants in comparison.")
 
     parser.add_argument("--feature-table", dest="features", default="generic",
-                        help="Select a feature table to output. Options are: %s" % str(list(Somatic.FeatureSet.sets.keys())))
+                        help="Select a feature table to output. Options are: %s" % str(Somatic.FeatureSet.sets.keys()))
 
     parser.add_argument("--feature-label", dest="label", default=None,
                         help="We will output a lable column, this value will go in there -- default is "

@@ -112,7 +112,7 @@ def parse_args():
     parser.add_argument("-P", "--include-nonpass", dest="inc_nonpass", action="store_true", default=False,
                         help="Use to include failing variants in comparison.")
 
-    parser.add_argument("--feature-table", dest="features", default=False, choices=list(Somatic.FeatureSet.sets.keys()),
+    parser.add_argument("--feature-table", dest="features", default=False, choices=Somatic.FeatureSet.sets.keys(),
                         help="Select a feature table to output.")
 
     parser.add_argument("--happy-stats", dest="happy_stats", default=False, action="store_true",
@@ -201,9 +201,9 @@ def parse_args():
 
     try:
         if type(args.af_strat_binsize) is str:
-            args.af_strat_binsize = list(map(float, args.af_strat_binsize.split(",")))
+            args.af_strat_binsize = map(float, args.af_strat_binsize.split(","))
         else:
-            args.af_strat_binsize = list(map(float, [args.af_strat_binsize]))
+            args.af_strat_binsize = map(float, [args.af_strat_binsize])
 
         if not args.af_strat_binsize:
             raise Exception("Bin size list is empty")
@@ -628,7 +628,7 @@ def main():
         metrics_output = makeMetricsObject("som.py.comparison")
 
         if args.ambi and args.explain_ambiguous:
-            ac = list(ambiClasses.items())
+            ac = list(ambiClasses.iteritems())
             if ac:
                 ambie = pandas.DataFrame(ac, columns=["class", "count"])
                 ambie.sort_values(["class"], inplace=True)
@@ -640,14 +640,14 @@ def main():
                              "overlap):\n" + ambie.to_string(index=False))
                 # in default mode, print result summary to stdout
                 if not args.quiet and not args.verbose:
-                    print("FP/ambiguity classes with info (multiple classes can " \
-                          "overlap):\n" + ambie.to_string(index=False))
+                    print "FP/ambiguity classes with info (multiple classes can " \
+                          "overlap):\n" + ambie.to_string(index=False)
                 ambie.to_csv(args.output + ".ambiclasses.csv")
                 metrics_output["metrics"].append(dataframeToMetricsTable("ambiclasses", ambie))
             else:
                 logging.info("No ambiguous variants.")
 
-            ar = list(ambiReasons.items())
+            ar = list(ambiReasons.iteritems())
             if ar:
                 ambie = pandas.DataFrame(ar, columns=["reason", "count"])
                 ambie.sort_values(["reason"], inplace=True)
@@ -659,8 +659,8 @@ def main():
                     formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
                 # in default mode, print result summary to stdout
                 if not args.quiet and not args.verbose:
-                    print("Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
-                        formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
+                    print "Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
+                        formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False)
                 ambie.to_csv(args.output + ".ambireasons.csv")
                 metrics_output["metrics"].append(dataframeToMetricsTable("ambireasons", ambie))
             else:
@@ -700,7 +700,7 @@ def main():
             if not args.disable_order_check:
                 logging.info("Checking order %i / %i" % (len1, len2))
 
-                for x in range(0, len1):
+                for x in xrange(0, len1):
                     for a in ["CHROM", "POS"]:
                         if tps.loc[x][a] != tps2.loc[x][a]:
                             raise Exception("Cannot merge TP features, inputs are out of order at %s / %s" % (
@@ -936,7 +936,7 @@ def main():
         logging.info("\n" + res.to_string())
         # in default mode, print result summary to stdout
         if not args.quiet and not args.verbose:
-            print("\n" + res.to_string())
+            print "\n" + res.to_string()
 
         res["sompyversion"] = vstring
 
