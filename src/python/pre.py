@@ -392,7 +392,7 @@ def main():
         exit(0)
 
     if args.version:
-        print("pre.py %s" % Tools.version)  # noqa:E999
+        print(("pre.py %s" % Tools.version))  # noqa:E999
         exit(0)
 
     args.input = args.input[0]

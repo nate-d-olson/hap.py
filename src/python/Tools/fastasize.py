@@ -64,7 +64,7 @@ def fastaNonNContigLengths(fastafile):
         with open(tf.name) as f:
             fasta_info = json.load(f)
 
-        for k, v in fasta_info.items():
+        for k, v in list(fasta_info.items()):
             fastacontiglengths[k] = int(v["n_trimmed_length"])
     finally:
         os.unlink(tf.name)

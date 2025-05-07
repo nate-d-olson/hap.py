@@ -250,7 +250,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                         pass
         except:
             pass
-        for k, v in evs_featurenames.items():
+        for k, v in list(evs_featurenames.items()):
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 
@@ -493,7 +493,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         except:
             pass
 
-        for k, v in evs_featurenames.items():
+        for k, v in list(evs_featurenames.items()):
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 

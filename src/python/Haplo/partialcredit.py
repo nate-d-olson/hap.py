@@ -202,7 +202,7 @@ def partialCredit(vcfname,
     try:
         res = runParallel(pool,
                           preprocessWrapper,
-                          zip(itertools.repeat(vcfname), locations),
+                          list(zip(itertools.repeat(vcfname), locations)),
                           {"reference": reference,
                            "decompose": decompose,
                            "leftshift": leftshift,
