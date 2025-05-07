@@ -36,7 +36,7 @@ import time
 import json
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
 import Tools
 from Tools import vcfextract
@@ -57,6 +57,13 @@ import Haplo.gvcf2bed
 import qfy
 import pre
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def main():
     parser = argparse.ArgumentParser("Haplotype Comparison")
@@ -262,7 +269,7 @@ def main():
     # write session info and args file
     session = sessionInfo()
     session["final_args"] = args.__dict__
-    with open(args.reports_prefix + ".runinfo.json", "w") as sessionfile:
+    with open_file(args.reports_prefix + ".runinfo.json", "w") as sessionfile:
         json.dump(session, sessionfile)
 
     try:
@@ -426,7 +433,7 @@ def main():
 
             args.locations = []
             for f in res:
-                with open(f) as fp:
+                with open_file(f) as fp:
                     for l in fp:
                         ll = l.strip().split("\t", 3)
                         if len(ll) < 3:
@@ -495,10 +502,10 @@ def main():
         if args.preserve_info and args.engine == "vcfeval":
             # if we use vcfeval we need to merge the INFO fields back in.
             tf = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
-            tempfiles.append(tf)
-            print("TRUTH_IN", file=tf)
-            print("QUERY_IN", file=tf)
-            tf.close()
+            tempfiles.append(tf.name)
+            with open_file(tf.name, "w") as tf_file:
+                tf_file.write("TRUTH_IN\n")
+                tf_file.write("QUERY_IN\n")
             info_file = tempfile.NamedTemporaryFile(suffix=".vcf.gz", delete=False)
             tempfiles.append(info_file.name)
             info_file.close()

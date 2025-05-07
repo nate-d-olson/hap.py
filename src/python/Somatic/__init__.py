@@ -20,7 +20,7 @@ from .Varscan2 import extractVarscan2SNVFeatures, extractVarscan2IndelFeatures
 from .Pisces import extractPiscesSNVFeatures, extractPiscesIndelFeatures
 
 
-class FeatureSet(object, metaclass=abc.ABCMeta):
+class FeatureSet(abc.ABC):
     """ VCF paired Feature set for somatic comparison """
 
     def __init__(self):
@@ -59,7 +59,7 @@ class GenericFeatures(FeatureSet):
     @staticmethod
     def processValue(t):
         _, val = t
-        if type(val) is list:
+        if isinstance(val, list):
             return ",".join(map(str, val))
         else:
             return val
@@ -94,7 +94,7 @@ class StrelkaAdmixSNVFeatures(FeatureSet):
     @staticmethod
     def processValue(t):
         n, val = t
-        if type(val) is list:
+        if isinstance(val, list):
             return ",".join(map(str, val))
         return val
 
@@ -127,7 +127,7 @@ class StrelkaAdmixIndelFeatures(StrelkaAdmixSNVFeatures):
             except:
                 val = "unknown"
         else:
-            if type(val) is list:
+            if isinstance(val, list):
                 return ",".join(map(str, val))
         return val
 

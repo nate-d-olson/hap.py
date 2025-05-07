@@ -13,6 +13,13 @@ import pandas
 import logging
 from Tools.vcfextract import vcfExtract, extractHeaders
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
     """ Return a data frame with features collected from the given VCF, tagged by given type

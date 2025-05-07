@@ -29,6 +29,13 @@ from Tools.parallel import runParallel, getPool
 from Tools.bcftools import runBcftools, concatenateParts
 from Tools.vcfextract import extractHeadersJSON
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def preprocessWrapper(file_and_location, args):
     starttime = time.time()
@@ -69,20 +76,20 @@ def preprocessWrapper(file_and_location, args):
         if finished:
             tfo.close()
             tfe.close()
-            with open(tfo.name) as f:
+            with open_file(tfo.name) as f:
                 for l in f:
                     logging.info(l.replace("\n", ""))
             os.unlink(tfo.name)
-            with open(tfe.name) as f:
+            with open_file(tfe.name) as f:
                 for l in f:
                     logging.warn(l.replace("\n", ""))
             os.unlink(tfe.name)
         else:
             logging.error("Preprocess command %s failed. Outputs are here %s / %s" % (to_run, tfo.name, tfe.name))
-            with open(tfo.name) as f:
+            with open_file(tfo.name) as f:
                 for l in f:
                     logging.error(l.replace("\n", ""))
-            with open(tfe.name) as f:
+            with open_file(tfe.name) as f:
                 for l in f:
                     logging.error(l.replace("\n", ""))
 
@@ -121,17 +128,17 @@ def blocksplitWrapper(location_str, bargs):
         finally:
             tfo.close()
             tfe.close()
-            with open(tfo.name) as f:
+            with open_file(tfo.name) as f:
                 for l in f:
                     logging.info(l.replace("\n", ""))
             os.unlink(tfo.name)
-            with open(tfe.name) as f:
+            with open_file(tfe.name) as f:
                 for l in f:
                     logging.warn(l.replace("\n", ""))
             os.unlink(tfe.name)
 
         r = []
-        with open(tf.name) as f:
+        with open_file(tf.name) as f:
             for l in f:
                 ll = l.strip().split("\t", 3)
                 if len(ll) < 3:
@@ -176,7 +183,7 @@ def partialCredit(vcfname,
                 # just return the same file
                 return
             locations = h["tabix"]["chromosomes"]
-        elif type(locations) is str or type(locations) is str:
+        elif isinstance(locations, str):
             locations = locations.split(",")
 
         # use blocksplit to subdivide input

@@ -16,7 +16,7 @@ foreach(FILENAME ${COPY_FILES})
 endforeach(FILENAME)
 
 SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Haplo")
-SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python27/Haplo")
+SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python3/Haplo")
 add_custom_target(python_src1 ALL COMMENT "Copying ${PYTHON_SRC} -> ${PYTHON_DST}")
 
 add_custom_command(TARGET python_src1
@@ -24,7 +24,7 @@ add_custom_command(TARGET python_src1
 )
 
 SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Somatic")
-SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python27/Somatic")
+SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python3/Somatic")
 add_custom_target(python_src2 ALL COMMENT "Copying ${PYTHON_SRC} -> ${PYTHON_DST}")
 
 add_custom_command(TARGET python_src2
@@ -32,7 +32,7 @@ add_custom_command(TARGET python_src2
 )
 
 SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Tools")
-SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python27/Tools")
+SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python3/Tools")
 add_custom_target(python_src3 ALL COMMENT "Copying ${PYTHON_SRC} -> ${PYTHON_DST}")
 
 add_custom_command(TARGET python_src3
@@ -40,5 +40,5 @@ add_custom_command(TARGET python_src3
 )
 
 configure_file("Haplo/version.py.in"
-               "${CMAKE_BINARY_DIR}/lib/python27/Haplo/version.py")
+               "${CMAKE_BINARY_DIR}/lib/python3/Haplo/version.py")
 

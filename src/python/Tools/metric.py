@@ -17,6 +17,14 @@ import math
 
 import Tools
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
+
 def dataframeToMetricsTable(table_id, df):
     """ Convert a pandas dataframe to a PUMA metrics table
 
@@ -110,15 +118,15 @@ def replaceNaNs(xobject):
     :return: object, fixed
     """
 
-    if type(xobject) is dict:
+    if isinstance(xobject, dict):
         for k in list(xobject.keys()):
-            if type(xobject[k]) is dict or type(xobject[k]) is list or type(xobject[k]) is float:
+            if isinstance(xobject[k], (dict, list)) or isinstance(xobject[k], float):
                 xobject[k] = replaceNaNs(xobject[k])
-    elif type(xobject) is list:
+    elif isinstance(xobject, list):
         for k in range(0, len(xobject)):
-            if type(xobject[k]) is dict or type(xobject[k]) is list or type(xobject[k]) is float:
+            if isinstance(xobject[k], (dict, list)) or isinstance(xobject[k], float):
                 xobject[k] = replaceNaNs(xobject[k])
-    elif type(xobject) is float:
+    elif isinstance(xobject, float):
         # NaN and Inf become null. Not elegant, a JavaScript-y solution would be
         # to put these in as strings
         if math.isnan(xobject) or math.isinf(xobject):

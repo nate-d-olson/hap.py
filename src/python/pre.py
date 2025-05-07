@@ -34,7 +34,7 @@ import time
 import pipes
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
 import Tools
 from Tools import vcfextract
@@ -43,6 +43,13 @@ from Tools.fastasize import fastaContigLengths
 from Tools.bcftools import runBcftools
 import Haplo.partialcredit
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def hasChrPrefix(chrlist):
     """ returns if list of chr names has a chr prefix or not """
@@ -122,7 +129,15 @@ def preprocess(vcf_input,
             int_format = "z"
 
         # HAP-317 always check for BCF errors since preprocessing tools now require valid headers
-        mf = subprocess.check_output("vcfcheck %s --check-bcf-errors 1" % pipes.quote(vcf_input), shell=True)
+        process = subprocess.Popen(f"vcfcheck {pipes.quote(vcf_input)} --check-bcf-errors 1", 
+                                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        
+        # Handle bytes vs. string in Python 3
+        if isinstance(stdout, bytes):
+            mf = stdout.decode('utf-8')
+        else:
+            mf = stdout
 
         if gender == "auto":
             logging.info(mf)

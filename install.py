@@ -24,13 +24,18 @@ import shutil
 import glob
 import fnmatch
 import multiprocessing
-import urllib2
+try:
+    # Python 3
+    from urllib.request import urlopen
+except ImportError:
+    # Python 2
+    from urllib2 import urlopen
 
 
 def check_python_version():
     """ Check if the python version is sufficient """
-    if sys.version_info < (2, 7, 3):
-        raise Exception("You will need to run this with Python >= 2.7.3")
+    if sys.version_info < (3, 6, 0):
+        raise Exception("You will need to run this with Python >= 3.6.0")
 
 
 def create_python_environment(source_dir, args):
@@ -38,12 +43,17 @@ def create_python_environment(source_dir, args):
     :return: shebang with path to the python executable
     """
     interp = args.python_interp
-    pyver = subprocess.check_output(interp + " -c \"import sys; print ','.join(map(str, list(sys.version_info["
-                                    "0:3])))\"", shell=True).strip().split(",")
-    pyver = tuple(map(int, pyver))
+    pyver_cmd = interp + " -c \"import sys; print(','.join(map(str, list(sys.version_info[0:3]))))\"" 
+    pyver_output = subprocess.check_output(pyver_cmd, shell=True)
+    
+    # Handle bytes output in Python 3
+    if isinstance(pyver_output, bytes):
+        pyver_output = pyver_output.decode('utf-8')
+        
+    pyver = tuple(map(int, pyver_output.strip().split(",")))
 
-    if pyver < (2, 7, 3):
-        raise Exception("Python >= 2.7.3 is required for installation.")
+    if pyver < (3, 6, 0):
+        raise Exception("Python >= 3.6.0 is required for installation.")
 
     # system python -- just return interp
     if args.python == "system":
@@ -65,12 +75,12 @@ def create_python_environment(source_dir, args):
     try:
         ve_tgz = os.path.join(source_dir, "external", "virtualenv-12.0.7.tar.gz")
         to_run = "cd %s && tar xzf %s" % (virtualenv_tempdir, ve_tgz)
-        print >>sys.stderr, to_run
+        print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
 
         ve_exec = os.path.join(virtualenv_tempdir, "virtualenv-12.0.7", "virtualenv.py")
         to_run = "%s -p %s %s" % (ve_exec, interp, args.python_venv_dir)
-        print >>sys.stderr, to_run
+        print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
     finally:
         if not args.keep_scratch:
@@ -88,7 +98,7 @@ def create_python_environment(source_dir, args):
         cmds = [ve_pip, "install", "--no-cache-dir"]
 
         if args.fix_cert:
-            response = urllib2.urlopen('http://curl.haxx.se/ca/cacert.pem')
+            response = urlopen('http://curl.haxx.se/ca/cacert.pem')
             certdata = response.read()
             f = tempfile.NamedTemporaryFile(delete=False)
             deleteme = f.name
@@ -98,7 +108,7 @@ def create_python_environment(source_dir, args):
             cmds.insert(2, deleteme)
 
         for x in open(os.path.join(source_dir, "happy.requirements.txt")):
-            print >>sys.stderr, " ".join(cmds + [x])
+            print(" ".join(cmds + [x]), file=sys.stderr)
             subprocess.check_call(" ".join(cmds + [x]), shell=True)
     finally:
         if deleteme:
@@ -109,14 +119,14 @@ def create_python_environment(source_dir, args):
 
 def replace_shebang(filename, shebang):
     """ Replace shebang line / reheader script files """
-    print >>sys.stderr, "Fixing shebang line in " + filename
+    print("Fixing shebang line in " + filename, file=sys.stderr)
 
     with open(filename) as f:
         lines = f.readlines()
 
     with open(filename, "w") as f:
         removed = False
-        print >> f, shebang
+        print(shebang, file=f)
         for i, l in enumerate(lines):
             if not removed and l.startswith("#!") and i < 10:
                 removed = True
@@ -143,7 +153,7 @@ def build_haplotypes(source_dir, build_dir, args):
                               os.path.abspath(args.rtgtools_wrapper).replace(" ", "\\ ")
 
     to_run = boost_prefix + "cd %s && %s %s" % (build_dir, boost_prefix, config_command)
-    print >>sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
     setupscript = ""
@@ -153,11 +163,11 @@ def build_haplotypes(source_dir, build_dir, args):
     setupscript += boost_prefix
 
     to_run = setupscript + "cd %s && %s make -j%i" % (build_dir, setupscript, args.processes)
-    print >>sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
     to_run = setupscript + "cd %s && %s make -j%i install" % (build_dir, setupscript, args.processes)
-    print >>sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
 
@@ -165,7 +175,7 @@ def test_haplotypes(source_dir, python_shebang, args):
     """ Run the unit + integration tests
     """
     to_run = "cd %s && %s" % (args.targetdir, os.path.join(source_dir, "src", "sh", "run_tests.sh"))
-    print >>sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     os.environ["PYTHON"] = python_shebang[2:]
     subprocess.check_call(to_run, shell=True)
 
@@ -264,8 +274,8 @@ def main():
         args.python_venv_dir = args.targetdir
 
     if "LD_LIBRARY_PATH" in os.environ or "DYLD_LIBRARY_PATH" in os.environ:
-        print >>sys.stderr, "WARNING: You have (DY)LD_LIBRARY_PATH set. Make sure these libraries are accessible " \
-                            "in the same environment you will run in."
+        print("WARNING: You have (DY)LD_LIBRARY_PATH set. Make sure these libraries are accessible "
+              "in the same environment you will run in.", file=sys.stderr)
 
     # fix dynamic linking
     if "LD_LIBRARY_PATH" in os.environ:

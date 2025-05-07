@@ -21,7 +21,7 @@ try:
     version = vs.__version__
     has_sge = vs.has_sge
 except ImportError:
-    logging.warn("No version found. Please follow the installation instructions.")
+    logging.warning("No version found. Please follow the installation instructions.")
     version = "unknown"
     has_sge = False
 
@@ -41,7 +41,7 @@ def defaultReference():
     for x in to_try:
         if os.path.exists(x):
             return x
-    logging.warn("No reference file found at default locations. You can set the environment"
+    logging.warning("No reference file found at default locations. You can set the environment"
                  " variable 'HGREF' or 'HG19' to point to a suitable Fasta file.")
     return None
 
@@ -201,4 +201,8 @@ class BGZipFile(object):
         self.write_file.close()
 
     def write(self, *args, **kwargs):
-        self.zip_pipe.stdin.write(*args, **kwargs)
+        # Handle bytes vs strings for Python 3
+        if args and isinstance(args[0], str):
+            self.zip_pipe.stdin.write(args[0].encode('utf-8'))
+        else:
+            self.zip_pipe.stdin.write(*args, **kwargs)

@@ -35,7 +35,7 @@ import tempfile
 import gzip
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
 import Tools
 import Tools.vcfextract

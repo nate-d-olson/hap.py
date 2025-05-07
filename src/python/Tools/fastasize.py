@@ -30,6 +30,13 @@ import pipes
 import json
 import re
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def fastaContigLengths(fastafile):
     """ Return contig lengths in a fasta file
@@ -39,7 +46,7 @@ def fastaContigLengths(fastafile):
 
     fastacontiglengths = {}
 
-    with open(fastafile + ".fai") as fai:
+    with open_file(fastafile + ".fai") as fai:
         for l in fai:
             row = l.strip().split("\t")
             fastacontiglengths[row[0]] = int(row[1])
@@ -61,7 +68,7 @@ def fastaNonNContigLengths(fastafile):
 
     try:
         subprocess.check_call("fastainfo %s %s" % (pipes.quote(fastafile), pipes.quote(tf.name)), shell=True)
-        with open(tf.name) as f:
+        with open_file(tf.name) as f:
             fasta_info = json.load(f)
 
         for k, v in list(fasta_info.items()):

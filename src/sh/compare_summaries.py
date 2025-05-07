@@ -4,6 +4,7 @@
 
 import sys
 
+
 def csvread(filename):
     f = open(filename)
 
@@ -26,7 +27,7 @@ def csvread(filename):
         if label in labels:
             continue
         labels.add(label)
-        for i in xrange(1, len(r)):
+        for i in range(1, len(r)):
             if header[i] not in data:
                 data[header[i]] = {}
             try:
@@ -62,11 +63,11 @@ def main():
             if field2 not in data2[metric]:
                 field2 = field2.replace("Locations.", "")
             if field1 not in data1[metric] and field2 not in data2[metric]:
-                print >>sys.stderr, "Skipping %s -- not present on both sides" % field
+                print("Skipping %s -- not present on both sides" % field, file=sys.stderr)
                 continue
-            print metric + " / " + field
-            print data1[metric][field1]
-            print data2[metric][field2]
+            print(metric + " / " + field)
+            print(data1[metric][field1])
+            print(data2[metric][field2])
             if metric.endswith("_ratio") and data1[metric][field1] in ["", "."] and data2[metric][field2] in ["", "."]:
                 # allow empty ratio match
                 continue
@@ -87,11 +88,11 @@ def main():
                                           data2[metric][field2] - data1[metric][field1]))
 
     if different_metrics:
-        print >> sys.stderr, "ERROR -- Metric differences detected:"
-        print >> sys.stderr, "-------------------------------------\n"
+        print("ERROR -- Metric differences detected:", file=sys.stderr)
+        print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print >> sys.stderr, "%s / %s: %s != %s difference: %f" % m
-        print >> sys.stderr, "-------------------------------------"
+            print("%s / %s: %s != %s difference: %f" % m, file=sys.stderr)
+        print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 
 

@@ -23,6 +23,13 @@ from itertools import islice, repeat
 
 from . import LoggingWriter
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 POOL = None
 
@@ -42,13 +49,13 @@ def getPool(threads):
 def splitEvery(n, iterable):
     """ split iterable into list blocks of size n """
     if n is None:
-    	yield list(iterable)
+        yield list(iterable)
     else:
-	    i = iter(iterable)
-	    piece = list(islice(i, n))
-	    while piece:
-	        yield piece
-	        piece = list(islice(i, n))
+        i = iter(iterable)
+        piece = list(islice(i, n))
+        while piece:
+            yield piece
+            piece = list(islice(i, n))
 
 
 def unpickleSequentially(plist):
@@ -57,7 +64,7 @@ def unpickleSequentially(plist):
     while plist or data:
         if not data:
             fname = plist.pop(0)
-            with open(fname) as f:
+            with open(fname, 'rb') as f:  # Use binary mode for pickle
                 data = pickle.load(f)
             os.unlink(fname)
         if data:

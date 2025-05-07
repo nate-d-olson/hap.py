@@ -16,6 +16,13 @@ import logging
 import subprocess
 import tempfile
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def tableROC(tbl, label_column, feature_column, filter_column=None,
              filter_name=None, roc_reversed=False):
@@ -53,7 +60,18 @@ def tableROC(tbl, label_column, feature_column, filter_column=None,
 
         logging.info("Running %s" % cmdline)
 
-        subprocess.check_call(cmdline, shell=True)
+        process = subprocess.Popen(cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        
+        # Handle bytes output in Python 3
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode('utf-8')
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode('utf-8')
+            
+        if process.returncode != 0:
+            raise Exception(f"ROC command failed: {stderr}")
+            
         try:
             result = pandas.read_table(tf1.name)
         except:
@@ -70,7 +88,7 @@ def tableROC(tbl, label_column, feature_column, filter_column=None,
             pass
 
 
-class ROC(object, metaclass=abc.ABCMeta):
+class ROC(abc.ABC):
     """ROC calculator base class"""
 
     classes = {}

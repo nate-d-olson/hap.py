@@ -24,6 +24,13 @@ import tempfile
 import time
 import subprocess
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def xcmpWrapper(location_str, args):
     """ Haplotype block comparison wrapper function
@@ -66,15 +73,28 @@ def xcmpWrapper(location_str, args):
 
     try:
         logging.info("Running '%s'" % to_run)
-        subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
+        process = subprocess.Popen(to_run, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        
+        # Handle bytes vs. string in Python 3
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode('utf-8')
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode('utf-8')
+            
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, to_run, output=stdout, stderr=stderr)
+            
+        with open_file(tfo.name, 'w') as f:
+            f.write(stdout)
+        with open_file(tfe.name, 'w') as f:
+            f.write(stderr)
     finally:
-        tfo.close()
-        tfe.close()
-        with open(tfo.name) as f:
+        with open_file(tfo.name) as f:
             for l in f:
                 logging.info(l.replace("\n", ""))
         os.unlink(tfo.name)
-        with open(tfe.name) as f:
+        with open_file(tfe.name) as f:
             for l in f:
                 logging.warn(l.replace("\n", ""))
         os.unlink(tfe.name)

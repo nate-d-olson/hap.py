@@ -18,6 +18,13 @@ import re
 import time
 import json
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def field(val):
     """ extract field into result, guess type """
@@ -85,9 +92,9 @@ def vcfExtract(vcfname, features, filterfun=None):
     """
 
     if vcfname.endswith(".gz"):
-        ff = gzip.GzipFile(vcfname)
+        ff = gzip.open(vcfname, 'rt', encoding='utf-8')  # Use text mode with encoding
     else:
-        ff = open(vcfname)
+        ff = open_file(vcfname)
 
     feature_index = [splitIndex(f) for f in features]
 
@@ -198,9 +205,9 @@ def vcfExtract(vcfname, features, filterfun=None):
 def extractHeaders(vcfname):
     """ Read the header lines from a VCF file """
     if vcfname.endswith(".gz"):
-        ff = gzip.GzipFile(vcfname)
+        ff = gzip.open(vcfname, 'rt', encoding='utf-8')  # Use text mode with encoding
     else:
-        ff = open(vcfname)
+        ff = open_file(vcfname)
 
     for l in ff:
         if l.startswith("#"):
@@ -222,11 +229,18 @@ def extractHeadersJSON(vcfname):
         sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         o, e = sp.communicate()
+        
+        # Handle bytes output in Python 3
+        if isinstance(o, bytes):
+            o = o.decode('utf-8')
+        if isinstance(e, bytes):
+            e = e.decode('utf-8')
 
         if sp.returncode != 0:
             raise Exception("vcfhdr2json call failed on file %s: %s / %s" % (vcfname, o, e))
 
-        vfh = json.load(open(tf.name))
+        with open_file(tf.name) as json_file:
+            vfh = json.load(json_file)
 
         # fix empty chr list
         if "tabix" not in vfh or not vfh["tabix"]:
@@ -235,7 +249,7 @@ def extractHeadersJSON(vcfname):
             vfh["tabix"]["chromosomes"] = None
         if not vfh["tabix"]["chromosomes"]:
             vfh["tabix"]["chromosomes"] = []
-        if type(vfh["tabix"]["chromosomes"]) is not list:
+        if not isinstance(vfh["tabix"]["chromosomes"], list):
             vfh["tabix"]["chromosomes"] = [vfh["tabix"]["chromosomes"]]
     finally:
         try:

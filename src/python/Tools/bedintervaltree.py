@@ -13,6 +13,13 @@ from bx.intervals.intersection import Interval
 from bx.intervals.intersection import IntervalTree
 from collections import defaultdict
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 class BedIntervalTree(object):
     def __init__(self):
@@ -111,9 +118,9 @@ class BedIntervalTree(object):
 
         """
         if bed_file.endswith(".gz"):
-            bed = gzip.open(bed_file)
+            bed = gzip.open(bed_file, 'rt', encoding='utf-8')  # Use text mode with encoding
         else:
-            bed = open(bed_file)
+            bed = open_file(bed_file)
 
         if hasattr(label, "__call__"):
             labeller = label

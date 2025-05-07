@@ -38,7 +38,7 @@ import json
 from collections import Counter
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
 import Tools
 from Tools.bcftools import runBcftools, parseStats, preprocessVCF
@@ -49,6 +49,14 @@ from Tools.ci import binomialCI
 from Tools.metric import makeMetricsObject, dataframeToMetricsTable
 from Tools.fastasize import fastaContigLengths, calculateLength
 import Somatic
+
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 
 def parse_args():

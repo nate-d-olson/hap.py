@@ -26,6 +26,13 @@ import pipes
 
 import Haplo.version  # pylint: disable=E0611,E0401
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
 
 def findVCFEval():
     """ Return default version of rtgtools if hap.py was built with
@@ -91,6 +98,13 @@ def runVCFEval(vcf1, vcf2, target, args):
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
             o, e = po.communicate()
+            
+            # Handle bytes vs. string in Python 3
+            if isinstance(o, bytes):
+                o = o.decode('utf-8')
+            if isinstance(e, bytes):
+                e = e.decode('utf-8')
+                
             po.wait()
             rc = po.returncode
             if rc != 0:
@@ -122,6 +136,12 @@ def runVCFEval(vcf1, vcf2, target, args):
                               stderr=subprocess.PIPE)
 
         o, e = po.communicate()
+        
+        # Handle bytes vs. string in Python 3
+        if isinstance(o, bytes):
+            o = o.decode('utf-8')
+        if isinstance(e, bytes):
+            e = e.decode('utf-8')
 
         po.wait()
 

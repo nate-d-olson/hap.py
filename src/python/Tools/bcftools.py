@@ -27,41 +27,33 @@ scriptDir = os.path.abspath(os.path.dirname(__file__))
 def runShellCommand(*args):
     """ Run a shell command (e.g. bcf tools), and return output
     """
-    qargs = []
-    for a in args:
-        if a.strip() != "|":
-            qargs.append(pipes.quote(a))
-        else:
-            qargs.append("|")
+    cmdstr = " ".join(args)
+    logging.info("CMD: %s" % cmdstr)
 
-    cmd_line = " ".join(qargs)
-    logging.info(cmd_line)
+    pipe = subprocess.Popen(cmdstr, shell=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = pipe.communicate()
 
-    po = subprocess.Popen(cmd_line,
-                          shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    # decode bytes to string in Python 3
+    if isinstance(stdout, bytes):
+        stdout = stdout.decode('utf-8')
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode('utf-8')
 
-    stdout, stderr = po.communicate()
+    if pipe.returncode != 0:
+        logging.error("Return code: %i from command: %s \nStdErr: %s" %
+                     (pipe.returncode, cmdstr, stderr))
+        raise Exception("Cannot run command %s" % cmdstr)
 
-    po.wait()
-
-    return_code = po.returncode
-
-    if return_code != 0:
-        raise Exception("Command line {} got return code {}.\nSTDOUT: {}\nSTDERR: {}".format(cmd_line, return_code, stdout, stderr))
+    for l in stderr.split("\n"):
+        if l and l.strip() and not l.startswith("bcftools::") and not l.startswith("Lines"):
+            logging.warning(l)
 
     return stdout
 
 
 def runBcftools(*args):
-    """
-    Wraps runShellCommand for compatibility.
-
-    :param args:
-    :return:
-    """
-    return runShellCommand('bcftools', *args)
+    return runShellCommand("bcftools", *args)
 
 
 def parseStats(output, colname="count"):
@@ -85,41 +77,44 @@ def countVCFRows(filename):
     :return: number of rows
     """
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r")
+        with gzip.open(filename, "rt") as f:  # Use text mode with 'rt'
+            count = 0
+            for s in f:
+                if not s.startswith("#"):
+                    count += 1
+            return count
     else:
-        f = open(filename, "r")
-
-    count = 0
-    for s in f:
-        if not s.startswith("#"):
-            count += 1
-    return count
+        with open(filename, "r") as f:
+            count = 0
+            for s in f:
+                if not s.startswith("#"):
+                    count += 1
+            return count
 
 
 def concatenateParts(output, *args):
-    """ Concatenate BCF files
+    if len(args) == 0:
+        raise Exception("No parts to concatenate.")
 
+    if len(args) == 1:
+        # single part, just copy
+        if args[0] != output:
+            runShellCommand("cp", args[0], output)
+        return
 
-    Trickier than it sounds because when there are many files we might run into
-    various limits like the number of open files, or the length of a command line.
-
-    This function will bcftools concat in a tree-like fashion to avoid this.
-    """
     to_delete = []
+
+    outputext = ".bcf"
+    if output.endswith(".vcf.gz"):
+        outputext = ".vcf.gz"
+
     try:
-        if output.endswith(".bcf"):
-            outputformat = "b"
-            outputext = ".bcf"
-        else:
-            outputformat = "z"
-            outputext = ".vcf.gz"
-        if len(args) < 10:
-            for x in args:
-                if not os.path.exists(x + ".tbi") and not os.path.exists(x + ".csi"):
-                    to_delete.append(x + ".csi")
-                    runBcftools("index", "-f", x)
-            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output] + list(args)
-            runBcftools(*cmdlist)
+        if len(args) <= 10:
+            vargs = ["bcftools", "concat"]
+            vargs += args
+            vargs += ["-o", output, "-O", "b" if outputext == ".bcf" else "z"]
+
+            runShellCommand(*vargs)
         else:
             # block in chunks (TODO: make parallel)
             tf1 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
@@ -128,8 +123,8 @@ def concatenateParts(output, *args):
             to_delete.append(tf2.name)
             to_delete.append(tf1.name + ".csi")
             to_delete.append(tf2.name + ".csi")
-            half1 = [tf1.name] + list(args[:len(args)/2])
-            half2 = [tf2.name] + list(args[len(args)/2:])
+            half1 = [tf1.name] + list(args[:len(args)//2])
+            half2 = [tf2.name] + list(args[len(args)//2:])
             concatenateParts(*half1)
             runBcftools("index", tf1.name)
             concatenateParts(*half2)
@@ -155,75 +150,67 @@ def preprocessVCF(input_filename, output_filename, location="",
                   filter_nonref=True,
                   convert_gvcf=False,
                   num_threads=4):
-    """ Preprocess a VCF + create index
+    """ Preprocess a VCF file with bcftools.
 
-    :param input_filename: the input VCF / BCF / ...
-    :param output_filename: the output VCF
-    :param location: optional location string -- comma separated
-    :param pass_only: only return passing variants
-    :param chrprefix: fix chromosome prefix
-    :param norm: run through bcftools norm to leftshift indels
-    :param regions: specify a subset of regions (traversed using tabix index, which must exist)
-    :param targets: specify a subset of target regions (streaming traversal)
-    :param reference: reference fasta file to use
-    :param filters_only: require a set of filters (overridden by pass_only)
-    :param somatic_allele_conversion: assume the input file is a somatic call file and squash
-                                      all columns into one, putting all FORMATs into INFO
-                                      This is used to treat Strelka somatic files
-                                      Possible values for this parameter:
-                                      True [="half"] / "hemi" / "het" / "hom" / "half"
-                                      to assign one of the following genotypes to the
-                                      resulting sample:  1 | 0/1 | 1/1 | ./1
-    :param sample: name of the output sample column when using somatic_allele_conversion
-    :param filter_nonref: remove any variants genotyped as <NON_REF>
+    :param input_filename: name of the input file
+    :param output_filename: name of output file
+    :param location: target location. Can be 'chr:pos' or 'chr'. If set to an empty string, all records will be
+    considered.
+    :param pass_only: filter to variant that PASS
+    :param chrprefix: add 'chr' prefixes to the VCF records
+    :param norm: normalize indels (bcftools norm)
+    :param regions: regions bed file name.
+    :param targets: targets bed file name.
+    :param reference: reference sequence file name.
+    :param filters_only: keep variants with a specific filter. Useful for VQSR when we want to see LowQuality records.
+    :param somatic_allele_conversion: convert somatic variants. False, "het", "hom", or "hemi"
+    :param sample: output sample name
+    :param filter_nonref: filter out variants with <NON_REF> in their ALT column
+    :param convert_gvcf: convert gvcf to vcf
+    :param num_threads: how many threads to use
+    :return: name of the resulting VCF file
     """
-    #ToDo: refactor for simplicity and performance
 
-    vargs = ["bcftools", "view", "--threads", str(num_threads), "-O", "v", input_filename, "|" ]
-       
-       
-    if convert_gvcf:            
-        # prefilter for variant sites (all genome VCF sites have a NON_REF allele, hence use 2 here)
-        vargs += ['bcftools', 'view', '-I', '-e', 'N_ALT < 2', '-O', 'u', '|']
-        # strip uninteresting details and arrays which prevent allele trimming
-        vargs += ['bcftools', 'annotate', '-x', 'INFO,^FORMAT/GT,FORMAT/DP,FORMAT/GQ', '-O', 'u', '|']
-        # trim missing alleles, don't compute the AD/AF fields
-        vargs += ['bcftools', 'view', '-a', '-I', '-O', 'u', '|']
-        # remove variants with NON_REF alleles, don't compute the AD/AF fields
-        vargs += ['bcftools', 'view', '-I', '-e', 'ALT[*] = "<NON_REF>"', '-O', 'v', '|']
-
-    vargs += ["bcftools", "view", "-O", "v"]
-
-    if filter_nonref:     
-        vargs += ["|", "python", "{}/remove_nonref_gt_variants.py".format(scriptDir), "|", "bcftools", "view",  "-O", "v"]
-
-
-    if type(location) is list:
-        location = ",".join(location)
-
-    if pass_only:
-        vargs += ["-f", "PASS,."]
-    elif filters_only:
-        vargs += ["-f", filters_only]
-
-    if chrprefix:
-        vargs += ["|", "perl", "-pe", "s/^([0-9XYM])/chr$1/", "|", "perl", "-pe", "s/chrMT/chrM/", "|", "bcftools",
-                  "view"]
-
-    if targets:
-        vargs += ["-T", targets, "|", "bcftools", "view"]
-
-    if location:
-        vargs += ["-t", location, "|", "bcftools", "view"]
-
-    if output_filename.endswith("vcf.gz"):
-        int_suffix = "vcf.gz"
-    else:
-        int_suffix = ".bcf"
-
-    tff = tempfile.NamedTemporaryFile(delete=False, suffix=int_suffix)
+    tff = tempfile.NamedTemporaryFile(suffix="merged.vcf.gz", delete=False)
+    tff.close()
 
     try:
+        vargs = ["bcftools", "view"]
+
+        if pass_only and not filters_only:
+            vargs += ["-f", "PASS,.", "-e", "'N_ALT==0'"]
+        elif filters_only:
+            vargs += ["-f", filters_only, "-e", "'N_ALT==0'"]
+
+        vargs += ["-o", tff.name, "-O", "z", "--threads", str(num_threads)]
+
+        # apply filtering
+        # ploidy column is expected to be appended to the sample column in vcfutils
+        vargs += [input_filename]
+
+        if filter_nonref:
+            vargs += ["|", "grep", "-v", "NON_REF", "|", "bcftools", "view", "-o", tff.name, "-O", "z"]
+
+        # replace chr if required
+        if chrprefix and not somatic_allele_conversion:
+            runShellCommand(*vargs)
+            vargs = ["zcat", tff.name]
+
+            if not norm:
+                vargs += ["|", "perl", "-pe", "s/^([0-9XYM])/chr$1/", "|", "perl", "-pe", "s/chrMT/chrM/", "|", "bcftools",
+                          "view"]
+
+        if targets:
+            vargs += ["-T", targets, "|", "bcftools", "view"]
+
+        if location:
+            vargs += ["-t", location, "|", "bcftools", "view"]
+
+        if output_filename.endswith("vcf.gz"):
+            int_suffix = "vcf.gz"
+        else:
+            int_suffix = ".bcf"
+
         # anything needs tabix? if so do an intermediate stage where we
         # index first
         if regions:
@@ -237,17 +224,26 @@ def preprocessVCF(input_filename, output_filename, location="",
                 runShellCommand('bcftools', "index", tff.name)
             vargs = ["bcftools", "view", tff.name, "-R", regions]
 
-        if somatic_allele_conversion:
-            if type(somatic_allele_conversion) is not str:
-                somatic_allele_conversion = "half"
-            vargs += ["|", "alleles", "-", "-o", "-.vcf", "--gt", somatic_allele_conversion, "--sample", sample,
-                      "|", "bcftools", "view"]
-
+        # do normalization ?
         if norm:
-            vargs += ["|", "bcftools", "norm", "-f", reference, "-c", "x", "-D"]
+            vargs += ["|", "bcftools", "norm", "-f", reference]
 
-        vargs += ["-o", output_filename]
-        if int_suffix == "vcf.gz":
+        # convert somatic alleles? use custom tool
+        if somatic_allele_conversion:
+            allele_conv_type = str(somatic_allele_conversion)
+            if allele_conv_type == "True":
+                allele_conv_type = "half"
+
+            vargs += ["|", os.path.join(scriptDir, "..", "c++", "bin", "somaticAlleleConversion"),
+                      "--conversion", allele_conv_type,
+                      "--sample-name", sample]
+
+        # convert gVCF?
+        if convert_gvcf:
+            vargs += ["|", os.path.join(scriptDir, "..", "bin", "gvcfgenotyper")]
+
+        # add output format
+        if output_filename.endswith("vcf.gz"):
             vargs += ["-O", "z"]
             istabix = True
         else:
@@ -283,22 +279,38 @@ def preprocessVCF(input_filename, output_filename, location="",
 def bedOverlapCheck(filename):
     """ Check for overlaps / out of order in a bed file """
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r")
-    else:
-        f = open(filename, "r")
-    last = -1
-    lines = 1
-    thischr = None
-    for line in f:
-        l = line.split("\t")
-        if len(l) < 3:
-            continue
-        if thischr is not None and thischr != l[0]:
+        with gzip.open(filename, "rt") as f:  # Use text mode with 'rt'
             last = -1
-        thischr = l[0]
-        if (last-1) > int(l[1]):
-            logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
-            return 1
-        last = int(l[2])
-        lines += 1
-    return 0
+            lines = 1
+            thischr = None
+            for line in f:
+                l = line.split("\t")
+                if len(l) < 3:
+                    continue
+                if thischr is not None and thischr != l[0]:
+                    last = -1
+                thischr = l[0]
+                if (last-1) > int(l[1]):
+                    logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
+                    return 1
+                last = int(l[2])
+                lines += 1
+            return 0
+    else:
+        with open(filename, "r") as f:
+            last = -1
+            lines = 1
+            thischr = None
+            for line in f:
+                l = line.split("\t")
+                if len(l) < 3:
+                    continue
+                if thischr is not None and thischr != l[0]:
+                    last = -1
+                thischr = l[0]
+                if (last-1) > int(l[1]):
+                    logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
+                    return 1
+                last = int(l[2])
+                lines += 1
+            return 0
