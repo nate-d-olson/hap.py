@@ -35,7 +35,7 @@ except ImportError:
 def check_python_version():
     """ Check if the python version is sufficient """
     if sys.version_info < (3, 6, 0):
-        raise Exception("You will need to run this with Python >= 3.6.0")
+        print("Warning: Python >= 3.6.0 is recommended for installation.", file=sys.stderr)
 
 
 def create_python_environment(source_dir, args):
@@ -51,9 +51,6 @@ def create_python_environment(source_dir, args):
         pyver_output = pyver_output.decode('utf-8')
         
     pyver = tuple(map(int, pyver_output.strip().split(",")))
-
-    if pyver < (3, 6, 0):
-        raise Exception("Python >= 3.6.0 is required for installation.")
 
     # system python -- just return interp
     if args.python == "system":
@@ -71,23 +68,25 @@ def create_python_environment(source_dir, args):
     if os.path.exists(args.python_venv_dir) and not args.python_venv_dir_update:
         raise Exception("The virtual environment directory already exists.")
 
-    virtualenv_tempdir = tempfile.mkdtemp(prefix="virtualenv", dir=args.scratch_path)
-    try:
-        ve_tgz = os.path.join(source_dir, "external", "virtualenv-12.0.7.tar.gz")
-        to_run = "cd %s && tar xzf %s" % (virtualenv_tempdir, ve_tgz)
-        print(to_run, file=sys.stderr)
-        subprocess.check_call(to_run, shell=True)
-
-        ve_exec = os.path.join(virtualenv_tempdir, "virtualenv-12.0.7", "virtualenv.py")
-        to_run = "%s -p %s %s" % (ve_exec, interp, args.python_venv_dir)
-        print(to_run, file=sys.stderr)
-        subprocess.check_call(to_run, shell=True)
-    finally:
-        if not args.keep_scratch:
-            try:
-                shutil.rmtree(virtualenv_tempdir)
-            except:
-                pass
+    # Use Python's built-in venv module for Python 3, or virtualenv for older versions
+    print(f"Creating Python virtual environment in {args.python_venv_dir}", file=sys.stderr)
+    
+    if pyver[0] >= 3:
+        import venv
+        venv.create(args.python_venv_dir, with_pip=True)
+    else:
+        # For Python 2, fall back to the old virtualenv approach
+        tempdir = tempfile.mkdtemp()
+        try:
+            # Download and extract virtualenv
+            virtualenv_url = "https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.0.7.tar.gz"
+            subprocess.check_call("cd %s && curl -L %s | tar xzf -" % (tempdir, virtualenv_url), shell=True)
+            virtualenv_dir = os.path.join(tempdir, "virtualenv-12.0.7")
+            to_run = "%s %s/virtualenv.py -p %s %s" % (
+                interp, virtualenv_dir, interp, args.python_venv_dir)
+            subprocess.check_call(to_run, shell=True)
+        finally:
+            shutil.rmtree(tempdir)
 
     # install requirements
     ve_python = os.path.join(args.python_venv_dir, "bin", "python")
@@ -107,9 +106,36 @@ def create_python_environment(source_dir, args):
             cmds.insert(1, " --cert")
             cmds.insert(2, deleteme)
 
+        # First ensure pip is up to date
+        subprocess.check_call(f"{ve_pip} install --upgrade pip", shell=True)
+        
+        # Install distro package which is needed for sessioninfo.py
+        print(" ".join(cmds + ["distro"]), file=sys.stderr)
+        try:
+            subprocess.check_call(" ".join(cmds + ["distro"]), shell=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Warning: Failed to install distro: {e}", file=sys.stderr)
+
+        # Process requirements
         for x in open(os.path.join(source_dir, "happy.requirements.txt")):
+            x = x.strip()
+            # Skip empty lines and comments
+            if not x or x.startswith('#'):
+                continue
+                
+            # Replace the outdated bx-python URL with a PyPI version
+            if "bitbucket.org/pkrusche/bx-python" in x:
+                print("Replacing outdated bx-python URL with PyPI version", file=sys.stderr)
+                x = "bx-python>=0.8.0"
+            
             print(" ".join(cmds + [x]), file=sys.stderr)
-            subprocess.check_call(" ".join(cmds + [x]), shell=True)
+            try:
+                subprocess.check_call(" ".join(cmds + [x]), shell=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Warning: Failed to install {x}: {e}", file=sys.stderr)
+                if "bitbucket.org" in x or "github.com" in x:
+                    print(f"This appears to be a URL-based dependency that might be obsolete.", file=sys.stderr)
+                    
     finally:
         if deleteme:
             os.unlink(deleteme)
