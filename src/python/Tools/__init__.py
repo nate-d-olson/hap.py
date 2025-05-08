@@ -15,6 +15,14 @@ import logging
 import subprocess
 from datetime import date
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
+
 # noinspection PyUnresolvedReferences
 try:
     import Haplo.version as vs  # pylint: disable=E0401,E0611
@@ -133,7 +141,7 @@ def writeVCFHeader(filelike, extrainfo="", chrprefix="chr"):
              '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">']
 
     if extrainfo:
-        if type(extrainfo) is list:
+        if isinstance(extrainfo, list):
             infos += extrainfo
         else:
             infos += extrainfo.split("\n")
@@ -188,8 +196,7 @@ class BGZipFile(object):
         zip_pipe = subprocess.Popen(["bgzip", "-f"],
                                     stdin=subprocess.PIPE,
                                     stdout=self.write_file,
-                                    stderr=subprocess.PIPE,
-                                    shell=True)
+                                    stderr=subprocess.PIPE)
         self.zip_pipe = zip_pipe
         self.name = filename
 

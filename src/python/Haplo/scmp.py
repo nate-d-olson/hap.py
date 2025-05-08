@@ -25,6 +25,14 @@ import tempfile
 from Tools.bcftools import runBcftools
 from Tools import LoggingWriter
 
+# Python 3 compatibility for file handling
+def open_file(filename, mode='r'):
+    """Helper function to open files in the correct mode for both text and binary."""
+    if 'b' in mode:
+        return open(filename, mode)
+    else:
+        return open(filename, mode, encoding='utf-8')
+
 def runSCmp(vcf1, vcf2, target, args):
     """ Runs scmp, which outputs a file quantify can produce counts on
     vcf1 and vcf2 must be indexed and only contain a single sample column.
