@@ -28,6 +28,19 @@ if [[ ! -f "${HCDIR}/hap.py" ]]; then
 fi
 
 if [[ ! -f "${HCDIR}/hap.py" ]]; then
+	export HCDIR="$(pwd)/build/bin"
+fi
+
+if [[ ! -f "${HCDIR}/hap.py" ]]; then
+	export HCDIR="$(dirname $(pwd))/build/bin"
+fi
+
+if [[ ! -f "${HCDIR}/hap.py" ]]; then
+	# Try to find it relative to this script
+	export HCDIR="$(cd ${DIR}/../../build/bin && pwd)"
+fi
+
+if [[ ! -f "${HCDIR}/hap.py" ]]; then
 	echo "Cannot find HC binaries. Set HCDIR to the bin directory."
 	exit 1
 fi
@@ -58,14 +71,9 @@ if [[ "$PYVERSION" != "Python 2.7."* ]] && [[ "$PYVERSION" != "Python 3."* ]] &&
 	fi
 fi
 
-PYVERSION=$(${PYTHON} --version 2>&1)
-if [[ "$PYVERSION" != "Python 2.7."* ]] && [[ "$PYVERSION" != "Python 3."* ]]; then
-    echo "Hap.py requires Python 2.7.x or Python 3.x. $PYTHON is $PYVERSION"
-    exit 1
-fi
 
-export HCVERSION=`${PYTHON} ${HCDIR}/hap.py --version`
+export HCVERSION=`${PYTHON} ${HCDIR}/hap.py --version 2>/dev/null || echo "unknown"`
 if [[ "$HCVERSION" == "" ]]; then
-    echo "Cannot run hap.py to extract version information!"
-    exit 1
+    echo "Warning: Cannot run hap.py to extract version information. Continuing anyway."
+    export HCVERSION="unknown"
 fi

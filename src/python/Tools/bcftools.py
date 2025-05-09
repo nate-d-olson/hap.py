@@ -173,6 +173,9 @@ def preprocessVCF(input_filename, output_filename, location="",
 
     tff = tempfile.NamedTemporaryFile(suffix="merged.vcf.gz", delete=False)
     tff.close()
+    
+    tmp_filtered = tempfile.NamedTemporaryFile(suffix="filtered.vcf.gz", delete=False)
+    tmp_filtered.close()
 
     try:
         vargs = ["bcftools", "view"]
@@ -182,72 +185,105 @@ def preprocessVCF(input_filename, output_filename, location="",
         elif filters_only:
             vargs += ["-f", filters_only, "-e", "'N_ALT==0'"]
 
-        vargs += ["-o", tff.name, "-O", "z", "--threads", str(num_threads)]
-
         # apply filtering
         # ploidy column is expected to be appended to the sample column in vcfutils
         vargs += [input_filename]
 
+        # When location is specified, add it directly in the first command
+        if location:
+            vargs += ["-t", location]
+
         if filter_nonref:
-            vargs += ["|", "grep", "-v", "NON_REF", "|", "bcftools", "view", "-o", tff.name, "-O", "z"]
+            # Use a temporary file for the filtered output instead of piping
+            vargs += ["-o", tmp_filtered.name, "-O", "z", "--threads", str(num_threads)]
+            runShellCommand(*vargs)
+            
+            # Now use grep to filter out NON_REF and save to the original temp file
+            runShellCommand("zcat", tmp_filtered.name, "|", "grep", "-v", "NON_REF", "|", 
+                           "bcftools", "view", "-o", tff.name, "-O", "z")
+        else:
+            vargs += ["-o", tff.name, "-O", "z", "--threads", str(num_threads)]
+            runShellCommand(*vargs)
 
         # replace chr if required
         if chrprefix and not somatic_allele_conversion:
-            runShellCommand(*vargs)
-            vargs = ["zcat", tff.name]
-
             if not norm:
-                vargs += ["|", "perl", "-pe", "s/^([0-9XYM])/chr$1/", "|", "perl", "-pe", "s/chrMT/chrM/", "|", "bcftools",
-                          "view"]
+                # Create a new temp file for this transformation
+                tmp_chr = tempfile.NamedTemporaryFile(suffix="chr.vcf.gz", delete=False)
+                tmp_chr.close()
+                
+                runShellCommand("zcat", tff.name, "|", 
+                               "perl", "-pe", "s/^([0-9XYM])/chr$1/", "|", 
+                               "perl", "-pe", "s/chrMT/chrM/", "|", 
+                               "bcftools", "view", "-o", tmp_chr.name, "-O", "z")
+                
+                # Replace our working file
+                os.unlink(tff.name)
+                os.rename(tmp_chr.name, tff.name)
 
+        # Set up for further processing
+        vargs = ["bcftools", "view", tff.name]
+        
         if targets:
-            vargs += ["-T", targets, "|", "bcftools", "view"]
-
-        if location:
-            vargs += ["-t", location, "|", "bcftools", "view"]
-
-        if output_filename.endswith("vcf.gz"):
-            int_suffix = "vcf.gz"
-        else:
-            int_suffix = ".bcf"
+            vargs += ["-T", targets]
 
         # anything needs tabix? if so do an intermediate stage where we
         # index first
         if regions:
-            if int_suffix == "vcf.gz":
-                vargs += ["-o", tff.name, "-O", "z"]
-                runShellCommand(*vargs)
-                runShellCommand('bcftools', "index", "-t", tff.name)
-            else:
-                vargs += ["-o", tff.name, "-O", "b"]
-                runShellCommand(*vargs)
-                runShellCommand('bcftools', "index", tff.name)
-            vargs = ["bcftools", "view", tff.name, "-R", regions]
+            # Save to temp file and index
+            tmp_regions = tempfile.NamedTemporaryFile(suffix="regions.vcf.gz", delete=False)
+            tmp_regions.close()
+            
+            vargs += ["-o", tmp_regions.name, "-O", "z"]
+            runShellCommand(*vargs)
+            runShellCommand('bcftools', "index", "-t", tmp_regions.name)
+            
+            # Start new command for region filtering
+            vargs = ["bcftools", "view", tmp_regions.name, "-R", regions]
 
-        # do normalization ?
+        # do normalization?
         if norm:
-            vargs += ["|", "bcftools", "norm", "-f", reference]
+            tmp_norm = tempfile.NamedTemporaryFile(suffix="norm.vcf.gz", delete=False)
+            tmp_norm.close()
+            
+            vargs += ["-o", tmp_norm.name, "-O", "z"]
+            runShellCommand(*vargs)
+            
+            vargs = ["bcftools", "norm", "-f", reference, tmp_norm.name]
 
         # convert somatic alleles? use custom tool
         if somatic_allele_conversion:
             allele_conv_type = str(somatic_allele_conversion)
             if allele_conv_type == "True":
                 allele_conv_type = "half"
-
-            vargs += ["|", os.path.join(scriptDir, "..", "c++", "bin", "somaticAlleleConversion"),
-                      "--conversion", allele_conv_type,
-                      "--sample-name", sample]
+                
+            tmp_conv = tempfile.NamedTemporaryFile(suffix="conv.vcf.gz", delete=False)
+            tmp_conv.close()
+            
+            vargs += ["-o", tmp_conv.name, "-O", "z"]
+            runShellCommand(*vargs)
+            
+            vargs = [os.path.join(scriptDir, "..", "c++", "bin", "somaticAlleleConversion"),
+                    "--conversion", allele_conv_type,
+                    "--sample-name", sample,
+                    "-i", tmp_conv.name]
 
         # convert gVCF?
         if convert_gvcf:
-            vargs += ["|", os.path.join(scriptDir, "..", "bin", "gvcfgenotyper")]
+            tmp_gvcf = tempfile.NamedTemporaryFile(suffix="gvcf.vcf.gz", delete=False)
+            tmp_gvcf.close()
+            
+            vargs += ["-o", tmp_gvcf.name, "-O", "z"]
+            runShellCommand(*vargs)
+            
+            vargs = [os.path.join(scriptDir, "..", "bin", "gvcfgenotyper"), tmp_gvcf.name]
 
         # add output format
         if output_filename.endswith("vcf.gz"):
-            vargs += ["-O", "z"]
+            vargs += ["-o", output_filename, "-O", "z"]
             istabix = True
         else:
-            vargs += ["-O", "b"]
+            vargs += ["-o", output_filename, "-O", "b"]
             istabix = False
 
         runShellCommand(*vargs)
@@ -262,18 +298,23 @@ def preprocessVCF(input_filename, output_filename, location="",
         raise ex
 
     finally:
-        try:
-            os.unlink(tff.name)
-        except:
-            pass
-        try:
-            os.unlink(tff.name + ".tbi")
-        except:
-            pass
-        try:
-            os.unlink(tff.name + ".csi")
-        except:
-            pass
+        # Clean up all temporary files
+        for tmp_file in [tff.name, tmp_filtered.name]:
+            try:
+                if os.path.exists(tmp_file):
+                    os.unlink(tmp_file)
+            except:
+                pass
+            try:
+                if os.path.exists(tmp_file + ".tbi"):
+                    os.unlink(tmp_file + ".tbi")
+            except:
+                pass
+            try:
+                if os.path.exists(tmp_file + ".csi"):
+                    os.unlink(tmp_file + ".csi")
+            except:
+                pass
 
 
 def bedOverlapCheck(filename):
