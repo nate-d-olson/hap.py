@@ -37,14 +37,18 @@ def field(val):
         try:
             val = int(val)
             done = True
-        except:
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Error parsing field value: {e}")
+            return None
             pass
 
         if done:
             return val
         try:
             val = float(val)
-        except:
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Error parsing field value: {e}")
+            return None
             pass
     return val
 
@@ -120,7 +124,8 @@ def vcfExtract(vcfname, features, filterfun=None):
                 # noinspection PyBroadException
                 try:
                     tpr = 1000000.0 * total / float(nrecords)
-                except:
+                except (ValueError, TypeError) as e:
+                    logging.warning(f"Error parsing field value: {e}")
                     tpr = -1
                 logging.info(
                     "Since start: %i records %.2f seconds, %.2f us/record."
@@ -184,8 +189,9 @@ def vcfExtract(vcfname, features, filterfun=None):
                                 val = val[ii]
                             else:
                                 val = None
-                    except:
-                        pass
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing field value: {e}")
+                        val = None
                     current.append(val)
                 elif f.startswith("S."):
                     ff, ii = feature_index[i]
@@ -276,7 +282,9 @@ def extractHeadersJSON(vcfname):
     finally:
         try:
             os.unlink(tf.name)
-        except:
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Error parsing field value: {e}")
+            return None
             pass
 
     return vfh
