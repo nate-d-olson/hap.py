@@ -61,15 +61,22 @@ class CallerInfo(object):
             o, e = sp.communicate()
 
             if sp.returncode != 0:
-                raise Exception("vcfhdr2json call failed: %s / %s" % (o, e))
-
-            with open(tf_name) as f:
-                vfh = json.load(f)
+                raise Exception(f"vcfhdr2json call failed: {o.decode('utf-8')} / {e.decode('utf-8')}")
+        except Exception as ex:
+            logging.error("Error running vcfhdr2json: %s", ex)
+        else:
+            try:
+                with open(tf_name, "r", encoding="utf-8") as f:
+                    vfh = json.load(f)
+            except json.JSONDecodeError as ex:
+                logging.error("Error parsing JSON from vcfhdr2json: %s", ex)
+            except Exception as ex:
+                logging.error("Error reading JSON file: %s", ex)
         finally:
             try:
                 os.unlink(tf_name)
-            except Exception as ex:
-                logging.error("Error deleting temporary file: %s", ex)
+            except OSError as e:
+                logging.warning(f"Error removing temp file: {e}")
 
         cp = ["unknown", "unknown", ""]
         gatk_callers = ["haplotypecaller", "unifiedgenotyper", "mutect"]
@@ -82,7 +89,9 @@ class CallerInfo(object):
                 if k == "source":
                     try:
                         cp[0] = str(hf["values"])
-                    except:
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                        continue
                         cp[0] = hf["value"]
                     if cp[0].startswith("Platypus_Version_"):
                         cp[1] = cp[0][len("Platypus_Version_") :]
@@ -91,19 +100,25 @@ class CallerInfo(object):
                 elif k == "source_version":
                     try:
                         cp[1] = str(hf["values"])
-                    except:
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                        continue
                         cp[1] = hf["value"]
                     source_found = True
                 elif k == "cmdline":
                     try:
                         cp[2] = str(hf["values"])
-                    except:
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                        continue
                         cp[2] = hf["value"]
                     source_found = True
                 elif k == "platypusOptions":
                     try:
                         cp[2] = str(hf["values"])
-                    except:
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                        continue
                         cp[2] = hf["value"]
                     source_found = True
                 elif k == "octopus":
@@ -113,36 +128,42 @@ class CallerInfo(object):
                     caller = "GATK"
                     try:
                         caller += "-" + hf["values"]["ID"]
-                    except:
-                        pass
-                    version = "unknown"
-                    try:
-                        version = hf["values"]["Version"]
-                    except:
-                        pass
-                    options = ""
-                    try:
-                        options = hf["values"]["CommandLineOptions"]
-                    except:
-                        pass
-                    if any(g in caller.lower() for g in gatk_callers):
-                        self.callers.append([caller, version, options])
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                    else:
+                        version = "unknown"
+                        try:
+                            version = hf["values"]["Version"]
+                        except (ValueError, TypeError) as e:
+                            logging.warning(f"Error parsing value: {e}")
+                        else:
+                            options = ""
+                            try:
+                                options = hf["values"]["CommandLineOptions"]
+                            except (ValueError, TypeError) as e:
+                                logging.warning(f"Error parsing value: {e}")
+                            else:
+                                if any(g in caller.lower() for g in gatk_callers):
+                                    self.callers.append([caller, version, options])
                 elif k.startswith("SentieonCommandLine"):
                     caller = "Sentieon"
                     try:
                         caller += "-" + hf["values"]["ID"]
-                    except:
-                        pass
-                    version = "unknown"
-                    try:
-                        version = hf["values"]["Version"]
-                    except:
-                        pass
-                    options = ""
-                    if any(s in caller.lower() for s in sent_callers):
-                        self.callers.append([caller, version])
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing value: {e}")
+                    else:
+                        version = "unknown"
+                        try:
+                            version = hf["values"]["Version"]
+                        except (ValueError, TypeError) as e:
+                            logging.warning(f"Error parsing value: {e}")
+                        else:
+                            if any(s in caller.lower() for s in sent_callers):
+                                self.callers.append([caller, version])
 
-            except:
+            except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                 pass
         if source_found:
             self.callers.append(cp)
@@ -168,26 +189,36 @@ class CallerInfo(object):
             try:
                 # noinspection PyTypeChecker
                 x = dict(y.split(":", 1) for y in line.split("\t")[1:])
-            except:
+            except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                 logging.warn("Unable to parse SAM/BAM header line: %s" % line)
                 continue
             cp = ["unknown", "unknown", ""]
             try:
                 cp[0] = x["PN"]
-            except:
+            except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                 try:
                     cp[0] = x["ID"]
                     if "-" in cp[0]:
                         cp[0] = cp[0].split("-")[0]
-                except:
+                except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                     pass
             try:
                 cp[1] = x["VN"]
-            except:
+            except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                 pass
             try:
                 cp[2] = x["CL"]
-            except:
+            except (OSError, IOError) as e:
+                logging.error(f"Error reading BAM file: {e}")
+                continue
                 pass
 
             self.aligners.append(cp)

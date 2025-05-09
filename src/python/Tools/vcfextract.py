@@ -151,7 +151,8 @@ def vcfExtract(vcfname, features, filterfun=None):
                 elif f.lower().startswith("qual"):
                     try:
                         current.append(float(spl[5]))
-                    except:
+                    except (ValueError, TypeError) as e:
+                        logging.warning(f"Error parsing float value: {e}")
                         current.append(None)
                 elif f.lower().startswith("fil"):
                     if spl[6] == "PASS" or spl[6] == ".":
@@ -168,7 +169,11 @@ def vcfExtract(vcfname, features, filterfun=None):
                     current.append(val)
                 elif f.startswith("I."):
                     if curinfo is None:
-                        curinfo = getInfo(spl[7])
+                        try:
+                            curinfo = getInfo(spl[7])
+                        except Exception as e:
+                            logging.error(f"Error getting info: {e}")
+                            curinfo = {}
                     val = None
                     try:
                         ff, ii = feature_index[i]
@@ -184,23 +189,29 @@ def vcfExtract(vcfname, features, filterfun=None):
                     current.append(val)
                 elif f.startswith("S."):
                     ff, ii = feature_index[i]
-                    dx = ff.split(".", 3)
+                    dx = ff.split(".", maxsplit=3)
                     sample = int(dx[1])
                     field = dx[2]
 
                     val = None
                     try:
-                        if not sample in curformats:
-                            curformats[sample] = getFormats(spl[8], spl[8 + sample])
+                        if sample not in curformats:
+                            try:
+                                curformats[sample] = getFormats(spl[8], spl[8 + sample])
+                            except IndexError as e:
+                                logging.error(f"Error getting formats for sample {sample}: {e}")
+                                raise
                         val = curformats[sample][field]
 
                         if ii is not None:
-                            if ii < len(val):
+                            try:
                                 val = val[ii]
-                            else:
+                            except IndexError:
+                                logging.warning(f"Index {ii} out of range for value: {val}")
                                 val = None
-                    except:
-                        pass
+                    except (KeyError, IndexError) as e:
+                        logging.warning(f"Error accessing sample field {field} for sample {sample}: {e}")
+                        current.append(None)
                     current.append(val)
                 else:
                     current.append(f)
