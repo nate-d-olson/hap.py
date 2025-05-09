@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -23,13 +23,14 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
-import logging
-import traceback
-import tempfile
 import json
+import logging
+import os
+import sys
+import tempfile
+import traceback
+
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))

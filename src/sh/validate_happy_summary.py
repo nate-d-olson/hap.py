@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # get corresponding row(s) in hap.py summary
     h_rows = {"ALL": dict(), "PASS": dict()}
     for h in happy_summary:
-        if h["Type"] == vtype and h["Filter"] in h_rows.keys():
+        if h["Type"] == vtype and h["Filter"] in list(h_rows.keys()):
             if len(h_rows[h["Filter"]]) == 0:
                 h_rows[h["Filter"]] = h
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         ("fp", "QUERY.FP"),
         ("unk", "QUERY.UNK"),
     ]
-    for h_filter, h_row in h_rows.items():
+    for h_filter, h_row in list(h_rows.items()):
         logging.info("Filter=%s" % h_filter)
         for s_field, h_field in count_fields:
             outcomes.add(

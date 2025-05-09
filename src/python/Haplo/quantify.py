@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from __future__ import print_function, division, unicode_literals
+
 
 # coding=utf-8
 #
@@ -156,7 +156,7 @@ def run_quantify(
         run_str += f" -v {pipes.quote(write_vcf)}"
 
     if regions:
-        for k, v in regions.items():
+        for k, v in list(regions.items()):
             run_str += f" -R '{k}:{v}'"
 
     if roc_regions:

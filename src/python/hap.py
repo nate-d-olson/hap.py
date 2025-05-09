@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -311,7 +311,7 @@ def main():
         parser.print_help()
         exit(1)
 
-    print("Hap.py %s" % Tools.version)
+    print(f"Hap.py {Tools.version}")
     if args.version:
         exit(0)
 

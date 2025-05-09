@@ -2,7 +2,7 @@
 import re
 import sys
 
-GT_SPLITTER = re.compile(r"[\/\|]")  # split a genotype field by '/' or '|'
+GT_SPLITTER = re.compile(r"/|\\|")  # split a genotype field by '/' or '|'
 
 
 def fast_nonref_remover(input_stream, output_stream):
