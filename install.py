@@ -243,9 +243,20 @@ def test_haplotypes(source_dir, python_shebang, args):
         args.targetdir,
         os.path.join(source_dir, "src", "sh", "run_tests.sh"),
     )
-    print(to_run, file=sys.stderr)
+    print("\nExecuting test script: %s" % to_run, file=sys.stderr)
     os.environ["PYTHON"] = python_shebang[2:]
-    subprocess.check_call(to_run, shell=True)
+    
+    # Use subprocess.run instead of check_call to avoid stopping on error
+    # and get the return code
+    result = subprocess.run(to_run, shell=True)
+    
+    # Report final test status but don't abort installation
+    if result.returncode != 0:
+        print("\nOne or more tests failed. See test output for details.", file=sys.stderr)
+        if not args.ignore_test_failures:
+            sys.exit(result.returncode)
+    else:
+        print("\nAll tests passed successfully.", file=sys.stderr)
 
 
 def main():
@@ -384,6 +395,14 @@ def main():
         default=True,
         action="store_false",
         help="Disable unit tests",
+    )
+
+    parser.add_argument(
+        "--ignore-test-failures",
+        dest="ignore_test_failures",
+        default=False,
+        action="store_true",
+        help="Continue installation even if tests fail",
     )
 
     args = parser.parse_args()
