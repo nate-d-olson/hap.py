@@ -16,13 +16,13 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
 import logging
+import os
+import pipes
+import shutil
 import subprocess
 import tempfile
 import time
-import shutil
-import pipes
 
 import Haplo.version  # pylint: disable=E0611,E0401
 
@@ -113,13 +113,13 @@ def runVCFEval(vcf1, vcf2, target, args):
             elif stdout.strip() or stderr.strip():
                 logging.info(f"RTG output: \n{stdout}\n / \n{stderr}\n")
 
-        runme = f"{findVCFEval()} vcfeval -b {args.truth} -c {args.query} -t {args.ref[:-3]}.sdf -o {args.output} -T {args.threads} -m ga4gh --ref-overlap"
-            pipes.quote(args.engine_vcfeval),
-            pipes.quote(vcf1),
-            pipes.quote(vcf2),
-            pipes.quote(args.engine_vcfeval_template),
-            vtf.name,
-            args.threads,
+        # construct vcfeval command
+        runme = (
+            f"{findVCFEval()} vcfeval "
+            f"-b {pipes.quote(vcf1)} -c {pipes.quote(vcf2)} "
+            f"-t {pipes.quote(args.engine_vcfeval_template)} "
+            f"-o {pipes.quote(vtf.name)} "
+            f"-T {args.threads} -m ga4gh --ref-overlap"
         )
 
         if not args.pass_only:
