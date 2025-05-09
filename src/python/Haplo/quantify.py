@@ -19,11 +19,9 @@ from __future__ import print_function, division, unicode_literals
 import os
 import tempfile
 import subprocess
-import copy
 import json
 import logging
 import Tools
-import pipes
 
 from Tools.bcftools import runBcftools
 

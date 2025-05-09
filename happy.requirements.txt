@@ -5,5 +5,4 @@ psutil
 pip
 pysam>=0.15.0
 nose
-scipy
 https://bitbucket.org/pkrusche/bx-python/get/tip.tar.bz2

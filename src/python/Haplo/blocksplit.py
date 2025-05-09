@@ -21,7 +21,6 @@ import logging
 import subprocess
 import tempfile
 import time
-import pipes
 
 
 # Python 3 compatibility for file handling

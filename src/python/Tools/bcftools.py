@@ -13,7 +13,6 @@
 import gzip
 import logging
 import os
-import pipes
 import subprocess
 import tempfile
 

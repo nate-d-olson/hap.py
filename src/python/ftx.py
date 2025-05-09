@@ -27,9 +27,7 @@ import sys
 import os
 import argparse
 import logging
-import traceback
 import tempfile
-import shutil
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))

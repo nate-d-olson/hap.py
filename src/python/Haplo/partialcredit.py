@@ -23,7 +23,6 @@ import tempfile
 import time
 import itertools
 import multiprocessing
-import pipes
 
 from Tools.parallel import runParallel, getPool
 from Tools.bcftools import runBcftools, concatenateParts

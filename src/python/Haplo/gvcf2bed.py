@@ -16,11 +16,9 @@
 import os
 import tempfile
 import subprocess
-import copy
 import json
 import logging
 import Tools
-import pipes
 
 
 # Python 3 compatibility for file handling

@@ -18,7 +18,6 @@
 
 import os
 import logging
-import traceback
 import tempfile
 
 

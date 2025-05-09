@@ -13,7 +13,6 @@
 from math import log1p
 
 import numpy as np
-import scipy.stats as stats
 
 _VALUE_CACHE = {}
 

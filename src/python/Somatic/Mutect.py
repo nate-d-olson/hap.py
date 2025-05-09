@@ -17,7 +17,6 @@ Author: Peter Krusche <pkrusche@illumina.com>
 
 import pandas
 import logging
-import re
 
 from Tools.vcfextract import vcfExtract, extractHeadersJSON
 
