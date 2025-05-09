@@ -15,38 +15,52 @@ from Tools.vcfextract import vcfExtract, extractHeaders
 
 
 def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
-    """ Return a data frame with features collected from the given VCF, tagged by given type
+    """Return a data frame with features collected from the given VCF, tagged by given type
     :param vcfname: name of the VCF file
     :param tag: type of variants
     :param avg_depth: average chromosome depths from BAM file
     """
-    features = ["CHROM", "POS", "REF", "ALT", "FILTER",
-                "I.DP",
-                "I.EVS",
-                "S.1.GT",
-                "S.1.GQ",
-                "S.1.AD",
-                "S.1.DP",
-                "S.1.VF",
-                "S.1.NL",
-                "S.1.SB",
-                "S.1.NC",
-                "S.1.AQ",
-                "S.1.GQX"]
+    features = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "I.DP",
+        "I.EVS",
+        "S.1.GT",
+        "S.1.GQ",
+        "S.1.AD",
+        "S.1.DP",
+        "S.1.VF",
+        "S.1.NL",
+        "S.1.SB",
+        "S.1.NC",
+        "S.1.AQ",
+        "S.1.GQX",
+    ]
 
-    cols = ["CHROM", "POS", "REF", "ALT",
-            "FILTER", "GQX", "EVS",
-            "T_DP", "T_DP_RATE",
-            "T_AF",
-            "tag"]
+    cols = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "GQX",
+        "EVS",
+        "T_DP",
+        "T_DP_RATE",
+        "T_AF",
+        "tag",
+    ]
 
     vcfheaders = list(extractHeaders(vcfname))
 
     evs_featurenames = {}
     for l in vcfheaders:
-        if '##snv_scoring_features' in l:
+        if "##snv_scoring_features" in l:
             try:
-                xl = str(l).split('=', 1)
+                xl = str(l).split("=", 1)
                 xl = xl[1].split(",")
                 for i, n in enumerate(xl):
                     evs_featurenames[i] = n
@@ -64,9 +78,9 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
             x = str(l).lower()
             x = x.replace("##meandepth_", "##maxdepth_")
             x = x.replace("##depth_", "##maxdepth_")
-            if '##maxdepth_' in x:
+            if "##maxdepth_" in x:
                 p, _, l = l.partition("_")
-                xl = str(l).split('=')
+                xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
                 logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
@@ -135,7 +149,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
             "T_DP": t_DP,
             "T_DP_RATE": t_DP_ratio,
             "T_AF": t_VF,
-            "tag": tag
+            "tag": tag,
         }
 
         records.append(qrec)
@@ -149,7 +163,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
 
 
 def extractPiscesIndelFeatures(vcfname, tag, avg_depth=None):
-    """ Return a data frame with features collected from the given VCF, tagged by given type
+    """Return a data frame with features collected from the given VCF, tagged by given type
     :param vcfname: name of the VCF file
     :param tag: type of variants
     :param avg_depth: average chromosome depths from BAM file

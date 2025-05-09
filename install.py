@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -62,7 +62,7 @@ def create_python_environment(source_dir, args):
     if args.python_venv_dir_force:
         try:
             shutil.rmtree(args.python_venv_dir)
-        except:
+        except Exception as e:
             pass
 
     if os.path.exists(args.python_venv_dir) and not args.python_venv_dir_update:
@@ -79,7 +79,7 @@ def create_python_environment(source_dir, args):
         tempdir = tempfile.mkdtemp()
         try:
             # Download and extract virtualenv
-            virtualenv_url = "https://pypi.python.org/packages/source/v/virtualenv/virtualenv-12.0.7.tar.gz"
+            virtualenv_url = "https://files.pythonhosted.org/packages/source/v/virtualenv/virtualenv-20.24.5.tar.gz"
             subprocess.check_call("cd %s && curl -L %s | tar xzf -" % (tempdir, virtualenv_url), shell=True)
             virtualenv_dir = os.path.join(tempdir, "virtualenv-12.0.7")
             to_run = "%s %s/virtualenv.py -p %s %s" % (
@@ -247,8 +247,7 @@ def main():
                         help="Directory to install the virtualenv in.")
 
     parser.add_argument("--pip-fix-cert", dest="fix_cert", default=False, action="store_true",
-                        help="Download and use certificate file in case of Linux distributions"
-                             " which have an outdated certificate file which makes pip fail.")
+                        help="Download and use certificate file in case of Linux distributions which have an outdated certificate file which makes pip fail.")
 
     # C++ compile options
     setups = [os.path.basename(x).replace("-setup.sh", "")
@@ -278,9 +277,7 @@ def main():
                         help="Get and build rtgtools. You need to have Java and Ant for this.")
 
     parser.add_argument("--rtgtools-wrapper", dest="rtgtools_wrapper", default=None,
-                        help="Wrapper script for rtgtools. This is optional, it is useful "
-                             "when the default version of Java must be replaced / the environment "
-                             "needs updating. There is an example in src/sh/rtg-wrapper.sh.")
+                        help="Wrapper script for rtgtools. This is optional, it is useful when the default version of Java must be replaced / the environment needs updating. There is an example in src/sh/rtg-wrapper.sh.")
 
     parser.add_argument("--build-processes", dest="processes",
                         default=multiprocessing.cpu_count(), type=int,

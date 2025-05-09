@@ -31,17 +31,18 @@ import subprocess
 import tempfile
 
 
+
 # Python 3 compatibility for file handling
-def open_file(filename, mode='r'):
+def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
+    if "b" in mode:
         return open(filename, mode)
     else:
-        return open(filename, mode, encoding='utf-8')
+        return open(filename, mode, encoding="utf-8")
+
 
 def fastaContigLengths(fastafile):
-    """ Return contig lengths in a fasta file
-    """
+    """Return contig lengths in a fasta file"""
     if not os.path.exists(fastafile + ".fai"):
         raise Exception("Fasta file %s is not indexed" % fastafile)
 
@@ -56,8 +57,8 @@ def fastaContigLengths(fastafile):
 
 
 def fastaNonNContigLengths(fastafile):
-    """ Return contig lengths in a fasta file excluding
-        Ns in the beginning or end
+    """Return contig lengths in a fasta file excluding
+    Ns in the beginning or end
     """
     if not os.path.exists(fastafile + ".fai"):
         raise Exception("Fasta file %s is not indexed" % fastafile)
@@ -68,7 +69,10 @@ def fastaNonNContigLengths(fastafile):
     tf.close()
 
     try:
-        subprocess.check_call("fastainfo %s %s" % (pipes.quote(fastafile), pipes.quote(tf.name)), shell=True)
+        subprocess.check_call(
+            "fastainfo %s %s" % (pipes.quote(fastafile), pipes.quote(tf.name)),
+            shell=True,
+        )
         with open_file(tf.name) as f:
             fasta_info = json.load(f)
 
@@ -81,7 +85,7 @@ def fastaNonNContigLengths(fastafile):
 
 
 def calculateLength(fastacontiglengths, locations):
-    """ Calculate total length of contigs overlapping a set of locations """
+    """Calculate total length of contigs overlapping a set of locations"""
     if not locations:
         return sum([fastacontiglengths[x] for x in list(fastacontiglengths.keys())])
 
@@ -89,8 +93,10 @@ def calculateLength(fastacontiglengths, locations):
     for l in re.split("[ ,]", locations):
         contig, _, pos = l.partition(":")
         if contig not in fastacontiglengths:
-            logging.warn("Contig %s is not present in input set %s; setting length to 0" %
-                            (contig, str(fastacontiglengths)))
+            logging.warn(
+                "Contig %s is not present in input set %s; setting length to 0"
+                % (contig, str(fastacontiglengths))
+            )
             length = 0
             continue
 

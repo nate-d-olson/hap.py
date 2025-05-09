@@ -25,16 +25,18 @@ import tempfile
 from Tools.bcftools import runBcftools
 from Tools import LoggingWriter
 
+
 # Python 3 compatibility for file handling
-def open_file(filename, mode='r'):
+def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
+    if "b" in mode:
         return open(filename, mode)
     else:
-        return open(filename, mode, encoding='utf-8')
+        return open(filename, mode, encoding="utf-8")
+
 
 def runSCmp(vcf1, vcf2, target, args):
-    """ Runs scmp, which outputs a file quantify can produce counts on
+    """Runs scmp, which outputs a file quantify can produce counts on
     vcf1 and vcf2 must be indexed and only contain a single sample column.
     """
 
@@ -48,16 +50,23 @@ def runSCmp(vcf1, vcf2, target, args):
         tf.close()
         try:
             # change GTs so we can compare them
-            vargs = ["merge", "--force-samples", vcf1, vcf2,
-                     "-o", tf.name]
+            vargs = ["merge", "--force-samples", vcf1, vcf2, "-o", tf.name]
             runBcftools(*vargs)
-            vargs = ["view", tf.name,
-                     "|",
-                     "scmp",
-                     "-M", cmode,
-                     "-", "-r", args.ref,
-                     "--threads", str(args.threads),
-                     "-o", target]
+            vargs = [
+                "view",
+                tf.name,
+                "|",
+                "scmp",
+                "-M",
+                cmode,
+                "-",
+                "-r",
+                args.ref,
+                "--threads",
+                str(args.threads),
+                "-o",
+                target,
+            ]
             if args.roc:
                 vargs += ["--q", args.roc]
 
@@ -74,13 +83,13 @@ def runSCmp(vcf1, vcf2, target, args):
             return [target, target + ".csi"]
     except Exception as e:
         logging.error("Exception when running scmp: %s" % str(e))
-        logging.error('-'*60)
+        logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
-        logging.error('-'*60)
+        logging.error("-" * 60)
         raise
     except BaseException as e:
         logging.error("Exception when running scmp: %s" % str(e))
-        logging.error('-'*60)
+        logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
-        logging.error('-'*60)
+        logging.error("-" * 60)
         raise

@@ -19,16 +19,18 @@ import tempfile
 import time
 
 
+
 # Python 3 compatibility for file handling
-def open_file(filename, mode='r'):
+def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
+    if "b" in mode:
         return open(filename, mode)
     else:
-        return open(filename, mode, encoding='utf-8')
+        return open(filename, mode, encoding="utf-8")
+
 
 def field(val):
-    """ extract field into result, guess type """
+    """extract field into result, guess type"""
     if "," in val:
         val = list(map(field, val.split(",")))
     else:
@@ -84,7 +86,7 @@ def splitIndex(ffield):
 
 
 def vcfExtract(vcfname, features, filterfun=None):
-    """ Given a list of VCF features, get tab-separated list from VCF file
+    """Given a list of VCF features, get tab-separated list from VCF file
 
     :param vcfname: the vcf file name
     :param features: list of features to extract
@@ -210,7 +212,7 @@ def extractHeaders(vcfname):
 
 
 def extractHeadersJSON(vcfname):
-    """ Extract the VCF header and turn into JSON
+    """Extract the VCF header and turn into JSON
     :param vcfname: VCF file name
     :return: VCF header in JSON format
     """
@@ -219,18 +221,24 @@ def extractHeadersJSON(vcfname):
     vfh = {}
 
     try:
-        sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
-                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sp = subprocess.Popen(
+            "vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         o, e = sp.communicate()
-        
+
         # Handle bytes output in Python 3
         if isinstance(o, bytes):
-            o = o.decode('utf-8')
+            o = o.decode("utf-8")
         if isinstance(e, bytes):
-            e = e.decode('utf-8')
+            e = e.decode("utf-8")
 
         if sp.returncode != 0:
-            raise Exception("vcfhdr2json call failed on file %s: %s / %s" % (vcfname, o, e))
+            raise Exception(
+                "vcfhdr2json call failed on file %s: %s / %s" % (vcfname, o, e)
+            )
 
         with open_file(tf.name) as json_file:
             vfh = json.load(json_file)
@@ -251,4 +259,3 @@ def extractHeadersJSON(vcfname):
             pass
 
     return vfh
-

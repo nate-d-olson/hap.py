@@ -25,18 +25,19 @@ from . import LoggingWriter
 
 
 # Python 3 compatibility for file handling
-def open_file(filename, mode='r'):
+def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
+    if "b" in mode:
         return open(filename, mode)
     else:
-        return open(filename, mode, encoding='utf-8')
+        return open(filename, mode, encoding="utf-8")
+
 
 POOL = None
 
 
 def getPool(threads):
-    """ get / create pool """
+    """get / create pool"""
     global POOL
     if POOL:
         return POOL
@@ -48,7 +49,7 @@ def getPool(threads):
 
 
 def splitEvery(n, iterable):
-    """ split iterable into list blocks of size n """
+    """split iterable into list blocks of size n"""
     if n is None:
         yield list(iterable)
     else:
@@ -60,23 +61,24 @@ def splitEvery(n, iterable):
 
 
 def unpickleSequentially(plist):
-    """ Unpickle and concatenate sequentially """
+    """Unpickle and concatenate sequentially"""
     data = []
     while plist or data:
         if not data:
             fname = plist.pop(0)
-            with open(fname, 'rb') as f:  # Use binary mode for pickle
+            with open(fname, "rb") as f:  # Use binary mode for pickle
                 data = pickle.load(f)
             os.unlink(fname)
         if data:
             yield data.pop(0)
+
 
 def parMapper(arg):
     try:
         # garbage collect so we can reuse memory
         # when running on very large inputs
         gc.collect()
-        return arg[1]['fun'](arg[0], *arg[1]['args'], **arg[1]['kwargs'])
+        return arg[1]["fun"](arg[0], *arg[1]["args"], **arg[1]["kwargs"])
     except Exception as e:
         logging.error("Exception when running %s:" % str(arg[1]['fun']))
         logging.error('-'*60)
@@ -93,7 +95,7 @@ def parMapper(arg):
 
 
 def runParallel(pool, fun, par, *args, **kwargs):
-    """ run a function in parallel on all elements in par
+    """run a function in parallel on all elements in par
 
     :param pool: multiprocessing.Pool or None
     :param fun: a function
@@ -103,9 +105,12 @@ def runParallel(pool, fun, par, *args, **kwargs):
 
     """
     if pool:
-        result = pool.map(parMapper, list(zip(par, repeat( { "fun": fun, "args": args, "kwargs": kwargs } ))))
+        result = pool.map(
+            parMapper,
+            list(zip(par, repeat({"fun": fun, "args": args, "kwargs": kwargs}))),
+        )
     else:
         result = []
         for c in par:
-            result.append(parMapper( (c, { "fun": fun, "args": args, "kwargs": kwargs } ) ))
+            result.append(parMapper((c, {"fun": fun, "args": args, "kwargs": kwargs})))
     return result

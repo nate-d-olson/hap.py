@@ -19,7 +19,7 @@ import Tools
 
 
 # Python 3 compatibility for file handling
-def open_file(filename, mode='r'):
+def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
     try:
         if 'b' in mode:
@@ -33,7 +33,7 @@ def open_file(filename, mode='r'):
         raise
 
 def dataframeToMetricsTable(table_id, df):
-    """ Convert a pandas dataframe to a PUMA metrics table
+    """Convert a pandas dataframe to a PUMA metrics table
 
     This is how a metrics table looks like:
 
@@ -54,10 +54,20 @@ def dataframeToMetricsTable(table_id, df):
     :return: a dictionary in metrics table format
     :rtype: dict
     """
-    mdict = {"id": table_id, "label": table_id, "type": "Table", "data": [], "properties": []}
+    mdict = {
+        "id": table_id,
+        "label": table_id,
+        "type": "Table",
+        "data": [],
+        "properties": [],
+    }
 
-
-    ldict = {'id': 'types', "label": 'types', "type": "string", "values": list(df.index.values)}
+    ldict = {
+        "id": "types",
+        "label": "types",
+        "type": "string",
+        "values": list(df.index.values),
+    }
     mdict["data"].append(ldict)
     for header in list(df):
         c = str(df[header].dtype)
@@ -70,14 +80,19 @@ def dataframeToMetricsTable(table_id, df):
             ccast = float
         else:
             coltype = "string"
-        ldict = {'id': header, "label": header, "type": coltype, "values": list(map(ccast, df[header].values))}
+        ldict = {
+            "id": header,
+            "label": header,
+            "type": coltype,
+            "values": list(map(ccast, df[header].values)),
+        }
         mdict["data"].append(ldict)
 
     return replaceNaNs(mdict)
 
 
 def makeMetricsObject(name):
-    """ Create PUMA metrics dictionary
+    """Create PUMA metrics dictionary
 
     This is how they look like
      {
@@ -99,28 +114,30 @@ def makeMetricsObject(name):
 
     version = "%s" % Tools.version
 
-    mdict = {'name': name,
-             'timestamp': time.strftime("%a %b %d %X %Y"),
-             'version': version,
-             'runInfo': [{"key": "commandline", "value": " ".join(sys.argv)}],
-             'metadata': {
-                 "required": {
-                     "id": "haplotypes",
-                     'version': version,
-                     "module": "%s" % os.path.basename(sys.argv[0]),
-                     "description": "%s generated this JSON file via command line %s" % (
-                         sys.argv[0], " ".join(sys.argv))
-                 }
-             },
-             'sampleInfo': [],
-             'parameters': [],
-             'metrics': []}
+    mdict = {
+        "name": name,
+        "timestamp": time.strftime("%a %b %d %X %Y"),
+        "version": version,
+        "runInfo": [{"key": "commandline", "value": " ".join(sys.argv)}],
+        "metadata": {
+            "required": {
+                "id": "haplotypes",
+                "version": version,
+                "module": "%s" % os.path.basename(sys.argv[0]),
+                "description": "%s generated this JSON file via command line %s"
+                % (sys.argv[0], " ".join(sys.argv)),
+            }
+        },
+        "sampleInfo": [],
+        "parameters": [],
+        "metrics": [],
+    }
 
     return mdict
 
 
 def replaceNaNs(xobject):
-    """ Replace all NaNs in the given object with string values
+    """Replace all NaNs in the given object with string values
     :param xobject: a dictionary
     :return: object, fixed
     """

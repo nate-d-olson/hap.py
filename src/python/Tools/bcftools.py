@@ -24,28 +24,35 @@ scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
 def runShellCommand(*args):
-    """ Run a shell command (e.g. bcf tools), and return output
-    """
+    """Run a shell command (e.g. bcf tools), and return output"""
     cmdstr = " ".join(args)
     logging.info("CMD: %s" % cmdstr)
 
-    pipe = subprocess.Popen(cmdstr, shell=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pipe = subprocess.Popen(
+        cmdstr, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     stdout, stderr = pipe.communicate()
 
     # decode bytes to string in Python 3
     if isinstance(stdout, bytes):
-        stdout = stdout.decode('utf-8')
+        stdout = stdout.decode("utf-8")
     if isinstance(stderr, bytes):
-        stderr = stderr.decode('utf-8')
+        stderr = stderr.decode("utf-8")
 
     if pipe.returncode != 0:
-        logging.error("Return code: %i from command: %s \nStdErr: %s" %
-                     (pipe.returncode, cmdstr, stderr))
+        logging.error(
+            "Return code: %i from command: %s \nStdErr: %s"
+            % (pipe.returncode, cmdstr, stderr)
+        )
         raise Exception("Cannot run command %s" % cmdstr)
 
     for l in stderr.split("\n"):
-        if l and l.strip() and not l.startswith("bcftools::") and not l.startswith("Lines"):
+        if (
+            l
+            and l.strip()
+            and not l.startswith("bcftools::")
+            and not l.startswith("Lines")
+        ):
             logging.warning(l)
 
     return stdout
@@ -56,7 +63,7 @@ def runBcftools(*args):
 
 
 def parseStats(output, colname="count"):
-    """ Parse BCFTOOLS Stats Output """
+    """Parse BCFTOOLS Stats Output"""
 
     result = {}
     for x in output.split("\n"):
@@ -71,7 +78,7 @@ def parseStats(output, colname="count"):
 
 
 def countVCFRows(filename):
-    """ Count the number of rows in a VCF
+    """Count the number of rows in a VCF
     :param filename: VCF file name
     :return: number of rows
     """
@@ -138,18 +145,24 @@ def concatenateParts(output, *args):
 
 
 # noinspection PyShadowingBuiltins
-def preprocessVCF(input_filename, output_filename, location="",
-                  pass_only=True,
-                  chrprefix=True, norm=False,
-                  regions=None, targets=None,
-                  reference="fake_reference_path",
-                  filters_only=None,
-                  somatic_allele_conversion=False,
-                  sample="SAMPLE",
-                  filter_nonref=True,
-                  convert_gvcf=False,
-                  num_threads=4):
-    """ Preprocess a VCF file with bcftools.
+def preprocessVCF(
+    input_filename,
+    output_filename,
+    location="",
+    pass_only=True,
+    chrprefix=True,
+    norm=False,
+    regions=None,
+    targets=None,
+    reference="fake_reference_path",
+    filters_only=None,
+    somatic_allele_conversion=False,
+    sample="SAMPLE",
+    filter_nonref=True,
+    convert_gvcf=False,
+    num_threads=4,
+):
+    """Preprocess a VCF file with bcftools.
 
     :param input_filename: name of the input file
     :param output_filename: name of output file
@@ -303,7 +316,7 @@ def preprocessVCF(input_filename, output_filename, location="",
 
 
 def bedOverlapCheck(filename):
-    """ Check for overlaps / out of order in a bed file """
+    """Check for overlaps / out of order in a bed file"""
     if filename.endswith(".gz"):
         with gzip.open(filename, "rt") as f:  # Use text mode with 'rt'
             last = -1
@@ -316,8 +329,11 @@ def bedOverlapCheck(filename):
                 if thischr is not None and thischr != l[0]:
                     last = -1
                 thischr = l[0]
-                if (last-1) > int(l[1]):
-                    logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
+                if (last - 1) > int(l[1]):
+                    logging.warn(
+                        "%s has overlapping regions at %s:%i (line %i)"
+                        % (filename, l[0], int(l[1]), lines)
+                    )
                     return 1
                 last = int(l[2])
                 lines += 1
@@ -334,8 +350,11 @@ def bedOverlapCheck(filename):
                 if thischr is not None and thischr != l[0]:
                     last = -1
                 thischr = l[0]
-                if (last-1) > int(l[1]):
-                    logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
+                if (last - 1) > int(l[1]):
+                    logging.warn(
+                        "%s has overlapping regions at %s:%i (line %i)"
+                        % (filename, l[0], int(l[1]), lines)
+                    )
                     return 1
                 last = int(l[2])
                 lines += 1

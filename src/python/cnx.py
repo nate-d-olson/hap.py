@@ -31,7 +31,7 @@ import sys
 import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
 import Tools
 from Tools.vcfcallerinfo import CallerInfo
@@ -43,11 +43,21 @@ def main():
 
     parser.add_argument("input", help="Input VCF file")
 
-    parser.add_argument("-o", "--output", dest="output", required=True,
-                        help="Output file name (json format)")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        required=True,
+        help="Output file name (json format)",
+    )
 
-    parser.add_argument("-b", "--bam", dest="bam", default=None,
-                        help="pass a BAM file for aligner name/version extraction")
+    parser.add_argument(
+        "-b",
+        "--bam",
+        dest="bam",
+        default=None,
+        help="pass a BAM file for aligner name/version extraction",
+    )
 
     args = parser.parse_args()
 
@@ -72,6 +82,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"{e}")
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)
