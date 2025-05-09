@@ -14,9 +14,7 @@ RUN apt-get update && \
         libncurses5-dev \
         openjdk-8-jdk \
         pkg-config \                    
-        python \
-        python2.7 \
-        python2.7-dev \                    
+        python \                  
         python-setuptools \
         python-pip \
         python-psutil \                    
