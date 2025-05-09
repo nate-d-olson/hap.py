@@ -19,7 +19,6 @@ import tempfile
 import time
 
 
-
 # Python 3 compatibility for file handling
 def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
@@ -94,7 +93,11 @@ def vcfExtract(vcfname, features, filterfun=None):
 
     """
 
-    with (gzip.open(vcfname, 'rt', encoding='utf-8') if vcfname.endswith(".gz") else open_file(vcfname)) as ff:
+    with (
+        gzip.open(vcfname, "rt", encoding="utf-8")
+        if vcfname.endswith(".gz")
+        else open_file(vcfname)
+    ) as ff:
         feature_index = [splitIndex(f) for f in features]
 
         start = time.time()
@@ -113,13 +116,16 @@ def vcfExtract(vcfname, features, filterfun=None):
 
             if lstart - last_time > 10:
                 last_time = lstart
-                total = lstart-start
+                total = lstart - start
                 # noinspection PyBroadException
                 try:
-                    tpr = 1000000.0*total/float(nrecords)
+                    tpr = 1000000.0 * total / float(nrecords)
                 except:
                     tpr = -1
-                logging.info("Since start: %i records %.2f seconds, %.2f us/record." % (nrecords, total, tpr))
+                logging.info(
+                    "Since start: %i records %.2f seconds, %.2f us/record."
+                    % (nrecords, total, tpr)
+                )
 
             spl = line.split("\t")
             current = []
@@ -185,7 +191,7 @@ def vcfExtract(vcfname, features, filterfun=None):
                     val = None
                     try:
                         if not sample in curformats:
-                            curformats[sample] = getFormats(spl[8], spl[8+sample])
+                            curformats[sample] = getFormats(spl[8], spl[8 + sample])
                         val = curformats[sample][field]
 
                         if ii is not None:
@@ -202,8 +208,12 @@ def vcfExtract(vcfname, features, filterfun=None):
 
 
 def extractHeaders(vcfname):
-    """ Read the header lines from a VCF file """
-    with (gzip.open(vcfname, 'rt', encoding='utf-8') if vcfname.endswith(".gz") else open_file(vcfname)) as ff:
+    """Read the header lines from a VCF file"""
+    with (
+        gzip.open(vcfname, "rt", encoding="utf-8")
+        if vcfname.endswith(".gz")
+        else open_file(vcfname)
+    ) as ff:
         for l in ff:
             if l.startswith("#"):
                 yield l.replace("\n", "")

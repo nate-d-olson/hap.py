@@ -10,13 +10,15 @@ def csvread(filename):
     f = open(filename)
     freader = csv.DictReader(f)
     data = {}
-    label_columns = ["Type", 
-                     "Subtype", 
-                     "Subset",
-                     "Filter", 
-                     "Genotype",
-                     "QQ.Field",
-                     "QQ"]
+    label_columns = [
+        "Type",
+        "Subtype",
+        "Subset",
+        "Filter",
+        "Genotype",
+        "QQ.Field",
+        "QQ",
+    ]
 
     for l in freader:
         record = dict(l)
@@ -65,29 +67,33 @@ def main():
             print("Only comparing common fields.", file=sys.stderr)
 
         for field in list(r1_keys.intersection(r2_keys)):
-            if field in ["Type", "Subtype", "Subset", "Filter", "Genotype", "QQ.Field", "QQ"]:
+            if field in [
+                "Type",
+                "Subtype",
+                "Subset",
+                "Filter",
+                "Genotype",
+                "QQ.Field",
+                "QQ",
+            ]:
                 if data1[key][field] != data2[key][field]:
-                    different_metrics.append((key,
-                                              field,
-                                              str(data1[key][field]),
-                                              str(data2[key][field])))
+                    different_metrics.append(
+                        (key, field, str(data1[key][field]), str(data2[key][field]))
+                    )
             else:
                 try:
                     a = float(data1[key][field])
                     b = float(data2[key][field])
 
                     if ("%.3g" % a) != ("%.3g" % b):
-                        different_metrics.append((key,
-                                                  field,
-                                                  ("%.3g" % a),
-                                                  ("%.3g" % b),
-                                                  b - a))
+                        different_metrics.append(
+                            (key, field, ("%.3g" % a), ("%.3g" % b), b - a)
+                        )
                 except:
                     if str(data1[key][field]) != str(data2[key][field]):
-                        different_metrics.append((key,
-                                                  field,
-                                                  str(data1[key][field]),
-                                                  str(data2[key][field])))
+                        different_metrics.append(
+                            (key, field, str(data1[key][field]), str(data2[key][field]))
+                        )
 
     if different_metrics:
         print("ERROR -- Metric differences detected:", file=sys.stderr)
@@ -101,5 +107,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

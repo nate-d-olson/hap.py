@@ -80,17 +80,17 @@ def parMapper(arg):
         gc.collect()
         return arg[1]["fun"](arg[0], *arg[1]["args"], **arg[1]["kwargs"])
     except Exception as e:
-        logging.error("Exception when running %s:" % str(arg[1]['fun']))
-        logging.error('-'*60)
+        logging.error("Exception when running %s:" % str(arg[1]["fun"]))
+        logging.error("-" * 60)
         with LoggingWriter(logging.ERROR) as lw:
             traceback.print_exc(file=lw)
-        logging.error('-'*60)
+        logging.error("-" * 60)
     except BaseException as e:
-        logging.error("Exception when running %s:" % str(arg[1]['fun']))
-        logging.error('-'*60)
+        logging.error("Exception when running %s:" % str(arg[1]["fun"]))
+        logging.error("-" * 60)
         with LoggingWriter(logging.ERROR) as lw:
             traceback.print_exc(file=lw)
-        logging.error('-'*60)
+        logging.error("-" * 60)
     return None
 
 

@@ -52,8 +52,12 @@ class CallerInfo(object):
 
         vfh = {}
         try:
-            sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf_name),
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            sp = subprocess.Popen(
+                "vcfhdr2json '%s' '%s'" % (vcfname, tf_name),
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             o, e = sp.communicate()
 
             if sp.returncode != 0:

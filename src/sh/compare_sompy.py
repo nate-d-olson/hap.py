@@ -15,13 +15,13 @@ from pathlib import Path
 def csvread(filename):
     """
     Read CSV file and return data as dictionary
-    
+
     Args:
         filename (str): Path to CSV file
-        
+
     Returns:
         dict: Dictionary containing CSV data
-        
+
     Raises:
         FileNotFoundError: If file does not exist
         ValueError: If data cannot be parsed
@@ -29,30 +29,30 @@ def csvread(filename):
     try:
         # Use pandas for better CSV handling
         df = pd.read_csv(filename)
-        
+
         # Validate required columns
-        required_columns = ['label', 'metric']
+        required_columns = ["label", "metric"]
         if not all(col in df.columns for col in required_columns):
             raise ValueError(f"Missing required columns in {filename}")
-            
+
         # Convert to dictionary structure
         data = {}
         for _, row in df.iterrows():
-            metric = row['metric']
-            label = row['label']
-            value = row.get('value', None)
-            
+            metric = row["metric"]
+            label = row["label"]
+            value = row.get("value", None)
+
             if metric not in data:
                 data[metric] = {}
-                
+
             try:
                 # Try to convert to float if possible
                 data[metric][label] = float(value) if value is not None else value
             except (ValueError, TypeError):
                 data[metric][label] = str(value) if value is not None else None
-                
+
         return data
-        
+
     except pd.errors.EmptyDataError:
         raise ValueError(f"Empty file: {filename}")
     except pd.errors.ParserError as e:
@@ -64,54 +64,71 @@ def csvread(filename):
 def main():
     """
     Main function to compare two CSV files
-    
+
     Raises:
         ValueError: If input files are invalid
         Exception: If comparison fails
     """
     if len(sys.argv) != 3:
         raise ValueError("Usage: python compare_sompy.py file1.csv file2.csv")
-        
+
     file1 = Path(sys.argv[1])
     file2 = Path(sys.argv[2])
-    
+
     if not file1.exists() or not file2.exists():
         raise ValueError("One or both input files do not exist")
-        
+
     try:
         data1 = csvread(str(file1))
         data2 = csvread(str(file2))
-        
+
         # Define metrics to compare
         metrics = [
-            'fp', 'ambiguous', 'recall', 'recall_lower', 'recall_upper', 'precision',
-            'precision_lower', 'precision_upper', 'tp', 'total.query', 'ambi', 'na',
-            'recall2', 'unk', 'total.truth', 'fn', 'fp.region.size', 'fp.rate'
+            "fp",
+            "ambiguous",
+            "recall",
+            "recall_lower",
+            "recall_upper",
+            "precision",
+            "precision_lower",
+            "precision_upper",
+            "tp",
+            "total.query",
+            "ambi",
+            "na",
+            "recall2",
+            "unk",
+            "total.truth",
+            "fn",
+            "fp.region.size",
+            "fp.rate",
         ]
-        
+
         # Create pandas DataFrame for comparison
-        comparison_df = pd.DataFrame(columns=['metric', 'field', 'file1_value', 'file2_value', 'status'])
-        
+        comparison_df = pd.DataFrame(
+            columns=["metric", "field", "file1_value", "file2_value", "status"]
+        )
+
         for metric in metrics:
             if metric not in data1 or metric not in data2:
                 raise ValueError(f"Metric {metric} missing in one of the files")
-                
+
             if len(data1[metric]) == 0 or len(data2[metric]) == 0:
                 raise ValueError(f"No data for metric {metric}")
-                
+
             for field in data1[metric].keys():
                 if field == "no-ALTs":
                     continue
-                    
+
                 try:
                     val1 = data1[metric][field]
                     val2 = data2[metric][field]
-                    
+
                     # Convert to float for comparison
                     try:
                         float_val1 = float(val1)
                         float_val2 = float(val2)
-                        
+
                         # Check if values are close enough (considering floating point precision)
                         if not pd.isna(float_val1) and not pd.isna(float_val2):
                             if abs(float_val1 - float_val2) > 1e-6:
@@ -124,34 +141,36 @@ def main():
                             status = "ERROR"
                         else:
                             status = "ok"
-                    
+
                     # Add to comparison DataFrame
-                    comparison_df = comparison_df.append({
-                        'metric': metric,
-                        'field': field,
-                        'file1_value': val1,
-                        'file2_value': val2,
-                        'status': status
-                    }, ignore_index=True)
-                    
+                    comparison_df = comparison_df.append(
+                        {
+                            "metric": metric,
+                            "field": field,
+                            "file1_value": val1,
+                            "file2_value": val2,
+                            "status": status,
+                        },
+                        ignore_index=True,
+                    )
+
                     # Print result
                     if status == "ok":
                         print(f"{metric} / {field}... ok ({val2:.3f})")
                     else:
                         print(f"{metric} / {field}... ERROR ({val1} / {val2})")
-                        
+
                 except Exception as e:
                     print(f"{metric} / {field}... ERROR (comparison failed: {str(e)})")
                     raise
-        
+
         # Save comparison results to CSV
-        comparison_df.to_csv('comparison_results.csv', index=False)
-        
+        comparison_df.to_csv("comparison_results.csv", index=False)
+
     except Exception as e:
         print(f"Error during comparison: {str(e)}", file=sys.stderr)
         raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

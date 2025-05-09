@@ -8,6 +8,7 @@ import numpy as np
 
 eps = 1e-6
 
+
 def csvread(filename):
     f = pd.read_csv(filename, na_values="")
     return f
@@ -26,7 +27,11 @@ def main():
         r2 = data2.iloc[i]
 
         # use exact string lookup & ignore NaN columns
-        if r1["CHROM"] == r2["CHROM"] and r1["POS"] == r2["POS"] and r1["tag"] == r2["tag"]:
+        if (
+            r1["CHROM"] == r2["CHROM"]
+            and r1["POS"] == r2["POS"]
+            and r1["tag"] == r2["tag"]
+        ):
             match += 1
         else:
             print("ERROR at %i:" % i)
@@ -55,7 +60,10 @@ def main():
                     if np.isnan(r1[f]) and np.isnan(r2[f]):
                         match += 1
                     elif np.isnan(r1[f]) or np.isnan(r2[f]):
-                        print("Value mismatch for %s: %s != %s" % (f, str(r1[f]), str(r2[f])))
+                        print(
+                            "Value mismatch for %s: %s != %s"
+                            % (f, str(r1[f]), str(r2[f]))
+                        )
                     elif abs(r1[f] - r2[f]) < eps:
                         match += 1
                     else:
@@ -63,7 +71,10 @@ def main():
                         failed += 1
 
         if failed > 0:
-            raise Exception("Values in tables don't match (%i failures out of %i comparisons)" % (failed, match + failed))
+            raise Exception(
+                "Values in tables don't match (%i failures out of %i comparisons)"
+                % (failed, match + failed)
+            )
         passed_columns = True
         print("All values match (%i comparisons)" % match)
     finally:
@@ -71,5 +82,5 @@ def main():
             raise Exception("Columns don't match")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

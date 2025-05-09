@@ -7,21 +7,22 @@ import argparse
 import csv
 import pprint as pp
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
+)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sompy-stats',
-                        help='Path to som.py stats.csv file')
-    parser.add_argument('--happy-summary',
-                        help='Path to hap.py summary.csv file')
-    parser.add_argument('--tolerance',
-                        help='Tolerance (def 0.001)',
-                        type=float,
-                        default=0.001)
+    parser.add_argument("--sompy-stats", help="Path to som.py stats.csv file")
+    parser.add_argument("--happy-summary", help="Path to hap.py summary.csv file")
+    parser.add_argument(
+        "--tolerance", help="Tolerance (def 0.001)", type=float, default=0.001
+    )
     args = parser.parse_args()
     return args
+
 
 def eval_equal(metric_name, count_a, count_b, tol=0.001):
     try:
@@ -31,16 +32,20 @@ def eval_equal(metric_name, count_a, count_b, tol=0.001):
         try:
             count_a = float(count_a)
             count_b = float(count_b)
-            if abs(count_a-count_b) < tol:
+            if abs(count_a - count_b) < tol:
                 return True
-            logging.info("%s: abs(%s-%s)=%s (FAIL)" % (metric_name, count_a, count_b, abs(count_a-count_b)))
+            logging.info(
+                "%s: abs(%s-%s)=%s (FAIL)"
+                % (metric_name, count_a, count_b, abs(count_a - count_b))
+            )
             return False
         except ValueError:
             pass
     # Test equality
     return count_a == count_b
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_args()
     sompy_stats = csv.DictReader(open(args.sompy_stats))
     happy_summary = csv.DictReader(open(args.happy_summary))
@@ -59,7 +64,7 @@ if __name__ == '__main__':
     logging.info("Comparing %s counts..." % vtype)
 
     # get corresponding row(s) in hap.py summary
-    h_rows = {'ALL': dict(), 'PASS': dict()}
+    h_rows = {"ALL": dict(), "PASS": dict()}
     for h in happy_summary:
         if h["Type"] == vtype and h["Filter"] in h_rows.keys():
             if len(h_rows[h["Filter"]]) == 0:
@@ -77,9 +82,18 @@ if __name__ == '__main__':
     for h_filter, h_row in h_rows.items():
         logging.info("Filter=%s" % h_filter)
         for s_field, h_field in count_fields:
-            outcomes.add(eval_equal("%s: %s" % (vtype, s_field), s[s_field], h_row[h_field], tol=args.tolerance))
+            outcomes.add(
+                eval_equal(
+                    "%s: %s" % (vtype, s_field),
+                    s[s_field],
+                    h_row[h_field],
+                    tol=args.tolerance,
+                )
+            )
 
-    logging.info("%s tests (%s failures)" % (len(outcomes), len([x for x in outcomes if not x])))
+    logging.info(
+        "%s tests (%s failures)" % (len(outcomes), len([x for x in outcomes if not x]))
+    )
 
     if False in outcomes:
         sys.exit(1)

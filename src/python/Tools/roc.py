@@ -47,7 +47,9 @@ def tableROC(
     :returns: a pandas.DataFrame with TP/FP/FN/precision/recall columns.
     """
 
-    with tempfile.NamedTemporaryFile(delete=False) as tf1, tempfile.NamedTemporaryFile(delete=False) as tf2:
+    with tempfile.NamedTemporaryFile(delete=False) as tf1, tempfile.NamedTemporaryFile(
+        delete=False
+    ) as tf2:
         try:
             fields = [feature_column, label_column]
             if filter_column:
@@ -66,18 +68,20 @@ def tableROC(
 
             logging.info("Running %s" % cmdline)
 
-            process = subprocess.Popen(cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process = subprocess.Popen(
+                cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             stdout, stderr = process.communicate()
-            
+
             # Handle bytes output in Python 3
             if isinstance(stdout, bytes):
-                stdout = stdout.decode('utf-8')
+                stdout = stdout.decode("utf-8")
             if isinstance(stderr, bytes):
-                stderr = stderr.decode('utf-8')
-                
+                stderr = stderr.decode("utf-8")
+
             if process.returncode != 0:
                 raise Exception(f"ROC command failed: {stderr}")
-                
+
             try:
                 result = pandas.read_table(tf1.name)
             except:

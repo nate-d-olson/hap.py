@@ -33,9 +33,7 @@ def _locations_tmp_bed_file(locations):
     if type(locations) is str:
         locations = locations.split(",")
     if type(locations) is not list:
-        raise Exception(
-            f"Invalid list of locations (must be str or list): {locations}"
-        )
+        raise Exception(f"Invalid list of locations (must be str or list): {locations}")
 
     llocations = []
 

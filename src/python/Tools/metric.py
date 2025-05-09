@@ -22,15 +22,16 @@ import Tools
 def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""
     try:
-        if 'b' in mode:
+        if "b" in mode:
             with open(filename, mode) as file:
                 return file
         else:
-            with open(filename, mode, encoding='utf-8') as file:
+            with open(filename, mode, encoding="utf-8") as file:
                 return file
     except IOError as e:
         print(f"Error opening file {filename}: {e}")
         raise
+
 
 def dataframeToMetricsTable(table_id, df):
     """Convert a pandas dataframe to a PUMA metrics table

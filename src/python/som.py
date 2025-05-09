@@ -34,7 +34,7 @@ import traceback
 import numpy as np
 import pandas
 
-np.seterr(all='ignore')
+np.seterr(all="ignore")
 import gzip
 import json
 from collections import Counter
@@ -51,7 +51,6 @@ from Tools.ci import binomialCI
 from Tools.fastasize import calculateLength, fastaContigLengths
 from Tools.metric import dataframeToMetricsTable, makeMetricsObject
 from Tools.roc import ROC
-
 
 
 # Python 3 compatibility for file handling
@@ -877,7 +876,7 @@ def main():
         # split VCF into FP, UNK and AMBI
         with gzip.open(rununiquepath, "rb") as toProcess:
             for entry in toProcess:
-                if entry[0] == '#':
+                if entry[0] == "#":
                     continue
 
                 fields = entry.strip().split("\t")

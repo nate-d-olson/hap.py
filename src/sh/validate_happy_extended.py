@@ -8,21 +8,22 @@ import csv
 import pprint as pp
 import re
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
+)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--sompy-stats',
-                        help='Path to som.py stats.csv file')
-    parser.add_argument('--happy-extended',
-                        help='Path to hap.py extended.csv file')
-    parser.add_argument('--tolerance',
-                        help='Tolerance (def 0.001)',
-                        type=float,
-                        default=0.001)
+    parser.add_argument("--sompy-stats", help="Path to som.py stats.csv file")
+    parser.add_argument("--happy-extended", help="Path to hap.py extended.csv file")
+    parser.add_argument(
+        "--tolerance", help="Tolerance (def 0.001)", type=float, default=0.001
+    )
     args = parser.parse_args()
     return args
+
 
 def eval_equal(metric_name, count_a, count_b, tol=0.001):
     try:
@@ -32,14 +33,18 @@ def eval_equal(metric_name, count_a, count_b, tol=0.001):
         try:
             count_a = float(count_a)
             count_b = float(count_b)
-            if abs(count_a-count_b) < tol:
+            if abs(count_a - count_b) < tol:
                 return True
-            logging.info("%s: abs(%s-%s)=%s (FAIL)" % (metric_name, count_a, count_b, abs(count_a-count_b)))
+            logging.info(
+                "%s: abs(%s-%s)=%s (FAIL)"
+                % (metric_name, count_a, count_b, abs(count_a - count_b))
+            )
             return False
         except ValueError:
             pass
     # Test equality
     return count_a == count_b
+
 
 def parse_sompy_stats(path):
     sompy_stats = csv.DictReader(open(path))
@@ -51,7 +56,11 @@ def parse_sompy_stats(path):
             m = re.findall("indels.(\d+\.\d+)-(\d+\.\d+)", subset)[0]
             af_low = m[0][:4]
             af_high = m[1][:4]
-            af_bin = "[%s,%s]" % (af_low, af_high) if af_low == "1.00" else "[%s,%s)" % (af_low, af_high)
+            af_bin = (
+                "[%s,%s]" % (af_low, af_high)
+                if af_low == "1.00"
+                else "[%s,%s)" % (af_low, af_high)
+            )
             result["INDEL." + af_bin] = s
 
         if re.match("SNVs.", subset):
@@ -59,12 +68,17 @@ def parse_sompy_stats(path):
             m = re.findall("SNVs.(\d+\.\d+)-(\d+\.\d+)", subset)[0]
             af_low = m[0][:4]
             af_high = m[1][:4]
-            af_bin = "[%s,%s]" % (af_low, af_high) if af_low == "1.00" else "[%s,%s)" % (af_low, af_high)
+            af_bin = (
+                "[%s,%s]" % (af_low, af_high)
+                if af_low == "1.00"
+                else "[%s,%s)" % (af_low, af_high)
+            )
             result["SNP." + af_bin] = s
 
     return result
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_args()
 
     sompy_stats = parse_sompy_stats(path=args.sompy_stats)
@@ -76,7 +90,14 @@ if __name__ == '__main__':
         try:
             s = sompy_stats[k]
         except KeyError:
-            s = {"total.truth": 0, "tp": 0, "fn": 0, "total.query": 0, "fp": 0, "unk": 0}
+            s = {
+                "total.truth": 0,
+                "tp": 0,
+                "fn": 0,
+                "total.query": 0,
+                "fp": 0,
+                "unk": 0,
+            }
 
         count_fields = [
             ("total.truth", "TRUTH.TOTAL"),
@@ -89,14 +110,34 @@ if __name__ == '__main__':
 
         if h["Filter"] == "ALL" and "ALL" not in k:
             for s_field, h_field in count_fields:
-                outcomes["ALL"].add(eval_equal("%s: %s" % (k, s_field), s[s_field], h[h_field], tol=args.tolerance))
+                outcomes["ALL"].add(
+                    eval_equal(
+                        "%s: %s" % (k, s_field),
+                        s[s_field],
+                        h[h_field],
+                        tol=args.tolerance,
+                    )
+                )
 
         if h["Filter"] == "PASS" and "ALL" not in k:
             for s_field, h_field in count_fields:
-                outcomes["PASS"].add(eval_equal("%s: %s" % (k, s_field), s[s_field], h[h_field], tol=args.tolerance))
+                outcomes["PASS"].add(
+                    eval_equal(
+                        "%s: %s" % (k, s_field),
+                        s[s_field],
+                        h[h_field],
+                        tol=args.tolerance,
+                    )
+                )
 
-    logging.info("ALL: %s tests (%s failures)" % (len(outcomes["ALL"]), len([x for x in outcomes["ALL"] if not x])))
-    logging.info("PASS: %s tests (%s failures)" % (len(outcomes["PASS"]), len([x for x in outcomes["PASS"] if not x])))
+    logging.info(
+        "ALL: %s tests (%s failures)"
+        % (len(outcomes["ALL"]), len([x for x in outcomes["ALL"] if not x]))
+    )
+    logging.info(
+        "PASS: %s tests (%s failures)"
+        % (len(outcomes["PASS"]), len([x for x in outcomes["PASS"] if not x]))
+    )
 
     retcode = 0
     if False in outcomes["ALL"] or False in outcomes["PASS"]:

@@ -31,9 +31,9 @@ def fast_nonref_remover(input_stream, output_stream):
                     break
         if not bad_variant:
             output_stream.write(line)
-                
-                
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     try:
         with sys.stdin as input_stream, sys.stdout as output_stream:
             fast_nonref_remover(input_stream, output_stream)

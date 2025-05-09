@@ -55,7 +55,6 @@ from Tools.parallel import getPool, runParallel
 from Tools.sessioninfo import sessionInfo
 
 
-
 # Python 3 compatibility for file handling
 def open_file(filename, mode="r"):
     """Helper function to open files in the correct mode for both text and binary."""

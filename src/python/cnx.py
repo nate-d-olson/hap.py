@@ -72,7 +72,7 @@ def main():
     logging.info("Writing %s" % args.output)
     try:
         with open(args.output, "w") as fp:
-            json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(",", ": "))
     except Exception as e:
         logging.error(f"Failed to write to {args.output}: {e}")
         raise
