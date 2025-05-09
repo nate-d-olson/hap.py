@@ -9,9 +9,10 @@
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
 import gzip
-from bx.intervals.intersection import Interval
-from bx.intervals.intersection import IntervalTree
 from collections import defaultdict
+
+from bx.intervals.intersection import Interval, IntervalTree
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
@@ -118,10 +119,18 @@ class BedIntervalTree(object):
 
         """
         if bed_file.endswith(".gz"):
-            bed = gzip.open(bed_file, 'rt', encoding='utf-8')  # Use text mode with encoding
+            with gzip.open(bed_file, 'rt', encoding='utf-8') as bed:  # Use text mode with encoding
+                self._process_bed_file(bed, label, fixchr)
         else:
-            bed = open_file(bed_file)
+            with open_file(bed_file) as bed:
+                self._process_bed_file(bed, label, fixchr)
 
+    def _process_bed_file(self, bed, label, fixchr):
+        """ Process the bed file and add entries to the tree
+        :param bed: Bed file object
+        :param label: label or labeller function
+        :param fixchr: fix chr prefix for contig names
+        """
         if hasattr(label, "__call__"):
             labeller = label
         elif label:

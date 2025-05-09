@@ -23,15 +23,17 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
 import logging
-import traceback
-import tempfile
+import os
 import shutil
-import pandas
+import sys
+import tempfile
+import traceback
+
 import numpy as np
+import pandas
+
 np.seterr(all='ignore')
 import gzip
 import json
@@ -40,15 +42,16 @@ from collections import Counter
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
-import Tools
-from Tools.bcftools import runBcftools, parseStats, preprocessVCF
-from Tools.bamstats import bamStats
-from Tools.bedintervaltree import BedIntervalTree
-from Tools.roc import ROC
-from Tools.ci import binomialCI
-from Tools.metric import makeMetricsObject, dataframeToMetricsTable
-from Tools.fastasize import fastaContigLengths, calculateLength
 import Somatic
+import Tools
+from Tools.bamstats import bamStats
+from Tools.bcftools import parseStats, preprocessVCF, runBcftools
+from Tools.bedintervaltree import BedIntervalTree
+from Tools.ci import binomialCI
+from Tools.fastasize import calculateLength, fastaContigLengths
+from Tools.metric import dataframeToMetricsTable, makeMetricsObject
+from Tools.roc import ROC
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
@@ -518,14 +521,14 @@ def main():
         rununiquepath = os.path.join(scratch, "tpfn", "0001.vcf.gz")
         header = runBcftools("view", rununiquepath, "--header-only")
 
-        fp = Tools.BGZipFile(fppath, True)
-        fp.write(header)
+        with Tools.BGZipFile(fppath, True) as fp:
+            fp.write(header)
 
-        unk = Tools.BGZipFile(unkpath, True)
-        unk.write(header)
+        with Tools.BGZipFile(unkpath, True) as unk:
+            unk.write(header)
 
-        ambi = Tools.BGZipFile(ambipath, True)
-        ambi.write(header)
+        with Tools.BGZipFile(ambipath, True) as ambi:
+            ambi.write(header)
 
         ambiClasses = Counter()
         ambiReasons = Counter()
@@ -543,65 +546,63 @@ def main():
             fpclasses.addFromBed(args.FP, "FP", args.fixchr_truth)
 
         # split VCF into FP, UNK and AMBI
-        toProcess = gzip.open(rununiquepath, "rb")
-        for entry in toProcess:
-            if entry[0] == '#':
-                continue
+        with gzip.open(rununiquepath, "rb") as toProcess:
+            for entry in toProcess:
+                if entry[0] == '#':
+                    continue
 
-            fields = entry.strip().split("\t")
-            chrom = fields[0]
-            start = int(fields[1])
-            stop = int(fields[1]) + len(fields[3])
+                fields = entry.strip().split("\t")
+                chrom = fields[0]
+                start = int(fields[1])
+                stop = int(fields[1]) + len(fields[3])
 
-            overlap = fpclasses.intersect(chrom, start, stop)
+                overlap = fpclasses.intersect(chrom, start, stop)
 
-            is_fp = False
-            is_ambi = False
+                is_fp = False
+                is_ambi = False
 
-            classes_this_pos = set()
+                classes_this_pos = set()
 
-            for o in overlap:
-                reason = o.value[0]
-                if reason == "fp" and args.ambi_fp:
-                    reason = "FP"
-                elif reason == "fp":
-                    reason = "ambi-fp"
-                elif reason == "unk":
-                    reason = "ambi-unk"
+                for o in overlap:
+                    reason = o.value[0]
+                    if reason == "fp" and args.ambi_fp:
+                        reason = "FP"
+                    elif reason == "fp":
+                        reason = "ambi-fp"
+                    elif reason == "unk":
+                        reason = "ambi-unk"
 
-                classes_this_pos.add(reason)
-                try:
-                    ambiReasons["%s: rep. count %s" % (reason, o.value[1])] += 1
-                except IndexError:
-                    ambiReasons["%s: rep. count *" % reason] += 1
-                for x in o.value[3:]:
-                    ambiReasons["%s: %s" % (reason, x)] += 1
-                if reason == "FP":
-                    is_fp = True
+                    classes_this_pos.add(reason)
+                    try:
+                        ambiReasons["%s: rep. count %s" % (reason, o.value[1])] += 1
+                    except IndexError:
+                        ambiReasons["%s: rep. count *" % reason] += 1
+                    for x in o.value[3:]:
+                        ambiReasons["%s: %s" % (reason, x)] += 1
+                    if reason == "FP":
+                        is_fp = True
+                    else:
+                        is_ambi = True
+
+                for reason in classes_this_pos:
+                    ambiClasses[reason] += 1
+
+                if is_fp:
+                    with Tools.BGZipFile(fppath, True) as fp:
+                        fp.write(entry)
+                elif is_ambi:
+                    with Tools.BGZipFile(ambipath, True) as ambi:
+                        ambi.write(entry)
+                elif not args.count_unk:
+                    # when we don't have FP regions, unk stuff becomes FP
+                    with Tools.BGZipFile(fppath, True) as fp:
+                        fp.write(entry)
                 else:
-                    is_ambi = True
-
-            for reason in classes_this_pos:
-                ambiClasses[reason] += 1
-
-            if is_fp:
-                fp.write(entry)
-            elif is_ambi:
-                ambi.write(entry)
-            elif not args.count_unk:
-                # when we don't have FP regions, unk stuff becomes FP
-                fp.write(entry)
-            else:
-                unk.write(entry)
-
-        toProcess.close()
+                    with Tools.BGZipFile(unkpath, True) as unk:
+                        unk.write(entry)
 
         # since 0001.vcf.gz should already be sorted, we can just convert to bgzipped vcf
         # and create index
-        fp.close()
-        ambi.close()
-        unk.close()
-
         runBcftools("index", "--tbi", fppath)
         runBcftools("index", "--tbi", unkpath)
         runBcftools("index", "--tbi", ambipath)

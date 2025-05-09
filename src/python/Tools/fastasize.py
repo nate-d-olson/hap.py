@@ -22,13 +22,14 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
-import logging
-import tempfile
-import subprocess
-import pipes
 import json
+import logging
+import os
+import pipes
 import re
+import subprocess
+import tempfile
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):

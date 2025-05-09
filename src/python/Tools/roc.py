@@ -9,12 +9,14 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import os
 import abc
-import pandas
 import logging
+import os
 import subprocess
 import tempfile
+
+import pandas
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
@@ -38,54 +40,51 @@ def tableROC(tbl, label_column, feature_column, filter_column=None,
     :returns: a pandas.DataFrame with TP/FP/FN/precision/recall columns.
     """
 
-    tf1 = tempfile.NamedTemporaryFile(delete=False)
-    tf1.close()
-    tf2 = tempfile.NamedTemporaryFile(delete=False)
-    tf2.close()
-    try:
-        fields = [feature_column, label_column]
-        if filter_column:
-            fields.append(filter_column)
+    with tempfile.NamedTemporaryFile(delete=False) as tf1, tempfile.NamedTemporaryFile(delete=False) as tf2:
+        try:
+            fields = [feature_column, label_column]
+            if filter_column:
+                fields.append(filter_column)
 
-        tbl[fields].to_csv(tf2.name, sep="\t", index=False)
+            tbl[fields].to_csv(tf2.name, sep="\t", index=False)
 
-        cmdline = "roc -t %s -v %s --verbose " % (label_column, feature_column)
-        if filter_column:
-            cmdline += " -f %s" % filter_column
-        if filter_name:
-            cmdline += " -n %s" % filter_name
-        if roc_reversed:
-            cmdline += " -R 1"
-        cmdline += " -o %s %s" % (tf1.name, tf2.name)
+            cmdline = "roc -t %s -v %s --verbose " % (label_column, feature_column)
+            if filter_column:
+                cmdline += " -f %s" % filter_column
+            if filter_name:
+                cmdline += " -n %s" % filter_name
+            if roc_reversed:
+                cmdline += " -R 1"
+            cmdline += " -o %s %s" % (tf1.name, tf2.name)
 
-        logging.info("Running %s" % cmdline)
+            logging.info("Running %s" % cmdline)
 
-        process = subprocess.Popen(cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        
-        # Handle bytes output in Python 3
-        if isinstance(stdout, bytes):
-            stdout = stdout.decode('utf-8')
-        if isinstance(stderr, bytes):
-            stderr = stderr.decode('utf-8')
+            process = subprocess.Popen(cmdline, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = process.communicate()
             
-        if process.returncode != 0:
-            raise Exception(f"ROC command failed: {stderr}")
-            
-        try:
-            result = pandas.read_table(tf1.name)
-        except:
-            raise Exception("Cannot parse ROC output.")
-        return result
-    finally:
-        try:
-            os.unlink(tf1.name)
-        except:
-            pass
-        try:
-            os.unlink(tf2.name)
-        except:
-            pass
+            # Handle bytes output in Python 3
+            if isinstance(stdout, bytes):
+                stdout = stdout.decode('utf-8')
+            if isinstance(stderr, bytes):
+                stderr = stderr.decode('utf-8')
+                
+            if process.returncode != 0:
+                raise Exception(f"ROC command failed: {stderr}")
+                
+            try:
+                result = pandas.read_table(tf1.name)
+            except:
+                raise Exception("Cannot parse ROC output.")
+            return result
+        finally:
+            try:
+                os.unlink(tf1.name)
+            except:
+                pass
+            try:
+                os.unlink(tf2.name)
+            except:
+                pass
 
 
 class ROC(abc.ABC):

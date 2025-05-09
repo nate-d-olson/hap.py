@@ -9,14 +9,15 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import os
+import gzip
+import json
 import logging
+import os
+import re
 import subprocess
 import tempfile
-import gzip
-import re
 import time
-import json
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
@@ -91,129 +92,121 @@ def vcfExtract(vcfname, features, filterfun=None):
 
     """
 
-    if vcfname.endswith(".gz"):
-        ff = gzip.open(vcfname, 'rt', encoding='utf-8')  # Use text mode with encoding
-    else:
-        ff = open_file(vcfname)
+    with (gzip.open(vcfname, 'rt', encoding='utf-8') if vcfname.endswith(".gz") else open_file(vcfname)) as ff:
+        feature_index = [splitIndex(f) for f in features]
 
-    feature_index = [splitIndex(f) for f in features]
+        start = time.time()
+        last_time = start
+        nrecords = 0
+        previous_end = 0
+        for line in ff:
+            if line.startswith("#"):
+                continue
+            line = line.replace("\n", "")
+            if filterfun and filterfun(line):
+                continue
 
-    start = time.time()
-    last_time = start
-    nrecords = 0
-    previous_end = 0
-    for line in ff:
-        if line.startswith("#"):
-            continue
-        line = line.replace("\n", "")
-        if filterfun and filterfun(line):
-            continue
+            nrecords += 1
+            lstart = time.time()
 
-        nrecords += 1
-        lstart = time.time()
-
-        if lstart - last_time > 10:
-            last_time = lstart
-            total = lstart-start
-            # noinspection PyBroadException
-            try:
-                tpr = 1000000.0*total/float(nrecords)
-            except:
-                tpr = -1
-            logging.info("Since start: %i records %.2f seconds, %.2f us/record." % (nrecords, total, tpr))
-
-        spl = line.split("\t")
-        current = []
-        curinfo = None
-        curformats = {}
-        for i, f in enumerate(features):
-            if f.lower().startswith("chr"):
-                current.append(spl[0])
-            elif f.lower().startswith("pos"):
-                current.append(int(spl[1]))
-            elif f.lower().startswith("id"):
-                current.append(spl[2])
-            elif f.lower().startswith("ref"):
-                current.append(spl[3])
-            elif f.lower().startswith("alt"):
-                val = spl[4].split(",")
-                if feature_index[i][1] is not None:
-                    if feature_index[i][1] < len(val):
-                        val = val[feature_index[i][1]]
-                    else:
-                        val = None
-                current.append(val)
-            elif f.lower().startswith("qual"):
+            if lstart - last_time > 10:
+                last_time = lstart
+                total = lstart-start
+                # noinspection PyBroadException
                 try:
-                    current.append(float(spl[5]))
+                    tpr = 1000000.0*total/float(nrecords)
                 except:
-                    current.append(None)
-            elif f.lower().startswith("fil"):
-                if spl[6] == "PASS" or spl[6] == ".":
-                    val = []
-                else:
-                    val = spl[6].split(",")
+                    tpr = -1
+                logging.info("Since start: %i records %.2f seconds, %.2f us/record." % (nrecords, total, tpr))
 
-                if feature_index[i][1] is not None:
-                    if feature_index[i][1] < len(val):
-                        val = val[feature_index[i][1]]
+            spl = line.split("\t")
+            current = []
+            curinfo = None
+            curformats = {}
+            for i, f in enumerate(features):
+                if f.lower().startswith("chr"):
+                    current.append(spl[0])
+                elif f.lower().startswith("pos"):
+                    current.append(int(spl[1]))
+                elif f.lower().startswith("id"):
+                    current.append(spl[2])
+                elif f.lower().startswith("ref"):
+                    current.append(spl[3])
+                elif f.lower().startswith("alt"):
+                    val = spl[4].split(",")
+                    if feature_index[i][1] is not None:
+                        if feature_index[i][1] < len(val):
+                            val = val[feature_index[i][1]]
+                        else:
+                            val = None
+                    current.append(val)
+                elif f.lower().startswith("qual"):
+                    try:
+                        current.append(float(spl[5]))
+                    except:
+                        current.append(None)
+                elif f.lower().startswith("fil"):
+                    if spl[6] == "PASS" or spl[6] == ".":
+                        val = []
                     else:
-                        val = None
+                        val = spl[6].split(",")
 
-                current.append(val)
-            elif f.startswith("I."):
-                if curinfo is None:
-                    curinfo = getInfo(spl[7])
-                val = None
-                try:
+                    if feature_index[i][1] is not None:
+                        if feature_index[i][1] < len(val):
+                            val = val[feature_index[i][1]]
+                        else:
+                            val = None
+
+                    current.append(val)
+                elif f.startswith("I."):
+                    if curinfo is None:
+                        curinfo = getInfo(spl[7])
+                    val = None
+                    try:
+                        ff, ii = feature_index[i]
+                        val = curinfo[ff[2:]]
+
+                        if ii is not None:
+                            if ii < len(val):
+                                val = val[ii]
+                            else:
+                                val = None
+                    except:
+                        pass
+                    current.append(val)
+                elif f.startswith("S."):
                     ff, ii = feature_index[i]
-                    val = curinfo[ff[2:]]
+                    dx = ff.split(".", 3)
+                    sample = int(dx[1])
+                    field = dx[2]
 
-                    if ii is not None:
-                        if ii < len(val):
-                            val = val[ii]
-                        else:
-                            val = None
-                except:
-                    pass
-                current.append(val)
-            elif f.startswith("S."):
-                ff, ii = feature_index[i]
-                dx = ff.split(".", 3)
-                sample = int(dx[1])
-                field = dx[2]
+                    val = None
+                    try:
+                        if not sample in curformats:
+                            curformats[sample] = getFormats(spl[8], spl[8+sample])
+                        val = curformats[sample][field]
 
-                val = None
-                try:
-                    if not sample in curformats:
-                        curformats[sample] = getFormats(spl[8], spl[8+sample])
-                    val = curformats[sample][field]
-
-                    if ii is not None:
-                        if ii < len(val):
-                            val = val[ii]
-                        else:
-                            val = None
-                except:
-                    pass
-                current.append(val)
-            else:
-                current.append(f)
-        yield current
+                        if ii is not None:
+                            if ii < len(val):
+                                val = val[ii]
+                            else:
+                                val = None
+                    except:
+                        pass
+                    current.append(val)
+                else:
+                    current.append(f)
+            yield current
 
 
 def extractHeaders(vcfname):
     """ Read the header lines from a VCF file """
-    if vcfname.endswith(".gz"):
-        ff = gzip.open(vcfname, 'rt', encoding='utf-8')  # Use text mode with encoding
-    else:
-        ff = open_file(vcfname)
-
-    for l in ff:
-        if l.startswith("#"):
-            yield l.replace("\n", "")
-        else:
-            break
+    with (gzip.open(vcfname, 'rt', encoding='utf-8') if vcfname.endswith(".gz") else open_file(vcfname)) as ff:
+        for l in ff:
+            if l.startswith("#"):
+                yield l.replace("\n", "")
+            else:
+                break
 
 
 def extractHeadersJSON(vcfname):

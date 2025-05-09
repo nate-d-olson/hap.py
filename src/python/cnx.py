@@ -23,18 +23,17 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
-import logging
-import traceback
 import json
+import logging
+import os
+import sys
+import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
 
 import Tools
-
 from Tools.vcfcallerinfo import CallerInfo
 
 
@@ -61,8 +60,12 @@ def main():
         args.output += ".json"
 
     logging.info("Writing %s" % args.output)
-    with open(args.output, "w") as fp:
-        json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(',', ': '))
+    try:
+        with open(args.output, "w") as fp:
+            json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(',', ': '))
+    except Exception as e:
+        logging.error(f"Failed to write to {args.output}: {e}")
+        raise
 
 
 if __name__ == "__main__":

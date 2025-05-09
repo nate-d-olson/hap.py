@@ -1,6 +1,6 @@
 #!/illumina/development/haplocompare/hc-virtualenv/bin/python
-import sys
 import re
+import sys
 
 GT_SPLITTER = re.compile(r'[\/\|]') # split a genotype field by '/' or '|'
 
@@ -31,4 +31,8 @@ def fast_nonref_remover(input_stream, output_stream):
                 
                 
 if __name__ == '__main__':
-    fast_nonref_remover(sys.stdin, sys.stdout)
+    try:
+        with sys.stdin as input_stream, sys.stdout as output_stream:
+            fast_nonref_remover(input_stream, output_stream)
+    except Exception as e:
+        sys.stderr.write(f"An error occurred: {e}\n")

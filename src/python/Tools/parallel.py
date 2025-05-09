@@ -9,19 +9,20 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import os
-import sys
-import gc
 import argparse
+import gc
 import logging
-import traceback
-import subprocess
 import multiprocessing
+import os
 import pickle
+import subprocess
+import sys
 import tempfile
+import traceback
 from itertools import islice, repeat
 
 from . import LoggingWriter
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
@@ -79,12 +80,14 @@ def parMapper(arg):
     except Exception as e:
         logging.error("Exception when running %s:" % str(arg[1]['fun']))
         logging.error('-'*60)
-        traceback.print_exc(file=LoggingWriter(logging.ERROR))
+        with LoggingWriter(logging.ERROR) as lw:
+            traceback.print_exc(file=lw)
         logging.error('-'*60)
     except BaseException as e:
         logging.error("Exception when running %s:" % str(arg[1]['fun']))
         logging.error('-'*60)
-        traceback.print_exc(file=LoggingWriter(logging.ERROR))
+        with LoggingWriter(logging.ERROR) as lw:
+            traceback.print_exc(file=lw)
         logging.error('-'*60)
     return None
 

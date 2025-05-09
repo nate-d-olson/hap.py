@@ -14,13 +14,13 @@
 # Collect session and run information
 #
 
+import copy
 import os
+import platform
 import sys
 import time
-import platform
-import copy
-import distro  # Use distro package instead of platform.dist()
 
+import distro  # Use distro package instead of platform.dist()
 import Tools
 
 

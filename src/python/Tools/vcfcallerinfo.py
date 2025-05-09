@@ -9,12 +9,12 @@
 #
 # https://github.com/sequencing/licenses/blob/master/Simplified-BSD-License.txt
 
-import tempfile
 import itertools
-import subprocess
+import json
 import logging
 import os
-import json
+import subprocess
+import tempfile
 
 
 class CallerInfo(object):
@@ -40,23 +40,25 @@ class CallerInfo(object):
         """ Add caller versions from a VCF
         :param vcfname: VCF file name
         """
-        tf = tempfile.NamedTemporaryFile(delete=False)
-        tf.close()
+        with tempfile.NamedTemporaryFile(delete=False) as tf:
+            tf_name = tf.name
+
         vfh = {}
         try:
-            sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
+            sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf_name),
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             o, e = sp.communicate()
 
             if sp.returncode != 0:
                 raise Exception("vcfhdr2json call failed: %s / %s" % (o, e))
 
-            vfh = json.load(open(tf.name))
+            with open(tf_name) as f:
+                vfh = json.load(f)
         finally:
             try:
-                os.unlink(tf.name)
-            except:
-                pass
+                os.unlink(tf_name)
+            except Exception as ex:
+                logging.error("Error deleting temporary file: %s", ex)
 
         cp = ['unknown', 'unknown', '']
         gatk_callers = ["haplotypecaller", "unifiedgenotyper", "mutect"]

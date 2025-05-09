@@ -9,21 +9,28 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
+import math
 import os
 import sys
-import pandas
 import time
-import math
 
+import pandas
 import Tools
+
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
-        return open(filename, mode)
-    else:
-        return open(filename, mode, encoding='utf-8')
+    try:
+        if 'b' in mode:
+            with open(filename, mode) as file:
+                return file
+        else:
+            with open(filename, mode, encoding='utf-8') as file:
+                return file
+    except IOError as e:
+        print(f"Error opening file {filename}: {e}")
+        raise
 
 def dataframeToMetricsTable(table_id, df):
     """ Convert a pandas dataframe to a PUMA metrics table

@@ -23,47 +23,42 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
-import logging
-import traceback
-import subprocess
-import multiprocessing
 import gzip
+import json
+import logging
+import multiprocessing
+import os
+import subprocess
+import sys
 import tempfile
 import time
-import json
+import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python3')))
 
+import Haplo.blocksplit
+import Haplo.gvcf2bed
+import Haplo.partialcredit
+import Haplo.quantify
+import Haplo.scmp
+import Haplo.vcfeval
+import Haplo.xcmp
+import pre
+import qfy
 import Tools
-from Tools import vcfextract
-from Tools import bcftools
-from Tools.parallel import runParallel, getPool
-from Tools.bcftools import preprocessVCF, bedOverlapCheck
+from Tools import bcftools, vcfextract
+from Tools.bcftools import bedOverlapCheck, preprocessVCF
 from Tools.fastasize import fastaContigLengths
+from Tools.parallel import getPool, runParallel
 from Tools.sessioninfo import sessionInfo
 
-import Haplo.blocksplit
-import Haplo.xcmp
-import Haplo.vcfeval
-import Haplo.scmp
-import Haplo.quantify
-import Haplo.partialcredit
-import Haplo.gvcf2bed
-
-import qfy
-import pre
 
 # Python 3 compatibility for file handling
 def open_file(filename, mode='r'):
     """Helper function to open files in the correct mode for both text and binary."""
-    if 'b' in mode:
-        return open(filename, mode)
-    else:
-        return open(filename, mode, encoding='utf-8')
+    return open(filename, mode, encoding=None if 'b' in mode else 'utf-8')
 
 def main():
     parser = argparse.ArgumentParser("Haplotype Comparison")

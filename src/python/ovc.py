@@ -26,16 +26,21 @@
 
 import sys
 
-f = open(sys.argv[1])
-
-last = -1
-
-lines = 1
-for line in f:
-	l = line.split("\t")
-	if len(l) > 3 and (last-1) > int(l[1]):
-		print(("Overlap at %s:%i (line %i)" % (l[0], int(l[1]), lines)))
-		exit(1)
-	elif len(l) > 3:
-		last = int(l[2])
-	lines += 1
+try:
+    with open(sys.argv[1]) as f:
+        last = -1
+        lines = 1
+        for line in f:
+            l = line.split("\t")
+            if len(l) > 3 and (last-1) > int(l[1]):
+                print(("Overlap at %s:%i (line %i)" % (l[0], int(l[1]), lines)))
+                exit(1)
+            elif len(l) > 3:
+                last = int(l[2])
+            lines += 1
+except FileNotFoundError as e:
+    print(f"Error: {e}")
+    exit(1)
+except IndexError:
+    print("Usage: ovc.py input.bed")
+    exit(1)
