@@ -1,4 +1,60 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
-  "features": {}
+  "name": "hap.py Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.9",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        "ms-vscode.cmake-tools",
+        "njpwerner.autodocstring"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.inlineSuggest.enabled": true,
+        "github.copilot.enable": {
+          "*": true,
+          "plaintext": true,
+          "markdown": true,
+          "python": true,
+          "cpp": true,
+          "shell": true
+        },
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "python.formatting.blackArgs": [
+          "--line-length",
+          "88"
+        ],
+        "python.analysis.typeCheckingMode": "basic",
+        "C_Cpp.default.cppStandard": "c++11",
+        "C_Cpp.default.includePath": [
+          "${workspaceFolder}/src/c++/**",
+          "${workspaceFolder}/external/**"
+        ],
+        "editor.rulers": [
+          88
+        ],
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "**/.DS_Store": true
+        }
+      }
+    }
+  },
+  "postCreateCommand": "pip install -r happy.requirements.txt && pip install black flake8 pytest",
+  "remoteUser": "vscode",
+  "updateContentCommand": "git pull"
 }
