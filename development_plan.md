@@ -1,7 +1,18 @@
 # Development Plan for hap.py Modernization
 
-## Overview
-This document outlines the roadmap for migrating hap.py from Python 2 to Python 3, modernizing the codebase, and improving usability.
+## Current Status
+
+We are in Phase 1 of the modernization effort, focusing on build system improvements and dependency management. Key progress includes:
+
+- ✅ Created modern CMake configuration with CMakePresets.json
+- ✅ Added package configuration and Find modules
+- ✅ Set up CPack configuration
+- ✅ Created pyproject.toml with updated dependencies
+- ✅ Modernized C++ build with target-based approach
+- ✅ Created dedicated CMake modules for standardization
+- ✅ Added macOS specific build enhancements
+- ✅ Created comprehensive build system documentation
+- ✅ Documented overall architecture and components
 
 ## Architecture Overview
 
@@ -184,21 +195,152 @@ The hap.py toolkit consists of several interconnected components structured in a
 
 Understanding these architectural elements is crucial for effective debugging, enhancement, and maintenance of the codebase during the modernization process.
 
-## Development Steps
-1. Initial Assessment & Environment Setup  
-   - Create a reproducible Docker environment  
-   - Document current functionality with examples  
-   - Establish baseline tests using the existing Python 2 code  
-2. Python 2 → Python 3 Conversion  
-   - Run 2to3 on core modules  
-   - Fix syntax and dependency API changes  
-3. Dependency Updates  
-   - Update C++ libraries (htslib, Boost)  
-   - Upgrade Python packages to Python 3–compatible versions  
-   - Adjust CMake and build scripts  
-4. Iterative Testing & Debugging  
-   - Track test results and error logs  
-   - Debug common failures in unit and integration tests  
+## Phased Development Plan
+
+### Phase 1: Build System & Dependencies (Current)
+
+#### Build System Modernization
+
+- [x] Create CMakePresets.json for better IDE integration
+- [x] Add package configuration files (hap.py-config.cmake.in)
+- [x] Create modern Find modules for dependencies
+- [x] Setup CPack configuration
+- [x] Update main CMakeLists.txt with modern practices
+- [x] Create dedicated CMake modules for C++ standards and settings
+- [x] Create Cython support module for Python-C++ integration
+- [x] Add centralized version handling in HappyProperties.cmake
+- [x] Add macOS-specific enhancements and code signing support
+- [ ] Convert install.py functionality to CMake
+- [ ] Add proper install targets
+- [ ] Resolve HTSlib detection issues
+- [ ] Fix zlib version conflicts
+
+#### Python Package Updates
+
+- [x] Create pyproject.toml
+- [ ] Update Python package structure
+- [ ] Convert setuptools configuration
+- [ ] Add proper entry points
+- [ ] Create setup.py wrapper for backward compatibility
+
+### Phase 2: Python 3 Migration
+
+#### Core Conversion
+
+- [ ] Run 2to3 on Python modules
+- [ ] Fix syntax changes (print, exceptions)
+  - Convert all print statements to print() function
+  - Update exception handling to use "as" syntax
+  - Replace deprecated **future** imports
+- [ ] Update string handling
+  - Fix unicode/bytes conversions
+  - Add explicit encoding for file operations
+  - Update string formatting to f-strings where appropriate
+- [ ] Fix integer division
+  - Replace / with // for integer division
+  - Add explicit casts where needed
+- [ ] Update dict/iterator methods
+  - Replace iteritems/iterkeys/itervalues with items/keys/values
+  - Update obsolete dictionary methods
+  - Fix list/iterator behavior differences
+
+#### Dependency Updates
+
+- [ ] Update Python package versions
+  - Update pysam to latest compatible version
+  - Modernize numpy/scipy/pandas usage
+  - Replace deprecated modules with maintained alternatives
+  - Add type hint support packages
+- [ ] Fix API changes in dependencies
+  - Address breaking changes in Python libraries
+  - Update Cython bindings for compatibility
+  - Fix file handling for Python 3 path objects
+- [ ] Update C++ library versions
+  - Update HTSlib to latest compatible version
+  - Modernize Boost usage (1.74+)
+  - Update compression libraries
+- [ ] Test compatibility with genomic file formats
+  - Validate VCF/BCF parsing in Python 3
+  - Test FASTA/BAM file handling
+  - Verify compression/decompression in modernized code
+
+### Phase 3: Testing Infrastructure
+
+#### Test Framework
+
+- [ ] Convert shell tests to pytest
+- [ ] Add CTest integration
+- [ ] Create test data management
+- [ ] Set up coverage reporting
+- [ ] Add integration test framework
+
+#### CI/CD Setup
+
+- [ ] Create GitHub Actions workflow
+- [ ] Configure test automation
+- [ ] Set up automated releases
+- [ ] Add documentation builds
+
+### Phase 4: Modernization & Cleanup
+
+#### Code Quality
+
+- [ ] Add type hints
+- [ ] Update docstrings
+- [ ] Apply Black formatting
+- [ ] Fix linting issues
+
+#### Performance
+
+- [ ] Profile memory usage
+- [ ] Optimize large dataset handling
+- [ ] Improve parallelization
+- [ ] Benchmark key operations
+
+## Dependencies
+
+### Python
+
+- pysam ≥0.21.0
+- numpy ≥1.24.0
+- pytest ≥7.0.0
+- black ≥23.0.0
+- mypy ≥1.0.0
+- sphinx ≥7.0.0
+
+### C++
+
+- CMake ≥3.15 (3.20+ recommended)
+- Boost ≥1.74.0
+  - Required components: filesystem, program_options, system, regex, test
+  - Optional components: thread, chrono, iostreams
+- HTSlib ≥1.17
+  - Requires zlib, libbz2, liblzma
+  - Optional: libcurl for remote access
+- zlib ≥1.2.13
+- jsoncpp ≥1.9.5
+- Compiler requirements:
+  - GCC 9+ or Clang 10+
+  - C++11 support required (C++14 recommended)
+
+## Progress Tracking
+
+| Component          | Status | Notes                                        |
+|--------------------|--------|----------------------------------------------|
+| CMake Config       | 🟢     | Modern structure implemented                  |
+| C++ Build System   | 🟢     | Modernized with dedicated modules            |
+| Python Packaging   | 🟡     | pyproject.toml created, more integration needed |
+| Build System       | 🟡     | Need install.py replacement and HTSlib fixes |
+| Python 3 Port      | ⚪️     | Not started                                  |
+| Test Framework     | 🟡     | C++ tests integrated with CTest              |
+| Documentation      | 🟡     | Architecture documented, need API docs       |
+
+Legend:
+
+- ⚪️ Not Started
+- 🟡 In Progress
+- 🟢 Complete  
+
 5. Code Modernization  
    - Add type hints and docstrings  
    - Refactor modules for modularity  
@@ -214,18 +356,23 @@ Understanding these architectural elements is crucial for effective debugging, e
    - Remove deprecated or unused code
 
 ## Dependencies
+
 ### Python Dependencies
+
 - pysam ≥0.x, numpy ≥1.x, …
 
 ### C++ Dependencies
+
 - htslib ≥1.x  
 - Boost ≥1.x
 
 ### External Tools
+
 - RTG tools  
 - samtools
 
 ## Progress Tracking
+
 | Component    | Py3 Conversion | Tests Passing | Notes |
 |--------------|----------------|---------------|-------|
 | Core         | ⬜             | ⬜            |       |
@@ -234,5 +381,6 @@ Understanding these architectural elements is crucial for effective debugging, e
 | CLI          | ⬜             | ⬜            |       |
 
 ## Challenges & Solutions
+
 - Deep Python–C++ integration: update Cython interfaces  
 - External tool API changes: pin compatible versions
