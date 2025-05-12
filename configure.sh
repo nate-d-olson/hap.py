@@ -45,7 +45,7 @@ PLATFORM='unknown'
 # On macOS, set SDKROOT for CMake to locate system headers
 if [[ "$(uname)" == "Darwin" ]]; then
   SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
-  EXTRA_CMAKE_OPTS="${EXTRA_CMAKE_OPTS:-} -DCMAKE_OSX_SYSROOT=${SDKROOT}"
+  export EXTRA_CMAKE_OPTS="${EXTRA_CMAKE_OPTS:-} -DCMAKE_OSX_SYSROOT=${SDKROOT} -DCMAKE_SYSTEM_IGNORE_PATH=/opt/homebrew/include"
 fi
 UNAMESTR=`uname`
 if [[ "$UNAMESTR" == 'Linux' ]]; then
