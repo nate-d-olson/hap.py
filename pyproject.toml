@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel>=0.37.0", "build>=0.7.0", "Cython>=0.29.2
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "hap.py"
+name = "happy"
 # Version is dynamically set during build from CMake
 version = "0.0.0"  # This will be updated by CMake
 description = "Haplotype comparison tools for benchmarking variant calls"
@@ -47,10 +47,11 @@ dev = [
 ]
 
 [project.scripts]
-hap.py = "happy.cli.hap:main"
-som.py = "happy.cli.som:main"
-qfy.py = "happy.cli.qfy:main"
-pre.py = "happy.cli.pre:main"
+hap = "happy.cli.hap:main"
+som = "happy.cli.som:main"
+qfy = "happy.cli.qfy:main"
+pre = "happy.cli.pre:main"
+
 
 [tool.setuptools]
 packages-dir = {"" = "src"}
