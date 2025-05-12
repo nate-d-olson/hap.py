@@ -2,53 +2,13 @@
 
 set -e
 
-# Find python
-PYTHON=python
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-TLD=$(pwd)/scratch
-ISD=$(pwd)
+echo "This script is deprecated. Dependencies are now handled by CMake using FetchContent."
+echo "Please build the project using standard CMake commands:"
+echo "  mkdir build && cd build"
+echo "  cmake .."
+echo "  cmake --build ."
 
-if [ "$1" == "rebuild" ];
-then
-    rm -rf ${TLD}
-    rm -rf ${ISD}/include/boost
-    rm -rf ${ISD}/include/htslib
-    rm -rf ${ISD}/bin/bcftools
-    rm -rf ${ISD}/bin/samtools
-    rm -rf ${ISD}/libexec/rtg-tools-install
-fi
-
-mkdir -p ${TLD}
-if [ ! -f ${TLD}/zlib-1.2.8/libz.a ];
-then
-    cd ${TLD}
-    rm -rf ${TLD}/zlib-1.2.8
-    tar xzf ${DIR}/zlib-1.2.8.tar.gz
-    cd zlib-1.2.8
-    ./configure --prefix ${ISD}
-    make -j4
-    make -j4 install
-else
-    echo "Zlib already built. To rebuild, delete ${TLD}/zlib-1.2.8"
-fi
-
-if [ -z "$BOOST_ROOT" ];
-then
-    if [ ! -d ${ISD}/include/boost ];
-    then
-        cd ${TLD}
-        rm -rf ${TLD}/boost_subset_1_58_0
-        tar xjf ${DIR}/boost_subset_1_58_0.tar.bz2
-        cd boost_subset_1_58_0
-        ./bootstrap.sh
-        ./b2 link=static -j4 --prefix=$ISD -sZLIB_SOURCE=$TLD
-        ./b2 link=static -j4 --prefix=$ISD install -sZLIB_SOURCE=$TLD/zlib-1.2.8
-    else
-        echo "Boost already built. To rebuild, delete ${ISD}/include/boost"
-    fi
-else
-    echo "BOOST_ROOT is set, not building boost."
-fi
+exit 0
 
 if [ ! -d ${ISD}/include/htslib ] ;
 then

@@ -2,15 +2,30 @@
 #
 # Author: Peter Krusche <pkrusche@illumina.com>
 #
-cmake_minimum_required (VERSION 3.5)
-project (HAPLOTYPES)
+cmake_minimum_required(VERSION 3.14...3.27)
+project(HAPLOTYPES
+    VERSION 1.0.0
+    DESCRIPTION "Benchmarking tool for small variant calls"
+    LANGUAGES CXX C)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
+# Add our custom CMake modules
+list(APPEND CMAKE_MODULE_PATH 
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake"
+)
+
+# Include our modern CMake modules
+include(VersionCheck)
+include(PackageHelpers)
+include(ModernDependencies)
+
+# Output directories
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Legacy includes
 include(cxx)
 include(configureFiles)
 
@@ -23,65 +38,101 @@ else()
     set (VCFEVAL_AVAILABLE 0)
 endif()
 
-execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies.sh
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    RESULT_VARIABLE EXTERNAL_SUCCESS)
+# Dependencies configuration
+include(FetchContent)
 
-if(NOT "${EXTERNAL_SUCCESS}" STREQUAL "0")
-    message(FATAL_ERROR "Building external dependencies has failed")
+# Modern Boost setup
+set(BOOST_MIN_VERSION 1.74.0)
+find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS thread iostreams regex unit_test_framework filesystem system program_options)
+if(NOT Boost_FOUND)
+    message(STATUS "Boost ${BOOST_MIN_VERSION}+ not found in system, fetching from source")
+    FetchContent_Declare(
+        Boost
+        URL https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.bz2
+        URL_HASH SHA256=83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1
+    )
+    FetchContent_MakeAvailable(Boost)
 endif()
 
-set(Boost_USE_STATIC_LIBS        ON)  # only find static libs
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME     ON)
+# ZLIB configuration
+find_package(ZLIB)
+if(NOT ZLIB_FOUND)
+    message(STATUS "ZLIB not found in system, fetching from source")
+    FetchContent_Declare(
+        ZLIB
+        URL https://zlib.net/zlib-1.2.13.tar.gz
+        URL_HASH SHA256=b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30
+    )
+    FetchContent_MakeAvailable(ZLIB)
+endif()
 
-# un-break library finding
-set(Boost_NO_BOOST_CMAKE         ON)
-set(Boost_NO_SYSTEM_PATHS        ON)
+# HTSlib configuration
+find_package(HTSlib)
+if(NOT HTSlib_FOUND)
+    message(STATUS "HTSlib not found in system, fetching from source")
+    FetchContent_Declare(
+        htslib
+        GIT_REPOSITORY https://github.com/samtools/htslib.git
+        GIT_TAG 1.17  # Latest stable release
+    )
+    FetchContent_MakeAvailable(htslib)
+endif()
 
-set(BOOST_ROOT ${CMAKE_BINARY_DIR})
-message("Using our own Boost, which was built at ${HAPLOTYPES_SOURCE_DIR}/external/boost_install")
+# BCFtools configuration (if needed)
+if(BUILD_VCFEVAL)
+    find_package(BCFtools)
+    if(NOT BCFtools_FOUND)
+        message(STATUS "BCFtools not found in system, fetching from source")
+        FetchContent_Declare(
+            bcftools
+            GIT_REPOSITORY https://github.com/samtools/bcftools.git
+            GIT_TAG 1.17  # Latest stable release
+        )
+        FetchContent_MakeAvailable(bcftools)
+    endif()
+endif()
 
-find_package(Boost 1.55.0 COMPONENTS thread iostreams regex unit_test_framework filesystem system program_options REQUIRED)
+# Include directories
+include_directories(${CMAKE_BINARY_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
 
-include_directories (${CMAKE_BINARY_DIR}/include)
-link_directories (${CMAKE_BINARY_DIR}/lib)
+# Additional external library configuration
+FetchContent_Declare(
+    jsoncpp
+    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+    GIT_TAG 1.9.5  # Latest stable version
+)
+FetchContent_MakeAvailable(jsoncpp)
 
-# make sure we use the bundled zlib version
-set(ZLIB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libz.a)
+# Include local headers
+include_directories(${HAPLOTYPES_SOURCE_DIR}/external/klib)
+include_directories(${HAPLOTYPES_SOURCE_DIR}/external/intervaltree)
+include_directories(${HAPLOTYPES_SOURCE_DIR}/src/c++/include)
 
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/klib)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/intervaltree)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/jsoncpp)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/src/c++/include)
-
-# install bcftools, samtools, htslib
+# SGE support configuration
 if(USE_SGE)
-    message("SGE mode selected, you will need to use --force-interactive to run hap.py")
-    set (SGE_AVAILABLE 1)
+    message(STATUS "SGE mode selected, you will need to use --force-interactive to run hap.py")
+    set(SGE_AVAILABLE 1)
 else()
-    set (SGE_AVAILABLE 0)
+    set(SGE_AVAILABLE 0)
 endif()
 
-include(FindHTSLib)
+# Required system packages
+find_package(Threads REQUIRED)
 
-find_package (Threads REQUIRED)
+# Build our libraries
+add_subdirectory(src/c++/lib)
 
-# make libraries first
-add_subdirectory (external)
-add_subdirectory (src/c++/lib)
-
-set(HAPLOTYPES_ALL_LIBS ${HAPLOTYPES_LIBRARY}
-                        ${GSSW_LIBRARY}
-                        ${KLIB_LIBRARY}
-                        ${JSONCPP_LIBRARY}
-                        ${Boost_LIBRARIES}
-                        ${HTSLIB_LIBRARIES}
-                        ${ZLIB_LIBRARIES}
-                        ${CMAKE_THREAD_LIBS_INIT})
+# Configure library dependencies
+set(HAPLOTYPES_ALL_LIBS 
+    ${HAPLOTYPES_LIBRARY}
+    ${GSSW_LIBRARY}
+    ${KLIB_LIBRARY}
+    jsoncpp_lib  # Modern jsoncpp target
+    ${Boost_LIBRARIES}
+    ${HTSLIB_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT})
 
 
 execute_process(COMMAND git describe --tags --always
