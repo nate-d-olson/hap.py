@@ -1,30 +1,30 @@
 # Define all executables with their source files and descriptions
 set(HAPPY_EXECUTABLES
     # Core comparison tools
-    "xcmp;xcmp.cpp;Compares VCFs by genotypes (truth vs query)"
-    "scmp;scmp.cpp;Compares VCFs by alleles (ignoring zygosity)"
-    "hapcmp;hapcmp.cpp;Compares VCFs based on sequence alignments"
-    
+    "xcmp\;xcmp.cpp\;Compares VCFs by genotypes (truth vs query)"
+    "scmp\;scmp.cpp\;Compares VCFs by alleles (ignoring zygosity)"
+    "hapcmp\;hapcmp.cpp\;Compares VCFs by sequence alignments"
+
     # Preprocessing tools
-    "preprocess;preprocess.cpp;Performs variant decomposition and leftshifting"
-    "alleles;alleles.cpp;Pre-processor for scmp that writes one record per allele"
-    
+    "preprocess\;preprocess.cpp\;Performs variant decomposition and leftshifting"
+    "alleles\;alleles.cpp\;Pre-processor for scmp that writes one record per allele"
+
     # Enumeration tools
-    "hapenum;hapenum.cpp;Takes a VCF and outputs all possible haplotypes"
-    "dipenum;dipenum.cpp;Takes a VCF and outputs paired diploid haplotypes"
-    
+    "hapenum\;hapenum.cpp\;Takes a VCF and outputs all possible haplotypes"
+    "dipenum\;dipenum.cpp\;Takes a VCF and outputs paired diploid haplotypes"
+
     # Analysis tools
-    "quantify;quantify.cpp;Counts variants in VCFs"
-    "roc;roc.cpp;Calculates ROC curve from a labeled table with values"
-    "blocksplit;blocksplit.cpp ../include/helpers/Roc.hh;Splits VCFs into non-breaking haplotype blocks"
-    
+    "quantify\;quantify.cpp\;Counts variants in VCFs"
+    "roc\;roc.cpp\;Calculates ROC curve from a labeled table with values"
+    "blocksplit\;blocksplit.cpp ../include/helpers/Roc.hh\;Splits VCFs into non-breaking haplotype blocks"
+
     # Utility tools
-    "multimerge;multimerge.cpp;Custom version of bcftools merge"
-    "vcfhdr2json;vcfhdr2json.cpp;Converts VCF header to JSON"
-    "validatevcf;validatevcf.cpp;Checks ref alleles and haplotype enumeration"
-    "vcfcheck;vcfcheck.cpp;Tests if VCF is acceptable by hap.py"
-    "fastainfo;fastainfo.cpp;Returns contig lengths in JSON format"
-    "gvcf2bed;gvcf2bed.cpp;Converts gVCF to BED with regions of homref/variants"
+    "multimerge\;multimerge.cpp\;Custom version of bcftools merge"
+    "vcfhdr2json\;vcfhdr2json.cpp\;Converts VCF header to JSON"
+    "validatevcf\;validatevcf.cpp\;Checks ref alleles and haplotype enumeration"
+    "vcfcheck\;vcfcheck.cpp\;Tests if VCF is acceptable by hap.py"
+    "fastainfo\;fastainfo.cpp\;Returns contig lengths in JSON format"
+    "gvcf2bed\;gvcf2bed.cpp\;Converts gVCF to BED with regions of homref/variants"
 )
 
 # Set common properties for all executables
