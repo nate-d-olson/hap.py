@@ -1,115 +1,94 @@
-# Top-level Cmake file for Haplotype Tools
-#
-# Author: Peter Krusche <pkrusche@illumina.com>
-#
+# Top-level CMake file for Haplotype Tools (hap.py)
 cmake_minimum_required(VERSION 3.14...3.27)
-project(HAPLOTYPES
-    VERSION 1.0.0
-    DESCRIPTION "Benchmarking tool for small variant calls"
-    LANGUAGES CXX C)
+
+# Set CMake policies
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW) # use PROFILE directly for Xcode
+endif()
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW) # allow options to be set without overriding
+endif()
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW) # use <PackageName>_ROOT variables
+endif()
+
+# Include GNUInstallDirs early (needs to be before project command)
+include(GNUInstallDirs)
 
 # Add our custom CMake modules
 list(APPEND CMAKE_MODULE_PATH 
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake"
 )
 
+# Include core properties module before project() to set version info
+include(HappyProperties)
+
+# Project declaration with metadata
+project(HAPLOTYPES
+    VERSION ${HAPPY_VERSION}
+    DESCRIPTION "${HAPPY_PROJECT_DESCRIPTION}"
+    HOMEPAGE_URL "${HAPPY_PROJECT_HOMEPAGE}"
+    LANGUAGES CXX C)
+
 # Include our modern CMake modules
+include(FetchContent)
+include(CMakePackageConfigHelpers)
 include(VersionCheck)
 include(PackageHelpers)
-include(ModernDependencies)
+include(MacOSPaths)
+include(CppSettings)      # C++ specific settings
+include(CythonSupport)    # Cython and Python integration
+include(AppleCodeSign)    # macOS code signing support
 
-# Output directories
+# Set output directories for consistency across platforms
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Legacy includes
+# Legacy includes - to be modernized in future PRs
 include(cxx)
 include(configureFiles)
 
+# Configure vcfeval support
 if(BUILD_VCFEVAL)
-    message("Will build rtg-tools.")
-    set( ENV{BUILD_VCFEVAL} "1" )
-    set( ENV{VCFEVAL_WRAPPER} ${VCFEVAL_WRAPPER} )
-    set (VCFEVAL_AVAILABLE 1)
+    message(STATUS "Building with vcfeval support")
+    set(ENV{BUILD_VCFEVAL} "1")
+    set(ENV{VCFEVAL_WRAPPER} ${VCFEVAL_WRAPPER})
+    set(VCFEVAL_AVAILABLE 1)
 else()
-    set (VCFEVAL_AVAILABLE 0)
+    set(VCFEVAL_AVAILABLE 0)
 endif()
 
-# Dependencies configuration
-include(FetchContent)
+# Include our modern dependency management
+include(ModernDependencies)
 
-# Modern Boost setup
-set(BOOST_MIN_VERSION 1.74.0)
-find_package(Boost ${BOOST_MIN_VERSION} COMPONENTS thread iostreams regex unit_test_framework filesystem system program_options)
-if(NOT Boost_FOUND)
-    message(STATUS "Boost ${BOOST_MIN_VERSION}+ not found in system, fetching from source")
-    FetchContent_Declare(
-        Boost
-        URL https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.tar.bz2
-        URL_HASH SHA256=83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1
-    )
-    FetchContent_MakeAvailable(Boost)
-endif()
+# Required system packages
+find_package(Threads REQUIRED)
 
-# ZLIB configuration
-find_package(ZLIB)
-if(NOT ZLIB_FOUND)
-    message(STATUS "ZLIB not found in system, fetching from source")
-    FetchContent_Declare(
-        ZLIB
-        URL https://zlib.net/zlib-1.2.13.tar.gz
-        URL_HASH SHA256=b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30
-    )
-    FetchContent_MakeAvailable(ZLIB)
-endif()
-
-# HTSlib configuration
-find_package(HTSlib)
-if(NOT HTSlib_FOUND)
-    message(STATUS "HTSlib not found in system, fetching from source")
-    FetchContent_Declare(
-        htslib
-        GIT_REPOSITORY https://github.com/samtools/htslib.git
-        GIT_TAG 1.17  # Latest stable release
-    )
-    FetchContent_MakeAvailable(htslib)
-endif()
-
-# BCFtools configuration (if needed)
-if(BUILD_VCFEVAL)
-    find_package(BCFtools)
-    if(NOT BCFtools_FOUND)
-        message(STATUS "BCFtools not found in system, fetching from source")
-        FetchContent_Declare(
-            bcftools
-            GIT_REPOSITORY https://github.com/samtools/bcftools.git
-            GIT_TAG 1.17  # Latest stable release
-        )
-        FetchContent_MakeAvailable(bcftools)
-    endif()
-endif()
-
-# Include directories
-include_directories(${CMAKE_BINARY_DIR}/include)
-include_directories(${Boost_INCLUDE_DIRS})
-
-# Additional external library configuration
+# Configure JsonCPP (using modern FetchContent)
 FetchContent_Declare(
     jsoncpp
     GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
-    GIT_TAG 1.9.5  # Latest stable version
+    GIT_TAG 1.9.5
+    CMAKE_CACHE_ARGS
+        -DJSONCPP_WITH_TESTS:BOOL=OFF
+        -DJSONCPP_WITH_POST_BUILD_UNITTEST:BOOL=OFF
+        -DBUILD_SHARED_LIBS:BOOL=ON
 )
 FetchContent_MakeAvailable(jsoncpp)
 
-# Include local headers
-include_directories(${HAPLOTYPES_SOURCE_DIR}/external/klib)
-include_directories(${HAPLOTYPES_SOURCE_DIR}/external/intervaltree)
-include_directories(${HAPLOTYPES_SOURCE_DIR}/src/c++/include)
+# Configure include directories
+include_directories(
+    ${CMAKE_BINARY_DIR}/include
+    ${HAPLOTYPES_SOURCE_DIR}/external/klib
+    ${HAPLOTYPES_SOURCE_DIR}/external/intervaltree
+    ${HAPLOTYPES_SOURCE_DIR}/src/c++/include
+)
 
-# SGE support configuration
+# Configure SGE support
 if(USE_SGE)
     message(STATUS "SGE mode selected, you will need to use --force-interactive to run hap.py")
     set(SGE_AVAILABLE 1)
@@ -117,8 +96,26 @@ else()
     set(SGE_AVAILABLE 0)
 endif()
 
-# Required system packages
-find_package(Threads REQUIRED)
+# Extract version from Git
+find_package(Git QUIET)
+if(GIT_FOUND)
+    execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --always
+        OUTPUT_VARIABLE HAPLOTYPES_VERSION
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+endif()
+
+# If Git isn't available or fails, use a default version
+if(NOT DEFINED HAPLOTYPES_VERSION OR HAPLOTYPES_VERSION STREQUAL "")
+    set(HAPLOTYPES_VERSION "${CMAKE_PROJECT_VERSION}")
+endif()
+
+# Configure the version header
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/c++/include/Version.hh.in"
+               "${CMAKE_BINARY_DIR}/include/Version.hh"
+               @ONLY)
 
 # Build our libraries
 add_subdirectory(src/c++/lib)
@@ -128,30 +125,74 @@ set(HAPLOTYPES_ALL_LIBS
     ${HAPLOTYPES_LIBRARY}
     ${GSSW_LIBRARY}
     ${KLIB_LIBRARY}
-    jsoncpp_lib  # Modern jsoncpp target
+    jsoncpp_lib
     ${Boost_LIBRARIES}
     ${HTSLIB_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT})
 
 
-execute_process(COMMAND git describe --tags --always
-    OUTPUT_VARIABLE HAPLOTYPES_VERSION
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_STRIP_TRAILING_WHITESPACE
+# Add subdirectories for components
+add_subdirectory(src/c++/main)
+add_subdirectory(src/data)
+
+# Build tests conditionally
+if(BUILD_TESTS)
+    include(CTest)
+    enable_testing()
+    add_subdirectory(src/c++/test)
+endif()
+
+# Build Python bindings conditionally
+if(BUILD_PYTHON)
+    add_subdirectory(src/python)
+endif()
+
+# Documentation build
+if(BUILD_DOCS)
+    find_package(Doxygen)
+    if(DOXYGEN_FOUND)
+        add_subdirectory(doc)
+    else()
+        message(STATUS "Doxygen not found, documentation will not be built")
+    endif()
+endif()
+
+# Installation rules
+install(DIRECTORY "${CMAKE_BINARY_DIR}/bin/"
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        USE_SOURCE_PERMISSIONS
+        FILES_MATCHING PATTERN "*")
+
+install(DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+if(BUILD_VCFEVAL)
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/libexec/"
+            DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}
+            USE_SOURCE_PERMISSIONS)
+endif()
+
+# Package configuration files
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/packages/hap.py-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/hap.py-config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hap.py
 )
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/c++/include/Version.hh.in"
-               "${CMAKE_BINARY_DIR}/include/Version.hh")
+# Version config file
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/hap.py-config-version.cmake
+    VERSION ${CMAKE_PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
 
-add_subdirectory (src/c++/main)
-add_subdirectory (src/data)
-add_subdirectory (src/c++/test)
-add_subdirectory (src/python)
+# Install package config files
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/hap.py-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/hap.py-config-version.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hap.py
+)
 
-# install
-install (DIRECTORY "${CMAKE_BINARY_DIR}/bin/" DESTINATION bin FILES_MATCHING PATTERN "*" PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
-install (DIRECTORY "${CMAKE_BINARY_DIR}/lib/" DESTINATION lib)
-if(BUILD_VCFEVAL)
-    install (DIRECTORY "${CMAKE_BINARY_DIR}/libexec/" DESTINATION libexec USE_SOURCE_PERMISSIONS)
-endif()
+# Configure CPack for packaging
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPackConfig.cmake)
