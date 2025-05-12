@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel>=0.37.0", "build>=0.7.0", "Cython>=0.29.24", "numpy>=1.19.0", "cmake>=3.21.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "hap.py"
-version = "0.1.0"  # This will be updated by CMake
+# Version is dynamically set during build from CMake
+version = "0.0.0"  # This will be updated by CMake
 description = "Haplotype comparison tools for benchmarking variant calls"
 authors = [
     {name = "Illumina", email = "support@illumina.com"}
@@ -36,16 +37,27 @@ dependencies = [
 test = [
     "pytest>=6.0",
     "pytest-cov>=2.0",
+    "black>=22.0",
 ]
 dev = [
     "black>=22.0",
     "flake8>=4.0",
     "mypy>=0.950",
+    "isort>=5.10.0",
 ]
 
+[project.scripts]
+hap.py = "happy.cli.hap:main"
+som.py = "happy.cli.som:main"
+qfy.py = "happy.cli.qfy:main"
+pre.py = "happy.cli.pre:main"
+
 [tool.setuptools]
-packages = ["Tools"]
-package-dir = {"" = "src/python"}
+packages-dir = {"" = "src"}
+packages = ["happy", "happy.tools", "happy.haplo", "happy.somatic"]
+
+[tool.setuptools.package-data]
+happy = ["py.typed", "*.pyi"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
