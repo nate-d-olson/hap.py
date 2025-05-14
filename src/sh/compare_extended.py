@@ -1,21 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Compare two extended csv files
 
 import sys
 import csv
 
+
 def csvread(filename):
     f = open(filename)
     freader = csv.DictReader(f)
     data = {}
-    label_columns = ["Type", 
-                     "Subtype", 
-                     "Subset",
-                     "Filter", 
-                     "Genotype",
-                     "QQ.Field",
-                     "QQ"]
+    label_columns = [
+        "Type",
+        "Subtype",
+        "Subset",
+        "Filter",
+        "Genotype",
+        "QQ.Field",
+        "QQ",
+    ]
 
     for l in freader:
         record = dict(l)
@@ -42,83 +45,67 @@ def main():
     data1 = csvread(sys.argv[1])
     data2 = csvread(sys.argv[2])
 
-    all_keys_1 = set()
-    for l in data1.values():
-        all_keys_1 |= set(l.keys())
-    all_keys_2 = set()
-    for l in data2.values():
-        all_keys_2 |= set(l.keys())
-
-    if len(all_keys_1 - all_keys_2) or len(all_keys_2 - all_keys_1):
-        print >> sys.stderr, "ERROR -- missing metrics:"
-        print >> sys.stderr, "-------------------------\n"
-        print >> sys.stderr, "In 1 but not 2: %s" % str(all_keys_1 - all_keys_2)
-        print >> sys.stderr, "In 2 but not 1: %s" % str(all_keys_1 - all_keys_2)
-        print >> sys.stderr, "-------------------------"
-        sys.exit(1)
-
-    all_labels_1 = set(data1.keys())
-    all_labels_2 = set(data2.keys())
-
-    if len(all_labels_1 - all_labels_2) or len(all_labels_2 - all_labels_1):
-        print >> sys.stderr, "ERROR -- missing rows:"
-        print >> sys.stderr, "-------------------------\n"
-        print >> sys.stderr, "In 1 but not 2: %s" % str(all_labels_1 - all_labels_2)
-        print >> sys.stderr, "In 2 but not 1: %s" % str(all_labels_1 - all_labels_2)
-        print >> sys.stderr, "-------------------------"
-        sys.exit(1)
-
-    print "Comparing %i labels and %i metrics..." % (len(all_labels_1), len(all_keys_1))
-
     different_metrics = []
 
-    for label in all_labels_1:
-        for metric in all_keys_1:
-            v1 = data1[label][metric]
-            v2 = data2[label][metric]
+    keys1 = set(data1.keys())
+    keys2 = set(data2.keys())
 
-            if metric.endswith("_ratio"):
-                if v1 == ".":
-                    v1 = ""
-                if v2 == ".":
-                    v2 = ""
+    if keys1 != keys2:
+        print("Different keys:", file=sys.stderr)
+        print("A - B = %s" % str(keys1 - keys2), file=sys.stderr)
+        print("B - A = %s" % str(keys2 - keys1), file=sys.stderr)
+        print("Only comparing common keys.", file=sys.stderr)
 
-            if type(v1) != type(v2):
-                different_metrics.append((label,
-                                          metric,
-                                          ("%s" % type(v1)),
-                                          ("%s" % type(v2)),
-                                          "type mismatch"))
-            elif type(v1) is float:
-                if ("%.3g" % v1) != ("%.3g" % v2):
-                    different_metrics.append((label,
-                                              metric,
-                                              ("%.3g" % v1),
-                                              ("%.3g" % v2),
-                                              str(v1 - v2)))
-            elif type(v1) is int:
-                if v1 != v2:
-                    different_metrics.append((label,
-                                              metric,
-                                              str(v1),
-                                              str(v2),
-                                              str(v1 - v2)))
+    for key in list(keys1.intersection(keys2)):
+        r1_keys = set(data1[key].keys())
+        r2_keys = set(data2[key].keys())
+
+        if r1_keys != r2_keys:
+            print("Different keys for %s:" % key, file=sys.stderr)
+            print("A - B = %s" % str(r1_keys - r2_keys), file=sys.stderr)
+            print("B - A = %s" % str(r2_keys - r1_keys), file=sys.stderr)
+            print("Only comparing common fields.", file=sys.stderr)
+
+        for field in list(r1_keys.intersection(r2_keys)):
+            if field in [
+                "Type",
+                "Subtype",
+                "Subset",
+                "Filter",
+                "Genotype",
+                "QQ.Field",
+                "QQ",
+            ]:
+                if data1[key][field] != data2[key][field]:
+                    different_metrics.append(
+                        (key, field, str(data1[key][field]), str(data2[key][field]))
+                    )
             else:
-                if v1 != v2:
-                    different_metrics.append((label,
-                                              metric,
-                                              str(v1),
-                                              str(v2),
-                                              "Non-numeric mismatch"))
+                try:
+                    a = float(data1[key][field])
+                    b = float(data2[key][field])
+
+                    if ("%.3g" % a) != ("%.3g" % b):
+                        different_metrics.append(
+                            (key, field, ("%.3g" % a), ("%.3g" % b), b - a)
+                        )
+                except:
+                    if str(data1[key][field]) != str(data2[key][field]):
+                        different_metrics.append(
+                            (key, field, str(data1[key][field]), str(data2[key][field]))
+                        )
 
     if different_metrics:
-        print >> sys.stderr, "ERROR -- Metric differences detected:"
-        print >> sys.stderr, "-------------------------------------\n"
+        print("ERROR -- Metric differences detected:", file=sys.stderr)
+        print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print >> sys.stderr, "%s / %s: %s != %s difference: %s" % m
-        print >> sys.stderr, "-------------------------------------"
+            if len(m) > 4:
+                print("%s / %s: %s != %s difference: %f" % m, file=sys.stderr)
+            else:
+                print("%s / %s: %s != %s" % m, file=sys.stderr)
+        print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

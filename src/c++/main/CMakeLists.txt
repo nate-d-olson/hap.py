@@ -1,66 +1,59 @@
-# multimerge is our version of bcftools merge
-add_executable(multimerge multimerge.cpp)
-target_link_libraries(multimerge ${HAPLOTYPES_ALL_LIBS})
+# Define all executables with their source files and descriptions
+set(HAPPY_EXECUTABLES
+    # Core comparison tools
+    "xcmp\;xcmp.cpp\;Compares VCFs by genotypes (truth vs query)"
+    "scmp\;scmp.cpp\;Compares VCFs by alleles (ignoring zygosity)"
+    "hapcmp\;hapcmp.cpp\;Compares VCFs by sequence alignments"
 
-# hapenum takes a VCF and outputs all possible haplotypes
-add_executable(hapenum hapenum.cpp)
-target_link_libraries(hapenum ${HAPLOTYPES_ALL_LIBS})
+    # Preprocessing tools
+    "preprocess\;preprocess.cpp\;Performs variant decomposition and leftshifting"
+    "alleles\;alleles.cpp\;Pre-processor for scmp that writes one record per allele"
 
-# dipenum takes a VCF and outputs paired diploid haplotypes
-add_executable(dipenum dipenum.cpp)
-target_link_libraries(dipenum ${HAPLOTYPES_ALL_LIBS})
+    # Enumeration tools
+    "hapenum\;hapenum.cpp\;Takes a VCF and outputs all possible haplotypes"
+    "dipenum\;dipenum.cpp\;Takes a VCF and outputs paired diploid haplotypes"
 
-# blocksplit takes a set of VCFs and regions which do not break haplotype blocks at the edges
-add_executable(blocksplit blocksplit.cpp ../include/helpers/Roc.hh)
-target_link_libraries(blocksplit ${HAPLOTYPES_ALL_LIBS})
+    # Analysis tools
+    "quantify\;quantify.cpp\;Counts variants in VCFs"
+    "roc\;roc.cpp\;Calculates ROC curve from a labeled table with values"
+    "blocksplit\;blocksplit.cpp ../include/helpers/Roc.hh\;Splits VCFs into non-breaking haplotype blocks"
 
-# hapcmp takes a pair of VCFs and outputs comparison results based on alignments
-add_executable(hapcmp hapcmp.cpp)
-target_link_libraries(hapcmp ${HAPLOTYPES_ALL_LIBS})
+    # Utility tools
+    "multimerge\;multimerge.cpp\;Custom version of bcftools merge"
+    "vcfhdr2json\;vcfhdr2json.cpp\;Converts VCF header to JSON"
+    "validatevcf\;validatevcf.cpp\;Checks ref alleles and haplotype enumeration"
+    "vcfcheck\;vcfcheck.cpp\;Tests if VCF is acceptable by hap.py"
+    "fastainfo\;fastainfo.cpp\;Returns contig lengths in JSON format"
+    "gvcf2bed\;gvcf2bed.cpp\;Converts gVCF to BED with regions of homref/variants"
+)
 
-# xcmp takes a pair of VCFs and outputs an annotated comparison VCF (by genotypes)
-add_executable(xcmp xcmp.cpp)
-target_link_libraries(xcmp ${HAPLOTYPES_ALL_LIBS})
-
-# scmp takes a pair of VCFs and outputs an annotated comparison VCF (by alleles)
-add_executable(scmp scmp.cpp)
-target_link_libraries(scmp ${HAPLOTYPES_ALL_LIBS})
-
-# alleles is a pre-processor for scmp. It takes all samples, writes one record per allele
-# collects FORMATs into INFO and GT.
-add_executable(alleles alleles.cpp)
-target_link_libraries(alleles ${HAPLOTYPES_ALL_LIBS})
-
-# quantify counts variants in VCFs
-add_executable(quantify quantify.cpp)
-target_link_libraries(quantify ${HAPLOTYPES_ALL_LIBS})
-
-# vcfhdr2json turns a VCF header into JSON
-add_executable(vcfhdr2json vcfhdr2json.cpp)
-target_link_libraries(vcfhdr2json ${HAPLOTYPES_ALL_LIBS})
-
-# ROC takes a table with labels and a value + calculates a ROC curve
-add_executable(roc roc.cpp)
-target_link_libraries(roc ${HAPLOTYPES_ALL_LIBS})
-
-# validatevcf checks ref alleles and tests if haplotypes can be enumerated
-add_executable(validatevcf validatevcf.cpp)
-target_link_libraries(validatevcf ${HAPLOTYPES_ALL_LIBS})
-
-# vcfcheck tests if something will be acceptable by hap.py
-# this is different from validatevcf, which counts the number of
-# superloci that will cause matching problems.
-add_executable(vcfcheck vcfcheck.cpp)
-target_link_libraries(vcfcheck ${HAPLOTYPES_ALL_LIBS})
-
-# preprocess does variant decomposition and leftshifting
-add_executable(preprocess preprocess.cpp)
-target_link_libraries(preprocess ${HAPLOTYPES_ALL_LIBS})
-
-# fastainfo returns contig lengths and non-n lengths in JSON format
-add_executable(fastainfo fastainfo.cpp)
-target_link_libraries(fastainfo ${HAPLOTYPES_ALL_LIBS})
-
-# gVCF2bed converts a gVCF file to bed, indicating regions of pass/fail homref/variants
-add_executable(gvcf2bed gvcf2bed.cpp)
-target_link_libraries(gvcf2bed ${HAPLOTYPES_ALL_LIBS})
+# Set common properties for all executables
+foreach(exec_info ${HAPPY_EXECUTABLES})
+    # Parse the executable information
+    string(REPLACE ";" " " exec_info_str "${exec_info}")
+    string(REGEX REPLACE "^([^;]+);([^;]+);(.*)$" "\\1;\\2;\\3" exec_parts "${exec_info}")
+    
+    list(GET exec_parts 0 exec_name)
+    list(GET exec_parts 1 exec_sources)
+    list(GET exec_parts 2 exec_description)
+    
+    # Convert space-separated sources to list
+    string(REPLACE " " ";" exec_source_list "${exec_sources}")
+    
+    # Add the executable using our standardized macro
+    happy_add_executable(${exec_name} "${exec_source_list}")
+    
+    # Add target description as a property
+    set_target_properties(${exec_name} PROPERTIES 
+        DESCRIPTION "${exec_description}"
+    )
+    
+    # Setup standard includes and link with libraries
+    happy_setup_includes(${exec_name})
+    target_link_libraries(${exec_name} ${HAPLOTYPES_ALL_LIBS})
+    
+    # Install the executable
+    install(TARGETS ${exec_name}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endforeach()

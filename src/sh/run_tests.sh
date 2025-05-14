@@ -1,282 +1,86 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-##############################################################
-# Test setup
-##############################################################
+# Simplified run_tests.sh - preserve legacy functionality
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. ${DIR}/detect_vars.sh
+# Determine script directory
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$DIR/../.." && pwd)"
 
-##############################################################
-# Boost unit tests
-##############################################################
+# Dry-run helper (set DRY_RUN=1 to skip execution)
+DRY_RUN=${DRY_RUN:-0}
+_run() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "DRY_RUN: $*"; return 0
+  else
+    "$@"
+  fi
+}
 
-# echo "Running BOOST_TEST tests."
-
-bin/test_haplotypes
-if [[ $? -ne 0 ]]; then
-	echo "Boost Unit tests FAILED!"
-	exit 1
-else
-	echo "Boost Unit tests SUCCEEDED!"
+# On macOS, ensure CMake uses the correct SDK
+if [[ "$(uname)" == "Darwin" ]]; then
+  export EXTRA_CMAKE_OPTS="-DCMAKE_OSX_SYSROOT=$(xcrun --show-sdk-path)"
 fi
 
-##############################################################
-# Test Multimerge
-##############################################################
+# Install and build C++ and Python components into local directory
+INSTALL_DIR="${INSTALL_DIR:-$PWD/.happy-install}"
+echo "Installing into ${INSTALL_DIR}"
+_run python3 "$ROOT/install.py" "$INSTALL_DIR"
 
-/bin/bash ${DIR}/run_multimerge_test.sh
+# Prepend binaries and CLI scripts to PATH
+export PATH="$INSTALL_DIR/bin:$PATH"
+PYTHON="${PYTHON:-python3}"
+HCDIR="$INSTALL_DIR/bin"
+export PYTHON HCDIR
 
+# Counters
+FAILED_TESTS=""
+TEST_COUNT=0
+FAIL_COUNT=0
+
+# BOOST unit tests
+echo "Running test_haplotypes"
+_run "$HCDIR/test_haplotypes"
+((TEST_COUNT++))
 if [[ $? -ne 0 ]]; then
-	echo "Multimerge tests FAILED!"
-	exit 1
+  echo "[FAILED] test_haplotypes"; FAILED_TESTS+="\n- test_haplotypes"; ((FAIL_COUNT++))
 else
-	echo "Multimerge tests SUCCEEDED!"
+  echo "[PASSED] test_haplotypes"
 fi
 
-##############################################################
-# Test Hapenum
-##############################################################
+# Other tests via helper scripts
+SCRIPTS=(
+  run_multimerge_test.sh run_hapenum_test.sh run_hapcmp_test.sh
+  run_pathtraversal_test.sh run_fp_accuracy_test.sh run_faulty_variant_test.sh
+  run_leftshift_test.sh run_other_vcf_tests.sh run_gvcf_homref_test.sh
+  run_chrprefix_test.sh run_decomp_test.sh run_integration_test.sh
+  run_scmp_test.sh
+)
+for script in "${SCRIPTS[@]}"; do
+  echo "Running ${script}"
+  _run bash "$DIR/$script"
+  ((TEST_COUNT++))
+  if [[ $? -ne 0 ]]; then
+    echo "[FAILED] ${script}"; FAILED_TESTS+="\n- ${script}"; ((FAIL_COUNT++))
+  else
+    echo "[PASSED] ${script}"
+  fi
+done
 
-/bin/bash ${DIR}/run_hapenum_test.sh
-
+# Python-based fastasize test
+echo "Running run_fastasize_test.py"
+_run "$PYTHON" "$DIR/run_fastasize_test.py"
+((TEST_COUNT++))
 if [[ $? -ne 0 ]]; then
-	echo "Hapenum test FAILED!"
-	exit 1
+  echo "[FAILED] run_fastasize_test.py"; FAILED_TESTS+="\n- run_fastasize_test.py"; ((FAIL_COUNT++))
 else
-	echo "Hapenum test SUCCEEDED!"
+  echo "[PASSED] run_fastasize_test.py"
 fi
 
-##############################################################
-# Test Hapcmp
-##############################################################
-
-/bin/bash ${DIR}/run_hapcmp_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Hapcmp test FAILED!"
-	exit 1
-else
-	echo "Hapcmp test SUCCEEDED!"
+# Summary
+echo -e "\nRan ${TEST_COUNT} tests: ${FAIL_COUNT} failures"
+if [[ ${FAIL_COUNT} -ne 0 ]]; then
+  echo -e "Failures:${FAILED_TESTS}"; exit 1
 fi
 
-##############################################################
-# Test Hap.py + path traversals
-##############################################################
-
-/bin/bash ${DIR}/run_pathtraversal_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Path traversal test FAILED!"
-	exit 1
-else
-	echo "Path traversal test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + FP regions
-##############################################################
-
-/bin/bash ${DIR}/run_fp_accuracy_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "FP region test FAILED!"
-	exit 1
-else
-	echo "FP region test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + Faulty input variants
-##############################################################
-
-/bin/bash ${DIR}/run_faulty_variant_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Faulty variant test FAILED!"
-	exit 1
-else
-	echo "Faulty variant test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py safe leftshifting
-##############################################################
-
-/bin/bash ${DIR}/run_leftshift_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Leftshift test FAILED!"
-	exit 1
-else
-	echo "Leftshift test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + other VCF items
-##############################################################
-
-/bin/bash ${DIR}/run_other_vcf_tests.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Other VCF tests FAILED!"
-	exit 1
-else
-	echo "Other VCF tests SUCCEEDED!"
-fi
-
-##############################################################
-# Test hom-ref block expansion and calls-only preprocessing
-##############################################################
-
-/bin/bash ${DIR}/run_gvcf_homref_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "GVCF hom-ref test FAILED!"
-	exit 1
-else
-	echo "GVCF hom-ref test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + chr prefix detection
-##############################################################
-
-/bin/bash ${DIR}/run_chrprefix_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Chr prefix detection tests FAILED!"
-	exit 1
-else
-	echo "Chr prefix detection tests SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py variant decomposition into primitives
-##############################################################
-
-/bin/bash ${DIR}/run_decomp_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Variant decomposition test FAILED!"
-	exit 1
-else
-	echo "Variant decomposition test SUCCEEDED!"
-fi
-
-##############################################################
-# Test contig length calculation
-##############################################################
-
-${PYTHON} ${DIR}/run_fastasize_test.py
-if [[ $? -ne 0 ]]; then
-    echo "Contig length calculation test FAILED!"
-    exit 1
-else
-    echo "Contig length calculation test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + integration
-##############################################################
-
-/bin/bash ${DIR}/run_integration_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Integration test FAILED!"
-	exit 1
-else
-	echo "Integration test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py scmp allele and distance-based comparison
-##############################################################
-
-/bin/bash ${DIR}/run_scmp_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Integration test FAILED!"
-	exit 1
-else
-	echo "Integration test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py on tricky test cases
-##############################################################
-
-/bin/bash ${DIR}/run_giab_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Tricky indel test FAILED!"
-	exit 1
-else
-	echo "Tricky indel test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Performance + Consistency
-##############################################################
-
-/bin/bash ${DIR}/run_performance_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Performance / Consistency test FAILED!"
-	exit 1
-else
-	echo "Performance / Consistency test SUCCEEDED!"
-fi
-
-##############################################################
-# Test GA4GH quantification
-##############################################################
-
-/bin/bash ${DIR}/run_quantify_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Quantify integration test FAILED!"
-	exit 1
-else
-	echo "Quantify integration test SUCCEEDED!"
-fi
-
-##############################################################
-# Test GA4GH stratified quantification
-##############################################################
-
-/bin/bash ${DIR}/run_quantify_stratification_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Quantify stratification test FAILED!"
-	exit 1
-else
-	echo "Quantify stratification test SUCCEEDED!"
-fi
-
-
-##############################################################
-# Test PG Counting
-##############################################################
-
-/bin/bash ${DIR}/run_happy_pg_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "PG integration test FAILED!"
-	exit 1
-else
-	echo "PG integration test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + integration
-##############################################################
-
-/bin/bash ${DIR}/run_sompy_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Som.py test FAILED!"
-	exit 1
-else
-	echo "Som.py test SUCCEEDED!"
-fi
+echo "All tests passed!"

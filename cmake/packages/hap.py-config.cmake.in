@@ -1,0 +1,16 @@
+# Package configuration for hap.py
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# Find dependencies
+find_dependency(ZLIB)
+find_dependency(Boost 1.74 COMPONENTS thread iostreams regex filesystem system program_options)
+find_dependency(HTSlib)
+
+if(@BUILD_VCFEVAL@)
+    find_dependency(BCFtools)
+endif()
+
+# Import targets
+include("${CMAKE_CURRENT_LIST_DIR}/hap.py-targets.cmake")

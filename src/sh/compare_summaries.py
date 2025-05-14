@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Compare two summary csv files
 
 import sys
+
 
 def csvread(filename):
     f = open(filename)
@@ -26,7 +27,7 @@ def csvread(filename):
         if label in labels:
             continue
         labels.add(label)
-        for i in xrange(1, len(r)):
+        for i in range(1, len(r)):
             if header[i] not in data:
                 data[header[i]] = {}
             try:
@@ -43,18 +44,26 @@ def main():
 
     different_metrics = []
 
-    for metric in ["TRUTH.TOTAL", "QUERY.TOTAL",
-                   "TRUTH.TP", "TRUTH.FN",
-                   "QUERY.FP", "QUERY.UNK",
-                   "TRUTH.TOTAL.TiTv_ratio", "QUERY.TOTAL.TiTv_ratio",
-                   "TRUTH.TOTAL.het_hom_ratio", "QUERY.TOTAL.het_hom_ratio",
-                   "METRIC.Recall", "METRIC.Precision", "METRIC.Frac_NA",
-                   "Subset.Size", "Subset.IS_CONF.Size"]:
+    for metric in [
+        "TRUTH.TOTAL",
+        "QUERY.TOTAL",
+        "TRUTH.TP",
+        "TRUTH.FN",
+        "QUERY.FP",
+        "QUERY.UNK",
+        "TRUTH.TOTAL.TiTv_ratio",
+        "QUERY.TOTAL.TiTv_ratio",
+        "TRUTH.TOTAL.het_hom_ratio",
+        "QUERY.TOTAL.het_hom_ratio",
+        "METRIC.Recall",
+        "METRIC.Precision",
+        "METRIC.Frac_NA",
+        "Subset.Size",
+        "Subset.IS_CONF.Size",
+    ]:
         if metric not in data1 and metric not in data2:
             continue
-        for field in ["Locations.SNP",
-                      "Locations.INDEL"
-                      ]:
+        for field in ["Locations.SNP", "Locations.INDEL"]:
             field1 = field
             if field1 not in data1[metric]:
                 field1 = field1.replace("Locations.", "")
@@ -62,12 +71,18 @@ def main():
             if field2 not in data2[metric]:
                 field2 = field2.replace("Locations.", "")
             if field1 not in data1[metric] and field2 not in data2[metric]:
-                print >>sys.stderr, "Skipping %s -- not present on both sides" % field
+                print(
+                    "Skipping %s -- not present on both sides" % field, file=sys.stderr
+                )
                 continue
-            print metric + " / " + field
-            print data1[metric][field1]
-            print data2[metric][field2]
-            if metric.endswith("_ratio") and data1[metric][field1] in ["", "."] and data2[metric][field2] in ["", "."]:
+            print(metric + " / " + field)
+            print(data1[metric][field1])
+            print(data2[metric][field2])
+            if (
+                metric.endswith("_ratio")
+                and data1[metric][field1] in ["", "."]
+                and data2[metric][field2] in ["", "."]
+            ):
                 # allow empty ratio match
                 continue
             try:
@@ -80,20 +95,24 @@ def main():
                 data2[metric][field2] = float("NaN")
 
             if ("%.3g" % data1[metric][field1]) != ("%.3g" % data2[metric][field2]):
-                different_metrics.append((field,
-                                          metric,
-                                          ("%.3g" % data1[metric][field1]),
-                                          ("%.3g" % data2[metric][field2]),
-                                          data2[metric][field2] - data1[metric][field1]))
+                different_metrics.append(
+                    (
+                        field,
+                        metric,
+                        ("%.3g" % data1[metric][field1]),
+                        ("%.3g" % data2[metric][field2]),
+                        data2[metric][field2] - data1[metric][field1],
+                    )
+                )
 
     if different_metrics:
-        print >> sys.stderr, "ERROR -- Metric differences detected:"
-        print >> sys.stderr, "-------------------------------------\n"
+        print("ERROR -- Metric differences detected:", file=sys.stderr)
+        print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print >> sys.stderr, "%s / %s: %s != %s difference: %f" % m
-        print >> sys.stderr, "-------------------------------------"
+            print("%s / %s: %s != %s difference: %f" % m, file=sys.stderr)
+        print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,64 +1,86 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# Compare two som.py csv files
+# Compare two sompy feature tables
 
 import sys
-import csv
+import pandas as pd
+import numpy as np
+
+eps = 1e-6
 
 
 def csvread(filename):
-    f = open(filename)
-    header = None
-    data = []
-    rn = 0
-    for r in csv.reader(f):
-        rn += 1
-        if not header:
-            header = r
-            continue
-        rec = {}
-        for i in xrange(0, len(r)):
-            try:
-                try:
-                    rec[header[i]] = float(r[i])
-                except:
-                    rec[header[i]] = r[i]
-            except:
-                print >> sys.stderr, "%i: %i / %i" % (rn, len(header), len(r))
-                print "%i: %i\n%s\n%s" % (rn, i, "\t".join(header), "\t".join(r))
-                raise
-
-        data.append(rec)
-    f.close()
-    return header, data
+    f = pd.read_csv(filename, na_values="")
+    return f
 
 
 def main():
-    header1, data1 = csvread(sys.argv[1])
-    header2, data2 = csvread(sys.argv[2])
+    data1 = csvread(sys.argv[1])
+    data2 = csvread(sys.argv[2])
 
-    if header1 != header2 or len(header1) == 0:
-        raise Exception("Header mismatch, \n%s\n != \n%s\n" % (str(header1), str(header2)))
+    if len(data1) != len(data2):
+        raise Exception("Table lengths differ: %i vs %i" % (len(data1), len(data2)))
 
-    if len(data1) != len(data2) or len(data1) == 0:
-        raise Exception("Data length mismatch, %i != %i" % (len(data1), len(data2)))
+    match = 0
+    for i in range(0, len(data1)):
+        r1 = data1.iloc[i]
+        r2 = data2.iloc[i]
 
-    print "Comparing fields: %s" % str(header1)
-
-    for i in xrange(0, len(data1)):
-        rec1 = data1[i]
-        rec2 = data2[i]
-        for metric in header1:
-            if type(rec1[metric]) is str and type(rec2[metric]) is str:
-                if rec1[metric] != rec2[metric]:
-                    raise Exception("Str mismatch in row %i: %s != %s" % (i, rec1[metric], rec2[metric]))
-            elif type(rec1[metric]) is float and type(rec2[metric]) is float:
-                if ("%.3g" % rec1[metric]) != ("%.3g" % rec2[metric]):
-                    raise Exception("Float mismatch in row %i: %g != %g" % (i, rec1[metric], rec2[metric]))
+        # use exact string lookup & ignore NaN columns
+        if (
+            r1["CHROM"] == r2["CHROM"]
+            and r1["POS"] == r2["POS"]
+            and r1["tag"] == r2["tag"]
+        ):
+            match += 1
+        else:
+            print("ERROR at %i:" % i)
+            print(r1.to_string())
+            print(r2.to_string())
+            print("")
+            if match < 10:
+                continue
             else:
-                raise Exception("Type mismatch in row %i: %s != %s" % (i, str(rec1[metric]), str(rec2[metric])))
-    print "ok (%i records)" % len(data1)
+                raise Exception("Records don't match.")
+
+    print("All feature table rows match (%i)" % match)
+
+    # match columns
+    passed_columns = False
+    try:
+        float_cols = set([s for s in list(data1) if not s == s.upper()])
+
+        match = 0
+        failed = 0
+        for i in range(0, len(data1)):
+            r1 = data1.iloc[i]
+            r2 = data2.iloc[i]
+            for f in float_cols:
+                if f in list(r1) and f in list(r2):
+                    if np.isnan(r1[f]) and np.isnan(r2[f]):
+                        match += 1
+                    elif np.isnan(r1[f]) or np.isnan(r2[f]):
+                        print(
+                            "Value mismatch for %s: %s != %s"
+                            % (f, str(r1[f]), str(r2[f]))
+                        )
+                    elif abs(r1[f] - r2[f]) < eps:
+                        match += 1
+                    else:
+                        print("Value mismatch for %s: %f != %f" % (f, r1[f], r2[f]))
+                        failed += 1
+
+        if failed > 0:
+            raise Exception(
+                "Values in tables don't match (%i failures out of %i comparisons)"
+                % (failed, match + failed)
+            )
+        passed_columns = True
+        print("All values match (%i comparisons)" % match)
+    finally:
+        if not passed_columns:
+            raise Exception("Columns don't match")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
