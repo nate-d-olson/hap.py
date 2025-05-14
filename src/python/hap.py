@@ -188,7 +188,7 @@ def main():
         parser.print_help()
         exit(1)
 
-    print "Hap.py %s" % Tools.version        
+    print("Hap.py %s" % Tools.version)
     if args.version:
         exit(0)
 
@@ -496,8 +496,8 @@ def main():
             # if we use vcfeval we need to merge the INFO fields back in.
             tf = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
             tempfiles.append(tf)
-            print >> tf, "TRUTH_IN"
-            print >> tf, "QUERY_IN"
+            print("TRUTH_IN", file=tf)
+            print("QUERY_IN", file=tf)
             tf.close()
             info_file = tempfile.NamedTemporaryFile(suffix=".vcf.gz", delete=False)
             tempfiles.append(info_file.name)

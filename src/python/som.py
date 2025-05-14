@@ -506,7 +506,7 @@ def main():
         unkpath = os.path.join(scratch, "unk.vcf.gz")
         ambipath = os.path.join(scratch, "ambi.vcf.gz")
 
-        # get header to print to unk and ambi VCFs
+        # get header to print(to unk and ambi VCFs)
         rununiquepath = os.path.join(scratch, "tpfn", "0001.vcf.gz")
         header = runBcftools("view", rununiquepath, "--header-only")
 
@@ -628,7 +628,7 @@ def main():
         metrics_output = makeMetricsObject("som.py.comparison")
 
         if args.ambi and args.explain_ambiguous:
-            ac = list(ambiClasses.iteritems())
+            ac = list(ambiClasses.items())
             if ac:
                 ambie = pandas.DataFrame(ac, columns=["class", "count"])
                 ambie.sort_values(["class"], inplace=True)
@@ -638,16 +638,16 @@ def main():
                 pandas.set_option("display.height", 1100)
                 logging.info("FP/ambiguity classes with info (multiple classes can "
                              "overlap):\n" + ambie.to_string(index=False))
-                # in default mode, print result summary to stdout
+                # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print "FP/ambiguity classes with info (multiple classes can " \
-                          "overlap):\n" + ambie.to_string(index=False)
+                    print("FP/ambiguity classes with info (multiple classes can " +
+                          "overlap):\n" + ambie.to_string(index=False))
                 ambie.to_csv(args.output + ".ambiclasses.csv")
                 metrics_output["metrics"].append(dataframeToMetricsTable("ambiclasses", ambie))
             else:
                 logging.info("No ambiguous variants.")
 
-            ar = list(ambiReasons.iteritems())
+            ar = list(ambiReasons.items())
             if ar:
                 ambie = pandas.DataFrame(ar, columns=["reason", "count"])
                 ambie.sort_values(["reason"], inplace=True)
@@ -657,10 +657,10 @@ def main():
                 pandas.set_option("display.height", 1100)
                 logging.info("Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
                     formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
-                # in default mode, print result summary to stdout
+                # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print "Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
-                        formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False)
+                    print("Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
+                        formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
                 ambie.to_csv(args.output + ".ambireasons.csv")
                 metrics_output["metrics"].append(dataframeToMetricsTable("ambireasons", ambie))
             else:
@@ -700,7 +700,7 @@ def main():
             if not args.disable_order_check:
                 logging.info("Checking order %i / %i" % (len1, len2))
 
-                for x in xrange(0, len1):
+                for x in range(0, len1):
                     for a in ["CHROM", "POS"]:
                         if tps.loc[x][a] != tps2.loc[x][a]:
                             raise Exception("Cannot merge TP features, inputs are out of order at %s / %s" % (
@@ -934,9 +934,9 @@ def main():
         vstring = "som.py-%s" % Tools.version
 
         logging.info("\n" + res.to_string())
-        # in default mode, print result summary to stdout
+        # in default mode, print(result summary to stdout)
         if not args.quiet and not args.verbose:
-            print "\n" + res.to_string()
+            print("\n" + res.to_string())
 
         res["sompyversion"] = vstring
 

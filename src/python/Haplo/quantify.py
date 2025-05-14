@@ -55,7 +55,7 @@ def _locations_tmp_bed_file(locations):
 
     tf = tempfile.NamedTemporaryFile(delete=False)
     for xchr, start, end in locations:
-        print >> tf, "%s\t%i\t%i" % (xchr, start - 1, end)
+        print("%s\t%i\t%i" % (xchr, start - 1, end), file=tf)
     tf.close()
 
     return tf.name
@@ -152,7 +152,7 @@ def run_quantify(filename,
         run_str += " -v %s" % pipes.quote(write_vcf)
 
     if regions:
-        for k, v in regions.iteritems():
+        for k, v in regions.items():
             run_str += " -R '%s:%s'" % (k, v)
 
     if roc_regions:
