@@ -1,106 +1,103 @@
-# Top-level Cmake file for Haplotype Tools
+# Top-level Cmake file for Haplotype Tools (Python 3 version)
 #
 # Author: Peter Krusche <pkrusche@illumina.com>
+# Python 3 Migration: [Your name]
 #
-cmake_minimum_required (VERSION 2.8)
-project (HAPLOTYPES)
+cmake_minimum_required(VERSION 3.10)
+project(HAPLOTYPES VERSION 0.3.15 LANGUAGES CXX C)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+# Set CMAKE policies
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)  # Use <PackageName>_ROOT variables
+endif()
+
+# Output directories
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Include custom CMake modules
 include(cxx)
 include(configureFiles)
+include(CythonSupport)
 
-if(BUILD_VCFEVAL)
-    message("Will build rtg-tools.")
-    set( ENV{BUILD_VCFEVAL} "1" )
-    set( ENV{VCFEVAL_WRAPPER} ${VCFEVAL_WRAPPER} )
-    set (VCFEVAL_AVAILABLE 1)
-else()
-    set (VCFEVAL_AVAILABLE 0)
+# Python version detection
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+message(STATUS "Found Python: ${Python3_EXECUTABLE} (version: ${Python3_VERSION})")
+if(Python3_VERSION VERSION_LESS 3.6)
+  message(FATAL_ERROR "Python 3.6 or later is required")
 endif()
 
+# Find NumPy for Cython integration
+if(NOT Python3_NumPy_FOUND)
+  message(WARNING "NumPy not found - some Cython modules may not build correctly")
+endif()
+
+# RTG tools / vcfeval configuration
+if(BUILD_VCFEVAL)
+    message(STATUS "Will build rtg-tools.")
+    set(ENV{BUILD_VCFEVAL} "1")
+    set(ENV{VCFEVAL_WRAPPER} ${VCFEVAL_WRAPPER})
+    set(VCFEVAL_AVAILABLE 1)
+else()
+    set(VCFEVAL_AVAILABLE 0)
+endif()
+
+# Build external dependencies
 execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies.sh
+    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies_py3.sh
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     RESULT_VARIABLE EXTERNAL_SUCCESS)
 
 if(NOT "${EXTERNAL_SUCCESS}" STREQUAL "0")
-    message(FATAL_ERROR "Building external dependencies has failed")
+    message(FATAL_ERROR "Building external dependencies has failed. See error messages above.")
 endif()
 
-set(Boost_USE_STATIC_LIBS        ON)  # only find static libs
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME     ON)
+# Boost configuration
+set(Boost_USE_STATIC_LIBS ON)  # only find static libs
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)  # Changed to OFF for better compatibility with Python
 
-# un-break library finding
-set(Boost_NO_BOOST_CMAKE         ON)
-set(Boost_NO_SYSTEM_PATHS        ON)
+# Find system Boost or use local built version
+if(DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT $ENV{BOOST_ROOT})
+    message(STATUS "Using system Boost from BOOST_ROOT environment: ${BOOST_ROOT}")
+    if(EXISTS "${BOOST_ROOT}/include/boost/version.hpp")
+        message(STATUS "Boost include directory found at ${BOOST_ROOT}/include/boost")
+    else()
+        message(WARNING "Boost headers not found at ${BOOST_ROOT}/include/boost")
+    endif()
+else()
+    set(BOOST_ROOT ${CMAKE_BINARY_DIR})
+    message(STATUS "Using our own Boost, which was built at ${CMAKE_SOURCE_DIR}/external/boost_subset_1_58_0")
+    if(NOT EXISTS "${CMAKE_BINARY_DIR}/include/boost/version.hpp")
+        message(WARNING "Built Boost headers not found at ${CMAKE_BINARY_DIR}/include/boost")
+    endif()
+endif()
 
-set(BOOST_ROOT ${CMAKE_BINARY_DIR})
-message("Using our own Boost, which was built at ${HAPLOTYPES_SOURCE_DIR}/external/boost_install")
+# Find Boost components
+find_package(Boost 1.55.0 COMPONENTS thread iostreams regex filesystem system program_options REQUIRED)
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find Boost libraries. Please install or set BOOST_ROOT.")
+endif()
 
-find_package(Boost 1.55.0 COMPONENTS thread iostreams regex unit_test_framework filesystem system program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
-include_directories (${CMAKE_BINARY_DIR}/include)
-link_directories (${CMAKE_BINARY_DIR}/lib)
+# Include directories
+include_directories(${CMAKE_BINARY_DIR}/include)
+link_directories(${CMAKE_BINARY_DIR}/lib)
 
-# make sure we use the bundled zlib version
-set(ZLIB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libz.a)
+# Find other dependencies
+find_package(ZLIB REQUIRED)
+include_directories(${ZLIB_INCLUDE_DIRS})
 
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/klib)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/intervaltree)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/external/jsoncpp)
-include_directories (${HAPLOTYPES_SOURCE_DIR}/src/c++/include)
+# Include subdirectories
+add_subdirectory(src/c++)
 
-# install bcftools, samtools, htslib
-if(USE_SGE)
-    message("SGE mode selected, you will need to use --force-interactive to run hap.py")
-    set (SGE_AVAILABLE 1)
-else()
-    set (SGE_AVAILABLE 0)
-endif()
-
-include(FindHTSLib)
-
-find_package (Threads REQUIRED)
-
-# make libraries first
-add_subdirectory (external)
-add_subdirectory (src/c++/lib)
-
-set(HAPLOTYPES_ALL_LIBS ${HAPLOTYPES_LIBRARY}
-                        ${GSSW_LIBRARY}
-                        ${KLIB_LIBRARY}
-                        ${JSONCPP_LIBRARY}
-                        ${Boost_LIBRARIES}
-                        ${HTSLIB_LIBRARIES}
-                        ${ZLIB_LIBRARIES}
-                        ${CMAKE_THREAD_LIBS_INIT})
-
-
-execute_process(COMMAND git describe --tags --always
-    OUTPUT_VARIABLE HAPLOTYPES_VERSION
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/c++/include/Version.hh.in"
-               "${CMAKE_BINARY_DIR}/include/Version.hh")
-
-add_subdirectory (src/c++/main)
-add_subdirectory (src/data)
-add_subdirectory (src/c++/test)
-add_subdirectory (src/python)
-
-# install
-install (DIRECTORY "${CMAKE_BINARY_DIR}/bin/" DESTINATION bin FILES_MATCHING PATTERN "*" PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_EXECUTE)
-install (DIRECTORY "${CMAKE_BINARY_DIR}/lib/" DESTINATION lib)
-if(BUILD_VCFEVAL)
-    install (DIRECTORY "${CMAKE_BINARY_DIR}/libexec/" DESTINATION libexec USE_SOURCE_PERMISSIONS)
-endif()
+# Status message at the end
+message(STATUS "Configuration completed successfully. Run 'make' to build.")
