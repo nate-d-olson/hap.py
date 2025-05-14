@@ -7,6 +7,7 @@ This directory contains configuration files for GitHub Copilot integration with 
 - `copilot-instructions.md`: Main instructions for GitHub Copilot about the project
 - `instructions/`: Language-specific coding standards and guidelines
 - `prompt/`: Helpful prompts and guides for common development tasks
+  - `continue-py3-migration.md`: Guidance for continuing the Python 3 migration
 - `archive/migration-docs/`: Documentation of Python 3 migration progress
   - `cython-integration-py3.md`: Details of Cython/C++ integration for Python 3
 - `PYTHON3_MIGRATION.md`: Current status and plan for Python 3 migration
@@ -53,6 +54,7 @@ Use these prefixes in your Copilot conversations:
 
 - `project-overview.md`: High-level project description
 - `python-migration-help.md`: Guidance for Python 2 to 3 migration
+- `continue-py3-migration.md`: Step-by-step guide to continue Python 3 migration work
 - `copilot-usage-guide.md`: Tips for using GitHub Copilot
 - `vibe-coding-guide.md`: Guide for Vibe coding with GitHub Copilot
 - `bioinformatics-prompts.md`: Useful prompts for bioinformatics tasks
