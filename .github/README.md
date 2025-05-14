@@ -55,6 +55,7 @@ Use these prefixes in your Copilot conversations:
 - `project-overview.md`: High-level project description
 - `python-migration-help.md`: Guidance for Python 2 to 3 migration
 - `continue-py3-migration.md`: Step-by-step guide to continue Python 3 migration work
+- `migration-scripts.md`: Guide to Python 3 migration scripts and workflow
 - `copilot-usage-guide.md`: Tips for using GitHub Copilot
 - `vibe-coding-guide.md`: Guide for Vibe coding with GitHub Copilot
 - `bioinformatics-prompts.md`: Useful prompts for bioinformatics tasks
