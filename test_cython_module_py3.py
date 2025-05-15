@@ -232,7 +232,7 @@ def main():
 
         # Test string handling in modules that imported successfully
         string_test_results = {}
-        for module_name, imported in import_results.items():
+        for module_name, imported in list(import_results.items()):
             if imported:
                 string_test_results[module_name] = test_cython_string_handling(
                     module_name

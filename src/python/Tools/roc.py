@@ -17,8 +17,14 @@ import subprocess
 import tempfile
 
 
-def tableROC(tbl, label_column, feature_column, filter_column=None,
-             filter_name=None, roc_reversed=False):
+def tableROC(
+    tbl,
+    label_column,
+    feature_column,
+    filter_column=None,
+    filter_name=None,
+    roc_reversed=False,
+):
     """Compute ROC table from TP/FP/FN classification table.
 
     :param tbl: table with label and feature
@@ -82,7 +88,7 @@ class ROC(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def from_table(self, tbl):
-        """ Create ROC from feature table
+        """Create ROC from feature table
         :param tbl: the table
         :type tbl: pandas.DataFrame
         :rtype: pandas.DataFrame
@@ -98,7 +104,7 @@ class ROC(object, metaclass=abc.ABCMeta):
 
     @classmethod
     def register(cls, name, ftname, cons):
-        """ Register a ROC calculator
+        """Register a ROC calculator
         :param name: the name of the calculator
         :param ftname: the features / feature table name
                       (will be accessible in the ftname attribute)
@@ -117,8 +123,8 @@ class StrelkaSNVRoc(ROC):
 
     def from_table(self, tbl):
         tbl.loc[tbl["NT"] != "ref", "QSS_NT"] = 0
-        return tableROC(tbl, "tag",
-                        "QSS_NT", "FILTER", "QSS_ref")
+        return tableROC(tbl, "tag", "QSS_NT", "FILTER", "QSS_ref")
+
 
 ROC.register("strelka.snv.qss", "hcc.strelka.snv", StrelkaSNVRoc)
 
@@ -128,8 +134,8 @@ class StrelkaSNVVQSRRoc(ROC):
 
     def from_table(self, tbl):
         tbl.loc[tbl["NT"] != "ref", "VQSR"] = 0
-        return tableROC(tbl, "tag",
-                        "VQSR", "FILTER", "LowQscore")
+        return tableROC(tbl, "tag", "VQSR", "FILTER", "LowQscore")
+
 
 ROC.register("strelka.snv.vqsr", "hcc.strelka.snv", StrelkaSNVVQSRRoc)
 
@@ -139,8 +145,8 @@ class StrelkaSNVEVSRoc(ROC):
 
     def from_table(self, tbl):
         tbl.loc[tbl["NT"] != "ref", "EVS"] = 0
-        return tableROC(tbl, "tag",
-                        "EVS", "FILTER", "LowEVS")
+        return tableROC(tbl, "tag", "EVS", "FILTER", "LowEVS")
+
 
 ROC.register("strelka.snv", "hcc.strelka.snv", StrelkaSNVEVSRoc)
 
@@ -151,8 +157,8 @@ class StrelkaIndelRoc(ROC):
     def from_table(self, tbl):
         # fix QSI for NT != ref
         tbl.loc[tbl["NT"] != "ref", "QSI_NT"] = 0
-        return tableROC(tbl, "tag",
-                        "QSI_NT", "FILTER", "QSI_ref")
+        return tableROC(tbl, "tag", "QSI_NT", "FILTER", "QSI_ref")
+
 
 ROC.register("strelka.indel", "hcc.strelka.indel", StrelkaIndelRoc)
 
@@ -162,8 +168,8 @@ class StrelkaIndelEVSRoc(ROC):
 
     def from_table(self, tbl):
         # fix QSI for NT != ref
-        return tableROC(tbl, "tag",
-                        "EVS", "FILTER", "LowEVS")
+        return tableROC(tbl, "tag", "EVS", "FILTER", "LowEVS")
+
 
 ROC.register("strelka.indel.evs", "hcc.strelka.indel", StrelkaIndelEVSRoc)
 
@@ -174,6 +180,7 @@ class Varscan2SNVRoc(ROC):
     def from_table(self, tbl):
         return tableROC(tbl, "tag", "SSC")
 
+
 ROC.register("varscan2.snv", "hcc.varscan2.snv", Varscan2SNVRoc)
 
 
@@ -183,6 +190,7 @@ class Varscan2IndelRoc(ROC):
     def from_table(self, tbl):
         return tableROC(tbl, "tag", "SSC")
 
+
 ROC.register("varscan2.indel", "hcc.varscan2.indel", Varscan2IndelRoc)
 
 
@@ -190,7 +198,8 @@ class MutectSNVRoc(ROC):
     """ROC calculator for MuTect SNVs"""
 
     def from_table(self, tbl):
-        return tableROC(tbl, "tag", "TLOD", "FILTER","t_lod_fstar")
+        return tableROC(tbl, "tag", "TLOD", "FILTER", "t_lod_fstar")
+
 
 ROC.register("mutect.snv", "hcc.mutect.snv", MutectSNVRoc)
 
@@ -199,6 +208,7 @@ class MutectIndelRoc(ROC):
     """ROC calculator for MuTect Indels"""
 
     def from_table(self, tbl):
-        return tableROC(tbl, "tag", "TLOD", "FILTER","t_lod_fstar")
+        return tableROC(tbl, "tag", "TLOD", "FILTER", "t_lod_fstar")
+
 
 ROC.register("mutect.indel", "hcc.mutect.indel", MutectIndelRoc)

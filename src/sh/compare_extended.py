@@ -5,17 +5,20 @@
 import sys
 import csv
 
+
 def csvread(filename):
     f = open(filename)
     freader = csv.DictReader(f)
     data = {}
-    label_columns = ["Type", 
-                     "Subtype", 
-                     "Subset",
-                     "Filter", 
-                     "Genotype",
-                     "QQ.Field",
-                     "QQ"]
+    label_columns = [
+        "Type",
+        "Subtype",
+        "Subset",
+        "Filter",
+        "Genotype",
+        "QQ.Field",
+        "QQ",
+    ]
 
     for l in freader:
         record = dict(l)
@@ -68,7 +71,9 @@ def main():
         print("-------------------------", file=sys.stderr)
         sys.exit(1)
 
-    print("Comparing %i labels and %i metrics..." % (len(all_labels_1), len(all_keys_1)))
+    print(
+        "Comparing %i labels and %i metrics..." % (len(all_labels_1), len(all_keys_1))
+    )
 
     different_metrics = []
 
@@ -84,32 +89,30 @@ def main():
                     v2 = ""
 
             if type(v1) != type(v2):
-                different_metrics.append((label,
-                                          metric,
-                                          ("%s" % type(v1)),
-                                          ("%s" % type(v2)),
-                                          "type mismatch"))
+                different_metrics.append(
+                    (
+                        label,
+                        metric,
+                        ("%s" % type(v1)),
+                        ("%s" % type(v2)),
+                        "type mismatch",
+                    )
+                )
             elif type(v1) is float:
                 if ("%.3g" % v1) != ("%.3g" % v2):
-                    different_metrics.append((label,
-                                              metric,
-                                              ("%.3g" % v1),
-                                              ("%.3g" % v2),
-                                              str(v1 - v2)))
+                    different_metrics.append(
+                        (label, metric, ("%.3g" % v1), ("%.3g" % v2), str(v1 - v2))
+                    )
             elif type(v1) is int:
                 if v1 != v2:
-                    different_metrics.append((label,
-                                              metric,
-                                              str(v1),
-                                              str(v2),
-                                              str(v1 - v2)))
+                    different_metrics.append(
+                        (label, metric, str(v1), str(v2), str(v1 - v2))
+                    )
             else:
                 if v1 != v2:
-                    different_metrics.append((label,
-                                              metric,
-                                              str(v1),
-                                              str(v2),
-                                              "Non-numeric mismatch"))
+                    different_metrics.append(
+                        (label, metric, str(v1), str(v2), "Non-numeric mismatch")
+                    )
 
     if different_metrics:
         print("ERROR -- Metric differences detected:", file=sys.stderr)
@@ -120,5 +123,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

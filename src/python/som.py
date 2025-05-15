@@ -976,11 +976,13 @@ def main():
                 )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print((
-                        "FP/ambiguity classes with info (multiple classes can "
-                        + "overlap):\n"
-                        + ambie.to_string(index=False)
-                    ))
+                    print(
+                        (
+                            "FP/ambiguity classes with info (multiple classes can "
+                            + "overlap):\n"
+                            + ambie.to_string(index=False)
+                        )
+                    )
                 ambie.to_csv(args.output + ".ambiclasses.csv")
                 metrics_output["metrics"].append(
                     dataframeToMetricsTable("ambiclasses", ambie)
@@ -1009,17 +1011,19 @@ def main():
                 )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print((
-                        "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
-                        + ambie.to_string(
-                            formatters={
-                                "reason": "{{:<{}s}}".format(
-                                    ambie["reason"].str.len().max()
-                                ).format
-                            },
-                            index=False,
+                    print(
+                        (
+                            "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
+                            + ambie.to_string(
+                                formatters={
+                                    "reason": "{{:<{}s}}".format(
+                                        ambie["reason"].str.len().max()
+                                    ).format
+                                },
+                                index=False,
+                            )
                         )
-                    ))
+                    )
                 ambie.to_csv(args.output + ".ambireasons.csv")
                 metrics_output["metrics"].append(
                     dataframeToMetricsTable("ambireasons", ambie)

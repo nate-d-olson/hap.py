@@ -16,7 +16,7 @@ import logging
 
 
 def bamStats(bamfile):
-    """ Extract average depths + idxstats data from BAM file, return data frame """
+    """Extract average depths + idxstats data from BAM file, return data frame"""
     istats = pysam.idxstats(bamfile)
     result = []
     samfile = pysam.Samfile(bamfile, "rb")
@@ -46,39 +46,69 @@ def bamStats(bamfile):
 
             rls /= count
             rec["READLEN"] = rls
-            rec["COVERAGE"] = float(rec["MAPPED"] * rec["READLEN"])/float(rec["NT"])
+            rec["COVERAGE"] = float(rec["MAPPED"] * rec["READLEN"]) / float(rec["NT"])
         except Exception:
             pass
         result.append(rec)
 
     if result:
-        result = pandas.DataFrame(result, columns=["CHROM", "NT", "MAPPED", "UNMAPPED", "READLEN", "COVERAGE"])
+        result = pandas.DataFrame(
+            result, columns=["CHROM", "NT", "MAPPED", "UNMAPPED", "READLEN", "COVERAGE"]
+        )
         min_readlen = np.min(result[result["READLEN"] > 0]["READLEN"])
         max_readlen = np.max(result[result["READLEN"] > 0]["READLEN"])
         if min_readlen != max_readlen:
-            logging.warn("Read lengths differ within the same BAM file: %s" % str(result["READLEN"].unique()))
+            logging.warn(
+                "Read lengths differ within the same BAM file: %s"
+                % str(result["READLEN"].unique())
+            )
 
-        agg_result = [{
-            "CHROM": "TOTAL",
-            "NT": np.sum(result["NT"]),
-            "MAPPED": np.sum(result["MAPPED"]),
-            "UNMAPPED": np.sum(result["UNMAPPED"]),
-            "READLEN": (max_readlen + min_readlen) / 2.0,
-        }]
-        agg_result[-1]["COVERAGE"] = np.sum(result["MAPPED"].multiply(result["READLEN"])) / np.sum(result["NT"])
+        agg_result = [
+            {
+                "CHROM": "TOTAL",
+                "NT": np.sum(result["NT"]),
+                "MAPPED": np.sum(result["MAPPED"]),
+                "UNMAPPED": np.sum(result["UNMAPPED"]),
+                "READLEN": (max_readlen + min_readlen) / 2.0,
+            }
+        ]
+        agg_result[-1]["COVERAGE"] = np.sum(
+            result["MAPPED"].multiply(result["READLEN"])
+        ) / np.sum(result["NT"])
 
         auto_result = result[result["CHROM"].str.match(r"^(?:chr)?[0-9]+$")]
         min_readlen = np.min(auto_result[auto_result["READLEN"] > 0]["READLEN"])
         max_readlen = np.max(auto_result[auto_result["READLEN"] > 0]["READLEN"])
-        agg_result.append({
-            "CHROM": "AUTOSOME",
-            "NT": np.sum(auto_result["NT"]),
-            "MAPPED": np.sum(auto_result["MAPPED"]),
-            "UNMAPPED": np.sum(auto_result["UNMAPPED"]),
-            "READLEN": (max_readlen + min_readlen) / 2.0,
-        })
-        agg_result[-1]["COVERAGE"] = np.sum(auto_result["MAPPED"].multiply(auto_result["READLEN"])) / np.sum(auto_result["NT"])
+        agg_result.append(
+            {
+                "CHROM": "AUTOSOME",
+                "NT": np.sum(auto_result["NT"]),
+                "MAPPED": np.sum(auto_result["MAPPED"]),
+                "UNMAPPED": np.sum(auto_result["UNMAPPED"]),
+                "READLEN": (max_readlen + min_readlen) / 2.0,
+            }
+        )
+        agg_result[-1]["COVERAGE"] = np.sum(
+            auto_result["MAPPED"].multiply(auto_result["READLEN"])
+        ) / np.sum(auto_result["NT"])
 
-        return pandas.concat([result, pandas.DataFrame(agg_result, columns=["CHROM", "NT", "MAPPED", "UNMAPPED", "READLEN", "COVERAGE"])]).set_index(["CHROM"])
+        return pandas.concat(
+            [
+                result,
+                pandas.DataFrame(
+                    agg_result,
+                    columns=[
+                        "CHROM",
+                        "NT",
+                        "MAPPED",
+                        "UNMAPPED",
+                        "READLEN",
+                        "COVERAGE",
+                    ],
+                ),
+            ]
+        ).set_index(["CHROM"])
     else:
-        return pandas.DataFrame(columns=["CHROM", "NT", "MAPPED", "UNMAPPED", "READLEN", "COVERAGE"])
+        return pandas.DataFrame(
+            columns=["CHROM", "NT", "MAPPED", "UNMAPPED", "READLEN", "COVERAGE"]
+        )

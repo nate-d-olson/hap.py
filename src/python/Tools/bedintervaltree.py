@@ -22,17 +22,18 @@ class BedIntervalTree(object):
 
         def mkzero():
             return int(0)
+
         self.count_by_label = defaultdict(mkzero)
         self.nt_count_by_label = defaultdict(mkzero)
 
     def __str__(self):
-        return str(self.intCount) + ' intervals'
+        return str(self.intCount) + " intervals"
 
     def __repr__(self):
         return str(self)
 
     def _addEntryToTree(self, bedentry, label):
-        """ Add a BED entry to the tree
+        """Add a BED entry to the tree
         :param bedentry: BED entry [chr, start, stop(, optional extra fields)]
         :type bedentry: list of int and string
         :param label: the label for the entry
@@ -49,7 +50,7 @@ class BedIntervalTree(object):
         self.intCount += 1
 
     def intersect(self, chrom, start, end):
-        """ Return all overlapping intervals in chr:[start,end)
+        """Return all overlapping intervals in chr:[start,end)
         :param chrom: Chromosome
         :param start: start (1-based)
         :param end: end
@@ -62,7 +63,7 @@ class BedIntervalTree(object):
         return self.tree[chrom].find(start, end)
 
     def countbases(self, chrom=None, start=0, end=0, label=None):
-        """ Return the number of bases covered by intervals in chr:[start,end)
+        """Return the number of bases covered by intervals in chr:[start,end)
         :param chrom: Chromosome
         :param start: start (1-based)
         :param end: end
@@ -76,7 +77,9 @@ class BedIntervalTree(object):
         if not chrom and label:
             return self.nt_count_by_label[label]
         elif not chrom and not label:
-            return sum([self.nt_count_by_label[x] for x in list(self.nt_count_by_label.keys())])
+            return sum(
+                [self.nt_count_by_label[x] for x in list(self.nt_count_by_label.keys())]
+            )
 
         total_length = 0
         for x in self.tree[chrom].find(start, end):
@@ -85,7 +88,7 @@ class BedIntervalTree(object):
         return total_length
 
     def count(self, label=None):
-        """ Return number of records per label
+        """Return number of records per label
         :param label: string label
         :return: number of intervals which have the given label
         """
@@ -95,7 +98,7 @@ class BedIntervalTree(object):
             return self.count_by_label[label]
 
     def addFromBed(self, bed_file, label="fp", fixchr=False):
-        """ Add all intervals from a bed file, attaching a given label
+        """Add all intervals from a bed file, attaching a given label
         :param bed_file: Bed File
         :param label: either a string label or a function to work on the bed columns
         :param fixchr: fix chr prefix for contig names

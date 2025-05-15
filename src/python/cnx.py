@@ -31,7 +31,7 @@ import traceback
 import json
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
 import Tools
 
@@ -44,11 +44,21 @@ def main():
 
     parser.add_argument("input", help="Input VCF file")
 
-    parser.add_argument("-o", "--output", dest="output", required=True,
-                        help="Output file name (json format)")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        required=True,
+        help="Output file name (json format)",
+    )
 
-    parser.add_argument("-b", "--bam", dest="bam", default=None,
-                        help="pass a BAM file for aligner name/version extraction")
+    parser.add_argument(
+        "-b",
+        "--bam",
+        dest="bam",
+        default=None,
+        help="pass a BAM file for aligner name/version extraction",
+    )
 
     args = parser.parse_args()
 
@@ -62,7 +72,7 @@ def main():
 
     logging.info("Writing %s" % args.output)
     with open(args.output, "w") as fp:
-        json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(',', ': '))
+        json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(",", ": "))
 
 
 if __name__ == "__main__":

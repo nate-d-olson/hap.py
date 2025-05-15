@@ -32,10 +32,10 @@ last = -1
 
 lines = 1
 for line in f:
-	l = line.split("\t")
-	if len(l) > 3 and (last-1) > int(l[1]):
-		print("Overlap at %s:%i (line %i)" % (l[0], int(l[1]), lines))
-		exit(1)
-	elif len(l) > 3:
-		last = int(l[2])
-	lines += 1
+    l = line.split("\t")
+    if len(l) > 3 and (last - 1) > int(l[1]):
+        print("Overlap at %s:%i (line %i)" % (l[0], int(l[1]), lines))
+        exit(1)
+    elif len(l) > 3:
+        last = int(l[2])
+    lines += 1

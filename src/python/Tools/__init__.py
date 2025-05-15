@@ -18,6 +18,7 @@ from datetime import date
 # noinspection PyUnresolvedReferences
 try:
     import Haplo.version as vs  # pylint: disable=E0401,E0611
+
     version = vs.__version__
     has_sge = vs.has_sge
 except ImportError:
@@ -27,7 +28,7 @@ except ImportError:
 
 
 def defaultReference():
-    to_try = ['/opt/hap.py-data/hg19.fa']
+    to_try = ["/opt/hap.py-data/hg19.fa"]
     try:
         to_try.insert(0, os.environ["HGREF"])
     except Exception:
@@ -41,8 +42,10 @@ def defaultReference():
     for x in to_try:
         if os.path.exists(x):
             return x
-    logging.warn("No reference file found at default locations. You can set the environment"
-                 " variable 'HGREF' or 'HG19' to point to a suitable Fasta file.")
+    logging.warn(
+        "No reference file found at default locations. You can set the environment"
+        " variable 'HGREF' or 'HG19' to point to a suitable Fasta file."
+    )
     return None
 
 
@@ -64,9 +67,11 @@ def which(program):
 
 
 def init():
-    logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
+    )
 
-    base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
     paths = ["bin"]
 
     for p in paths:
@@ -89,8 +94,8 @@ def init():
         if not which(x):
             raise Exception("Dependency %s not found" % x)
 
-    os.environ['DYLD_LIBRARY_PATH'] = os.path.join(base, "lib")
-    os.environ['LD_LIBRARY_PATH'] = os.path.join(base, "lib")
+    os.environ["DYLD_LIBRARY_PATH"] = os.path.join(base, "lib")
+    os.environ["LD_LIBRARY_PATH"] = os.path.join(base, "lib")
 
 
 init()
@@ -98,13 +103,14 @@ init()
 # safely import here
 # noinspection PyUnresolvedReferences
 import pysam  # noqa: F401
+
 # noinspection PyUnresolvedReferences
 import pandas  # noqa: F401
 
 
 class LoggingWriter(object):
-    """ Helper class to write tracebacks to log file
-    """
+    """Helper class to write tracebacks to log file"""
+
     def __init__(self, level):
         self.level = level
 
@@ -115,22 +121,25 @@ class LoggingWriter(object):
 
 
 def writeVCFHeader(filelike, extrainfo="", chrprefix="chr"):
-    """ write a VCF header
-    """
-    header = ["CHROM",
-              "POS",
-              "ID",
-              "REF",
-              "ALT",
-              "QUAL",
-              "FILTER",
-              "INFO",
-              "FORMAT",
-              "SIMPLE"]
+    """write a VCF header"""
+    header = [
+        "CHROM",
+        "POS",
+        "ID",
+        "REF",
+        "ALT",
+        "QUAL",
+        "FILTER",
+        "INFO",
+        "FORMAT",
+        "SIMPLE",
+    ]
 
-    infos = ['##fileformat=VCFv4.1',
-             '##reference=hg19',
-             '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">']
+    infos = [
+        "##fileformat=VCFv4.1",
+        "##reference=hg19",
+        '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',
+    ]
 
     if extrainfo:
         if type(extrainfo) is list:
@@ -138,21 +147,42 @@ def writeVCFHeader(filelike, extrainfo="", chrprefix="chr"):
         else:
             infos += extrainfo.split("\n")
 
-    contigs = [["1", "249250621"], ["2", "243199373"], ["3", "198022430"], ["4", "191154276"],
-               ["5", "180915260"], ["6", "171115067"], ["7", "159138663"], ["8", "146364022"],
-               ["9", "141213431"], ["10", "135534747"], ["11", "135006516"],
-               ["12", "133851895"], ["13", "115169878"], ["14", "107349540"], ["15", "102531392"],
-               ["16", "90354753"], ["17", "81195210"], ["18", "78077248"], ["19", "59128983"],
-               ["20", "63025520"], ["21", "48129895"], ["22", "51304566"], ["X", "155270560"]]
+    contigs = [
+        ["1", "249250621"],
+        ["2", "243199373"],
+        ["3", "198022430"],
+        ["4", "191154276"],
+        ["5", "180915260"],
+        ["6", "171115067"],
+        ["7", "159138663"],
+        ["8", "146364022"],
+        ["9", "141213431"],
+        ["10", "135534747"],
+        ["11", "135006516"],
+        ["12", "133851895"],
+        ["13", "115169878"],
+        ["14", "107349540"],
+        ["15", "102531392"],
+        ["16", "90354753"],
+        ["17", "81195210"],
+        ["18", "78077248"],
+        ["19", "59128983"],
+        ["20", "63025520"],
+        ["21", "48129895"],
+        ["22", "51304566"],
+        ["X", "155270560"],
+    ]
 
-    meta = ["##fileDate=" + date.today().isoformat(),
-            "##source=HaploCompare",
-            "##source_version=%s" % version]
+    meta = [
+        "##fileDate=" + date.today().isoformat(),
+        "##source=HaploCompare",
+        "##source_version=%s" % version,
+    ]
 
     for i in infos:
         filelike.write(i + "\n")
     for c in contigs:
-        filelike.write('##contig=<ID=' + chrprefix + c[0] + ',length=' + c[1] + '>\n')
+        filelike.write("##contig=<ID=" + chrprefix + c[0] + ",length=" + c[1] + ">\n")
     for i in meta:
         filelike.write(i + "\n")
 
@@ -160,7 +190,7 @@ def writeVCFHeader(filelike, extrainfo="", chrprefix="chr"):
 
 
 def mkdir_p(path):
-    """ mkdir -p path """
+    """mkdir -p path"""
     try:
         os.makedirs(os.path.abspath(path))
     except OSError as exc:  # Python >2.5
@@ -173,11 +203,10 @@ def mkdir_p(path):
 
 
 class BGZipFile(object):
-    """ BGZip file helper
-    """
+    """BGZip file helper"""
 
     def __init__(self, filename, force=False):
-        """ Make a subprocess for bgzip
+        """Make a subprocess for bgzip
         :param filename: name of the output file
         :param force: true to overwrite if file exists
         """
@@ -185,11 +214,13 @@ class BGZipFile(object):
             raise Exception("File %s exists, use force=True to overwrite" % filename)
 
         self.write_file = open(filename, "wb")
-        zip_pipe = subprocess.Popen(["bgzip", "-f"],
-                                    stdin=subprocess.PIPE,
-                                    stdout=self.write_file,
-                                    stderr=subprocess.PIPE,
-                                    shell=True)
+        zip_pipe = subprocess.Popen(
+            ["bgzip", "-f"],
+            stdin=subprocess.PIPE,
+            stdout=self.write_file,
+            stderr=subprocess.PIPE,
+            shell=True,
+        )
         self.zip_pipe = zip_pipe
         self.name = filename
 

@@ -136,7 +136,7 @@ def run_tests(modules_by_package: Dict[str, List[Path]]) -> Dict[str, Dict[str, 
     """
     results = {}
 
-    for package, modules in modules_by_package.items():
+    for package, modules in list(modules_by_package.items()):
         results[package] = {}
 
         for module_path in modules:
@@ -225,7 +225,7 @@ def main():
         logger.error("No Python 3 modules found")
         return 1
 
-    for package, modules in py3_modules.items():
+    for package, modules in list(py3_modules.items()):
         package_name = package if package else "root"
         logger.info(f"Found {len(modules)} module(s) in package '{package_name}'")
 
@@ -237,8 +237,8 @@ def main():
     success_count = 0
     fail_count = 0
 
-    for package, module_results in results.items():
-        for module, success in module_results.items():
+    for package, module_results in list(results.items()):
+        for module, success in list(module_results.items()):
             if success:
                 success_count += 1
             else:

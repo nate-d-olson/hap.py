@@ -23,11 +23,8 @@ import Tools
 import pipes
 
 
-def gvcf2bed(vcf,
-             ref,
-             regions=None,
-             scratch_prefix=None):
-    """ Run gvcf2bed and return temporary region bed file in temp folder """
+def gvcf2bed(vcf, ref, regions=None, scratch_prefix=None):
+    """Run gvcf2bed and return temporary region bed file in temp folder"""
 
     tf = tempfile.NamedTemporaryFile(dir=scratch_prefix, suffix=".bed")
     tf.close()
@@ -37,4 +34,3 @@ def gvcf2bed(vcf,
     logging.info("Running gvcf2bed: '%s'" % cmdline)
     subprocess.check_call(cmdline, shell=True)
     return tf.name
-

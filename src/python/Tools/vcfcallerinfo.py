@@ -18,8 +18,7 @@ import json
 
 
 class CallerInfo(object):
-    """ Class for collecting caller info and version
-    """
+    """Class for collecting caller info and version"""
 
     def __init__(self):
         # callers and aligners are stored in tuples of three:
@@ -28,24 +27,36 @@ class CallerInfo(object):
         self.aligners = []
 
     def __repr__(self):
-        return "aligners=[" + ",".join(["/".join(xx) for xx in self.aligners]) + "] " + \
-               "callers=[" + ",".join(["/".join(xx) for xx in self.callers]) + "]"
+        return (
+            "aligners=["
+            + ",".join(["/".join(xx) for xx in self.aligners])
+            + "] "
+            + "callers=["
+            + ",".join(["/".join(xx) for xx in self.callers])
+            + "]"
+        )
 
     def asDict(self):
         kvd = ["name", "version", "parameters"]
-        return {"aligners": [dict(y for y in zip(kvd, x)) for x in self.aligners],
-                "callers": [dict(y for y in zip(kvd, x)) for x in self.callers]}
+        return {
+            "aligners": [dict(y for y in zip(kvd, x)) for x in self.aligners],
+            "callers": [dict(y for y in zip(kvd, x)) for x in self.callers],
+        }
 
     def addVCF(self, vcfname):
-        """ Add caller versions from a VCF
+        """Add caller versions from a VCF
         :param vcfname: VCF file name
         """
         tf = tempfile.NamedTemporaryFile(delete=False)
         tf.close()
         vfh = {}
         try:
-            sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            sp = subprocess.Popen(
+                "vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             o, e = sp.communicate()
 
             if sp.returncode != 0:
@@ -58,7 +69,7 @@ class CallerInfo(object):
             except Exception:
                 pass
 
-        cp = ['unknown', 'unknown', '']
+        cp = ["unknown", "unknown", ""]
         gatk_callers = ["haplotypecaller", "unifiedgenotyper", "mutect"]
         sent_callers = ["haplotyper"]
         source_found = False
@@ -72,7 +83,7 @@ class CallerInfo(object):
                     except Exception:
                         cp[0] = hf["value"]
                     if cp[0].startswith("Platypus_Version_"):
-                        cp[1] = cp[0][len("Platypus_Version_"):]
+                        cp[1] = cp[0][len("Platypus_Version_") :]
                         cp[0] = "Platypus"
                     source_found = True
                 elif k == "source_version":
@@ -135,11 +146,15 @@ class CallerInfo(object):
             self.callers.append(cp)
 
     def addBAM(self, bamfile):
-        """ Extract aligner information from a BAM file
+        """Extract aligner information from a BAM file
         :param bamfile: name of BAM file
         """
-        sp = subprocess.Popen("samtools view -H '%s'" % bamfile,
-                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sp = subprocess.Popen(
+            "samtools view -H '%s'" % bamfile,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         o, e = sp.communicate()
 
         if sp.returncode != 0:
@@ -154,22 +169,22 @@ class CallerInfo(object):
             except Exception:
                 logging.warn("Unable to parse SAM/BAM header line: %s" % line)
                 continue
-            cp = ['unknown', 'unknown', '']
+            cp = ["unknown", "unknown", ""]
             try:
-                cp[0] = x['PN']
+                cp[0] = x["PN"]
             except Exception:
                 try:
-                    cp[0] = x['ID']
+                    cp[0] = x["ID"]
                     if "-" in cp[0]:
                         cp[0] = cp[0].split("-")[0]
                 except Exception:
                     pass
             try:
-                cp[1] = x['VN']
+                cp[1] = x["VN"]
             except Exception:
                 pass
             try:
-                cp[2] = x['CL']
+                cp[2] = x["CL"]
             except Exception:
                 pass
 

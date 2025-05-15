@@ -20,7 +20,7 @@ import json
 
 
 def field(val):
-    """ extract field into result, guess type """
+    """extract field into result, guess type"""
     if "," in val:
         val = list(map(field, val.split(",")))
     else:
@@ -76,7 +76,7 @@ def splitIndex(ffield):
 
 
 def vcfExtract(vcfname, features, filterfun=None):
-    """ Given a list of VCF features, get tab-separated list from VCF file
+    """Given a list of VCF features, get tab-separated list from VCF file
 
     :param vcfname: the vcf file name
     :param features: list of features to extract
@@ -107,13 +107,16 @@ def vcfExtract(vcfname, features, filterfun=None):
 
         if lstart - last_time > 10:
             last_time = lstart
-            total = lstart-start
+            total = lstart - start
             # noinspection PyBroadException
             try:
-                tpr = 1000000.0*total/float(nrecords)
+                tpr = 1000000.0 * total / float(nrecords)
             except Exception:
                 tpr = -1
-            logging.info("Since start: %i records %.2f seconds, %.2f us/record." % (nrecords, total, tpr))
+            logging.info(
+                "Since start: %i records %.2f seconds, %.2f us/record."
+                % (nrecords, total, tpr)
+            )
 
         spl = line.split("\t")
         current = []
@@ -179,7 +182,7 @@ def vcfExtract(vcfname, features, filterfun=None):
                 val = None
                 try:
                     if not sample in curformats:
-                        curformats[sample] = getFormats(spl[8], spl[8+sample])
+                        curformats[sample] = getFormats(spl[8], spl[8 + sample])
                     val = curformats[sample][field]
 
                     if ii is not None:
@@ -196,7 +199,7 @@ def vcfExtract(vcfname, features, filterfun=None):
 
 
 def extractHeaders(vcfname):
-    """ Read the header lines from a VCF file """
+    """Read the header lines from a VCF file"""
     if vcfname.endswith(".gz"):
         ff = gzip.GzipFile(vcfname)
     else:
@@ -210,7 +213,7 @@ def extractHeaders(vcfname):
 
 
 def extractHeadersJSON(vcfname):
-    """ Extract the VCF header and turn into JSON
+    """Extract the VCF header and turn into JSON
     :param vcfname: VCF file name
     :return: VCF header in JSON format
     """
@@ -219,12 +222,18 @@ def extractHeadersJSON(vcfname):
     vfh = {}
 
     try:
-        sp = subprocess.Popen("vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
-                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sp = subprocess.Popen(
+            "vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         o, e = sp.communicate()
 
         if sp.returncode != 0:
-            raise Exception("vcfhdr2json call failed on file %s: %s / %s" % (vcfname, o, e))
+            raise Exception(
+                "vcfhdr2json call failed on file %s: %s / %s" % (vcfname, o, e)
+            )
 
         vfh = json.load(open(tf.name))
 
@@ -244,4 +253,3 @@ def extractHeadersJSON(vcfname):
             pass
 
     return vfh
-

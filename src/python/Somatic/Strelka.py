@@ -15,47 +15,90 @@ from Tools.vcfextract import vcfExtract, extractHeaders
 
 
 def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
-    """ Return a data frame with features collected from the given VCF, tagged by given type
+    """Return a data frame with features collected from the given VCF, tagged by given type
     :param vcfname: name of the VCF file
     :param tag: type of variants
     :param avg_depth: average chromosome depths from BAM file
     """
-    features = ["CHROM", "POS", "REF", "ALT", "FILTER",
-                "I.NT", "I.SOMATIC", "I.QSS_NT",
-                "I.VQSR", "I.EVS", "I.EVSF", "I.SomaticEVS",
-                "I.SGT", "I.MQ", "I.MQ0",
-                "I.SNVSB", "I.ReadPosRankSum",
-                "S.1.SDP", "S.2.SDP",
-                "S.1.FDP", "S.2.FDP",
-                "S.1.DP", "S.2.DP",
-                "S.1.AU", "S.2.AU",
-                "S.1.CU", "S.2.CU",
-                "S.1.GU", "S.2.GU",
-                "S.1.TU", "S.2.TU"]
+    features = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "I.NT",
+        "I.SOMATIC",
+        "I.QSS_NT",
+        "I.VQSR",
+        "I.EVS",
+        "I.EVSF",
+        "I.SomaticEVS",
+        "I.SGT",
+        "I.MQ",
+        "I.MQ0",
+        "I.SNVSB",
+        "I.ReadPosRankSum",
+        "S.1.SDP",
+        "S.2.SDP",
+        "S.1.FDP",
+        "S.2.FDP",
+        "S.1.DP",
+        "S.2.DP",
+        "S.1.AU",
+        "S.2.AU",
+        "S.1.CU",
+        "S.2.CU",
+        "S.1.GU",
+        "S.2.GU",
+        "S.1.TU",
+        "S.2.TU",
+    ]
 
-    cols = ["CHROM", "POS", "REF", "ALT",
-            "NT", "NT_REF", "QSS_NT", "FILTER", "SomaticEVS", "EVS", "VQSR",
-            "N_FDP_RATE", "T_FDP_RATE", "N_SDP_RATE", "T_SDP_RATE",
-            "N_DP", "T_DP", "N_DP_RATE", "T_DP_RATE",
-            "N_AF", "T_AF",
-            "MQ", "MQ0",
-            "SNVSB",
-            "ReadPosRankSum", "tag"]
+    cols = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "NT",
+        "NT_REF",
+        "QSS_NT",
+        "FILTER",
+        "SomaticEVS",
+        "EVS",
+        "VQSR",
+        "N_FDP_RATE",
+        "T_FDP_RATE",
+        "N_SDP_RATE",
+        "T_SDP_RATE",
+        "N_DP",
+        "T_DP",
+        "N_DP_RATE",
+        "T_DP_RATE",
+        "N_AF",
+        "T_AF",
+        "MQ",
+        "MQ0",
+        "SNVSB",
+        "ReadPosRankSum",
+        "tag",
+    ]
 
     vcfheaders = list(extractHeaders(vcfname))
 
     evs_featurenames = {}
     for l in vcfheaders:
-        if '##snv_scoring_features' in l:
+        if "##snv_scoring_features" in l:
             try:
-                xl = str(l).split('=', 1)
+                xl = str(l).split("=", 1)
                 xl = xl[1].split(",")
                 for i, n in enumerate(xl):
                     evs_featurenames[i] = n
                     cols.append("E." + n)
                     logging.info("Scoring feature %i : %s" % (i, n))
             except Exception:
-                logging.warn("Could not parse scoring feature names from Strelka output")
+                logging.warn(
+                    "Could not parse scoring feature names from Strelka output"
+                )
 
     records = []
 
@@ -66,9 +109,9 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             x = str(l).lower()
             x = x.replace("##meandepth_", "##maxdepth_")
             x = x.replace("##depth_", "##maxdepth_")
-            if '##maxdepth_' in x:
+            if "##maxdepth_" in x:
                 p, _, l = l.partition("_")
-                xl = str(l).split('=')
+                xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
                 logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
@@ -99,14 +142,27 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                 rec["I.EVS"] = -1.0
 
         # fix missing features
-        for q in ["I.QSS_NT", "I.MQ", "I.MQ0",
-                  "I.SNVSB", "I.ReadPosRankSum", "S.1.SDP", "S.2.SDP",
-                  "S.1.FDP", "S.2.FDP",
-                  "S.1.DP", "S.2.DP",
-                  "S.1.AU", "S.2.AU",
-                  "S.1.CU", "S.2.CU",
-                  "S.1.GU", "S.2.GU",
-                  "S.1.TU", "S.2.TU"]:
+        for q in [
+            "I.QSS_NT",
+            "I.MQ",
+            "I.MQ0",
+            "I.SNVSB",
+            "I.ReadPosRankSum",
+            "S.1.SDP",
+            "S.2.SDP",
+            "S.1.FDP",
+            "S.2.FDP",
+            "S.1.DP",
+            "S.2.DP",
+            "S.1.AU",
+            "S.2.AU",
+            "S.1.CU",
+            "S.2.CU",
+            "S.1.GU",
+            "S.2.GU",
+            "S.1.TU",
+            "S.2.TU",
+        ]:
             if q not in rec or rec[q] is None:
                 rec[q] = 0
                 if not ("feat:" + q) in has_warned:
@@ -160,7 +216,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         # Ref and alt allele counts for tier1 and tier2
         allele_ref = rec["REF"]
         try:
-            t_allele_ref_counts = list(map(float, rec['S.2.' + allele_ref + 'U']))
+            t_allele_ref_counts = list(map(float, rec["S.2." + allele_ref + "U"]))
         except Exception:
             t_allele_ref_counts = [0, 0]
 
@@ -170,7 +226,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             t_allele_alt_counts = [0, 0]
             for a in alleles_alt:
                 for i in range(2):
-                    t_allele_alt_counts[i] += float(rec['S.2.' + a + 'U'][i])
+                    t_allele_alt_counts[i] += float(rec["S.2." + a + "U"][i])
         except Exception:
             t_allele_alt_counts = [0, 0]
 
@@ -178,10 +234,12 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         if t_allele_alt_counts[0] + t_allele_ref_counts[0] == 0:
             t_tier1_allele_rate = 0
         else:
-            t_tier1_allele_rate = t_allele_alt_counts[0] / float(t_allele_alt_counts[0] + t_allele_ref_counts[0])
+            t_tier1_allele_rate = t_allele_alt_counts[0] / float(
+                t_allele_alt_counts[0] + t_allele_ref_counts[0]
+            )
 
         try:
-            n_allele_ref_counts = list(map(float, rec['S.1.' + allele_ref + 'U']))
+            n_allele_ref_counts = list(map(float, rec["S.1." + allele_ref + "U"]))
         except Exception:
             n_allele_ref_counts = [0, 0]
 
@@ -191,7 +249,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             n_allele_alt_counts = [0, 0]
             for a in alleles_alt:
                 for i in range(2):
-                    n_allele_alt_counts[i] += float(rec['S.1.' + a + 'U'][i])
+                    n_allele_alt_counts[i] += float(rec["S.1." + a + "U"][i])
         except Exception:
             n_allele_alt_counts = [0, 0]
 
@@ -199,7 +257,9 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         if n_allele_alt_counts[0] + n_allele_ref_counts[0] == 0:
             n_tier1_allele_rate = 0
         else:
-            n_tier1_allele_rate = n_allele_alt_counts[0] / float(n_allele_alt_counts[0] + n_allele_ref_counts[0])
+            n_tier1_allele_rate = n_allele_alt_counts[0] / float(
+                n_allele_alt_counts[0] + n_allele_ref_counts[0]
+            )
 
         try:
             snvsb = rec["I.SNVSB"]
@@ -237,7 +297,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             "MQ0": MQ_ZERO,
             "SNVSB": snvsb,
             "ReadPosRankSum": rprs,
-            "tag": tag
+            "tag": tag,
         }
         # ESF features
         try:
@@ -265,54 +325,76 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
 
 
 def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
-    """ Return a data frame with features collected from the given VCF, tagged by given type
+    """Return a data frame with features collected from the given VCF, tagged by given type
     :param vcfname: name of the VCF file
     :param tag: type of variants
     :param avg_depth: average chromosome depths from BAM file
     """
-    features = ["CHROM", "POS", "REF", "ALT", "FILTER",
-                "I.NT", "I.SOMATIC", "I.QSI_NT", "I.EVS", "I.EVSF", "I.SomaticEVS",
-                "I.SGT", "I.RC", "I.RU",
-                "I.IC", "I.IHP",
-                "I.MQ", "I.MQ0",
-                "S.1.DP", "S.2.DP",
-                "S.1.TAR", "S.2.TAR",
-                "S.1.TIR", "S.2.TIR",
-                "S.1.TOR", "S.2.TOR",
-                "S.1.BCN50", "S.2.BCN50",
-                "S.1.FDP50", "S.2.FDP50",
-                ]
+    features = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "I.NT",
+        "I.SOMATIC",
+        "I.QSI_NT",
+        "I.EVS",
+        "I.EVSF",
+        "I.SomaticEVS",
+        "I.SGT",
+        "I.RC",
+        "I.RU",
+        "I.IC",
+        "I.IHP",
+        "I.MQ",
+        "I.MQ0",
+        "S.1.DP",
+        "S.2.DP",
+        "S.1.TAR",
+        "S.2.TAR",
+        "S.1.TIR",
+        "S.2.TIR",
+        "S.1.TOR",
+        "S.2.TOR",
+        "S.1.BCN50",
+        "S.2.BCN50",
+        "S.1.FDP50",
+        "S.2.FDP50",
+    ]
 
-    cols = ["CHROM",
-            "POS",
-            "REF",
-            "ALT",
-            "LENGTH",
-            "INDELTYPE",
-            "FILTER",
-            "NT",
-            "NT_REF",
-            "EVS",
-            "QSI_NT",
-            "N_DP",
-            "T_DP",
-            "N_DP_RATE",
-            "T_DP_RATE",
-            "N_BCN",
-            "T_BCN",
-            "N_FDP",
-            "T_FDP",
-            "N_AF",
-            "T_AF",
-            "SGT",
-            "RC",
-            "RU",
-            "RU_LEN",
-            "IC",
-            "IHP",
-            "MQ",
-            "MQ0",
-            "tag"]
+    cols = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "LENGTH",
+        "INDELTYPE",
+        "FILTER",
+        "NT",
+        "NT_REF",
+        "EVS",
+        "QSI_NT",
+        "N_DP",
+        "T_DP",
+        "N_DP_RATE",
+        "T_DP_RATE",
+        "N_BCN",
+        "T_BCN",
+        "N_FDP",
+        "T_FDP",
+        "N_AF",
+        "T_AF",
+        "SGT",
+        "RC",
+        "RU",
+        "RU_LEN",
+        "IC",
+        "IHP",
+        "MQ",
+        "MQ0",
+        "tag",
+    ]
 
     records = []
 
@@ -321,16 +403,18 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
     evs_featurenames = {}
 
     for l in vcfheaders:
-        if '##indel_scoring_features' in l:
+        if "##indel_scoring_features" in l:
             try:
-                xl = str(l).split('=', 1)
+                xl = str(l).split("=", 1)
                 xl = xl[1].split(",")
                 for i, n in enumerate(xl):
                     evs_featurenames[i] = n
                     cols.append("E." + n)
                     logging.info("Scoring feature %i : %s" % (i, n))
             except Exception:
-                logging.warn("Could not parse scoring feature names from Strelka output")
+                logging.warn(
+                    "Could not parse scoring feature names from Strelka output"
+                )
 
     if not avg_depth:
         avg_depth = {}
@@ -339,9 +423,9 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
             x = str(l).lower()
             x = x.replace("##meandepth_", "##maxdepth_")
             x = x.replace("##depth_", "##maxdepth_")
-            if '##maxdepth_' in x:
+            if "##maxdepth_" in x:
                 p, _, l = l.partition("_")
-                xl = str(l).split('=')
+                xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
                 logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
@@ -365,19 +449,25 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                 rec["I.EVS"] = -1.0
 
         # fix missing features
-        for q in ["I.QSI_NT", "I.RC", "I.IC", "I.IHP",
-                  "S.1.DP", "S.2.DP",
-                  "S.1.BCN50", "S.2.BCN50",
-                  "S.1.FDP50", "S.2.FDP50"]:
+        for q in [
+            "I.QSI_NT",
+            "I.RC",
+            "I.IC",
+            "I.IHP",
+            "S.1.DP",
+            "S.2.DP",
+            "S.1.BCN50",
+            "S.2.BCN50",
+            "S.1.FDP50",
+            "S.2.FDP50",
+        ]:
             if q not in rec or rec[q] is None:
                 rec[q] = 0
                 if not ("feat:" + q) in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
-        for q in ["S.1.TAR", "S.2.TAR",
-                  "S.1.TIR", "S.2.TIR",
-                  "S.1.TOR", "S.2.TOR"]:
+        for q in ["S.1.TAR", "S.2.TAR", "S.1.TIR", "S.2.TIR", "S.1.TOR", "S.2.TOR"]:
             if q not in rec or rec[q] is None:
                 rec[q] = [0, 0]
                 if not ("feat:" + q) in has_warned:
@@ -423,12 +513,16 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
 
         # extract observed AF from strelka counts. TIR = ALT; TAR = REF
         try:
-            n_af = float(rec["S.1.TIR"][0]) / (float(rec["S.1.TIR"][0]) + float(rec["S.1.TAR"][0]))
+            n_af = float(rec["S.1.TIR"][0]) / (
+                float(rec["S.1.TIR"][0]) + float(rec["S.1.TAR"][0])
+            )
         except Exception:
             n_af = 0
 
         try:
-            t_af = float(rec["S.2.TIR"][0]) / (float(rec["S.2.TIR"][0]) + float(rec["S.2.TAR"][0]))
+            t_af = float(rec["S.2.TIR"][0]) / (
+                float(rec["S.2.TIR"][0]) + float(rec["S.2.TAR"][0])
+            )
         except Exception:
             t_af = 0
 
@@ -451,7 +545,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
             "N_AF": n_af,
             "T_AF": t_af,
             "SGT": rec["I.SGT"],
-            "tag": tag
+            "tag": tag,
         }
 
         # fields with defaults

@@ -35,9 +35,26 @@ def main():
     data1 = csvread(sys.argv[1])
     data2 = csvread(sys.argv[2])
 
-    for metric in ['fp', 'ambiguous', 'recall', 'recall_lower', 'recall_upper', 'precision',
-                   'precision_lower', 'precision_upper', 'tp', 'total.query', 'ambi', 'na',
-                   'recall2', 'unk', 'total.truth', 'fn', 'fp.region.size', 'fp.rate']:
+    for metric in [
+        "fp",
+        "ambiguous",
+        "recall",
+        "recall_lower",
+        "recall_upper",
+        "precision",
+        "precision_lower",
+        "precision_upper",
+        "tp",
+        "total.query",
+        "ambi",
+        "na",
+        "recall2",
+        "unk",
+        "total.truth",
+        "fn",
+        "fp.region.size",
+        "fp.rate",
+    ]:
         if len(data1[metric]) == 0 or len(data2[metric]) == 0:
             raise Exception("Number of metrics to compare is wrong")
 
@@ -49,10 +66,15 @@ def main():
                     raise Exception("Failed: Results should be the same")
                 print(metric + " / " + field + "... ok (%8.3f)" % data2[metric][field])
             except:
-                print(metric + " / " + field + "... ERROR (%s / %s)" % (data1[metric][field], data2[metric][field]))
+                print(
+                    metric
+                    + " / "
+                    + field
+                    + "... ERROR (%s / %s)"
+                    % (data1[metric][field], data2[metric][field])
+                )
                 raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

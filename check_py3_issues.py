@@ -277,7 +277,7 @@ class Python2To3Issues:
 
     def report(self):
         """Generate a report of all issues found"""
-        total_issues = sum(len(issues) for issues in self.issues.values())
+        total_issues = sum(len(issues) for issues in list(self.issues.values()))
 
         print("\n=== Python 2 to 3 Migration Issues Report ===")
         print(f"Total issues found: {total_issues}\n")
@@ -346,7 +346,7 @@ def generate_migration_report(checker, python_files):
     issues_by_module = {}
 
     # Group issues by module/package
-    for issue_type, issues in checker.issues.items():
+    for issue_type, issues in list(checker.issues.items()):
         for issue in issues:
             # Handle both dict and tuple formats
             if isinstance(issue, dict):
@@ -366,7 +366,7 @@ def generate_migration_report(checker, python_files):
     # Calculate files with no issues
     for file in python_files:
         file_has_issues = False
-        for issue_type, issues in checker.issues.items():
+        for issue_type, issues in list(checker.issues.items()):
             for issue in issues:
                 # Handle both dict and tuple formats
                 if isinstance(issue, dict) and issue.get("file") == file:
@@ -397,7 +397,7 @@ def generate_migration_report(checker, python_files):
 
     print("\nIssues by module:")
     for module, count in sorted(
-        issues_by_module.items(), key=lambda x: x[1], reverse=True
+        list(issues_by_module.items()), key=lambda x: x[1], reverse=True
     ):
         print(f"  {module}: {count} issues")
 

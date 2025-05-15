@@ -33,7 +33,7 @@ import json
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
 import Tools
 import Tools.bamstats
@@ -66,5 +66,5 @@ def main():
         all_results.to_csv(args.output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

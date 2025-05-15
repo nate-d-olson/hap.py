@@ -7,15 +7,21 @@ import argparse
 import csv
 import pprint as pp
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
+)
+
 
 def parse_args():
     parser = argparse.ArgumentParser("Validate hap.py stats")
     parser.add_argument("--sompy_stats", required=True, help="Path to som.py stats.csv")
-    parser.add_argument("--happy_summary", required=True, help="Path to hap.py summary.csv")
+    parser.add_argument(
+        "--happy_summary", required=True, help="Path to hap.py summary.csv"
+    )
     args = parser.parse_args()
     return args
+
 
 def eval_equal(metric_name, count_a, count_b):
     a = int(count_a)
@@ -24,7 +30,8 @@ def eval_equal(metric_name, count_a, count_b):
     logging.info("%s: %d vs %d - %s" % (metric_name, a, b, e))
     return e
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_args()
     sompy_stats = csv.DictReader(open(args.sompy_stats))
     happy_summary = csv.DictReader(open(args.happy_summary))
@@ -44,12 +51,42 @@ if __name__ == '__main__':
     outcomes = dict(ALL=set(), PASS=set())
     for h in happy_summary:
         if h["Type"] == vtype:
-            outcomes[h["Filter"]].add(eval_equal(metric_name="TRUTH.TOTAL", count_a=s["total.truth"], count_b=h["TRUTH.TOTAL"]))
-            outcomes[h["Filter"]].add(eval_equal(metric_name="TRUTH.TP", count_a=s["tp"], count_b=h["TRUTH.TP"]))
-            outcomes[h["Filter"]].add(eval_equal(metric_name="TRUTH.FN", count_a=s["fn"], count_b=h["TRUTH.FN"]))
-            outcomes[h["Filter"]].add(eval_equal(metric_name="QUERY.TOTAL", count_a=s["total.query"], count_b=h["QUERY.TOTAL"]))
-            outcomes[h["Filter"]].add(eval_equal(metric_name="QUERY.FP", count_a=s["fp"], count_b=h["QUERY.FP"]))
-            outcomes[h["Filter"]].add(eval_equal(metric_name="QUERY.UNK", count_a=int(s["unk"])+int(s["ambi"]), count_b=h["QUERY.UNK"]))
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="TRUTH.TOTAL",
+                    count_a=s["total.truth"],
+                    count_b=h["TRUTH.TOTAL"],
+                )
+            )
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="TRUTH.TP", count_a=s["tp"], count_b=h["TRUTH.TP"]
+                )
+            )
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="TRUTH.FN", count_a=s["fn"], count_b=h["TRUTH.FN"]
+                )
+            )
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="QUERY.TOTAL",
+                    count_a=s["total.query"],
+                    count_b=h["QUERY.TOTAL"],
+                )
+            )
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="QUERY.FP", count_a=s["fp"], count_b=h["QUERY.FP"]
+                )
+            )
+            outcomes[h["Filter"]].add(
+                eval_equal(
+                    metric_name="QUERY.UNK",
+                    count_a=int(s["unk"]) + int(s["ambi"]),
+                    count_b=h["QUERY.UNK"],
+                )
+            )
 
     failed_vfilters = [x for x in outcomes if "FAIL" in outcomes[x]]
     if len(failed_vfilters) == 2:

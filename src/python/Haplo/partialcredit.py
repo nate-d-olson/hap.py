@@ -38,28 +38,25 @@ def preprocessWrapper(file_and_location, args):
     else:
         int_suffix = "vcf.gz"
 
-    tf = tempfile.NamedTemporaryFile(delete=False,
-                                     prefix="input.%s" % location_str,
-                                     suffix=".prep." + int_suffix)
+    tf = tempfile.NamedTemporaryFile(
+        delete=False, prefix="input.%s" % location_str, suffix=".prep." + int_suffix
+    )
     tf.close()
 
-    to_run = "preprocess %s:* %s-o %s -V %i -L %i -r %s" % \
-             (pipes.quote(filename),
-              ("-l %s " % pipes.quote(location_str)) if location_str else "",
-              tf.name,
-              args["decompose"],
-              args["leftshift"],
-              pipes.quote(args["reference"]))
+    to_run = "preprocess %s:* %s-o %s -V %i -L %i -r %s" % (
+        pipes.quote(filename),
+        ("-l %s " % pipes.quote(location_str)) if location_str else "",
+        tf.name,
+        args["decompose"],
+        args["leftshift"],
+        pipes.quote(args["reference"]),
+    )
 
     if args["haploid_x"]:
         to_run += " --haploid-x 1"
 
-    tfe = tempfile.NamedTemporaryFile(delete=False,
-                                      prefix="stderr",
-                                      suffix=".log")
-    tfo = tempfile.NamedTemporaryFile(delete=False,
-                                      prefix="stdout",
-                                      suffix=".log")
+    tfe = tempfile.NamedTemporaryFile(delete=False, prefix="stderr", suffix=".log")
+    tfo = tempfile.NamedTemporaryFile(delete=False, prefix="stdout", suffix=".log")
     finished = False
     try:
         logging.info("Running '%s'" % to_run)
@@ -78,7 +75,10 @@ def preprocessWrapper(file_and_location, args):
                     logging.warn(l.replace("\n", ""))
             os.unlink(tfe.name)
         else:
-            logging.error("Preprocess command %s failed. Outputs are here %s / %s" % (to_run, tfo.name, tfe.name))
+            logging.error(
+                "Preprocess command %s failed. Outputs are here %s / %s"
+                % (to_run, tfo.name, tfe.name)
+            )
             with open(tfo.name) as f:
                 for l in f:
                     logging.error(l.replace("\n", ""))
@@ -93,28 +93,25 @@ def preprocessWrapper(file_and_location, args):
 
 
 def blocksplitWrapper(location_str, bargs):
-    """ Blocksplit for partial credit preprocessing """
+    """Blocksplit for partial credit preprocessing"""
     starttime = time.time()
-    tf = tempfile.NamedTemporaryFile(delete=False,
-                                     prefix="result.%s" % location_str,
-                                     suffix=".chunks.bed")
+    tf = tempfile.NamedTemporaryFile(
+        delete=False, prefix="result.%s" % location_str, suffix=".chunks.bed"
+    )
     result = None
     try:
         tf.close()
 
-        to_run = "blocksplit %s -l %s -o %s --window %i --nblocks %i -f 0" % \
-                 (pipes.quote(bargs["vcf"]),
-                  pipes.quote(location_str),
-                  tf.name,
-                  bargs["dist"],
-                  bargs["pieces"])
+        to_run = "blocksplit %s -l %s -o %s --window %i --nblocks %i -f 0" % (
+            pipes.quote(bargs["vcf"]),
+            pipes.quote(location_str),
+            tf.name,
+            bargs["dist"],
+            bargs["pieces"],
+        )
 
-        tfe = tempfile.NamedTemporaryFile(delete=False,
-                                          prefix="stderr",
-                                          suffix=".log")
-        tfo = tempfile.NamedTemporaryFile(delete=False,
-                                          prefix="stdout",
-                                          suffix=".log")
+        tfe = tempfile.NamedTemporaryFile(delete=False, prefix="stderr", suffix=".log")
+        tfo = tempfile.NamedTemporaryFile(delete=False, prefix="stdout", suffix=".log")
         try:
             logging.info("Running '%s'" % to_run)
             subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
@@ -148,16 +145,19 @@ def blocksplitWrapper(location_str, bargs):
         os.unlink(tf.name)
     return result
 
-def partialCredit(vcfname,
-                  outputname,
-                  reference,
-                  locations,
-                  threads=1,
-                  window=10000,
-                  leftshift=True,
-                  decompose=True,
-                  haploid_x=False):
-    """ Partial-credit-process a VCF file according to our args """
+
+def partialCredit(
+    vcfname,
+    outputname,
+    reference,
+    locations,
+    threads=1,
+    window=10000,
+    leftshift=True,
+    decompose=True,
+    haploid_x=False,
+):
+    """Partial-credit-process a VCF file according to our args"""
 
     pool = getPool(int(threads))
     if threads > 1:
@@ -180,39 +180,47 @@ def partialCredit(vcfname,
             locations = locations.split(",")
 
         # use blocksplit to subdivide input
-        res = runParallel(pool,
-                          blocksplitWrapper,
-                          locations,
-                          {"vcf": vcfname,
-                           "dist": window,
-                           "pieces": min(40, threads*4)})
+        res = runParallel(
+            pool,
+            blocksplitWrapper,
+            locations,
+            {"vcf": vcfname, "dist": window, "pieces": min(40, threads * 4)},
+        )
 
         if None in res:
             raise Exception("One of the blocksplit processes failed.")
 
         locations = list(itertools.chain.from_iterable(res))
         if not len(locations):
-            logging.warn("Blocksplit returned no blocks. This can happen when "
-                         "an input contains no valid variants.")
+            logging.warn(
+                "Blocksplit returned no blocks. This can happen when "
+                "an input contains no valid variants."
+            )
             locations = [""]
     else:
         locations = [""]
 
     res = []
     try:
-        res = runParallel(pool,
-                          preprocessWrapper,
-                          zip(itertools.repeat(vcfname), locations),
-                          {"reference": reference,
-                           "decompose": decompose,
-                           "leftshift": leftshift,
-                           "haploid_x": haploid_x,
-                           "bcf": outputname.endswith(".bcf")})
+        res = runParallel(
+            pool,
+            preprocessWrapper,
+            zip(itertools.repeat(vcfname), locations),
+            {
+                "reference": reference,
+                "decompose": decompose,
+                "leftshift": leftshift,
+                "haploid_x": haploid_x,
+                "bcf": outputname.endswith(".bcf"),
+            },
+        )
 
         if None in res:
             raise Exception("One of the preprocess jobs failed")
         if not res:
-            raise Exception("No blocks were processed. List of locations: %s" % str(list(locations)))
+            raise Exception(
+                "No blocks were processed. List of locations: %s" % str(list(locations))
+            )
 
         concatenateParts(outputname, *res)
         if outputname.endswith(".vcf.gz"):

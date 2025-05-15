@@ -38,7 +38,9 @@ def main():
     header2, data2 = csvread(sys.argv[2])
 
     if header1 != header2 or len(header1) == 0:
-        raise Exception("Header mismatch, \n%s\n != \n%s\n" % (str(header1), str(header2)))
+        raise Exception(
+            "Header mismatch, \n%s\n != \n%s\n" % (str(header1), str(header2))
+        )
 
     if len(data1) != len(data2) or len(data1) == 0:
         raise Exception("Data length mismatch, %i != %i" % (len(data1), len(data2)))
@@ -51,14 +53,23 @@ def main():
         for metric in header1:
             if type(rec1[metric]) is str and type(rec2[metric]) is str:
                 if rec1[metric] != rec2[metric]:
-                    raise Exception("Str mismatch in row %i: %s != %s" % (i, rec1[metric], rec2[metric]))
+                    raise Exception(
+                        "Str mismatch in row %i: %s != %s"
+                        % (i, rec1[metric], rec2[metric])
+                    )
             elif type(rec1[metric]) is float and type(rec2[metric]) is float:
                 if ("%.3g" % rec1[metric]) != ("%.3g" % rec2[metric]):
-                    raise Exception("Float mismatch in row %i: %g != %g" % (i, rec1[metric], rec2[metric]))
+                    raise Exception(
+                        "Float mismatch in row %i: %g != %g"
+                        % (i, rec1[metric], rec2[metric])
+                    )
             else:
-                raise Exception("Type mismatch in row %i: %s != %s" % (i, str(rec1[metric]), str(rec2[metric])))
+                raise Exception(
+                    "Type mismatch in row %i: %s != %s"
+                    % (i, str(rec1[metric]), str(rec2[metric]))
+                )
     print("ok (%i records)" % len(data1))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

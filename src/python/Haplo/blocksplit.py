@@ -26,32 +26,33 @@ import pipes
 
 def blocksplitWrapper(location_str, args):
     starttime = time.time()
-    tf = tempfile.NamedTemporaryFile(delete=False,
-                                     dir=args.scratch_prefix,
-                                     prefix="result.%s" % location_str,
-                                     suffix=".chunks.bed")
+    tf = tempfile.NamedTemporaryFile(
+        delete=False,
+        dir=args.scratch_prefix,
+        prefix="result.%s" % location_str,
+        suffix=".chunks.bed",
+    )
     tf.close()
 
     if location_str:
         loc = " -l %s" % pipes.quote(location_str)
     else:
         loc = ""
-    to_run = "blocksplit %s %s%s -o %s --window %i --nblocks %i -f 0" % \
-             (pipes.quote(args.vcf1),
-              pipes.quote(args.vcf2),
-              loc,
-              tf.name,
-              args.window*2,
-              args.pieces)
+    to_run = "blocksplit %s %s%s -o %s --window %i --nblocks %i -f 0" % (
+        pipes.quote(args.vcf1),
+        pipes.quote(args.vcf2),
+        loc,
+        tf.name,
+        args.window * 2,
+        args.pieces,
+    )
 
-    tfe = tempfile.NamedTemporaryFile(delete=False,
-                                      dir=args.scratch_prefix,
-                                      prefix="stderr",
-                                      suffix=".log")
-    tfo = tempfile.NamedTemporaryFile(delete=False,
-                                      dir=args.scratch_prefix,
-                                      prefix="stdout",
-                                      suffix=".log")
+    tfe = tempfile.NamedTemporaryFile(
+        delete=False, dir=args.scratch_prefix, prefix="stderr", suffix=".log"
+    )
+    tfo = tempfile.NamedTemporaryFile(
+        delete=False, dir=args.scratch_prefix, prefix="stdout", suffix=".log"
+    )
     try:
         logging.info("Running '%s'" % to_run)
         subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
