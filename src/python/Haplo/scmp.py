@@ -54,16 +54,25 @@ def runSCmp(vcf1, vcf2, target, args):
                 args.ref,
                 "--threads",
                 # Ensure str() conversion is safe for Python 3
-                str(args.threads) if not isinstance(args.threads, bytes) else args.threads.decode('utf-8'),
+                (
+                    str(args.threads)
+                    if not isinstance(args.threads, bytes)
+                    else args.threads.decode("utf-8")
+                ),
                 "-o",
                 target,
             ]
             if args.roc:
                 vargs += ["--q", args.roc]
 
-            vargs += ["--distance-maxdist", 
-                      str(args.engine_scmp_distance) if not isinstance(args.engine_scmp_distance, bytes) 
-                      else args.engine_scmp_distance.decode('utf-8')]
+            vargs += [
+                "--distance-maxdist",
+                (
+                    str(args.engine_scmp_distance)
+                    if not isinstance(args.engine_scmp_distance, bytes)
+                    else args.engine_scmp_distance.decode("utf-8")
+                ),
+            ]
             runBcftools(*vargs)
         finally:
             os.remove(tf.name)
@@ -76,7 +85,7 @@ def runSCmp(vcf1, vcf2, target, args):
             return [target, target + ".csi"]
     except Exception as e:
         # Handle case where error message might be bytes in Python 3
-        error_msg = e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        error_msg = e.decode("utf-8") if isinstance(e, bytes) else str(e)
         logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
@@ -84,7 +93,7 @@ def runSCmp(vcf1, vcf2, target, args):
         raise
     except BaseException as e:
         # Handle case where error message might be bytes in Python 3
-        error_msg = e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        error_msg = e.decode("utf-8") if isinstance(e, bytes) else str(e)
         logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
