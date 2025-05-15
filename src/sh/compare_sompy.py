@@ -64,15 +64,19 @@ def main():
             try:
                 if ("%8.3f" % data1[metric][field]) != ("%8.3f" % data2[metric][field]):
                     raise Exception("Failed: Results should be the same")
-                print((metric + " / " + field + "... ok (%8.3f)" % data2[metric][field]))
+                print(
+                    (metric + " / " + field + "... ok (%8.3f)" % data2[metric][field])
+                )
             except:
-                print((
-                    metric
-                    + " / "
-                    + field
-                    + "... ERROR (%s / %s)"
-                    % (data1[metric][field], data2[metric][field])
-                ))
+                print(
+                    (
+                        metric
+                        + " / "
+                        + field
+                        + "... ERROR (%s / %s)"
+                        % (data1[metric][field], data2[metric][field])
+                    )
+                )
                 raise
 
 
