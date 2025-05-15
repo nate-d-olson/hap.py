@@ -4,16 +4,16 @@
 
 Based on current progress (Updated May 14, 2025):
 
-- **Overall Progress**: 43.8% of files fully migrated (21/48 files)
-- **Remaining Issues**: 90 issues across 27 files
-- **Priority Areas**: Haplo module (32 issues), Tools module (25 issues), Somatic module (12 issues)
+- **Overall Progress**: 42.9% of files fully migrated (21/49 files)
+- **Remaining Issues**: 91 issues across 28 files
+- **Priority Areas**: Tools module (29 issues), Haplo module (25 issues), Somatic module (16 issues)
 
 ### Issues by Type
-1. String/Unicode Issues (78 occurrences)
+1. String/Unicode Issues (70 occurrences)
    - Unicode to str conversion
    - File I/O encoding specification
 
-2. Exception Syntax (12 occurrences)
+2. Exception Syntax (21 occurrences)
    - Update from `except X, e` to `except X as e`
 
 ### Completed Work
@@ -21,9 +21,10 @@ Based on current progress (Updated May 14, 2025):
 - **Cython Integration**:
   - Created `src/cmake/CythonSupport.cmake` with Python 3 support
   - Implemented proper module structure in `src/python/Haplo/cython/`
+  - Fixed syntax errors in Cython modules (`_internal.pyx`, `cpp_internal.pyx`)
+  - Added proper language level and encoding directives
   - Added fallback mechanism with mock implementations
-  - Updated build system integration in CMakeLists files
-  - Implemented string handling with proper encoding/decoding
+  - Updated Cython-C++ string handling with explicit encoding/decoding
 
 - **Build System**:
   - Created Python 3 compatible `CMakeLists.txt.py3`
@@ -31,36 +32,45 @@ Based on current progress (Updated May 14, 2025):
   - Updated paths for Python 3 module installation
 
 - **Code Fixes**:
-  - Applied automated fixes for print statements, exception syntax
-  - Updated string handling in core utility modules
-  - Fixed file I/O operations with encoding specifications
+  - Fixed corrupted Somatic/Mutect.py with properly formatted Python 3 version
+  - Updated file handling in Tools/bcftools.py with proper encoding
+  - Fixed string handling in Haplo/quantify.py
+  - Updated exception handling to use `except Exception as e` syntax
+  - Fixed Python 3 f-strings usage in Haplo/cython/__init__.py
+  - Added proper encodings for text file operations
+  - Fixed temporary file creation with explicit text mode
 
 ## Next Steps
 
-### 1. Continue Automated Migration
+### 1. Continue String/Unicode Issues
+
+Focus on resolving the remaining string handling issues in the priority modules:
 
 ```bash
-# Run the enhanced migration script on remaining Python files
-python3 automate_py3_updates.py --paths "src/python" --apply
+# Address string handling issues in Tools module (29 issues)
+python3 check_py3_issues.py --paths "src/python/Tools" --verbose
 
-# Generate updated report of remaining issues
-python3 check_py3_issues.py --generate-report
+# Address string handling issues in Haplo module (25 issues)
+python3 check_py3_issues.py --paths "src/python/Haplo" --verbose
+
+# Address string handling issues in Somatic module (16 issues)
+python3 check_py3_issues.py --paths "src/python/Somatic" --verbose
 ```
 
 ### 2. Test Cython Integration
 
 ```bash
 # Test with mock implementation
-HAPLO_USE_MOCK=1 python3 test_cython_mock.py
+HAPLO_USE_MOCK=1 python3 test_cython_module_py3.py
 
-# Test with actual Cython modules (if build successful)
+# Test the fixed Cython modules with actual C++ integration
 python3 test_cython_module_py3.py
 
 # Run comprehensive C++ integration tests
 bash test_cpp_integration.sh
 ```
 
-### 3. Build and Verify
+### 3. Build and Test
 
 ```bash
 # Build with Python 3 installer
@@ -70,7 +80,20 @@ python3 install_py3.py /tmp/happy-py3-build
 cd /tmp/happy-py3-build
 src/sh/run_tests.sh
 
-# Capture and analyze failures
+# Capture output to analyze failures
+src/sh/run_tests.sh 2>&1 | tee test_results.log
+```
+
+### 4. Remaining Exception Syntax Issues
+
+Fix the 21 remaining exception syntax issues across the codebase:
+
+```bash
+# Find and fix all remaining exception syntax issues
+grep -r "except \w\+," --include="*.py" src/python | cut -d ":" -f 1 | sort -u > exception_syntax_files.txt
+
+# Manually fix each file listed in exception_syntax_files.txt
+```
 src/sh/run_tests.sh 2>&1 | tee test_output.log
 grep -A 5 "FAILED" test_output.log
 ```
@@ -88,6 +111,7 @@ Focus on priority modules in this order:
 - Update `PYTHON3_MIGRATION.md` with progress
 - Document any module-specific considerations
 - Update test documentation for Python 3 compatibility
+- Update this document (`.github/prompt/continue-py3-migration.md`) for use with the next session.
 
 ## Common Issues to Watch For
 

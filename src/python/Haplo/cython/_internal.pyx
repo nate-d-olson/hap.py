@@ -29,8 +29,8 @@ np.import_array()
 
 # Forward declarations of C++ types
 cdef extern from "Version.hh" namespace "haplotypes":
-    cdef string version_string()
-    cdef string build_timestamp()
+    string version_string() nogil
+    string build_timestamp() nogil
 
 # Attempt to import the C++ functionality - this is defined in a separate file
 # that's generated during the build process
@@ -38,21 +38,38 @@ try:
     # Define Python-accessible version information
     def get_version():
         """Get the hap.py version string"""
-        return version_string.decode('utf-8') if isinstance(version_string, bytes) else version_string().decode('utf-8')
+        cdef string v = version_string()
+        return v.decode('utf-8')
     
     def get_build_time():
         """Get the hap.py build timestamp"""
-        return build_timestamp.decode('utf-8') if isinstance(build_timestamp, bytes) else build_timestamp().decode('utf-8')
+        cdef string t = build_timestamp()
+        return t.decode('utf-8')
         
 except Exception as e:
-    logging.warning(f"Could not initialize C++ components: {e}")
+    logging.warning("Could not initialize C++ components: {}".format(str(e)))
     
     # Define fallback versions of the functions
     def get_version():
+        """Fallback version function when C++ is not available"""
+        return "unknown (C++ module not loaded)"
+    
+    def get_build_time():
+        """Fallback build time function when C++ is not available"""
+        return "unknown (C++ module not loaded)"
+
+# Add module initialization function
+def is_available():
+    """Check if the C++ components are available"""
+    try:
+        v = get_version()
+        return v != "unknown (C++ module not loaded)"
+    except:
+        return False
         """Get the hap.py version string (fallback)"""
         return "0.0.0-fallback"
     
-    def get_build_time():
+    def get_build_time() -> str:
         """Get the hap.py build timestamp (fallback)"""
         return "unknown"
     

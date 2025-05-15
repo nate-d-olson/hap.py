@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -10,23 +10,21 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import os
-import subprocess
-import logging
-import pandas
-import tempfile
 import gzip
+import logging
+import os
 import pipes
+import subprocess
+import tempfile
 
+import pandas
 import Tools
-
 
 scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
 def runShellCommand(*args):
-    """ Run a shell command (e.g. bcf tools), and return output
-    """
+    """Run a shell command (e.g. bcf tools), and return output"""
     qargs = []
     for a in args:
         if a.strip() != "|":
@@ -37,10 +35,13 @@ def runShellCommand(*args):
     cmd_line = " ".join(qargs)
     logging.info(cmd_line)
 
-    po = subprocess.Popen(cmd_line,
-                          shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE)
+    po = subprocess.Popen(
+        cmd_line,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )  # text mode for Python 3 compatibility
 
     stdout, stderr = po.communicate()
 
@@ -49,23 +50,28 @@ def runShellCommand(*args):
     return_code = po.returncode
 
     if return_code != 0:
-        raise Exception("Command line {} got return code {}.\nSTDOUT: {}\nSTDERR: {}".format(cmd_line, return_code, stdout, stderr))
+        raise Exception(
+            "Command line {} got return code {}.\nSTDOUT: {}\nSTDERR: {}".format(
+                cmd_line, return_code, stdout, stderr
+            )
+        )
 
-    return stdout
+    return stdout, stderr, return_code
 
 
 def runBcftools(*args):
     """
     Wraps runShellCommand for compatibility.
 
-    :param args:
-    :return:
+    :param args: Arguments to pass to bcftools
+    :return: stdout from the command
     """
-    return runShellCommand('bcftools', *args)
+    stdout, stderr, return_code = runShellCommand("bcftools", *args)
+    return stdout
 
 
 def parseStats(output, colname="count"):
-    """ Parse BCFTOOLS Stats Output """
+    """Parse BCFTOOLS Stats Output"""
 
     result = {}
     for x in output.split("\n"):
@@ -80,12 +86,12 @@ def parseStats(output, colname="count"):
 
 
 def countVCFRows(filename):
-    """ Count the number of rows in a VCF
+    """Count the number of rows in a VCF
     :param filename: VCF file name
     :return: number of rows
     """
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r", encoding="utf-8")
+        f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
     else:
         f = open(filename, "r", encoding="utf-8")
 
@@ -93,11 +99,13 @@ def countVCFRows(filename):
     for s in f:
         if not s.startswith("#"):
             count += 1
+
+    f.close()
     return count
 
 
 def concatenateParts(output, *args):
-    """ Concatenate BCF files
+    """Concatenate BCF files
 
 
     Trickier than it sounds because when there are many files we might run into
@@ -128,8 +136,11 @@ def concatenateParts(output, *args):
             to_delete.append(tf2.name)
             to_delete.append(tf1.name + ".csi")
             to_delete.append(tf2.name + ".csi")
-            half1 = [tf1.name] + list(args[:len(args)/2])
-            half2 = [tf2.name] + list(args[len(args)/2:])
+            mid_point = (
+                len(args) // 2
+            )  # Use integer division for Python 3 compatibility
+            half1 = [tf1.name] + list(args[:mid_point])
+            half2 = [tf2.name] + list(args[mid_point:])
             concatenateParts(*half1)
             runBcftools("index", tf1.name)
             concatenateParts(*half2)
@@ -139,23 +150,29 @@ def concatenateParts(output, *args):
         for f in to_delete:
             try:
                 os.unlink(f)
-            except Exception:
+            except Exception as e:
                 pass
 
 
 # noinspection PyShadowingBuiltins
-def preprocessVCF(input_filename, output_filename, location="",
-                  pass_only=True,
-                  chrprefix=True, norm=False,
-                  regions=None, targets=None,
-                  reference="fake_reference_path",
-                  filters_only=None,
-                  somatic_allele_conversion=False,
-                  sample="SAMPLE",
-                  filter_nonref=True,
-                  convert_gvcf=False,
-                  num_threads=4):
-    """ Preprocess a VCF + create index
+def preprocessVCF(
+    input_filename,
+    output_filename,
+    location="",
+    pass_only=True,
+    chrprefix=True,
+    norm=False,
+    regions=None,
+    targets=None,
+    reference="fake_reference_path",
+    filters_only=None,
+    somatic_allele_conversion=False,
+    sample="SAMPLE",
+    filter_nonref=True,
+    convert_gvcf=False,
+    num_threads=4,
+):
+    """Preprocess a VCF + create index
 
     :param input_filename: the input VCF / BCF / ...
     :param output_filename: the output VCF
@@ -177,26 +194,59 @@ def preprocessVCF(input_filename, output_filename, location="",
     :param sample: name of the output sample column when using somatic_allele_conversion
     :param filter_nonref: remove any variants genotyped as <NON_REF>
     """
-    #ToDo: refactor for simplicity and performance
+    # ToDo: refactor for simplicity and performance
 
-    vargs = ["bcftools", "view", "--threads", str(num_threads), "-O", "v", input_filename, "|" ]
-       
-       
-    if convert_gvcf:            
+    vargs = [
+        "bcftools",
+        "view",
+        "--threads",
+        str(num_threads),
+        "-O",
+        "v",
+        input_filename,
+        "|",
+    ]
+
+    if convert_gvcf:
         # prefilter for variant sites (all genome VCF sites have a NON_REF allele, hence use 2 here)
-        vargs += ['bcftools', 'view', '-I', '-e', 'N_ALT < 2', '-O', 'u', '|']
+        vargs += ["bcftools", "view", "-I", "-e", "N_ALT < 2", "-O", "u", "|"]
         # strip uninteresting details and arrays which prevent allele trimming
-        vargs += ['bcftools', 'annotate', '-x', 'INFO,^FORMAT/GT,FORMAT/DP,FORMAT/GQ', '-O', 'u', '|']
+        vargs += [
+            "bcftools",
+            "annotate",
+            "-x",
+            "INFO,^FORMAT/GT,FORMAT/DP,FORMAT/GQ",
+            "-O",
+            "u",
+            "|",
+        ]
         # trim missing alleles, don't compute the AD/AF fields
-        vargs += ['bcftools', 'view', '-a', '-I', '-O', 'u', '|']
+        vargs += ["bcftools", "view", "-a", "-I", "-O", "u", "|"]
         # remove variants with NON_REF alleles, don't compute the AD/AF fields
-        vargs += ['bcftools', 'view', '-I', '-e', 'ALT[*] = "<NON_REF>"', '-O', 'v', '|']
+        vargs += [
+            "bcftools",
+            "view",
+            "-I",
+            "-e",
+            'ALT[*] = "<NON_REF>"',
+            "-O",
+            "v",
+            "|",
+        ]
 
     vargs += ["bcftools", "view", "-O", "v"]
 
-    if filter_nonref:     
-        vargs += ["|", "python", "{}/remove_nonref_gt_variants.py".format(scriptDir), "|", "bcftools", "view",  "-O", "v"]
-
+    if filter_nonref:
+        vargs += [
+            "|",
+            "python",
+            "{}/remove_nonref_gt_variants.py".format(scriptDir),
+            "|",
+            "bcftools",
+            "view",
+            "-O",
+            "v",
+        ]
 
     if type(location) is list:
         location = ",".join(location)
@@ -207,8 +257,19 @@ def preprocessVCF(input_filename, output_filename, location="",
         vargs += ["-f", filters_only]
 
     if chrprefix:
-        vargs += ["|", "perl", "-pe", "s/^([0-9XYM])/chr$1/", "|", "perl", "-pe", "s/chrMT/chrM/", "|", "bcftools",
-                  "view"]
+        vargs += [
+            "|",
+            "perl",
+            "-pe",
+            "s/^([0-9XYM])/chr$1/",
+            "|",
+            "perl",
+            "-pe",
+            "s/chrMT/chrM/",
+            "|",
+            "bcftools",
+            "view",
+        ]
 
     if targets:
         vargs += ["-T", targets, "|", "bcftools", "view"]
@@ -229,19 +290,31 @@ def preprocessVCF(input_filename, output_filename, location="",
         if regions:
             if int_suffix == "vcf.gz":
                 vargs += ["-o", tff.name, "-O", "z"]
-                runShellCommand(*vargs)
-                runShellCommand('bcftools', "index", "-t", tff.name)
+                _, _, _ = runShellCommand(*vargs)
+                _, _, _ = runShellCommand("bcftools", "index", "-t", tff.name)
             else:
                 vargs += ["-o", tff.name, "-O", "b"]
-                runShellCommand(*vargs)
-                runShellCommand('bcftools', "index", tff.name)
+                _, _, _ = runShellCommand(*vargs)
+                _, _, _ = runShellCommand("bcftools", "index", tff.name)
             vargs = ["bcftools", "view", tff.name, "-R", regions]
 
         if somatic_allele_conversion:
             if type(somatic_allele_conversion) is not str:
                 somatic_allele_conversion = "half"
-            vargs += ["|", "alleles", "-", "-o", "-.vcf", "--gt", somatic_allele_conversion, "--sample", sample,
-                      "|", "bcftools", "view"]
+            vargs += [
+                "|",
+                "alleles",
+                "-",
+                "-o",
+                "-.vcf",
+                "--gt",
+                somatic_allele_conversion,
+                "--sample",
+                sample,
+                "|",
+                "bcftools",
+                "view",
+            ]
 
         if norm:
             vargs += ["|", "bcftools", "norm", "-f", reference, "-c", "x", "-D"]
@@ -254,36 +327,38 @@ def preprocessVCF(input_filename, output_filename, location="",
             vargs += ["-O", "b"]
             istabix = False
 
-        runShellCommand(*vargs)
+        _, _, _ = runShellCommand(*vargs)
 
         if istabix:
-            runShellCommand('bcftools', "index", "-t", output_filename)
+            _, _, _ = runShellCommand("bcftools", "index", "-t", output_filename)
         else:
-            runShellCommand('bcftools', "index", output_filename)
+            _, _, _ = runShellCommand("bcftools", "index", output_filename)
 
     except Exception as ex:
-        print("Error running BCFTOOLS; please check your file for compatibility issues issues using vcfcheck")
+        print(
+            "Error running BCFTOOLS; please check your file for compatibility issues issues using vcfcheck"
+        )
         raise ex
 
     finally:
         try:
             os.unlink(tff.name)
-        except Exception:
+        except Exception as e:
             pass
         try:
             os.unlink(tff.name + ".tbi")
-        except Exception:
+        except Exception as e:
             pass
         try:
             os.unlink(tff.name + ".csi")
-        except Exception:
+        except Exception as e:
             pass
 
 
 def bedOverlapCheck(filename):
-    """ Check for overlaps / out of order in a bed file """
+    """Check for overlaps / out of order in a bed file"""
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r", encoding="utf-8")
+        f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
     else:
         f = open(filename, "r", encoding="utf-8")
     last = -1
@@ -296,8 +371,11 @@ def bedOverlapCheck(filename):
         if thischr is not None and thischr != l[0]:
             last = -1
         thischr = l[0]
-        if (last-1) > int(l[1]):
-            logging.warn("%s has overlapping regions at %s:%i (line %i)" % (filename, l[0], int(l[1]), lines))
+        if (last - 1) > int(l[1]):
+            logging.warn(
+                "%s has overlapping regions at %s:%i (line %i)"
+                % (filename, l[0], int(l[1]), lines)
+            )
             return 1
         last = int(l[2])
         lines += 1

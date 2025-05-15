@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -43,19 +44,21 @@ def _locations_tmp_bed_file(locations):
             raise Exception("Invalid chromosome name in %s" % str(l))
         try:
             start = int(start)
-        except Exception:
+        except Exception as e:
             start = 0
 
         try:
             end = int(end)
-        except Exception:
+        except Exception as e:
             end = 2**31 - 1
 
         llocations.append((xchr, start, end))
 
     locations = sorted(llocations)
 
-    tf = tempfile.NamedTemporaryFile(delete=False)
+    tf = tempfile.NamedTemporaryFile(
+        delete=False, mode="w", encoding="utf-8"
+    )  # text mode with encoding for Python 3
     for xchr, start, end in locations:
         print("%s\t%i\t%i" % (xchr, start - 1, end), file=tf)
     tf.close()
@@ -169,21 +172,25 @@ def run_quantify(
         location_file = _locations_tmp_bed_file(locations)
         run_str += " --only '%s'" % location_file
 
-    tfe = tempfile.NamedTemporaryFile(delete=False, prefix="stderr", suffix=".log")
-    tfo = tempfile.NamedTemporaryFile(delete=False, prefix="stdout", suffix=".log")
+    tfe = tempfile.NamedTemporaryFile(
+        delete=False, prefix="stderr", suffix=".log", mode="w", encoding="utf-8"
+    )
+    tfo = tempfile.NamedTemporaryFile(
+        delete=False, prefix="stdout", suffix=".log", mode="w", encoding="utf-8"
+    )
 
     logging.info("Running '%s'" % run_str)
 
     try:
         subprocess.check_call(run_str, shell=True, stdout=tfo, stderr=tfe)
-    except Exception:
+    except Exception as e:
         tfo.close()
         tfe.close()
-        with open(tfo.name) as f:
+        with open(tfo.name, encoding="utf-8") as f:
             for l in f:
                 logging.error("[stdout] " + l.replace("\n", ""))
         os.unlink(tfo.name)
-        with open(tfe.name) as f:
+        with open(tfe.name, encoding="utf-8") as f:
             for l in f:
                 logging.error("[stderr] " + l.replace("\n", ""))
         os.unlink(tfe.name)
@@ -193,11 +200,11 @@ def run_quantify(
 
     tfo.close()
     tfe.close()
-    with open(tfo.name) as f:
+    with open(tfo.name, encoding="utf-8") as f:
         for l in f:
             logging.info("[stdout] " + l.replace("\n", ""))
     os.unlink(tfo.name)
-    with open(tfe.name) as f:
+    with open(tfe.name, encoding="utf-8") as f:
         for l in f:
             logging.info("[stderr] " + l.replace("\n", ""))
     os.unlink(tfe.name)

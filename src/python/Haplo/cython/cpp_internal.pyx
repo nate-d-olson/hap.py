@@ -21,26 +21,26 @@ cdef extern from "Version.hh" namespace "haplotypes":
     string get_build_time() nogil
 
 # Expose version info to Python
-def get_version() -> str:
+def get_version():
     """Get the hap.py version string"""
     cdef string version
     with nogil:
         version = get_version_string()
-    return version.decode('utf-8') if isinstance(version, bytes) else version.decode('utf8')
+    return version.decode('utf-8')
 
-def get_git_hash() -> str:
+def get_git_hash():
     """Get the git hash of the current version"""
     cdef string hash_str
     with nogil:
         hash_str = get_version_git_hash()
-    return hash_str.decode('utf-8') if isinstance(hash_str, bytes) else hash_str.decode('utf8')
+    return hash_str.decode('utf-8')
 
-def get_build_time() -> str:
+def get_build_time():
     """Get the build timestamp"""
     cdef string timestamp
     with nogil:
         timestamp = get_build_time()
-    return timestamp.decode('utf-8') if isinstance(timestamp, bytes) else timestamp.decode('utf8')
+    return timestamp.decode('utf-8')
 
 # Forward declarations for variant handling
 cdef extern from "Variant.hh" namespace "haplotypes":
@@ -80,30 +80,30 @@ cdef class PyVariant:
             
     @property
     def chrom(self) -> str:
-        return self.decode('utf-8') if isinstance(self, bytes) else self._variant.chrom.decode('utf8')
+        return self._variant.chrom.decode('utf-8')
     
     @property
     def pos(self) -> int:
-        return self.decode('utf-8') if isinstance(self, bytes) else self._variant.pos
+        return self._variant.pos
     
     @property
     def ref(self) -> str:
-        return self.decode('utf-8') if isinstance(self, bytes) else self._variant.ref.decode('utf8')
+        return self._variant.ref.decode('utf-8')
     
     @property
     def alt(self) -> str:
-        return self.decode('utf-8') if isinstance(self, bytes) else self._variant.alt.decode('utf8')
+        return self._variant.alt.decode('utf-8')
     
     @property
     def qual(self) -> float:
-        return self.decode('utf-8') if isinstance(self, bytes) else self._variant.qual
+        return self._variant.qual
     
     @qual.setter
     def qual(self, double value):
         self._variant.qual = value
     
     def __str__(self) -> str:
-        return f.decode('utf-8') if isinstance(f, bytes) else f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
+        return f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
 
 # Basic test function
 def test_module():
