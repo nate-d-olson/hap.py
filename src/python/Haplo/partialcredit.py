@@ -16,16 +16,16 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
+import itertools
 import logging
+import os
+import pipes
 import subprocess
 import tempfile
 import time
-import itertools
-import pipes
 
-from Tools.parallel import runParallel, getPool
-from Tools.bcftools import runBcftools, concatenateParts
+from Tools.bcftools import concatenateParts, runBcftools
+from Tools.parallel import getPool, runParallel
 from Tools.vcfextract import extractHeadersJSON
 
 
@@ -65,11 +65,11 @@ def preprocessWrapper(file_and_location, args):
         if finished:
             tfo.close()
             tfe.close()
-            with open(tfo.name) as f:
+            with open(tfo.name, encoding="utf-8") as f:
                 for l in f:
                     logging.info(l.replace("\n", ""))
             os.unlink(tfo.name)
-            with open(tfe.name) as f:
+            with open(tfe.name, encoding="utf-8") as f:
                 for l in f:
                     logging.warn(l.replace("\n", ""))
             os.unlink(tfe.name)
@@ -78,10 +78,10 @@ def preprocessWrapper(file_and_location, args):
                 "Preprocess command %s failed. Outputs are here %s / %s"
                 % (to_run, tfo.name, tfe.name)
             )
-            with open(tfo.name) as f:
+            with open(tfo.name, encoding="utf-8") as f:
                 for l in f:
                     logging.error(l.replace("\n", ""))
-            with open(tfe.name) as f:
+            with open(tfe.name, encoding="utf-8") as f:
                 for l in f:
                     logging.error(l.replace("\n", ""))
 
@@ -117,17 +117,17 @@ def blocksplitWrapper(location_str, bargs):
         finally:
             tfo.close()
             tfe.close()
-            with open(tfo.name) as f:
+            with open(tfo.name, encoding="utf-8") as f:
                 for l in f:
                     logging.info(l.replace("\n", ""))
             os.unlink(tfo.name)
-            with open(tfe.name) as f:
+            with open(tfe.name, encoding="utf-8") as f:
                 for l in f:
                     logging.warn(l.replace("\n", ""))
             os.unlink(tfe.name)
 
         r = []
-        with open(tf.name) as f:
+        with open(tf.name, encoding="utf-8") as f:
             for l in f:
                 ll = l.strip().split("\t", 3)
                 if len(ll) < 3:

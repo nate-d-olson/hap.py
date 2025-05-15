@@ -1,24 +1,26 @@
 # Python 3 Migration Status and Plan
 
-## Current Status (Updated May 14, 2025)
+## Current Status (Updated May 15, 2025)
 
 ### Progress Overview
 - Total Python files: 48
-- Fully migrated files: 21 (43.8%)
-- Partially migrated files: 27 (56.2%)
-- Total remaining issues: 90
+- Fully migrated files: 31 (64.6%)
+- Partially migrated files: 17 (35.4%)
+- Total remaining issues: 56
 
 ### Issues by Type
-1. String/Unicode Issues (78 occurrences)
+1. String/Unicode Issues (56 occurrences)
    - Unicode to str conversion
    - Encoding/decoding operations
    - File I/O encoding specification
+   - Bytes vs. string handling in Python 3
 
-2. Exception Syntax (12 occurrences)
-   - Update from `except X, e` to `except X as e`
+2. Exception Syntax (0 occurrences)
+   - All files now use Python 3 style `except X as e`
+   - No remaining exception syntax issues
 
 ### Issues by Module (Prioritized)
-1. Haplo (32 issues) - Highest priority
+1. Haplo (16 issues) - Highest priority
 2. Tools (25 issues)
 3. Somatic (12 issues)
 4. Core files (hap.py, som.py, qfy.py) - 13 issues total
@@ -175,3 +177,6 @@ The updated build system now:
   - `automate_py3_updates.py`
   - `check_py3_issues.py`
   - `update_cython_modules_py3.py`
+  - `fix_exception_syntax.py` - Fix Python 2 style exception syntax (except X, y:)
+  - `fix_string_unicode.py` - Fix string/unicode handling issues for Python 3
+  - `update_cython_for_py3.py` - Update Cython modules with language_level directive and string handling

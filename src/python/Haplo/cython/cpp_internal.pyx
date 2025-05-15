@@ -68,10 +68,10 @@ cdef class PyVariant:
             bytes alt_bytes = alt.encode('utf8')
             
         self._variant = new Variant(
-            string(<char*>chrom_bytes), 
+            string(<char*>(chrom_bytes if isinstance(chrom_bytes, bytes) else chrom_bytes.encode("utf-8"))), 
             pos, 
-            string(<char*>ref_bytes), 
-            string(<char*>alt_bytes)
+            string(<char*>(ref_bytes if isinstance(ref_bytes, bytes) else ref_bytes.encode("utf-8"))), 
+            string(<char*>(alt_bytes if isinstance(alt_bytes, bytes) else alt_bytes.encode("utf-8")))
         )
         
     def __dealloc__(self):

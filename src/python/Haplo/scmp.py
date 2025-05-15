@@ -16,14 +16,13 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
 import logging
-import traceback
+import os
 import tempfile
+import traceback
 
-
-from Tools.bcftools import runBcftools
 from Tools import LoggingWriter
+from Tools.bcftools import runBcftools
 
 
 def runSCmp(vcf1, vcf2, target, args):
@@ -54,14 +53,17 @@ def runSCmp(vcf1, vcf2, target, args):
                 "-r",
                 args.ref,
                 "--threads",
-                str(args.threads),
+                # Ensure str() conversion is safe for Python 3
+                str(args.threads) if not isinstance(args.threads, bytes) else args.threads.decode('utf-8'),
                 "-o",
                 target,
             ]
             if args.roc:
                 vargs += ["--q", args.roc]
 
-            vargs += ["--distance-maxdist", str(args.engine_scmp_distance)]
+            vargs += ["--distance-maxdist", 
+                      str(args.engine_scmp_distance) if not isinstance(args.engine_scmp_distance, bytes) 
+                      else args.engine_scmp_distance.decode('utf-8')]
             runBcftools(*vargs)
         finally:
             os.remove(tf.name)
@@ -73,13 +75,17 @@ def runSCmp(vcf1, vcf2, target, args):
             runBcftools("index", target)
             return [target, target + ".csi"]
     except Exception as e:
-        logging.error("Exception when running scmp: %s" % str(e))
+        # Handle case where error message might be bytes in Python 3
+        error_msg = e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
         logging.error("-" * 60)
         raise
     except BaseException as e:
-        logging.error("Exception when running scmp: %s" % str(e))
+        # Handle case where error message might be bytes in Python 3
+        error_msg = e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
         logging.error("-" * 60)

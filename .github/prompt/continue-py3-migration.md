@@ -2,19 +2,22 @@
 
 ## Migration Status Summary
 
-Based on current progress (Updated May 14, 2025):
+Based on current progress (Updated May 15, 2025):
 
-- **Overall Progress**: 42.9% of files fully migrated (21/49 files)
-- **Remaining Issues**: 91 issues across 28 files
-- **Priority Areas**: Tools module (29 issues), Haplo module (25 issues), Somatic module (16 issues)
+- **Overall Progress**: 65% of files fully migrated (31/48 files)
+- **Remaining Issues**: 56 issues across 17 files
+- **Priority Areas**: Haplo module (16 issues), Somatic module (15 issues), Core files (hap.py, som.py, qfy.py) (15 issues)
 
 ### Issues by Type
-1. String/Unicode Issues (70 occurrences)
+1. String/Unicode Issues (56 occurrences)
    - Unicode to str conversion
    - File I/O encoding specification
+   - Bytes vs. Strings in Python 3
+   - String formatting with potentially bytes objects
 
-2. Exception Syntax (21 occurrences)
-   - Update from `except X, e` to `except X as e`
+2. Exception Syntax (0 occurrences)
+   - All exception syntax issues have been resolved
+   - All files now use Python 3 style `except X as e`
 
 ### Completed Work
 
@@ -42,22 +45,33 @@ Based on current progress (Updated May 14, 2025):
 
 ## Next Steps
 
-### 1. Continue String/Unicode Issues
+### 1. Resolve String/Unicode Issues
 
 Focus on resolving the remaining string handling issues in the priority modules:
 
 ```bash
-# Address string handling issues in Tools module (29 issues)
+# Address string handling issues in Tools module (28 issues)
 python3 check_py3_issues.py --paths "src/python/Tools" --verbose
 
-# Address string handling issues in Haplo module (25 issues)
+# Address string handling issues in Haplo module (24 issues)
 python3 check_py3_issues.py --paths "src/python/Haplo" --verbose
 
-# Address string handling issues in Somatic module (16 issues)
+# Address string handling issues in Somatic module (15 issues)
 python3 check_py3_issues.py --paths "src/python/Somatic" --verbose
 ```
 
-### 2. Test Cython Integration
+### 2. Fix Exception Syntax Issues
+
+Fix the 21 remaining exception syntax issues across the codebase:
+
+```bash
+# Find and fix all remaining exception syntax issues
+grep -r "except \w\+," --include="*.py" src/python | cut -d ":" -f 1 | sort -u > exception_syntax_files.txt
+
+# Manually fix each file listed in exception_syntax_files.txt
+```
+
+### 3. Test Cython Integration
 
 ```bash
 # Test with mock implementation
@@ -70,7 +84,7 @@ python3 test_cython_module_py3.py
 bash test_cpp_integration.sh
 ```
 
-### 3. Build and Test
+### 4. Build and Test
 
 ```bash
 # Build with Python 3 installer
@@ -84,29 +98,25 @@ src/sh/run_tests.sh
 src/sh/run_tests.sh 2>&1 | tee test_results.log
 ```
 
-### 4. Remaining Exception Syntax Issues
-
-Fix the 21 remaining exception syntax issues across the codebase:
-
-```bash
-# Find and fix all remaining exception syntax issues
-grep -r "except \w\+," --include="*.py" src/python | cut -d ":" -f 1 | sort -u > exception_syntax_files.txt
-
-# Manually fix each file listed in exception_syntax_files.txt
-```
-src/sh/run_tests.sh 2>&1 | tee test_output.log
-grep -A 5 "FAILED" test_output.log
-```
-
-### 4. Targeted Fixes
+### 5. Targeted Fixes
 
 Focus on priority modules in this order:
-1. Fix remaining Haplo module issues (string/bytes handling)
-2. Update Tools module with proper encoding
-3. Fix Somatic module integrations
-4. Update main scripts (hap.py, som.py, qfy.py)
+1. Fix remaining Haplo module issues (16 issues - improved from 24)
+   - Fix string formatting with potentially bytes objects in error handling
+   - Update Cython integration points for proper string/bytes conversion
+2. Fix Somatic module integrations (15 issues)
+3. Update main scripts (hap.py, som.py, qfy.py) (15 issues)
+4. Address remaining Tools module issues
 
-### 5. Update Documentation
+### 6. Modernization Goals
+
+- Add type hints and Google-style docstrings to all Python files
+- Implement CI/CD pipelines for automated testing
+- Create containerized deployment options (e.g., Docker)
+- Optimize memory usage for large genomic datasets
+- Improve parallelization for performance
+
+### 7. Update Documentation
 
 - Update `PYTHON3_MIGRATION.md` with progress
 - Document any module-specific considerations
