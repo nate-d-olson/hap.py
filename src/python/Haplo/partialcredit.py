@@ -205,7 +205,7 @@ def partialCredit(
         res = runParallel(
             pool,
             preprocessWrapper,
-            zip(itertools.repeat(vcfname), locations),
+            list(zip(itertools.repeat(vcfname), locations)),
             {
                 "reference": reference,
                 "decompose": decompose,

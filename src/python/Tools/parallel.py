@@ -95,7 +95,7 @@ def runParallel(pool, fun, par, *args, **kwargs):
     """
     if pool:
         result = pool.map(
-            parMapper, zip(par, repeat({"fun": fun, "args": args, "kwargs": kwargs}))
+            parMapper, list(zip(par, repeat({"fun": fun, "args": args, "kwargs": kwargs})))
         )
     else:
         result = []

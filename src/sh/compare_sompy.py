@@ -58,21 +58,21 @@ def main():
         if len(data1[metric]) == 0 or len(data2[metric]) == 0:
             raise Exception("Number of metrics to compare is wrong")
 
-        for field in data1[metric].keys():
+        for field in list(data1[metric].keys()):
             if field == "no-ALTs":
                 continue
             try:
                 if ("%8.3f" % data1[metric][field]) != ("%8.3f" % data2[metric][field]):
                     raise Exception("Failed: Results should be the same")
-                print(metric + " / " + field + "... ok (%8.3f)" % data2[metric][field])
+                print((metric + " / " + field + "... ok (%8.3f)" % data2[metric][field]))
             except:
-                print(
+                print((
                     metric
                     + " / "
                     + field
                     + "... ERROR (%s / %s)"
                     % (data1[metric][field], data2[metric][field])
-                )
+                ))
                 raise
 
 
