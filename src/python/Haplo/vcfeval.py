@@ -139,12 +139,12 @@ def runVCFEval(vcf1, vcf2, target, args):
         # remove temp path
         try:
             shutil.rmtree(vtf.name)
-        except:
+        except Exception:
             pass
         if del_sdf:
             try:
                 shutil.rmtree(args.engine_vcfeval_template)
-            except:
+            except Exception:
                 pass
 
     elapsed = time.time() - starttime

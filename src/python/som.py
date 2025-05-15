@@ -23,32 +23,34 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
 import logging
-import traceback
-import tempfile
+import os
 import shutil
-import pandas
+import sys
+import tempfile
+import traceback
+
 import numpy as np
-np.seterr(all='ignore')
+import pandas
+
+np.seterr(all="ignore")
 import gzip
 import json
 from collections import Counter
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, '..', 'lib', 'python27')))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
-import Tools
-from Tools.bcftools import runBcftools, parseStats, preprocessVCF
-from Tools.bamstats import bamStats
-from Tools.bedintervaltree import BedIntervalTree
-from Tools.roc import ROC
-from Tools.ci import binomialCI
-from Tools.metric import makeMetricsObject, dataframeToMetricsTable
-from Tools.fastasize import fastaContigLengths, calculateLength
 import Somatic
+import Tools
+from Tools.bamstats import bamStats
+from Tools.bcftools import parseStats, preprocessVCF, runBcftools
+from Tools.bedintervaltree import BedIntervalTree
+from Tools.ci import binomialCI
+from Tools.fastasize import calculateLength, fastaContigLengths
+from Tools.metric import dataframeToMetricsTable, makeMetricsObject
+from Tools.roc import ROC
 
 
 def parse_args():
@@ -57,138 +59,329 @@ def parse_args():
     parser.add_argument("truth", help="Truth VCF file")
     parser.add_argument("query", help="Query VCF file")
 
-    parser.add_argument("-o", "--output", dest="output", required=True,
-                        help="Output file prefix for statistics and feature table (when selected)")
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        required=True,
+        help="Output file prefix for statistics and feature table (when selected)",
+    )
 
-    parser.add_argument("-l", "--location", dest="location", default="",
-                        help="Location for bcftools view (e.g. chr1)")
+    parser.add_argument(
+        "-l",
+        "--location",
+        dest="location",
+        default="",
+        help="Location for bcftools view (e.g. chr1)",
+    )
 
-    parser.add_argument("-R", "--restrict-regions", dest="regions_bedfile",
-                        default=None, type=str,
-                        help="Restrict analysis to given (sparse) regions (using -R in bcftools).")
+    parser.add_argument(
+        "-R",
+        "--restrict-regions",
+        dest="regions_bedfile",
+        default=None,
+        type=str,
+        help="Restrict analysis to given (sparse) regions (using -R in bcftools).",
+    )
 
-    parser.add_argument("-T", "--target-regions", dest="targets_bedfile",
-                        default=None, type=str,
-                        help="Restrict analysis to given (dense) regions (using -T in bcftools).")
+    parser.add_argument(
+        "-T",
+        "--target-regions",
+        dest="targets_bedfile",
+        default=None,
+        type=str,
+        help="Restrict analysis to given (dense) regions (using -T in bcftools).",
+    )
 
-    parser.add_argument("-f", "--false-positives", dest="FP",
-                        help="False-positive region bed file to distinguish UNK from FP")
+    parser.add_argument(
+        "-f",
+        "--false-positives",
+        dest="FP",
+        help="False-positive region bed file to distinguish UNK from FP",
+    )
 
-    parser.add_argument("-a", "--ambiguous", dest="ambi", action='append',
-                        help="Ambiguous region bed file(s) to distinguish from FP (e.g. variant only observed "
-                             "in some replicates)")
+    parser.add_argument(
+        "-a",
+        "--ambiguous",
+        dest="ambi",
+        action="append",
+        help="Ambiguous region bed file(s) to distinguish from FP (e.g. variant only observed "
+        "in some replicates)",
+    )
 
-    parser.add_argument("--ambi-fp", dest="ambi_fp", action='store_true', default=False,
-                        help="Use FP calls from ambiguous region files also.")
+    parser.add_argument(
+        "--ambi-fp",
+        dest="ambi_fp",
+        action="store_true",
+        default=False,
+        help="Use FP calls from ambiguous region files also.",
+    )
 
-    parser.add_argument("--no-ambi-fp", dest="ambi_fp", action='store_false',
-                        help="Do not use FP calls from ambiguous region files also.")
+    parser.add_argument(
+        "--no-ambi-fp",
+        dest="ambi_fp",
+        action="store_false",
+        help="Do not use FP calls from ambiguous region files also.",
+    )
 
-    parser.add_argument("--count-unk", dest="count_unk", action='store_true', default=False,
-                        help="Assume the truth set covers the whole genome and only count FPs in regions "
-                             "specified by the truth VCF or ambiguous/false-positive regions.")
+    parser.add_argument(
+        "--count-unk",
+        dest="count_unk",
+        action="store_true",
+        default=False,
+        help="Assume the truth set covers the whole genome and only count FPs in regions "
+        "specified by the truth VCF or ambiguous/false-positive regions.",
+    )
 
-    parser.add_argument("--no-count-unk", dest="count_unk", action='store_false',
-                        help="Do not use FP calls from ambiguous region files also.")
+    parser.add_argument(
+        "--no-count-unk",
+        dest="count_unk",
+        action="store_false",
+        help="Do not use FP calls from ambiguous region files also.",
+    )
 
-    parser.add_argument("-e", "--explain_ambiguous", dest="explain_ambiguous", required=False,
-                        default=False, action="store_true",
-                        help="print a table giving the number of ambiguous events per category")
+    parser.add_argument(
+        "-e",
+        "--explain_ambiguous",
+        dest="explain_ambiguous",
+        required=False,
+        default=False,
+        action="store_true",
+        help="print a table giving the number of ambiguous events per category",
+    )
 
-    parser.add_argument("-r", "--reference", dest="ref", default=Tools.defaultReference(),
-                        help="Specify a reference file.")
+    parser.add_argument(
+        "-r",
+        "--reference",
+        dest="ref",
+        default=Tools.defaultReference(),
+        help="Specify a reference file.",
+    )
 
-    parser.add_argument("--scratch-prefix", dest="scratch_prefix",
-                        default=None,
-                        help="Filename prefix for scratch report output.")
+    parser.add_argument(
+        "--scratch-prefix",
+        dest="scratch_prefix",
+        default=None,
+        help="Filename prefix for scratch report output.",
+    )
 
-    parser.add_argument("--keep-scratch", dest="delete_scratch",
-                        default=True, action="store_false",
-                        help="Filename prefix for scratch report output.")
+    parser.add_argument(
+        "--keep-scratch",
+        dest="delete_scratch",
+        default=True,
+        action="store_false",
+        help="Filename prefix for scratch report output.",
+    )
 
-    parser.add_argument("--continue", dest="cont", default=False, action="store_true",
-                        help="Continue from scratch space (i.e. use VCFs in there if they already exist).")
+    parser.add_argument(
+        "--continue",
+        dest="cont",
+        default=False,
+        action="store_true",
+        help="Continue from scratch space (i.e. use VCFs in there if they already exist).",
+    )
 
-    parser.add_argument("-P", "--include-nonpass", dest="inc_nonpass", action="store_true", default=False,
-                        help="Use to include failing variants in comparison.")
+    parser.add_argument(
+        "-P",
+        "--include-nonpass",
+        dest="inc_nonpass",
+        action="store_true",
+        default=False,
+        help="Use to include failing variants in comparison.",
+    )
 
-    parser.add_argument("--feature-table", dest="features", default=False, choices=Somatic.FeatureSet.sets.keys(),
-                        help="Select a feature table to output.")
+    parser.add_argument(
+        "--feature-table",
+        dest="features",
+        default=False,
+        choices=Somatic.FeatureSet.sets.keys(),
+        help="Select a feature table to output.",
+    )
 
-    parser.add_argument("--happy-stats", dest="happy_stats", default=False, action="store_true",
-                        help="Generate summary.csv.")
+    parser.add_argument(
+        "--happy-stats",
+        dest="happy_stats",
+        default=False,
+        action="store_true",
+        help="Generate summary.csv.",
+    )
 
-    parser.add_argument("--bam", dest="bams", default=[], action="append",
-                        help="pass one or more BAM files for feature table extraction")
+    parser.add_argument(
+        "--bam",
+        dest="bams",
+        default=[],
+        action="append",
+        help="pass one or more BAM files for feature table extraction",
+    )
 
-    parser.add_argument("--normalize-truth", dest="normalize_truth", default=False, action="store_true",
-                        help="Enable running of bcftools norm on the truth file.")
+    parser.add_argument(
+        "--normalize-truth",
+        dest="normalize_truth",
+        default=False,
+        action="store_true",
+        help="Enable running of bcftools norm on the truth file.",
+    )
 
-    parser.add_argument("--normalize-query", dest="normalize_query", default=False, action="store_true",
-                        help="Enable running of bcftools norm on the query file.")
+    parser.add_argument(
+        "--normalize-query",
+        dest="normalize_query",
+        default=False,
+        action="store_true",
+        help="Enable running of bcftools norm on the query file.",
+    )
 
-    parser.add_argument("-N", "--normalize-all", dest="normalize_all", default=False, action="store_true",
-                        help="Enable running of bcftools norm on both truth and query file.")
+    parser.add_argument(
+        "-N",
+        "--normalize-all",
+        dest="normalize_all",
+        default=False,
+        action="store_true",
+        help="Enable running of bcftools norm on both truth and query file.",
+    )
 
-    parser.add_argument("--fixchr-truth", dest="fixchr_truth", action="store_true", default=True,
-                        help="Add chr prefix to truth file (default: true).")
+    parser.add_argument(
+        "--fixchr-truth",
+        dest="fixchr_truth",
+        action="store_true",
+        default=True,
+        help="Add chr prefix to truth file (default: true).",
+    )
 
-    parser.add_argument("--fixchr-query", dest="fixchr_query", action="store_true", default=True,
-                        help="Add chr prefix to query file (default: true).")
+    parser.add_argument(
+        "--fixchr-query",
+        dest="fixchr_query",
+        action="store_true",
+        default=True,
+        help="Add chr prefix to query file (default: true).",
+    )
 
-    parser.add_argument("--fix-chr-truth", dest="fixchr_truth", action="store_true", default=None,
-                        help="Same as --fixchr-truth.")
+    parser.add_argument(
+        "--fix-chr-truth",
+        dest="fixchr_truth",
+        action="store_true",
+        default=None,
+        help="Same as --fixchr-truth.",
+    )
 
-    parser.add_argument("--fix-chr-query", dest="fixchr_query", action="store_true", default=None,
-                        help="Same as --fixchr-query.")
+    parser.add_argument(
+        "--fix-chr-query",
+        dest="fixchr_query",
+        action="store_true",
+        default=None,
+        help="Same as --fixchr-query.",
+    )
 
-    parser.add_argument("--no-fixchr-truth", dest="fixchr_truth", action="store_false", default=False,
-                        help="Disable chr replacement for truth (default: false).")
+    parser.add_argument(
+        "--no-fixchr-truth",
+        dest="fixchr_truth",
+        action="store_false",
+        default=False,
+        help="Disable chr replacement for truth (default: false).",
+    )
 
-    parser.add_argument("--no-fixchr-query", dest="fixchr_query", action="store_false", default=False,
-                        help="Add chr prefix to query file (default: false).")
+    parser.add_argument(
+        "--no-fixchr-query",
+        dest="fixchr_query",
+        action="store_false",
+        default=False,
+        help="Add chr prefix to query file (default: false).",
+    )
 
-    parser.add_argument("--no-order-check", dest="disable_order_check", default=False, action="store_true",
-                        help="Disable checking the order of TP features (dev feature).")
+    parser.add_argument(
+        "--no-order-check",
+        dest="disable_order_check",
+        default=False,
+        action="store_true",
+        help="Disable checking the order of TP features (dev feature).",
+    )
 
-    parser.add_argument("--roc", dest="roc", default=None, choices=ROC.list(),
-                        help="Create a ROC-style table. This is caller specific "
-                             " - this will override the --feature-table switch!")
+    parser.add_argument(
+        "--roc",
+        dest="roc",
+        default=None,
+        choices=ROC.list(),
+        help="Create a ROC-style table. This is caller specific "
+        " - this will override the --feature-table switch!",
+    )
 
-    parser.add_argument("--bin-afs", dest="af_strat", default=None, action="store_true",
-                        help="Stratify into different AF buckets. This needs to have features available "
-                             "for getting the AF both in truth and query variants.")
-    parser.add_argument("--af-binsize", dest="af_strat_binsize", default=0.2,
-                        help="Bin size for AF binning (should be < 1). Multiple bin sizes can be specified using a comma, "
-                             "e.g. 0.1,0.2,0.5,0.2 will split at 0.1, 0.3, 0.8 and 1.0.")
-    parser.add_argument("--af-truth", dest="af_strat_truth", default="I.T_ALT_RATE",
-                        help="Feature name to use for retrieving AF for truth variants (TP and FN)")
-    parser.add_argument("--af-query", dest="af_strat_query", default="T_AF",
-                        help="Feature name to use for retrieving AF for query variants (FP/UNK/AMBI)")
+    parser.add_argument(
+        "--bin-afs",
+        dest="af_strat",
+        default=None,
+        action="store_true",
+        help="Stratify into different AF buckets. This needs to have features available "
+        "for getting the AF both in truth and query variants.",
+    )
+    parser.add_argument(
+        "--af-binsize",
+        dest="af_strat_binsize",
+        default=0.2,
+        help="Bin size for AF binning (should be < 1). Multiple bin sizes can be specified using a comma, "
+        "e.g. 0.1,0.2,0.5,0.2 will split at 0.1, 0.3, 0.8 and 1.0.",
+    )
+    parser.add_argument(
+        "--af-truth",
+        dest="af_strat_truth",
+        default="I.T_ALT_RATE",
+        help="Feature name to use for retrieving AF for truth variants (TP and FN)",
+    )
+    parser.add_argument(
+        "--af-query",
+        dest="af_strat_query",
+        default="T_AF",
+        help="Feature name to use for retrieving AF for query variants (FP/UNK/AMBI)",
+    )
 
-    parser.add_argument("-FN", "--count-filtered-fn", dest="count_filtered_fn", action="store_true",
-                        help="Count filtered vs. absent FN numbers. This requires the -P switch (to use all "
-                             "variants) and either the --feature-table or --roc switch.")
+    parser.add_argument(
+        "-FN",
+        "--count-filtered-fn",
+        dest="count_filtered_fn",
+        action="store_true",
+        help="Count filtered vs. absent FN numbers. This requires the -P switch (to use all "
+        "variants) and either the --feature-table or --roc switch.",
+    )
 
-    parser.add_argument("--fp-region-size", dest="fpr_size",
-                        help="How to obtain the normalisation constant for FP rate. By default, this will use the FP region bed file size when using"
-                             " --count-unk and the size of all reference contigs that overlap with the location specified in -l otherwise."
-                             " This can be overridden with: 1) a number of nucleotides, or 2) \"auto\" to use the lengths of all contigs that have calls."
-                             " The resulting value is used as fp.region.size.")
+    parser.add_argument(
+        "--fp-region-size",
+        dest="fpr_size",
+        help="How to obtain the normalisation constant for FP rate. By default, this will use the FP region bed file size when using"
+        " --count-unk and the size of all reference contigs that overlap with the location specified in -l otherwise."
+        ' This can be overridden with: 1) a number of nucleotides, or 2) "auto" to use the lengths of all contigs that have calls.'
+        " The resulting value is used as fp.region.size.",
+    )
 
-    parser.add_argument("--ci-level", dest="ci_level", default=0.95, type = float,
-                        help="Confidence level for precision/recall confidence intervals (default: 0.95)")
+    parser.add_argument(
+        "--ci-level",
+        dest="ci_level",
+        default=0.95,
+        type=float,
+        help="Confidence level for precision/recall confidence intervals (default: 0.95)",
+    )
 
-    parser.add_argument("--logfile", dest="logfile", default=None,
-                        help="Write logging information into file rather than to stderr")
+    parser.add_argument(
+        "--logfile",
+        dest="logfile",
+        default=None,
+        help="Write logging information into file rather than to stderr",
+    )
 
     verbosity_options = parser.add_mutually_exclusive_group(required=False)
 
-    verbosity_options.add_argument("--verbose", dest="verbose", default=False, action="store_true",
-                                   help="Raise logging level from warning to info.")
+    verbosity_options.add_argument(
+        "--verbose",
+        dest="verbose",
+        default=False,
+        action="store_true",
+        help="Raise logging level from warning to info.",
+    )
 
-    verbosity_options.add_argument("--quiet", dest="quiet", default=False, action="store_true",
-                                   help="Set logging level to output errors only.")
+    verbosity_options.add_argument(
+        "--quiet",
+        dest="quiet",
+        default=False,
+        action="store_true",
+        help="Set logging level to output errors only.",
+    )
 
     args = parser.parse_args()
 
@@ -207,16 +400,20 @@ def parse_args():
 
         if not args.af_strat_binsize:
             raise Exception("Bin size list is empty")
-    except:
-        logging.error("Failed to parse stratification bin size: %s" % str(args.af_strat_binsize))
+    except Exception:
+        logging.error(
+            "Failed to parse stratification bin size: %s" % str(args.af_strat_binsize)
+        )
         exit(1)
 
     # reinitialize logging
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
-    logging.basicConfig(filename=args.logfile,
-                        format='%(asctime)s %(levelname)-8s %(message)s',
-                        level=loglevel)
+    logging.basicConfig(
+        filename=args.logfile,
+        format="%(asctime)s %(levelname)-8s %(message)s",
+        level=loglevel,
+    )
 
     if args.normalize_all:
         args.normalize_truth = True
@@ -226,26 +423,34 @@ def parse_args():
         args.roc = ROC.make(args.roc)
         args.features = args.roc.ftname
         if not args.inc_nonpass:
-            logging.warn("When creating ROCs without the -P switch, the ROC data points will only "
-                         "include filtered variants (i.e. they will normally end at the caller's "
-                         "quality threshold).")
+            logging.warn(
+                "When creating ROCs without the -P switch, the ROC data points will only "
+                "include filtered variants (i.e. they will normally end at the caller's "
+                "quality threshold)."
+            )
 
     if not (args.ci_level > 0.0 and args.ci_level < 1.0):
         raise Exception("Confidence interval level must be > 0.0 and < 1.0.")
 
     if args.af_strat and not args.features:
-        raise Exception("To stratify by AFs, a feature table must be selected -- use this switch together "
-                        "with --feature-table or --roc")
+        raise Exception(
+            "To stratify by AFs, a feature table must be selected -- use this switch together "
+            "with --feature-table or --roc"
+        )
 
     if args.count_filtered_fn and (not args.inc_nonpass or not args.features):
-        raise Exception("Counting filtered / unfiltered FNs only works when a feature table is selected, "
-                        "and when using unfiltered variants. Specify -P --feature-table <...> or use "
-                        "--roc to select a ROC type.")
+        raise Exception(
+            "Counting filtered / unfiltered FNs only works when a feature table is selected, "
+            "and when using unfiltered variants. Specify -P --feature-table <...> or use "
+            "--roc to select a ROC type."
+        )
 
     if args.happy_stats and (not args.inc_nonpass or not args.features):
-        raise Exception("Obtaining hap.py stats only works when a feature table is selected, "
-                        "and when using unfiltered variants. Specify -P --feature-table <...> or use "
-                        "--roc to select a ROC type.")
+        raise Exception(
+            "Obtaining hap.py stats only works when a feature table is selected, "
+            "and when using unfiltered variants. Specify -P --feature-table <...> or use "
+            "--roc to select a ROC type."
+        )
 
     if args.scratch_prefix:
         scratch = os.path.abspath(args.scratch_prefix)
@@ -264,7 +469,9 @@ def resolve_vtype(args):
     elif fvtype == "indel":
         vtype = "INDEL"
     else:
-        logging.warning("Could not parse variant type from feature table arg, setting to NA")
+        logging.warning(
+            "Could not parse variant type from feature table arg, setting to NA"
+        )
         vtype = "NA"
     return vtype
 
@@ -275,18 +482,34 @@ def summary_from_featuretable(f, args):
     vtype = resolve_vtype(args)
 
     # define output data frame and temporary dict
-    happy_cols = ["Type", "Filter", "TRUTH.TOTAL", "TRUTH.TP",
-        "TRUTH.FN", "QUERY.TOTAL", "QUERY.FP", "QUERY.UNK", "FP.gt", "METRIC.Recall",
-        "METRIC.Precision", "METRIC.Frac_NA", "METRIC.F1_Score",
-        "TRUTH.TOTAL.TiTv_ratio", "QUERY.TOTAL.TiTv_ratio",
-        "TRUTH.TOTAL.het_hom_ratio", "QUERY.TOTAL.het_hom_ratio"]
-    happy_summary = pandas.DataFrame(columns = happy_cols)
+    happy_cols = [
+        "Type",
+        "Filter",
+        "TRUTH.TOTAL",
+        "TRUTH.TP",
+        "TRUTH.FN",
+        "QUERY.TOTAL",
+        "QUERY.FP",
+        "QUERY.UNK",
+        "FP.gt",
+        "METRIC.Recall",
+        "METRIC.Precision",
+        "METRIC.Frac_NA",
+        "METRIC.F1_Score",
+        "TRUTH.TOTAL.TiTv_ratio",
+        "QUERY.TOTAL.TiTv_ratio",
+        "TRUTH.TOTAL.het_hom_ratio",
+        "QUERY.TOTAL.het_hom_ratio",
+    ]
+    happy_summary = pandas.DataFrame(columns=happy_cols)
     r = dict()
     r["Type"] = vtype
     decimals = 4
 
     # truth numbers do not depend on filter
-    truth = f[(f["REF.truth"].notnull()) & (f["REF.truth"] != "") & (f["REF.truth"] != ".")]
+    truth = f[
+        (f["REF.truth"].notnull()) & (f["REF.truth"] != "") & (f["REF.truth"] != ".")
+    ]
     r["TRUTH.TOTAL"] = truth.shape[0]
     r["TRUTH.TP"] = truth[(truth["tag"] == "TP")].shape[0]
     r["TRUTH.FN"] = truth[(truth["tag"] == "FN")].shape[0]
@@ -297,24 +520,50 @@ def summary_from_featuretable(f, args):
     for vfilter in ["PASS", "ALL"]:
         r["Filter"] = vfilter
 
-        query = f[(f["REF"].notnull()) & (f["REF"] != "") & (f["REF"] != ".") & \
-                  (f["ALT"].notnull()) & (f["ALT"] != "") & (f["ALT"] != ".")]
+        query = f[
+            (f["REF"].notnull())
+            & (f["REF"] != "")
+            & (f["REF"] != ".")
+            & (f["ALT"].notnull())
+            & (f["ALT"] != "")
+            & (f["ALT"] != ".")
+        ]
         if vfilter == "PASS":
-            query = query[(query["FILTER"].isnull()) | (query["FILTER"] == "PASS") | (query["FILTER"] == "") | (query["FILTER"] == ".")]
+            query = query[
+                (query["FILTER"].isnull())
+                | (query["FILTER"] == "PASS")
+                | (query["FILTER"] == "")
+                | (query["FILTER"] == ".")
+            ]
 
         # query counts across all AFs
         r["QUERY.FP"] = query[(query["tag"] == "FP")].shape[0]
-        r["QUERY.UNK"] = query[(query["tag"] == "UNK")].shape[0] + query[(query["tag"] == "AMBI")].shape[0]
+        r["QUERY.UNK"] = (
+            query[(query["tag"] == "UNK")].shape[0]
+            + query[(query["tag"] == "AMBI")].shape[0]
+        )
         r["QUERY.TOTAL"] = r["TRUTH.TP"] + r["QUERY.FP"] + r["QUERY.UNK"]
         r["FP.gt"] = "NA"
         r["QUERY.TOTAL.het_hom_ratio"] = "NA"
         r["QUERY.TOTAL.TiTv_ratio"] = "NA"
 
         # performance metrics across all AFs
-        r["METRIC.Recall"] = np.round(np.true_divide(r["TRUTH.TP"], r["TRUTH.TOTAL"]), decimals)
-        r["METRIC.Precision"] = np.round(np.true_divide(r["TRUTH.TP"], (r["TRUTH.TP"] + r["QUERY.FP"])), decimals)
-        r["METRIC.Frac_NA"] = np.round(np.true_divide(r["QUERY.UNK"], r["QUERY.TOTAL"]), decimals)
-        r["METRIC.F1_Score"] = np.round(np.true_divide(2 * r["METRIC.Precision"] * r["METRIC.Recall"], (r["METRIC.Precision"] + r["METRIC.Recall"])), decimals)
+        r["METRIC.Recall"] = np.round(
+            np.true_divide(r["TRUTH.TP"], r["TRUTH.TOTAL"]), decimals
+        )
+        r["METRIC.Precision"] = np.round(
+            np.true_divide(r["TRUTH.TP"], (r["TRUTH.TP"] + r["QUERY.FP"])), decimals
+        )
+        r["METRIC.Frac_NA"] = np.round(
+            np.true_divide(r["QUERY.UNK"], r["QUERY.TOTAL"]), decimals
+        )
+        r["METRIC.F1_Score"] = np.round(
+            np.true_divide(
+                2 * r["METRIC.Precision"] * r["METRIC.Recall"],
+                (r["METRIC.Precision"] + r["METRIC.Recall"]),
+            ),
+            decimals,
+        )
 
         happy_summary = happy_summary.append(pandas.DataFrame([r]))
 
@@ -322,7 +571,14 @@ def summary_from_featuretable(f, args):
     happy_summary = happy_summary[happy_cols]
 
     # append breaks col types - fix them
-    int_cols = ["TRUTH.TOTAL", "TRUTH.TP", "TRUTH.FN", "QUERY.TOTAL", "QUERY.FP", "QUERY.UNK"]
+    int_cols = [
+        "TRUTH.TOTAL",
+        "TRUTH.TP",
+        "TRUTH.FN",
+        "QUERY.TOTAL",
+        "QUERY.FP",
+        "QUERY.UNK",
+    ]
     for col in int_cols:
         happy_summary[col] = happy_summary[col].astype("int")
 
@@ -335,13 +591,28 @@ def extended_from_featuretable(f, args):
     vtype = resolve_vtype(args)
 
     # define output data frame and temporary dict
-    happy_cols = ["Type", "Subtype", "Subset", "Filter",
-        "TRUTH.TOTAL", "TRUTH.TP", "TRUTH.FN",
-        "QUERY.TOTAL", "QUERY.FP", "QUERY.UNK", "FP.gt", "METRIC.Recall",
-        "METRIC.Precision", "METRIC.Frac_NA", "METRIC.F1_Score",
-        "TRUTH.TOTAL.TiTv_ratio", "QUERY.TOTAL.TiTv_ratio",
-        "TRUTH.TOTAL.het_hom_ratio", "QUERY.TOTAL.het_hom_ratio"]
-    happy_extended = pandas.DataFrame(columns = happy_cols)
+    happy_cols = [
+        "Type",
+        "Subtype",
+        "Subset",
+        "Filter",
+        "TRUTH.TOTAL",
+        "TRUTH.TP",
+        "TRUTH.FN",
+        "QUERY.TOTAL",
+        "QUERY.FP",
+        "QUERY.UNK",
+        "FP.gt",
+        "METRIC.Recall",
+        "METRIC.Precision",
+        "METRIC.Frac_NA",
+        "METRIC.F1_Score",
+        "TRUTH.TOTAL.TiTv_ratio",
+        "QUERY.TOTAL.TiTv_ratio",
+        "TRUTH.TOTAL.het_hom_ratio",
+        "QUERY.TOTAL.het_hom_ratio",
+    ]
+    happy_extended = pandas.DataFrame(columns=happy_cols)
     r = dict()
     decimals = 4
 
@@ -367,8 +638,13 @@ def extended_from_featuretable(f, args):
             r["Subset"] = "[%.2f,1.00]" % start
 
         # truth numbers do not depend on filter
-        truth = f[(f["REF.truth"].notnull()) & (f["REF.truth"] != "") & (f["REF.truth"] != ".") & \
-                  (f[af_t_feature] >= start) & (f[af_t_feature] < end)]
+        truth = f[
+            (f["REF.truth"].notnull())
+            & (f["REF.truth"] != "")
+            & (f["REF.truth"] != ".")
+            & (f[af_t_feature] >= start)
+            & (f[af_t_feature] < end)
+        ]
         r["TRUTH.TOTAL"] = truth.shape[0]
         r["TRUTH.TP"] = truth[(truth["tag"] == "TP")].shape[0]
         r["TRUTH.FN"] = truth[(truth["tag"] == "FN")].shape[0]
@@ -379,25 +655,52 @@ def extended_from_featuretable(f, args):
         for vfilter in ["PASS", "ALL"]:
             r["Filter"] = vfilter
 
-            query = f[(f["REF"].notnull()) & (f["REF"] != "") & (f["REF"] != ".") & \
-                      (f["ALT"].notnull()) & (f["ALT"] != "") & (f["ALT"] != ".") & \
-                      (f[af_q_feature] >= start) & (f[af_q_feature] < end)]
+            query = f[
+                (f["REF"].notnull())
+                & (f["REF"] != "")
+                & (f["REF"] != ".")
+                & (f["ALT"].notnull())
+                & (f["ALT"] != "")
+                & (f["ALT"] != ".")
+                & (f[af_q_feature] >= start)
+                & (f[af_q_feature] < end)
+            ]
             if vfilter == "PASS":
-                query = query[(query["FILTER"].isnull()) | (query["FILTER"] == "PASS") | (query["FILTER"] == "") | (query["FILTER"] == ".")]
+                query = query[
+                    (query["FILTER"].isnull())
+                    | (query["FILTER"] == "PASS")
+                    | (query["FILTER"] == "")
+                    | (query["FILTER"] == ".")
+                ]
 
             # query counts across all AFs
             r["QUERY.FP"] = query[(query["tag"] == "FP")].shape[0]
-            r["QUERY.UNK"] = query[(query["tag"] == "UNK")].shape[0] + query[(query["tag"] == "AMBI")].shape[0]
+            r["QUERY.UNK"] = (
+                query[(query["tag"] == "UNK")].shape[0]
+                + query[(query["tag"] == "AMBI")].shape[0]
+            )
             r["QUERY.TOTAL"] = r["TRUTH.TP"] + r["QUERY.FP"] + r["QUERY.UNK"]
             r["FP.gt"] = "NA"
             r["QUERY.TOTAL.het_hom_ratio"] = "NA"
             r["QUERY.TOTAL.TiTv_ratio"] = "NA"
 
             # performance metrics across all AFs
-            r["METRIC.Recall"] = np.round(np.true_divide(r["TRUTH.TP"], r["TRUTH.TOTAL"]), decimals)
-            r["METRIC.Precision"] = np.round(np.true_divide(r["TRUTH.TP"], (r["TRUTH.TP"] + r["QUERY.FP"])), decimals)
-            r["METRIC.Frac_NA"] = np.round(np.true_divide(r["QUERY.UNK"], r["QUERY.TOTAL"]), decimals)
-            r["METRIC.F1_Score"] = np.round(np.true_divide(2 * r["METRIC.Precision"] * r["METRIC.Recall"], (r["METRIC.Precision"] + r["METRIC.Recall"])), decimals)
+            r["METRIC.Recall"] = np.round(
+                np.true_divide(r["TRUTH.TP"], r["TRUTH.TOTAL"]), decimals
+            )
+            r["METRIC.Precision"] = np.round(
+                np.true_divide(r["TRUTH.TP"], (r["TRUTH.TP"] + r["QUERY.FP"])), decimals
+            )
+            r["METRIC.Frac_NA"] = np.round(
+                np.true_divide(r["QUERY.UNK"], r["QUERY.TOTAL"]), decimals
+            )
+            r["METRIC.F1_Score"] = np.round(
+                np.true_divide(
+                    2 * r["METRIC.Precision"] * r["METRIC.Recall"],
+                    (r["METRIC.Precision"] + r["METRIC.Recall"]),
+                ),
+                decimals,
+            )
             happy_extended = happy_extended.append(pandas.DataFrame([r]))
 
         # re-configure counters
@@ -411,7 +714,14 @@ def extended_from_featuretable(f, args):
     happy_extended = happy_extended[happy_cols]
 
     # append breaks col types - fix them
-    int_cols = ["TRUTH.TOTAL", "TRUTH.TP", "TRUTH.FN", "QUERY.TOTAL", "QUERY.FP", "QUERY.UNK"]
+    int_cols = [
+        "TRUTH.TOTAL",
+        "TRUTH.TP",
+        "TRUTH.FN",
+        "QUERY.TOTAL",
+        "QUERY.FP",
+        "QUERY.UNK",
+    ]
     for col in int_cols:
         happy_extended[col] = happy_extended[col].astype("int")
 
@@ -452,13 +762,17 @@ def main():
         ntpath = os.path.join(scratch, "normalized_truth.vcf.gz")
 
         if not (args.cont and os.path.exists(ntpath)):
-            preprocessVCF(args.truth, ntpath, args.location,
-                          True,  # pass_only
-                          args.fixchr_truth,  # chrprefix
-                          args.normalize_truth,  # norm,
-                          args.regions_bedfile,
-                          args.targets_bedfile,
-                          args.ref)
+            preprocessVCF(
+                args.truth,
+                ntpath,
+                args.location,
+                True,  # pass_only
+                args.fixchr_truth,  # chrprefix
+                args.normalize_truth,  # norm,
+                args.regions_bedfile,
+                args.targets_bedfile,
+                args.ref,
+            )
         else:
             logging.info("Continuing from %s" % ntpath)
 
@@ -468,13 +782,17 @@ def main():
         nqpath = os.path.join(scratch, "normalized_query.vcf.gz")
 
         if not (args.cont and os.path.exists(nqpath)):
-            preprocessVCF(args.query, nqpath, args.location,
-                          not args.inc_nonpass,  # pass_only
-                          args.fixchr_query,  # chrprefix
-                          args.normalize_query,  # norm,
-                          args.regions_bedfile,
-                          args.targets_bedfile,
-                          args.ref)
+            preprocessVCF(
+                args.query,
+                nqpath,
+                args.location,
+                not args.inc_nonpass,  # pass_only
+                args.fixchr_query,  # chrprefix
+                args.normalize_query,  # norm,
+                args.regions_bedfile,
+                args.targets_bedfile,
+                args.ref,
+            )
         else:
             logging.info("Continuing from %s" % nqpath)
 
@@ -483,22 +801,34 @@ def main():
 
         logging.info("Intersecting")
 
-        tpfn_files = all([os.path.exists(os.path.join(scratch, "tpfn", "0000.vcf.gz")),
-                          os.path.exists(os.path.join(scratch, "tpfn", "0001.vcf.gz")),
-                          os.path.exists(os.path.join(scratch, "tpfn", "0002.vcf.gz"))])
+        tpfn_files = all(
+            [
+                os.path.exists(os.path.join(scratch, "tpfn", "0000.vcf.gz")),
+                os.path.exists(os.path.join(scratch, "tpfn", "0001.vcf.gz")),
+                os.path.exists(os.path.join(scratch, "tpfn", "0002.vcf.gz")),
+            ]
+        )
 
-        tpfn_r_files = all([os.path.exists(os.path.join(scratch, "tpfn", "0000.vcf.gz")),
-                            os.path.exists(os.path.join(scratch, "tpfn", "0001.vcf.gz")),
-                            os.path.exists(os.path.join(scratch, "tpfn", "0002.vcf.gz"))])
+        tpfn_r_files = all(
+            [
+                os.path.exists(os.path.join(scratch, "tpfn", "0000.vcf.gz")),
+                os.path.exists(os.path.join(scratch, "tpfn", "0001.vcf.gz")),
+                os.path.exists(os.path.join(scratch, "tpfn", "0002.vcf.gz")),
+            ]
+        )
 
         if not (args.cont and tpfn_files):
-            runBcftools("isec", ntpath, nqpath, "-p", os.path.join(scratch, "tpfn"), "-O", "z")
+            runBcftools(
+                "isec", ntpath, nqpath, "-p", os.path.join(scratch, "tpfn"), "-O", "z"
+            )
         else:
             logging.info("Continuing from %s" % os.path.join(scratch, "tpfn"))
 
         if args.features and not (args.cont and tpfn_r_files):
             # only need to do this for getting the feature table
-            runBcftools("isec", nqpath, ntpath, "-p", os.path.join(scratch, "tpfn_r"), "-O", "z")
+            runBcftools(
+                "isec", nqpath, ntpath, "-p", os.path.join(scratch, "tpfn_r"), "-O", "z"
+            )
 
         logging.info("Getting FPs / Ambi / Unk")
 
@@ -537,7 +867,7 @@ def main():
         # split VCF into FP, UNK and AMBI
         toProcess = gzip.open(rununiquepath, "rb")
         for entry in toProcess:
-            if entry[0] == '#':
+            if entry[0] == "#":
                 continue
 
             fields = entry.strip().split("\t")
@@ -603,8 +933,12 @@ def main():
         truthcounts = parseStats(runBcftools("stats", ntpath), "total.truth")
         querycounts = parseStats(runBcftools("stats", nqpath), "total.query")
 
-        tpcounts = parseStats(runBcftools("stats", os.path.join(scratch, "tpfn", "0002.vcf.gz")), "tp")
-        fncounts = parseStats(runBcftools("stats", os.path.join(scratch, "tpfn", "0000.vcf.gz")), "fn")
+        tpcounts = parseStats(
+            runBcftools("stats", os.path.join(scratch, "tpfn", "0002.vcf.gz")), "tp"
+        )
+        fncounts = parseStats(
+            runBcftools("stats", os.path.join(scratch, "tpfn", "0000.vcf.gz")), "fn"
+        )
         fpcounts = parseStats(runBcftools("stats", fppath), "fp")
         ambicounts = parseStats(runBcftools("stats", ambipath), "ambi")
         unkcounts = parseStats(runBcftools("stats", unkpath), "unk")
@@ -636,14 +970,21 @@ def main():
                 pandas.set_option("display.max_columns", 1000)
                 pandas.set_option("display.width", 1000)
                 pandas.set_option("display.height", 1100)
-                logging.info("FP/ambiguity classes with info (multiple classes can "
-                             "overlap):\n" + ambie.to_string(index=False))
+                logging.info(
+                    "FP/ambiguity classes with info (multiple classes can "
+                    "overlap):\n" + ambie.to_string(index=False)
+                )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print("FP/ambiguity classes with info (multiple classes can " +
-                          "overlap):\n" + ambie.to_string(index=False))
+                    print(
+                        "FP/ambiguity classes with info (multiple classes can "
+                        + "overlap):\n"
+                        + ambie.to_string(index=False)
+                    )
                 ambie.to_csv(args.output + ".ambiclasses.csv")
-                metrics_output["metrics"].append(dataframeToMetricsTable("ambiclasses", ambie))
+                metrics_output["metrics"].append(
+                    dataframeToMetricsTable("ambiclasses", ambie)
+                )
             else:
                 logging.info("No ambiguous variants.")
 
@@ -655,14 +996,34 @@ def main():
                 pandas.set_option("display.max_columns", 1000)
                 pandas.set_option("display.width", 1000)
                 pandas.set_option("display.height", 1100)
-                logging.info("Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
-                    formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
+                logging.info(
+                    "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
+                    + ambie.to_string(
+                        formatters={
+                            "reason": "{{:<{}s}}".format(
+                                ambie["reason"].str.len().max()
+                            ).format
+                        },
+                        index=False,
+                    )
+                )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print("Reasons for defining as ambiguous (multiple reasons can overlap):\n" + ambie.to_string(
-                        formatters={'reason': '{{:<{}s}}'.format(ambie['reason'].str.len().max()).format}, index=False))
+                    print(
+                        "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
+                        + ambie.to_string(
+                            formatters={
+                                "reason": "{{:<{}s}}".format(
+                                    ambie["reason"].str.len().max()
+                                ).format
+                            },
+                            index=False,
+                        )
+                    )
                 ambie.to_csv(args.output + ".ambireasons.csv")
-                metrics_output["metrics"].append(dataframeToMetricsTable("ambireasons", ambie))
+                metrics_output["metrics"].append(
+                    dataframeToMetricsTable("ambireasons", ambie)
+                )
             else:
                 logging.info("No ambiguous variants.")
 
@@ -695,7 +1056,10 @@ def main():
             len2 = tps2.shape[0]
 
             if len1 != len2:
-                raise Exception("Cannot read TP features, lists have different lengths : %i != %i" % (len1, len2))
+                raise Exception(
+                    "Cannot read TP features, lists have different lengths : %i != %i"
+                    % (len1, len2)
+                )
 
             if not args.disable_order_check:
                 logging.info("Checking order %i / %i" % (len1, len2))
@@ -703,16 +1067,14 @@ def main():
                 for x in range(0, len1):
                     for a in ["CHROM", "POS"]:
                         if tps.loc[x][a] != tps2.loc[x][a]:
-                            raise Exception("Cannot merge TP features, inputs are out of order at %s / %s" % (
-                                str(tps[x:x + 1]), str(tps2[x:x + 1])))
+                            raise Exception(
+                                "Cannot merge TP features, inputs are out of order at %s / %s"
+                                % (str(tps[x : x + 1]), str(tps2[x : x + 1]))
+                            )
 
             logging.info("Merging...")
 
-            cdata = {
-                "CHROM": tps["CHROM"],
-                "POS": tps["POS"],
-                "tag": tps["tag"]
-            }
+            cdata = {"CHROM": tps["CHROM"], "POS": tps["POS"], "tag": tps["tag"]}
 
             tpc = pandas.DataFrame(cdata, columns=["CHROM", "POS", "tag"])
 
@@ -767,24 +1129,28 @@ def main():
             if "ALT.truth" in all_columns:
                 first_columns.append("ALT.truth")
 
-            ordered_columns = first_columns + sorted([x for x in all_columns if x not in first_columns])
+            ordered_columns = first_columns + sorted(
+                [x for x in all_columns if x not in first_columns]
+            )
             featuretable = featuretable[ordered_columns]
             # make sure positions are integers
             featuretable["POS"] = featuretable["POS"].astype(int)
 
             logging.info("Saving feature table...")
-            featuretable.to_csv(args.output + ".features.csv", float_format='%.8f')
+            featuretable.to_csv(args.output + ".features.csv", float_format="%.8f")
 
             if args.roc is not None:
                 roc_table = args.roc.from_table(featuretable)
-                roc_table.to_csv(args.output + ".roc.csv", float_format='%.8f')
+                roc_table.to_csv(args.output + ".roc.csv", float_format="%.8f")
 
             featuretable["FILTER"].fillna("", inplace=True)
             featuretable.ix[featuretable["REF"].str.len() < 1, "absent"] = True
-            featuretable.ix[featuretable["tag"] == "FN", "REF"] = featuretable.ix[featuretable["tag"] == "FN",
-                                                                                  "REF.truth"]
-            featuretable.ix[featuretable["tag"] == "FN", "ALT"] = featuretable.ix[featuretable["tag"] == "FN",
-                                                                                  "ALT.truth"]
+            featuretable.ix[featuretable["tag"] == "FN", "REF"] = featuretable.ix[
+                featuretable["tag"] == "FN", "REF.truth"
+            ]
+            featuretable.ix[featuretable["tag"] == "FN", "ALT"] = featuretable.ix[
+                featuretable["tag"] == "FN", "ALT.truth"
+            ]
             af_t_feature = args.af_strat_truth
             af_q_feature = args.af_strat_query
             for vtype in ["records", "SNVs", "indels"]:
@@ -792,14 +1158,30 @@ def main():
                 featuretable_this_type = featuretable
 
                 if args.count_filtered_fn:
-                    res.ix[res["type"] == vtype, "fp.filtered"] = featuretable_this_type[
-                        (featuretable_this_type["tag"] == "FP") & (featuretable_this_type["FILTER"] != "")].shape[0]
-                    res.ix[res["type"] == vtype, "tp.filtered"] = featuretable_this_type[
-                        (featuretable_this_type["tag"] == "TP") & (featuretable_this_type["FILTER"] != "")].shape[0]
-                    res.ix[res["type"] == vtype, "unk.filtered"] = featuretable_this_type[
-                        (featuretable_this_type["tag"] == "UNK") & (featuretable_this_type["FILTER"] != "")].shape[0]
-                    res.ix[res["type"] == vtype, "ambi.filtered"] = featuretable_this_type[
-                        (featuretable_this_type["tag"] == "AMBI") & (featuretable_this_type["FILTER"] != "")].shape[0]
+                    res.ix[res["type"] == vtype, "fp.filtered"] = (
+                        featuretable_this_type[
+                            (featuretable_this_type["tag"] == "FP")
+                            & (featuretable_this_type["FILTER"] != "")
+                        ].shape[0]
+                    )
+                    res.ix[res["type"] == vtype, "tp.filtered"] = (
+                        featuretable_this_type[
+                            (featuretable_this_type["tag"] == "TP")
+                            & (featuretable_this_type["FILTER"] != "")
+                        ].shape[0]
+                    )
+                    res.ix[res["type"] == vtype, "unk.filtered"] = (
+                        featuretable_this_type[
+                            (featuretable_this_type["tag"] == "UNK")
+                            & (featuretable_this_type["FILTER"] != "")
+                        ].shape[0]
+                    )
+                    res.ix[res["type"] == vtype, "ambi.filtered"] = (
+                        featuretable_this_type[
+                            (featuretable_this_type["tag"] == "AMBI")
+                            & (featuretable_this_type["FILTER"] != "")
+                        ].shape[0]
+                    )
 
                 if args.af_strat:
                     start = 0.0
@@ -812,31 +1194,46 @@ def main():
                         if end >= 1:
                             end = 1.00000001
                         if start >= end:
-                             break
-                        n_tp = featuretable_this_type[(featuretable_this_type["tag"] == "TP") &
-                                                      (featuretable_this_type[af_t_feature] >= start) &
-                                                      (featuretable_this_type[af_t_feature] < end)]
-                        n_fn = featuretable_this_type[(featuretable_this_type["tag"] == "FN") &
-                                                      (featuretable_this_type[af_t_feature] >= start) &
-                                                      (featuretable_this_type[af_t_feature] < end)]
-                        n_fp = featuretable_this_type[(featuretable_this_type["tag"] == "FP") &
-                                                      (featuretable_this_type[af_q_feature] >= start) &
-                                                      (featuretable_this_type[af_q_feature] < end)]
-                        n_ambi = featuretable_this_type[(featuretable_this_type["tag"] == "AMBI") &
-                                                        (featuretable_this_type[af_q_feature] >= start) &
-                                                        (featuretable_this_type[af_q_feature] < end)]
-                        n_unk = featuretable_this_type[(featuretable_this_type["tag"] == "UNK") &
-                                                       (featuretable_this_type[af_q_feature] >= start) &
-                                                       (featuretable_this_type[af_q_feature] < end)]
+                            break
+                        n_tp = featuretable_this_type[
+                            (featuretable_this_type["tag"] == "TP")
+                            & (featuretable_this_type[af_t_feature] >= start)
+                            & (featuretable_this_type[af_t_feature] < end)
+                        ]
+                        n_fn = featuretable_this_type[
+                            (featuretable_this_type["tag"] == "FN")
+                            & (featuretable_this_type[af_t_feature] >= start)
+                            & (featuretable_this_type[af_t_feature] < end)
+                        ]
+                        n_fp = featuretable_this_type[
+                            (featuretable_this_type["tag"] == "FP")
+                            & (featuretable_this_type[af_q_feature] >= start)
+                            & (featuretable_this_type[af_q_feature] < end)
+                        ]
+                        n_ambi = featuretable_this_type[
+                            (featuretable_this_type["tag"] == "AMBI")
+                            & (featuretable_this_type[af_q_feature] >= start)
+                            & (featuretable_this_type[af_q_feature] < end)
+                        ]
+                        n_unk = featuretable_this_type[
+                            (featuretable_this_type["tag"] == "UNK")
+                            & (featuretable_this_type[af_q_feature] >= start)
+                            & (featuretable_this_type[af_q_feature] < end)
+                        ]
 
-                        r = {"type": "%s.%f-%f" % (vtype, start, end),
-                             "total.truth": n_tp.shape[0] + n_fn.shape[0],
-                             "total.query": n_tp.shape[0] + n_fp.shape[0] + n_ambi.shape[0] + n_unk.shape[0],
-                             "tp": n_tp.shape[0],
-                             "fp": n_fp.shape[0],
-                             "fn": n_fn.shape[0],
-                             "unk": n_unk.shape[0],
-                             "ambi": n_ambi.shape[0]}
+                        r = {
+                            "type": "%s.%f-%f" % (vtype, start, end),
+                            "total.truth": n_tp.shape[0] + n_fn.shape[0],
+                            "total.query": n_tp.shape[0]
+                            + n_fp.shape[0]
+                            + n_ambi.shape[0]
+                            + n_unk.shape[0],
+                            "tp": n_tp.shape[0],
+                            "fp": n_fp.shape[0],
+                            "fn": n_fn.shape[0],
+                            "unk": n_unk.shape[0],
+                            "ambi": n_ambi.shape[0],
+                        }
 
                         if args.count_filtered_fn:
                             r["fp.filtered"] = n_fp[n_fp["FILTER"] != ""].shape[0]
@@ -846,10 +1243,20 @@ def main():
 
                         res = pandas.concat([res, pandas.DataFrame([r])])
 
-                        if args.roc is not None and (n_tp.shape[0] + n_fn.shape[0] + n_fp.shape[0]) > 0:
-                            roc_table_strat = args.roc.from_table(pandas.concat([n_tp, n_fp, n_fn]))
-                            rtname = "%s.%s.%f-%f.roc.csv" % (args.output, vtype, start, end)
-                            roc_table_strat.to_csv(rtname, float_format='%.8f')
+                        if (
+                            args.roc is not None
+                            and (n_tp.shape[0] + n_fn.shape[0] + n_fp.shape[0]) > 0
+                        ):
+                            roc_table_strat = args.roc.from_table(
+                                pandas.concat([n_tp, n_fp, n_fn])
+                            )
+                            rtname = "%s.%s.%f-%f.roc.csv" % (
+                                args.output,
+                                vtype,
+                                start,
+                                end,
+                            )
+                            roc_table_strat.to_csv(rtname, float_format="%.8f")
                         start = end
                         next_binsize += 1
                         if next_binsize >= len(args.af_strat_binsize):
@@ -862,8 +1269,8 @@ def main():
         # summary metrics with confidence intervals
         ci_alpha = 1.0 - args.ci_level
 
-        recall = binomialCI(res["tp"], res["tp"]+res["fn"], ci_alpha)
-        precision = binomialCI(res["tp"], res["tp"]+res["fp"], ci_alpha)
+        recall = binomialCI(res["tp"], res["tp"] + res["fn"], ci_alpha)
+        precision = binomialCI(res["tp"], res["tp"] + res["fp"], ci_alpha)
         res["recall"], res["recall_lower"], res["recall_upper"] = recall
         res["recall2"] = res["tp"] / (res["total.truth"])
         res["precision"], res["precision_lower"], res["precision_upper"] = precision
@@ -878,7 +1285,7 @@ def main():
             try:
                 fp_region_count = int(args.fpr_size)
                 auto_size = False
-            except:
+            except Exception:
                 pass
         if auto_size:
             if any_fp:
@@ -917,15 +1324,24 @@ def main():
         res["fp.rate"] = 1e6 * res["fp"] / res["fp.region.size"]
 
         if args.count_filtered_fn:
-            res["recall.filtered"] = (res["tp"] - res["tp.filtered"]) / (res["tp"] + res["fn"])
+            res["recall.filtered"] = (res["tp"] - res["tp.filtered"]) / (
+                res["tp"] + res["fn"]
+            )
 
-            res["precision.filtered"] = (res["tp"] - res["tp.filtered"]) / (res["tp"] - res["tp.filtered"] +
-                                                                            res["fp"] - res["fp.filtered"])
+            res["precision.filtered"] = (res["tp"] - res["tp.filtered"]) / (
+                res["tp"] - res["tp.filtered"] + res["fp"] - res["fp.filtered"]
+            )
 
-            res["fp.rate.filtered"] = 1e6 * (res["fp"] - res["fp.filtered"]) / res["fp.region.size"]
+            res["fp.rate.filtered"] = (
+                1e6 * (res["fp"] - res["fp.filtered"]) / res["fp.region.size"]
+            )
 
-            res["na.filtered"] = (res["unk"] - res["unk.filtered"]) / (res["total.query"])
-            res["ambiguous.filtered"] = (res["ambi"] - res["ambi.filtered"]) / res["total.query"]
+            res["na.filtered"] = (res["unk"] - res["unk.filtered"]) / (
+                res["total.query"]
+            )
+            res["ambiguous.filtered"] = (res["ambi"] - res["ambi.filtered"]) / res[
+                "total.query"
+            ]
 
         # HAP-162 remove inf values
         res.replace([np.inf, -np.inf], 0)
@@ -951,7 +1367,9 @@ def main():
 
         if args.happy_stats:
             # parse saved feature table as the one in memory has been updated
-            featuretable = pandas.read_csv(args.output + ".features.csv", low_memory = False, dtype = {"FILTER": str})
+            featuretable = pandas.read_csv(
+                args.output + ".features.csv", low_memory=False, dtype={"FILTER": str}
+            )
 
             # hap.py summary.csv
             summary = summary_from_featuretable(featuretable, args)
@@ -974,5 +1392,11 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         logging.error(str(e))
+        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        exit(1)
+        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        exit(1)
+        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        exit(1)
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

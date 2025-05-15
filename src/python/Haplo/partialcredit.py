@@ -223,13 +223,13 @@ def partialCredit(vcfname,
         for r in res:
             try:
                 os.unlink(r)
-            except:
+            except Exception:
                 pass
             try:
                 os.unlink(r + ".tbi")
-            except:
+            except Exception:
                 pass
             try:
                 os.unlink(r + ".csi")
-            except:
+            except Exception:
                 pass

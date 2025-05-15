@@ -34,7 +34,7 @@ def jeffreysCI(x, n, alpha=0.05):
     key = "%i_%i_%f" % (x, n, alpha)
     try:
         return _VALUE_CACHE[key]
-    except:
+    except Exception:
         pass
 
     p = x / n

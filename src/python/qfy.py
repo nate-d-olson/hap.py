@@ -58,7 +58,7 @@ def quantify(args):
     truth_or_query_is_bcf = False
     try:
         truth_or_query_is_bcf = args.vcf1.endswith(".bcf") and args.vcf2.endswith(".bcf")
-    except:
+    except Exception:
         # args.vcf1 and args.vcf2 are only available when we're running
         # inside hap.py.
         pass
@@ -108,7 +108,7 @@ def quantify(args):
     roc_header = args.roc
     try:
         roc_header = args.roc_header
-    except:
+    except Exception:
         pass
 
     Haplo.quantify.run_quantify(vcf_name,
@@ -145,7 +145,7 @@ def quantify(args):
         contig_lengths = fastasize.fastaNonNContigLengths(args.ref)
         total_region_size = fastasize.calculateLength(contig_lengths, contigs_to_use)
         logging.info("Subset.Size for * is %i, based on these contigs: %s " % (total_region_size, str(contigs_to_use)))
-    except:
+    except Exception:
         pass
 
     res = Haplo.happyroc.roc(roc_table, args.reports_prefix + ".roc",
@@ -201,19 +201,19 @@ def quantify(args):
 
     logging.info("\n" + essential_numbers.to_string(index=False))
 
-    # in default mode, print result summary to stdout
+    # in default mode, print(result summary to stdout)
     if not args.quiet and not args.verbose:
-        print "Benchmarking Summary:"
-        print essential_numbers.to_string(index=False)
+        print("Benchmarking Summary:")
+        print(essential_numbers.to_string(index=False))
 
     # keep this for verbose output
     if not args.verbose:
         try:
             os.unlink(roc_table)
-        except:
+        except Exception:
             pass
 
-    for t in res.iterkeys():
+    for t in res.keys():
         metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
 
     # gzip JSON output
@@ -362,7 +362,7 @@ def main():
         exit(0)
 
     if args.version:
-        print "qfy.py %s" % Tools.version
+        print("qfy.py %s" % Tools.version)
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:

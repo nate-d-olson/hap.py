@@ -57,7 +57,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                                 n_sample = "S.%i." % (i+1)
                                 break
 
-        except:
+        except Exception:
             logging.warn("Unable to detect tumour / normal sample order from VCF header")
 
         logging.info("Normal sample name : %s (prefix %s) / tumour sample name : %s (prefix %s)" % (nsn, n_sample,
@@ -148,7 +148,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                 n_allele_alt_count = 0
             else:
                 n_allele_alt_count = 0
-                for a in xrange(0, len(alleles_alt)):
+                for a in range(0, len(alleles_alt)):
                     n_allele_alt_count += float(rec[n_sample + "AD"][a + 1])
 
             if n_allele_alt_count + n_allele_ref_count == 0:
@@ -163,7 +163,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                 t_allele_alt_count = 0
             else:
                 t_allele_alt_count = 0
-                for a in xrange(0, len(alleles_alt)):
+                for a in range(0, len(alleles_alt)):
                     t_allele_alt_count += float(rec[t_sample + "AD"][a + 1])
 
             if t_allele_alt_count + t_allele_ref_count == 0:
@@ -251,7 +251,7 @@ def extractMutectIndelFeatures(vcfname, tag, avg_depth=None):
                                 n_sample = "S.%i." % (i+1)
                                 break
 
-        except:
+        except Exception:
             logging.warn("Unable to detect tumour / normal sample order from VCF header")
 
         logging.info("Normal sample name : %s (prefix %s) / tumour sample name : %s (prefix %s)" % (nsn, n_sample,
@@ -344,7 +344,7 @@ def extractMutectIndelFeatures(vcfname, tag, avg_depth=None):
                 n_allele_alt_count = 0
             else:
                 n_allele_alt_count = 0
-                for a in xrange(0, len(alleles_alt)):
+                for a in range(0, len(alleles_alt)):
                     n_allele_alt_count += float(rec[n_sample + "AD"][a + 1])
 
             if n_allele_alt_count + n_allele_ref_count == 0:
@@ -359,7 +359,7 @@ def extractMutectIndelFeatures(vcfname, tag, avg_depth=None):
                 t_allele_alt_count = 0
             else:
                 t_allele_alt_count = 0
-                for a in xrange(0, len(alleles_alt)):
+                for a in range(0, len(alleles_alt)):
                     t_allele_alt_count += float(rec[t_sample + "AD"][a + 1])
 
             if t_allele_alt_count + t_allele_ref_count == 0:

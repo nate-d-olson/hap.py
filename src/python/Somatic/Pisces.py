@@ -52,7 +52,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
                     evs_featurenames[i] = n
                     cols.append("E." + n)
                     logging.info("Scoring feature %i : %s" % (i, n))
-            except:
+            except Exception:
                 logging.warn("Could not parse scoring feature names from Pisces output")
 
     records = []
@@ -81,19 +81,19 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
         # read VQSR value, if it's not present, set to -1 (old versions of Pisces)
         try:
             rec["I.VQSR"] = float(rec["I.VQSR"])
-        except:
+        except Exception:
             rec["I.VQSR"] = -1.0
 
         # read EVS value, if it's not present, set to -1 (old versions of Pisces)
         if "I.SomaticEVS" in rec:
             try:
                 rec["I.EVS"] = float(rec["I.SomaticEVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
         else:
             try:
                 rec["I.EVS"] = float(rec["I.EVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
 
         # fix missing features
@@ -115,7 +115,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
         if avg_depth:
             try:
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
-            except:
+            except Exception:
                 if not rec["CHROM"] in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True

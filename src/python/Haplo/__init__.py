@@ -5,9 +5,9 @@ This module provides initialization for the Haplo package, ensuring
 proper imports of all submodules and handling Python 3 compatibility.
 """
 
+import logging
 import os
 import sys
-import logging
 
 # Import version information
 __version__ = "0.3.12-py3"
@@ -20,6 +20,7 @@ if current_dir not in sys.path:
 # Configure fallback for Cython modules
 try:
     from .cython import USING_MOCK
+
     if USING_MOCK:
         logging.warning("Using mock implementations for Cython modules")
 except ImportError:

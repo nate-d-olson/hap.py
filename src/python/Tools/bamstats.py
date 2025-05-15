@@ -47,7 +47,7 @@ def bamStats(bamfile):
             rls /= count
             rec["READLEN"] = rls
             rec["COVERAGE"] = float(rec["MAPPED"] * rec["READLEN"])/float(rec["NT"])
-        except:
+        except Exception:
             pass
         result.append(rec)
 

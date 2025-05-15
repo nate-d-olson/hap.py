@@ -75,7 +75,7 @@ def parseStats(output, colname="count"):
             count = int(vx[3])
             result[name] = count
 
-    result = pandas.DataFrame(list(result.iteritems()), columns=["type", colname])
+    result = pandas.DataFrame(list(result.items()), columns=["type", colname])
     return result
 
 
@@ -85,9 +85,9 @@ def countVCFRows(filename):
     :return: number of rows
     """
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r")
+        f = gzip.open(filename, "r", encoding="utf-8")
     else:
-        f = open(filename, "r")
+        f = open(filename, "r", encoding="utf-8")
 
     count = 0
     for s in f:
@@ -139,7 +139,7 @@ def concatenateParts(output, *args):
         for f in to_delete:
             try:
                 os.unlink(f)
-            except:
+            except Exception:
                 pass
 
 
@@ -268,24 +268,24 @@ def preprocessVCF(input_filename, output_filename, location="",
     finally:
         try:
             os.unlink(tff.name)
-        except:
+        except Exception:
             pass
         try:
             os.unlink(tff.name + ".tbi")
-        except:
+        except Exception:
             pass
         try:
             os.unlink(tff.name + ".csi")
-        except:
+        except Exception:
             pass
 
 
 def bedOverlapCheck(filename):
     """ Check for overlaps / out of order in a bed file """
     if filename.endswith(".gz"):
-        f = gzip.open(filename, "r")
+        f = gzip.open(filename, "r", encoding="utf-8")
     else:
-        f = open(filename, "r")
+        f = open(filename, "r", encoding="utf-8")
     last = -1
     lines = 1
     thischr = None

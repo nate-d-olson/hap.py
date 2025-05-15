@@ -54,7 +54,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                     evs_featurenames[i] = n
                     cols.append("E." + n)
                     logging.info("Scoring feature %i : %s" % (i, n))
-            except:
+            except Exception:
                 logging.warn("Could not parse scoring feature names from Strelka output")
 
     records = []
@@ -83,19 +83,19 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         # read VQSR value, if it's not present, set to -1 (old versions of Strelka)
         try:
             rec["I.VQSR"] = float(rec["I.VQSR"])
-        except:
+        except Exception:
             rec["I.VQSR"] = -1.0
 
         # read EVS value, if it's not present, set to -1 (old versions of Strelka)
         if "I.SomaticEVS" in rec:
             try:
                 rec["I.EVS"] = float(rec["I.SomaticEVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
         else:
             try:
                 rec["I.EVS"] = float(rec["I.EVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
 
         # fix missing features
@@ -121,12 +121,12 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
 
         try:
             MQ = float(rec["I.MQ"])
-        except:
+        except Exception:
             MQ = None
 
         try:
             MQ_ZERO = float(rec["I.MQ0"])
-        except:
+        except Exception:
             MQ_ZERO = None
 
         n_FDP = float(rec["S.1.FDP"])
@@ -149,7 +149,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             try:
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
-            except:
+            except Exception:
                 if not rec["CHROM"] in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True
@@ -161,7 +161,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         allele_ref = rec["REF"]
         try:
             t_allele_ref_counts = map(float, rec['S.2.' + allele_ref + 'U'])
-        except:
+        except Exception:
             t_allele_ref_counts = [0, 0]
 
         alleles_alt = rec["ALT"]
@@ -171,7 +171,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             for a in alleles_alt:
                 for i in range(2):
                     t_allele_alt_counts[i] += float(rec['S.2.' + a + 'U'][i])
-        except:
+        except Exception:
             t_allele_alt_counts = [0, 0]
 
         # Compute the tier1 and tier2 alt allele rates.
@@ -182,7 +182,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
 
         try:
             n_allele_ref_counts = map(float, rec['S.1.' + allele_ref + 'U'])
-        except:
+        except Exception:
             n_allele_ref_counts = [0, 0]
 
         alleles_alt = rec["ALT"]
@@ -192,7 +192,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             for a in alleles_alt:
                 for i in range(2):
                     n_allele_alt_counts[i] += float(rec['S.1.' + a + 'U'][i])
-        except:
+        except Exception:
             n_allele_alt_counts = [0, 0]
 
         # Compute the tier1 and tier2 alt allele rates.
@@ -203,12 +203,12 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
 
         try:
             snvsb = rec["I.SNVSB"]
-        except:
+        except Exception:
             snvsb = 0
 
         try:
             rprs = rec["I.ReadPosRankSum"]
-        except:
+        except Exception:
             rprs = 0
 
         # Gather the computed data into a dict
@@ -245,12 +245,12 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                 if i in evs_featurenames:
                     try:
                         qrec["E." + evs_featurenames[i]] = float(v)
-                    except:
+                    except Exception:
                         # failure to parse
                         pass
-        except:
+        except Exception:
             pass
-        for k, v in evs_featurenames.iteritems():
+        for k, v in evs_featurenames.items():
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 
@@ -329,7 +329,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                     evs_featurenames[i] = n
                     cols.append("E." + n)
                     logging.info("Scoring feature %i : %s" % (i, n))
-            except:
+            except Exception:
                 logging.warn("Could not parse scoring feature names from Strelka output")
 
     if not avg_depth:
@@ -356,12 +356,12 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         if "I.SomaticEVS" in rec:
             try:
                 rec["I.EVS"] = float(rec["I.SomaticEVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
         else:
             try:
                 rec["I.EVS"] = float(rec["I.EVS"])
-            except:
+            except Exception:
                 rec["I.EVS"] = -1.0
 
         # fix missing features
@@ -413,7 +413,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
             try:
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
-            except:
+            except Exception:
                 if not rec["CHROM"] in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True
@@ -424,12 +424,12 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         # extract observed AF from strelka counts. TIR = ALT; TAR = REF
         try:
             n_af = float(rec["S.1.TIR"][0]) / (float(rec["S.1.TIR"][0]) + float(rec["S.1.TAR"][0]))
-        except:
+        except Exception:
             n_af = 0
 
         try:
             t_af = float(rec["S.2.TIR"][0]) / (float(rec["S.2.TIR"][0]) + float(rec["S.2.TAR"][0]))
-        except:
+        except Exception:
             t_af = 0
 
         # Gather the computed data into a dict
@@ -476,7 +476,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                 res = rec[fd["s"]]
                 if "t" in fd:
                     res = fd["t"](res)
-            except:
+            except Exception:
                 res = fd["def"]
 
             qrec[fd["n"]] = res
@@ -487,13 +487,13 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                 if i in evs_featurenames:
                     try:
                         qrec["E." + evs_featurenames[i]] = float(v)
-                    except:
+                    except Exception:
                         # failure to parse
                         pass
-        except:
+        except Exception:
             pass
 
-        for k, v in evs_featurenames.iteritems():
+        for k, v in evs_featurenames.items():
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 

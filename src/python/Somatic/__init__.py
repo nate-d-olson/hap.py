@@ -126,7 +126,7 @@ class StrelkaAdmixIndelFeatures(StrelkaAdmixSNVFeatures):
                     val = "loh"
                 else:
                     val = "unknown"
-            except:
+            except Exception:
                 val = "unknown"
         else:
             if type(val) is list:

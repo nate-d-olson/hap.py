@@ -55,7 +55,7 @@ class CallerInfo(object):
         finally:
             try:
                 os.unlink(tf.name)
-            except:
+            except Exception:
                 pass
 
         cp = ['unknown', 'unknown', '']
@@ -69,7 +69,7 @@ class CallerInfo(object):
                 if k == "source":
                     try:
                         cp[0] = str(hf["values"])
-                    except:
+                    except Exception:
                         cp[0] = hf["value"]
                     if cp[0].startswith("Platypus_Version_"):
                         cp[1] = cp[0][len("Platypus_Version_"):]
@@ -78,19 +78,19 @@ class CallerInfo(object):
                 elif k == "source_version":
                     try:
                         cp[1] = str(hf["values"])
-                    except:
+                    except Exception:
                         cp[1] = hf["value"]
                     source_found = True
                 elif k == "cmdline":
                     try:
                         cp[2] = str(hf["values"])
-                    except:
+                    except Exception:
                         cp[2] = hf["value"]
                     source_found = True
                 elif k == "platypusOptions":
                     try:
                         cp[2] = str(hf["values"])
-                    except:
+                    except Exception:
                         cp[2] = hf["value"]
                     source_found = True
                 elif k == "octopus":
@@ -100,17 +100,17 @@ class CallerInfo(object):
                     caller = "GATK"
                     try:
                         caller += "-" + hf["values"]["ID"]
-                    except:
+                    except Exception:
                         pass
                     version = "unknown"
                     try:
                         version = hf["values"]["Version"]
-                    except:
+                    except Exception:
                         pass
                     options = ""
                     try:
                         options = hf["values"]["CommandLineOptions"]
-                    except:
+                    except Exception:
                         pass
                     if any(g in caller.lower() for g in gatk_callers):
                         self.callers.append([caller, version, options])
@@ -118,18 +118,18 @@ class CallerInfo(object):
                     caller = "Sentieon"
                     try:
                         caller += "-" + hf["values"]["ID"]
-                    except:
+                    except Exception:
                         pass
                     version = "unknown"
                     try:
                         version = hf["values"]["Version"]
-                    except:
+                    except Exception:
                         pass
                     options = ""
                     if any(s in caller.lower() for s in sent_callers):
                         self.callers.append([caller, version])
 
-            except:
+            except Exception:
                 pass
         if source_found:
             self.callers.append(cp)
@@ -151,26 +151,26 @@ class CallerInfo(object):
             try:
                 # noinspection PyTypeChecker
                 x = dict(y.split(":", 1) for y in line.split("\t")[1:])
-            except:
+            except Exception:
                 logging.warn("Unable to parse SAM/BAM header line: %s" % line)
                 continue
             cp = ['unknown', 'unknown', '']
             try:
                 cp[0] = x['PN']
-            except:
+            except Exception:
                 try:
                     cp[0] = x['ID']
                     if "-" in cp[0]:
                         cp[0] = cp[0].split("-")[0]
-                except:
+                except Exception:
                     pass
             try:
                 cp[1] = x['VN']
-            except:
+            except Exception:
                 pass
             try:
                 cp[2] = x['CL']
-            except:
+            except Exception:
                 pass
 
             self.aligners.append(cp)

@@ -13,24 +13,26 @@
 #
 # Process raw counts coming out of quantify
 
-import os
-import tempfile
-import subprocess
 import copy
 import json
 import logging
-import Tools
+import os
 import pipes
+import subprocess
+import tempfile
 
+import Tools
 from Tools.bcftools import runBcftools
 
 
 def _locations_tmp_bed_file(locations):
-    """ turn a list of locations into a bed file """
+    """turn a list of locations into a bed file"""
     if type(locations) is str:
         locations = locations.split(",")
     if type(locations) is not list:
-        raise Exception("Invalid list of locations (must be str or list): %s" % str(locations))
+        raise Exception(
+            "Invalid list of locations (must be str or list): %s" % str(locations)
+        )
 
     llocations = []
 
@@ -41,13 +43,13 @@ def _locations_tmp_bed_file(locations):
             raise Exception("Invalid chromosome name in %s" % str(l))
         try:
             start = int(start)
-        except:
+        except Exception:
             start = 0
 
         try:
             end = int(end)
-        except:
-            end = 2 ** 31 - 1
+        except Exception:
+            end = 2**31 - 1
 
         llocations.append((xchr, start, end))
 
@@ -61,21 +63,26 @@ def _locations_tmp_bed_file(locations):
     return tf.name
 
 
-def run_quantify(filename,
-                 output_file=None, write_vcf=False, regions=None,
-                 reference=Tools.defaultReference(),
-                 locations=None, threads=1,
-                 output_vtc=False,
-                 output_rocs=False,
-                 qtype=None,
-                 roc_file=None,
-                 roc_val=None,
-                 roc_header=None,
-                 roc_filter=None,
-                 roc_delta=None,
-                 roc_regions=None,
-                 clean_info=True,
-                 strat_fixchr=False):
+def run_quantify(
+    filename,
+    output_file=None,
+    write_vcf=False,
+    regions=None,
+    reference=Tools.defaultReference(),
+    locations=None,
+    threads=1,
+    output_vtc=False,
+    output_rocs=False,
+    qtype=None,
+    roc_file=None,
+    roc_val=None,
+    roc_header=None,
+    roc_filter=None,
+    roc_delta=None,
+    roc_regions=None,
+    clean_info=True,
+    strat_fixchr=False,
+):
     """Run quantify and return parsed JSON
 
     :param filename: the VCF file name
@@ -101,9 +108,7 @@ def run_quantify(filename,
     if not output_file:
         output_file = tempfile.NamedTemporaryFile().name
 
-    run_str = "quantify %s -o %s" % (
-            pipes.quote(filename),
-            pipes.quote(output_file))
+    run_str = "quantify %s -o %s" % (pipes.quote(filename), pipes.quote(output_file))
     run_str += " -r %s" % pipes.quote(reference)
     run_str += " --threads %i" % threads
 
@@ -164,18 +169,14 @@ def run_quantify(filename,
         location_file = _locations_tmp_bed_file(locations)
         run_str += " --only '%s'" % location_file
 
-    tfe = tempfile.NamedTemporaryFile(delete=False,
-                                      prefix="stderr",
-                                      suffix=".log")
-    tfo = tempfile.NamedTemporaryFile(delete=False,
-                                      prefix="stdout",
-                                      suffix=".log")
+    tfe = tempfile.NamedTemporaryFile(delete=False, prefix="stderr", suffix=".log")
+    tfo = tempfile.NamedTemporaryFile(delete=False, prefix="stdout", suffix=".log")
 
     logging.info("Running '%s'" % run_str)
 
     try:
         subprocess.check_call(run_str, shell=True, stdout=tfo, stderr=tfe)
-    except:
+    except Exception:
         tfo.close()
         tfe.close()
         with open(tfo.name) as f:
@@ -209,5 +210,3 @@ def run_quantify(filename,
         to_run = "tabix -p vcf %s" % pipes.quote(write_vcf)
         logging.info("Running '%s'" % to_run)
         subprocess.check_call(to_run, shell=True)
-
-

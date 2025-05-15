@@ -85,24 +85,34 @@ class Python2To3Issues:
         for node in ast.walk(tree):
             # Note: We can't check for print statements using AST in Python 3
             # since ast.Print doesn't exist. We use regex for this instead.
-            
+
             # Check for except syntax (Python 3 uses ast.Try instead of ast.TryExcept)
-            if hasattr(ast, 'TryExcept') and isinstance(node, ast.TryExcept):
+            if hasattr(ast, "TryExcept") and isinstance(node, ast.TryExcept):
                 for handler in node.handlers:
                     if handler.name is not None and not isinstance(
                         handler.name, ast.Name
                     ):
                         self.issues["except_syntax"].append(
-                            {"file": filepath, "line": handler.lineno, "message": "Old exception syntax (except Exception, e)"}
+                            {
+                                "file": filepath,
+                                "line": handler.lineno,
+                                "message": "Old exception syntax (except Exception, e)",
+                            }
                         )
             elif isinstance(node, ast.Try):
                 for handler in node.handlers:
                     # In Python 3, exception variable is in handler.name
-                    if hasattr(handler, 'name') and handler.name is not None and not isinstance(
-                        handler.name, ast.Name
+                    if (
+                        hasattr(handler, "name")
+                        and handler.name is not None
+                        and not isinstance(handler.name, ast.Name)
                     ):
                         self.issues["except_syntax"].append(
-                            {"file": filepath, "line": handler.lineno, "message": "Old exception syntax (except Exception, e)"}
+                            {
+                                "file": filepath,
+                                "line": handler.lineno,
+                                "message": "Old exception syntax (except Exception, e)",
+                            }
                         )
 
             # Check for xrange usage
@@ -111,11 +121,13 @@ class Python2To3Issues:
                 and isinstance(node.func, ast.Name)
                 and node.func.id == "xrange"
             ):
-                self.issues["xrange"].append({
-                    "file": filepath,
-                    "line": node.lineno,
-                    "message": "Replace xrange with range"
-                })
+                self.issues["xrange"].append(
+                    {
+                        "file": filepath,
+                        "line": node.lineno,
+                        "message": "Replace xrange with range",
+                    }
+                )
 
             # Check for dict methods that have changed
             if isinstance(node, ast.Attribute):
@@ -123,40 +135,52 @@ class Python2To3Issues:
                     isinstance(node.value, ast.Name)
                     and node.attr in self.dict_methods_py2
                 ):
-                    self.issues["dict_methods"].append({
-                        "file": filepath, 
-                        "line": getattr(node, "lineno", "?"),
-                        "message": f"Replace {node.attr} with Python 3 equivalent"
-                    })
+                    self.issues["dict_methods"].append(
+                        {
+                            "file": filepath,
+                            "line": getattr(node, "lineno", "?"),
+                            "message": f"Replace {node.attr} with Python 3 equivalent",
+                        }
+                    )
 
             # Check for division that might need to be updated
             if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
                 if isinstance(node.left, ast.Num) and isinstance(node.right, ast.Num):
                     # Integer division in Python 2 that might need // in Python 3
-                    if hasattr(node.left, 'n') and hasattr(node.right, 'n') and \
-                       node.left.n == int(node.left.n) and node.right.n == int(node.right.n):
-                        self.issues["division"].append({
-                            "file": filepath,
-                            "line": node.lineno,
-                            "message": "Consider using // for integer division"
-                        })
+                    if (
+                        hasattr(node.left, "n")
+                        and hasattr(node.right, "n")
+                        and node.left.n == int(node.left.n)
+                        and node.right.n == int(node.right.n)
+                    ):
+                        self.issues["division"].append(
+                            {
+                                "file": filepath,
+                                "line": node.lineno,
+                                "message": "Consider using // for integer division",
+                            }
+                        )
 
             # Check for imports of renamed modules
             if isinstance(node, ast.Import):
                 for name in node.names:
                     if name.name in self.renamed_modules:
-                        self.issues["imports"].append({
-                            "file": filepath,
-                            "line": node.lineno,
-                            "message": f"Update {name.name} to {self.renamed_modules[name.name]}"
-                        })
+                        self.issues["imports"].append(
+                            {
+                                "file": filepath,
+                                "line": node.lineno,
+                                "message": f"Update {name.name} to {self.renamed_modules[name.name]}",
+                            }
+                        )
             elif isinstance(node, ast.ImportFrom):
                 if node.module in self.renamed_modules:
-                    self.issues["imports"].append({
-                        "file": filepath,
-                        "line": node.lineno,
-                        "message": f"Update {node.module} to {self.renamed_modules[node.module]}"
-                    })
+                    self.issues["imports"].append(
+                        {
+                            "file": filepath,
+                            "line": node.lineno,
+                            "message": f"Update {node.module} to {self.renamed_modules[node.module]}",
+                        }
+                    )
 
     def _check_with_regex(self, content, filepath):
         """Check Python 2 to 3 issues using regex patterns"""
@@ -164,18 +188,27 @@ class Python2To3Issues:
         print_pattern = r'(?<!["\'])print\s+[^(]'
         for match in re.finditer(print_pattern, content):
             # Make sure it's not inside a comment or string
-            line_start = content.rfind('\n', 0, match.start())
+            line_start = content.rfind("\n", 0, match.start())
             if line_start == -1:
                 line_start = 0
             else:
                 line_start += 1  # Skip the newline
-            
-            line = content[line_start:match.start()].strip()
-            if not line.startswith('#') and not line.startswith('"') and not line.startswith("'"):
+
+            line = content[line_start : match.start()].strip()
+            if (
+                not line.startswith("#")
+                and not line.startswith('"')
+                and not line.startswith("'")
+            ):
                 lineno = content[: match.start()].count("\n") + 1
                 self.issues["print_statement"].append(
-                    {"file": filepath, "line": lineno, "message": "Python 2 print statement"})
-        
+                    {
+                        "file": filepath,
+                        "line": lineno,
+                        "message": "Python 2 print statement",
+                    }
+                )
+
         # Check for unicode/str issues
         unicode_patterns = [
             r"unicode\(",
@@ -189,28 +222,39 @@ class Python2To3Issues:
             for match in re.finditer(pattern, content):
                 lineno = content[: match.start()].count("\n") + 1
                 self.issues["unicode_issues"].append(
-                    {"file": filepath, "line": lineno, "message": "Potential string/unicode issue"})
+                    {
+                        "file": filepath,
+                        "line": lineno,
+                        "message": "Potential string/unicode issue",
+                    }
+                )
 
     def _check_cython_issues(self, content, filepath):
         """Check for Cython-specific Python 3 issues"""
         # Check for language level directives
         if not re.search(r"#\s*cython:\s*language_level\s*=\s*3", content):
-            self.issues["cython_integration"].append({
-                "file": filepath,
-                "line": 0,
-                "message": "Missing language_level=3 directive"
-            })
+            self.issues["cython_integration"].append(
+                {
+                    "file": filepath,
+                    "line": 0,
+                    "message": "Missing language_level=3 directive",
+                }
+            )
 
         # Check for string handling in Cython
         if re.search(r"cdef\s+char\s*\*.*=\s*(?!<).*str", content):
-            search_results = re.findall(r"\n.*cdef\s+char\s*\*.*=\s*(?!<).*str", content)
+            search_results = re.findall(
+                r"\n.*cdef\s+char\s*\*.*=\s*(?!<).*str", content
+            )
             if search_results:
-                lineno = content[:content.find(search_results[0])].count("\n") + 1
-                self.issues["cython_integration"].append({
-                    "file": filepath,
-                    "line": lineno,
-                    "message": "Potential string handling issue with char* and Python 3 str"
-                })
+                lineno = content[: content.find(search_results[0])].count("\n") + 1
+                self.issues["cython_integration"].append(
+                    {
+                        "file": filepath,
+                        "line": lineno,
+                        "message": "Potential string handling issue with char* and Python 3 str",
+                    }
+                )
 
         # Check for Python C API calls that changed in Python 3
         py3_api_changes = [
@@ -223,11 +267,13 @@ class Python2To3Issues:
         for pattern in py3_api_changes:
             for match in re.finditer(pattern, content):
                 lineno = content[: match.start()].count("\n") + 1
-                self.issues["cython_integration"].append({
-                    "file": filepath, 
-                    "line": lineno, 
-                    "message": f"Python C API change needed: {pattern}"
-                })
+                self.issues["cython_integration"].append(
+                    {
+                        "file": filepath,
+                        "line": lineno,
+                        "message": f"Python C API change needed: {pattern}",
+                    }
+                )
 
     def report(self):
         """Generate a report of all issues found"""
@@ -241,7 +287,7 @@ class Python2To3Issues:
             issues = self.issues[category]
             if not issues:
                 return
-                
+
             issue_count = len(issues)
             print(f"{description} ({issue_count}):")
             if self.verbose:
@@ -265,14 +311,29 @@ class Python2To3Issues:
             print()
 
         # Print each category of issues
-        print_issue_category("print_statement", "Print Statements: Replace with print() function")
-        print_issue_category("unicode_issues", "Unicode/String Issues: Check string handling, unicode() vs str()")
+        print_issue_category(
+            "print_statement", "Print Statements: Replace with print() function"
+        )
+        print_issue_category(
+            "unicode_issues",
+            "Unicode/String Issues: Check string handling, unicode() vs str()",
+        )
         print_issue_category("xrange", "xrange Usage: Replace with range()")
-        print_issue_category("dict_methods", "Dict Methods: Update iterator methods (iteritems -> items, etc.)")
-        print_issue_category("division", "Division Operator: Check integer division behavior (/ vs //)")
-        print_issue_category("except_syntax", "Exception Syntax: Update to 'except X as y'")
+        print_issue_category(
+            "dict_methods",
+            "Dict Methods: Update iterator methods (iteritems -> items, etc.)",
+        )
+        print_issue_category(
+            "division", "Division Operator: Check integer division behavior (/ vs //)"
+        )
+        print_issue_category(
+            "except_syntax", "Exception Syntax: Update to 'except X as y'"
+        )
         print_issue_category("imports", "Renamed Imports: Update module imports")
-        print_issue_category("cython_integration", "Cython Integration Issues: Check Cython/Python 3 compatibility")
+        print_issue_category(
+            "cython_integration",
+            "Cython Integration Issues: Check Cython/Python 3 compatibility",
+        )
 
         return total_issues
 
@@ -294,7 +355,7 @@ def generate_migration_report(checker, python_files):
                 path = issue[0]
             else:
                 continue
-                
+
             if path:
                 parts = path.split("/")
                 module = parts[2] if len(parts) > 2 else path

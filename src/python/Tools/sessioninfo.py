@@ -58,7 +58,7 @@ def sessionInfo():
         result["logical_cpus"] = psutil.cpu_count(True)
         result["cpu_freq"] = psutil.cpu_freq()
         result["memory"] = dict(psutil.virtual_memory().__dict__)
-    except:
+    except Exception:
         pass
 
     try:
@@ -68,7 +68,7 @@ def sessionInfo():
             pip_packages.append(str(i))
 
         result["pip_packages"] = pip_packages
-    except:
+    except Exception:
         pass
 
     return result

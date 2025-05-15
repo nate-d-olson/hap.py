@@ -104,7 +104,7 @@ def roc(roc_table, output_path,
                     try:
                         if rec["Filter"] != filter_handling:
                             continue
-                    except:
+                    except Exception:
                         pass
 
                 try:
@@ -119,7 +119,7 @@ def roc(roc_table, output_path,
                             result[roc] = [rec]
                         else:
                             result[roc].append(rec)
-                except:
+                except Exception:
                     pass
 
                 try:
@@ -134,7 +134,7 @@ def roc(roc_table, output_path,
                             result[roc] = [rec]
                         else:
                             result[roc].append(rec)
-                except:
+                except Exception:
                     pass
 
                 try:
@@ -149,7 +149,7 @@ def roc(roc_table, output_path,
                             result[roc] = [rec]
                         else:
                             result[roc].append(rec)
-                except:
+                except Exception:
                     pass
 
                 roc = "all"
@@ -160,7 +160,7 @@ def roc(roc_table, output_path,
 
     if "all" not in result:
         # minimal empty DF
-        minidata = [{"Type": "SNP", "Subtype": "*", "Filter": "ALL", "Genotype": "*", "Subset": "*", "QQ": "*"} for _ in xrange(2)]
+        minidata = [{"Type": "SNP", "Subtype": "*", "Filter": "ALL", "Genotype": "*", "Subset": "*", "QQ": "*"} for _ in range(2)]
         minidata[1]["Type"] = "INDEL"
         result["all"] = pandas.DataFrame(minidata, columns=RESULT_ALLCOLUMNS)
         for i, c in enumerate(RESULT_ALLCOLUMNS):
@@ -221,7 +221,7 @@ def _postprocessRocData(roctable):
     def safe_int(f):
         try:
             return int(f)
-        except:
+        except Exception:
             return 0
 
     typeconv = [("METRIC.Recall", None),

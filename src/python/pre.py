@@ -140,7 +140,7 @@ def preprocess(vcf_input,
             try:
                 if f["key"] == "FILTER":
                     allfilters.append(f["values"]["ID"])
-            except:
+            except Exception:
                 logging.warn("ignoring header: %s" % str(f))
 
         required_filters = None
@@ -166,7 +166,7 @@ def preprocess(vcf_input,
 
                 if reference_has_chr_prefix and not vcf_has_chr_prefix:
                     fixchr = True
-            except:
+            except Exception:
                 logging.warn("Guessing the chr prefix in %s has failed." % vcf_input)
 
         if leftshift or decompose: # all these require preprocessing
@@ -208,7 +208,7 @@ def preprocess(vcf_input,
         for t in tempfiles:
             try:
                 os.unlink(t)
-            except:
+            except Exception:
                 pass
 
     return gender
@@ -392,7 +392,7 @@ def main():
         exit(0)
 
     if args.version:
-        print "pre.py %s" % Tools.version  # noqa:E999
+        print("pre.py %s" % Tools.version)  # noqa:E999
         exit(0)
 
     args.input = args.input[0]

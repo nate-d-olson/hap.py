@@ -28,14 +28,14 @@ def field(val):
         try:
             val = int(val)
             done = True
-        except:
+        except Exception:
             pass
 
         if done:
             return val
         try:
             val = float(val)
-        except:
+        except Exception:
             pass
     return val
 
@@ -111,7 +111,7 @@ def vcfExtract(vcfname, features, filterfun=None):
             # noinspection PyBroadException
             try:
                 tpr = 1000000.0*total/float(nrecords)
-            except:
+            except Exception:
                 tpr = -1
             logging.info("Since start: %i records %.2f seconds, %.2f us/record." % (nrecords, total, tpr))
 
@@ -139,7 +139,7 @@ def vcfExtract(vcfname, features, filterfun=None):
             elif f.lower().startswith("qual"):
                 try:
                     current.append(float(spl[5]))
-                except:
+                except Exception:
                     current.append(None)
             elif f.lower().startswith("fil"):
                 if spl[6] == "PASS" or spl[6] == ".":
@@ -167,7 +167,7 @@ def vcfExtract(vcfname, features, filterfun=None):
                             val = val[ii]
                         else:
                             val = None
-                except:
+                except Exception:
                     pass
                 current.append(val)
             elif f.startswith("S."):
@@ -187,7 +187,7 @@ def vcfExtract(vcfname, features, filterfun=None):
                             val = val[ii]
                         else:
                             val = None
-                except:
+                except Exception:
                     pass
                 current.append(val)
             else:
@@ -240,7 +240,7 @@ def extractHeadersJSON(vcfname):
     finally:
         try:
             os.unlink(tf.name)
-        except:
+        except Exception:
             pass
 
     return vfh

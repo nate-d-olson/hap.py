@@ -56,17 +56,17 @@ def tableROC(tbl, label_column, feature_column, filter_column=None,
         subprocess.check_call(cmdline, shell=True)
         try:
             result = pandas.read_table(tf1.name)
-        except:
+        except Exception:
             raise Exception("Cannot parse ROC output.")
         return result
     finally:
         try:
             os.unlink(tf1.name)
-        except:
+        except Exception:
             pass
         try:
             os.unlink(tf2.name)
-        except:
+        except Exception:
             pass
 
 

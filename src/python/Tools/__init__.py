@@ -30,12 +30,12 @@ def defaultReference():
     to_try = ['/opt/hap.py-data/hg19.fa']
     try:
         to_try.insert(0, os.environ["HGREF"])
-    except:
+    except Exception:
         pass
 
     try:
         to_try.insert(0, os.environ["HG19"])
-    except:
+    except Exception:
         pass
 
     for x in to_try:
