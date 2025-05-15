@@ -23,13 +23,12 @@ Allows for preprocess, blocksplit and integration of partial credit comparisons.
 
 import itertools
 import logging
-import multiprocessing
 import os
 import shlex
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from Tools.bcftools import concatenateParts, runBcftools
 from Tools.parallel import getPool, runParallel

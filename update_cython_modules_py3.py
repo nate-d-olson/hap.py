@@ -11,12 +11,10 @@ Usage:
 """
 
 import argparse
-import os
 import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
 
 
 def process_pyx_file(file_path: Path, backup: bool = True) -> bool:

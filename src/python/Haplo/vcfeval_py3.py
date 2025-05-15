@@ -28,7 +28,7 @@ import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, List, Optional
 
 import Haplo.version  # pylint: disable=E0611,E0401
 

@@ -18,7 +18,6 @@ import os
 import sys
 import time
 import platform
-import copy
 
 import Tools
 

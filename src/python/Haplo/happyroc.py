@@ -17,12 +17,10 @@
 # -- we don't want to read in any of the data since we have a lot more of it.
 #
 
-import os
 import re
 import logging
 import pandas
 import numpy as np
-import itertools
 
 from Tools import ci
 

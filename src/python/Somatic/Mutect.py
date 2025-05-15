@@ -60,7 +60,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
                             n_sample = "S.%i." % (i + 1)
                             break
 
-    except Exception as e:
+    except Exception:
         logging.warning("Unable to detect tumour / normal sample order from VCF header")
 
     logging.info(
@@ -99,9 +99,9 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
             rec[ff] = vr[i]
 
         for q in [n_sample + "GT", t_sample + "GT"]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = "."
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warning("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -123,9 +123,9 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
             n_sample + "AD",
             t_sample + "AD",
         ]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warning("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
             else:

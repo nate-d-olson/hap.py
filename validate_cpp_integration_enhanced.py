@@ -14,13 +14,11 @@ Usage:
 """
 
 import argparse
-import importlib
 import logging
 import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

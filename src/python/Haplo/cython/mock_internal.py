@@ -7,8 +7,7 @@ without requiring the actual C++ components to be built.
 This is especially useful during the Python 2 to 3 migration process.
 """
 
-import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Union
 
 
 class MockVariantRecord:

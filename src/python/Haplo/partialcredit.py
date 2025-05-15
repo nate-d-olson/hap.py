@@ -22,7 +22,6 @@ import subprocess
 import tempfile
 import time
 import itertools
-import multiprocessing
 import pipes
 
 from Tools.parallel import runParallel, getPool

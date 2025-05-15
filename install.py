@@ -24,7 +24,9 @@ import shutil
 import glob
 import fnmatch
 import multiprocessing
-import urllib2
+import urllib.request
+import urllib.error
+import urllib.parse
 
 
 def check_python_version():
@@ -72,12 +74,12 @@ def create_python_environment(source_dir, args):
     try:
         ve_tgz = os.path.join(source_dir, "external", "virtualenv-12.0.7.tar.gz")
         to_run = "cd %s && tar xzf %s" % (virtualenv_tempdir, ve_tgz)
-        print >> sys.stderr, to_run
+        print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
 
         ve_exec = os.path.join(virtualenv_tempdir, "virtualenv-12.0.7", "virtualenv.py")
         to_run = "%s -p %s %s" % (ve_exec, interp, args.python_venv_dir)
-        print >> sys.stderr, to_run
+        print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
     finally:
         if not args.keep_scratch:
@@ -95,7 +97,7 @@ def create_python_environment(source_dir, args):
         cmds = [ve_pip, "install", "--no-cache-dir"]
 
         if args.fix_cert:
-            response = urllib2.urlopen("http://curl.haxx.se/ca/cacert.pem")
+            response = urllib.request.urlopen("http://curl.haxx.se/ca/cacert.pem")
             certdata = response.read()
             f = tempfile.NamedTemporaryFile(delete=False)
             deleteme = f.name
@@ -105,7 +107,7 @@ def create_python_environment(source_dir, args):
             cmds.insert(2, deleteme)
 
         for x in open(os.path.join(source_dir, "happy.requirements.txt")):
-            print >> sys.stderr, " ".join(cmds + [x])
+            print(" ".join(cmds + [x]), file=sys.stderr)
             subprocess.check_call(" ".join(cmds + [x]), shell=True)
     finally:
         if deleteme:
@@ -116,14 +118,14 @@ def create_python_environment(source_dir, args):
 
 def replace_shebang(filename, shebang):
     """Replace shebang line / reheader script files"""
-    print >> sys.stderr, "Fixing shebang line in " + filename
+    print("Fixing shebang line in " + filename, file=sys.stderr)
 
     with open(filename) as f:
         lines = f.readlines()
 
     with open(filename, "w") as f:
         removed = False
-        print >> f, shebang
+        print(shebang, file=f)
         for i, l in enumerate(lines):
             if not removed and l.startswith("#!") and i < 10:
                 removed = True
@@ -157,7 +159,7 @@ def build_haplotypes(source_dir, build_dir, args):
             ).replace(" ", "\\ ")
 
     to_run = boost_prefix + "cd %s && %s %s" % (build_dir, boost_prefix, config_command)
-    print >> sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
     setupscript = ""
@@ -173,7 +175,7 @@ def build_haplotypes(source_dir, build_dir, args):
         setupscript,
         args.processes,
     )
-    print >> sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
     to_run = setupscript + "cd %s && %s make -j%i install" % (
@@ -181,7 +183,7 @@ def build_haplotypes(source_dir, build_dir, args):
         setupscript,
         args.processes,
     )
-    print >> sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
 
@@ -191,7 +193,7 @@ def test_haplotypes(source_dir, python_shebang, args):
         args.targetdir,
         os.path.join(source_dir, "src", "sh", "run_tests.sh"),
     )
-    print >> sys.stderr, to_run
+    print(to_run, file=sys.stderr)
     os.environ["PYTHON"] = python_shebang[2:]
     subprocess.check_call(to_run, shell=True)
 
@@ -348,7 +350,11 @@ def main():
         args.python_venv_dir = args.targetdir
 
     if "LD_LIBRARY_PATH" in os.environ or "DYLD_LIBRARY_PATH" in os.environ:
-        print >> sys.stderr, "WARNING: You have (DY)LD_LIBRARY_PATH set. Make sure these libraries are accessible " "in the same environment you will run in."
+        print(
+            "WARNING: You have (DY)LD_LIBRARY_PATH set. Make sure these libraries are accessible "
+            "in the same environment you will run in.",
+            file=sys.stderr,
+        )
 
     # fix dynamic linking
     if "LD_LIBRARY_PATH" in os.environ:

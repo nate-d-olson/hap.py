@@ -6,11 +6,10 @@ Script to check Python 3 migration status and run tests for converted modules
 import argparse
 import importlib
 import logging
-import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Configure logging
 logging.basicConfig(

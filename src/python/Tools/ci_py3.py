@@ -14,8 +14,7 @@ Module for confidence interval calculations, particularly useful for
 bioinformatics data analysis in hap.py.
 """
 
-from math import log1p
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import scipy.stats as stats

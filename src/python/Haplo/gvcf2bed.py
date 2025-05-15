@@ -13,13 +13,9 @@
 #
 # Run gvcf2bed
 
-import os
 import tempfile
 import subprocess
-import copy
-import json
 import logging
-import Tools
 import pipes
 
 

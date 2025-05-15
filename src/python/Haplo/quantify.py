@@ -14,8 +14,6 @@
 #
 # Process raw counts coming out of quantify
 
-import copy
-import json
 import logging
 import os
 import pipes
@@ -44,12 +42,12 @@ def _locations_tmp_bed_file(locations):
             raise Exception("Invalid chromosome name in %s" % str(l))
         try:
             start = int(start)
-        except Exception as e:
+        except Exception:
             start = 0
 
         try:
             end = int(end)
-        except Exception as e:
+        except Exception:
             end = 2**31 - 1
 
         llocations.append((xchr, start, end))
@@ -183,7 +181,7 @@ def run_quantify(
 
     try:
         subprocess.check_call(run_str, shell=True, stdout=tfo, stderr=tfe)
-    except Exception as e:
+    except Exception:
         tfo.close()
         tfe.close()
         with open(tfo.name, encoding="utf-8") as f:

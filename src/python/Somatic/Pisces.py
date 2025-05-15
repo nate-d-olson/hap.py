@@ -114,7 +114,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
         for q in ["S.1.NC", "S.1.AQ"]:
             if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -130,7 +130,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
             try:
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
             except Exception:
-                if not rec["CHROM"] in has_warned:
+                if rec["CHROM"] not in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True
         elif "DPnorm" not in has_warned:

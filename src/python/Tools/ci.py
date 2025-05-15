@@ -10,7 +10,6 @@
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
 
-from math import log1p
 
 import numpy as np
 import scipy.stats as stats

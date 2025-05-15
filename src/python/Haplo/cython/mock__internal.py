@@ -9,8 +9,8 @@ import logging
 import warnings
 
 # Log warning about using mock implementation
-warnings.warn(f"Using mock implementation of _internal")
-logging.warning(f"Using mock implementation of _internal")
+warnings.warn("Using mock implementation of _internal")
+logging.warning("Using mock implementation of _internal")
 
 
 def test_string_handling():

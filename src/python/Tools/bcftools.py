@@ -18,7 +18,6 @@ import subprocess
 import tempfile
 
 import pandas
-import Tools
 
 scriptDir = os.path.abspath(os.path.dirname(__file__))
 
@@ -150,7 +149,7 @@ def concatenateParts(output, *args):
         for f in to_delete:
             try:
                 os.unlink(f)
-            except Exception as e:
+            except Exception:
                 pass
 
 
@@ -343,15 +342,15 @@ def preprocessVCF(
     finally:
         try:
             os.unlink(tff.name)
-        except Exception as e:
+        except Exception:
             pass
         try:
             os.unlink(tff.name + ".tbi")
-        except Exception as e:
+        except Exception:
             pass
         try:
             os.unlink(tff.name + ".csi")
-        except Exception as e:
+        except Exception:
             pass
 
 

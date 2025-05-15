@@ -17,7 +17,6 @@ Author: Madis Rumming <mrumming@illumina.com>, Peter Krusche <pkrusche@illumina.
 
 import pandas
 import logging
-import re
 
 from Tools.vcfextract import vcfExtract, extractHeadersJSON
 
@@ -75,9 +74,9 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
             rec[ff] = vr[i]
 
         for q in [n_sample + "GT", t_sample + "GT"]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = "."
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -96,9 +95,9 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
             n_sample + "FREQ",
             t_sample + "FREQ",
         ]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
             else:
@@ -126,10 +125,10 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
             if rec["CHROM"] in avg_depth:
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
-            elif not rec["CHROM"] in has_warned:
+            elif rec["CHROM"] not in has_warned:
                 logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                 has_warned[rec["CHROM"]] = True
-        elif not "DPnorm" in has_warned:
+        elif "DPnorm" not in has_warned:
             logging.warn("Cannot normalize depths.")
             has_warned["DPnorm"] = True
 
@@ -278,9 +277,9 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
             rec[ff] = vr[i]
 
         for q in [n_sample + "GT", t_sample + "GT"]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = "."
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -299,9 +298,9 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
             n_sample + "FREQ",
             t_sample + "FREQ",
         ]:
-            if not q in rec or rec[q] is None:
+            if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
             else:
@@ -322,10 +321,10 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
             if rec["CHROM"] in avg_depth:
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
-            elif not rec["CHROM"] in has_warned:
+            elif rec["CHROM"] not in has_warned:
                 logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                 has_warned[rec["CHROM"]] = True
-        elif not "DPnorm" in has_warned:
+        elif "DPnorm" not in has_warned:
             logging.warn("Cannot normalize depths.")
             has_warned["DPnorm"] = True
 

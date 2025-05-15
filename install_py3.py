@@ -24,7 +24,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.request as urllib_request
 
 
 def check_python_version():
@@ -87,7 +86,7 @@ def create_python_environment(source_dir, args):
     if not os.path.exists(requirements_file):
         requirements_file = os.path.join(source_dir, "happy.requirements.txt")
         print(
-            f"Warning: Using Python 2 requirements file. Consider creating happy.requirements.py3.txt",
+            "Warning: Using Python 2 requirements file. Consider creating happy.requirements.py3.txt",
             file=sys.stderr,
         )
 

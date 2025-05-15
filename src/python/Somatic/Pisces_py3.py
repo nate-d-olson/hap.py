@@ -15,7 +15,7 @@ Provides feature extraction and filtering for somatic analysis.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, Optional
 
 import pandas
 from Tools.vcfextract import extractHeaders, vcfExtract

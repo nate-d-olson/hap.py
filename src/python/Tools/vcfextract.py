@@ -181,7 +181,7 @@ def vcfExtract(vcfname, features, filterfun=None):
 
                 val = None
                 try:
-                    if not sample in curformats:
+                    if sample not in curformats:
                         curformats[sample] = getFormats(spl[8], spl[8 + sample])
                     val = curformats[sample][field]
 

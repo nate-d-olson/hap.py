@@ -24,12 +24,10 @@
 #
 
 import argparse
-import gzip
 import json
 import logging
 import multiprocessing
 import os
-import subprocess
 import sys
 import tempfile
 import time
@@ -49,7 +47,7 @@ import pre
 import qfy
 import Tools
 from Tools import bcftools, vcfextract
-from Tools.bcftools import bedOverlapCheck, preprocessVCF
+from Tools.bcftools import bedOverlapCheck
 from Tools.fastasize import fastaContigLengths
 from Tools.parallel import getPool, runParallel
 from Tools.sessioninfo import sessionInfo

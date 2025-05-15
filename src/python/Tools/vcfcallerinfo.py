@@ -10,7 +10,6 @@
 # https://github.com/sequencing/licenses/blob/master/Simplified-BSD-License.txt
 
 import tempfile
-import itertools
 import subprocess
 import logging
 import os

@@ -5,7 +5,6 @@
 import sys
 import argparse
 import csv
-import pprint as pp
 import re
 import logging
 

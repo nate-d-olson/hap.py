@@ -14,12 +14,8 @@ Usage:
 """
 
 import argparse
-import ast
 import os
 import re
-import sys
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class Python2To3Updater:
@@ -146,7 +142,7 @@ class Python2To3Updater:
     def _fix_dict_methods(self, content: str, filepath: str) -> str:
         """Update dict methods (iteritems to items, etc.)"""
         updated_content = content
-        for old_method, new_method in self.dict_methods_map.items():
+        for old_method, new_method in list(self.dict_methods_map.items()):
             # Look for the old method
             pattern = rf"\.{old_method}\(\)"
             if re.search(pattern, updated_content):
@@ -227,42 +223,57 @@ class Python2To3Updater:
 
     def summarize_changes(self):
         """Print a summary of the changes made or would be made"""
-        total_changes = sum(len(changes) for changes in self.changes_made.values())
+        total_changes = sum(
+            len(changes) for changes in list(self.changes_made.values())
+        )
 
         print("\n=== Python 3 Update Summary ===")
         print(
-            "Total changes {}: {}".format(
-                "made" if self.apply else "identified", total_changes
+            (
+                "Total changes {}: {}".format(
+                    "made" if self.apply else "identified", total_changes
+                )
             )
         )
 
         print(
-            "\nPrint statements {}: {}".format(
-                "converted" if self.apply else "to convert",
-                len(self.changes_made["print_statement"]),
+            (
+                "\nPrint statements {}: {}".format(
+                    "converted" if self.apply else "to convert",
+                    len(self.changes_made["print_statement"]),
+                )
             )
         )
         print(
-            "Exception syntax {}: {}".format(
-                "updated" if self.apply else "to update",
-                len(self.changes_made["except_syntax"]),
+            (
+                "Exception syntax {}: {}".format(
+                    "updated" if self.apply else "to update",
+                    len(self.changes_made["except_syntax"]),
+                )
             )
         )
         print(
-            "xrange {}: {}".format(
-                "replaced" if self.apply else "to replace",
-                len(self.changes_made["xrange"]),
+            (
+                "xrange {}: {}".format(
+                    "replaced" if self.apply else "to replace",
+                    len(self.changes_made["xrange"]),
+                )
             )
         )
         print(
-            "Dict methods {}: {}".format(
-                "updated" if self.apply else "to update",
-                len(self.changes_made["dict_methods"]),
+            (
+                "Dict methods {}: {}".format(
+                    "updated" if self.apply else "to update",
+                    len(self.changes_made["dict_methods"]),
+                )
             )
         )
         print(
-            "String encoding {}: {}".format(
-                "fixed" if self.apply else "to fix", len(self.changes_made["encoding"])
+            (
+                "String encoding {}: {}".format(
+                    "fixed" if self.apply else "to fix",
+                    len(self.changes_made["encoding"]),
+                )
             )
         )
         print(

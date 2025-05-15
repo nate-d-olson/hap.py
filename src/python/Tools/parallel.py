@@ -10,15 +10,11 @@
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
 import os
-import sys
 import gc
-import argparse
 import logging
 import traceback
-import subprocess
 import multiprocessing
 import pickle
-import tempfile
 from itertools import islice, repeat
 
 from . import LoggingWriter
@@ -70,12 +66,12 @@ def parMapper(arg):
         # when running on very large inputs
         gc.collect()
         return arg[1]["fun"](arg[0], *arg[1]["args"], **arg[1]["kwargs"])
-    except Exception as e:
+    except Exception:
         logging.error("Exception when running %s:" % str(arg[1]["fun"]))
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
         logging.error("-" * 60)
-    except BaseException as e:
+    except BaseException:
         logging.error("Exception when running %s:" % str(arg[1]["fun"]))
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))

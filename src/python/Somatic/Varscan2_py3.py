@@ -19,8 +19,7 @@ Author: Madis Rumming <mrumming@illumina.com>, Peter Krusche <pkrusche@illumina.
 """
 
 import logging
-import re
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional
 
 import pandas
 from Tools.vcfextract import extractHeadersJSON, vcfExtract

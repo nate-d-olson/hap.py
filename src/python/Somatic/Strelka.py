@@ -165,7 +165,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         ]:
             if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -206,7 +206,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
             except Exception:
-                if not rec["CHROM"] in has_warned:
+                if rec["CHROM"] not in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True
         elif "DPnorm" not in has_warned:
@@ -311,7 +311,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         except Exception:
             pass
         for k, v in list(evs_featurenames.items()):
-            if not "E." + v in qrec:
+            if "E." + v not in qrec:
                 qrec["E." + v] = 0
 
         records.append(qrec)
@@ -463,14 +463,14 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         ]:
             if q not in rec or rec[q] is None:
                 rec[q] = 0
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
         for q in ["S.1.TAR", "S.2.TAR", "S.1.TIR", "S.2.TIR", "S.1.TOR", "S.2.TOR"]:
             if q not in rec or rec[q] is None:
                 rec[q] = [0, 0]
-                if not ("feat:" + q) in has_warned:
+                if ("feat:" + q) not in has_warned:
                     logging.warn("Missing feature %s" % q)
                     has_warned["feat:" + q] = True
 
@@ -504,7 +504,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                 n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
                 t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
             except Exception:
-                if not rec["CHROM"] in has_warned:
+                if rec["CHROM"] not in has_warned:
                     logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
                     has_warned[rec["CHROM"]] = True
         elif "DPnorm" not in has_warned:
@@ -588,7 +588,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
             pass
 
         for k, v in list(evs_featurenames.items()):
-            if not "E." + v in qrec:
+            if "E." + v not in qrec:
                 qrec["E." + v] = 0
 
         records.append(qrec)
