@@ -204,7 +204,7 @@ def quantify(args):
     # in default mode, print(result summary to stdout)
     if not args.quiet and not args.verbose:
         print("Benchmarking Summary:")
-        print(essential_numbers.to_string(index=False))
+        print((essential_numbers.to_string(index=False)))
 
     # keep this for verbose output
     if not args.verbose:
@@ -213,7 +213,7 @@ def quantify(args):
         except Exception:
             pass
 
-    for t in res.keys():
+    for t in list(res.keys()):
         metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
 
     # gzip JSON output
@@ -362,7 +362,7 @@ def main():
         exit(0)
 
     if args.version:
-        print("qfy.py %s" % Tools.version)
+        print(("qfy.py %s" % Tools.version))
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:

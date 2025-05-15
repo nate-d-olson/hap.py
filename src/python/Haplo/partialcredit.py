@@ -176,7 +176,7 @@ def partialCredit(vcfname,
                 # just return the same file
                 return
             locations = h["tabix"]["chromosomes"]
-        elif type(locations) is str or type(locations) is unicode:
+        elif type(locations) is str or type(locations) is str:
             locations = locations.split(",")
 
         # use blocksplit to subdivide input
@@ -202,7 +202,7 @@ def partialCredit(vcfname,
     try:
         res = runParallel(pool,
                           preprocessWrapper,
-                          itertools.izip(itertools.repeat(vcfname), locations),
+                          zip(itertools.repeat(vcfname), locations),
                           {"reference": reference,
                            "decompose": decompose,
                            "leftshift": leftshift,

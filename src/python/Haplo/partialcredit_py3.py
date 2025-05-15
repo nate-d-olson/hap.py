@@ -249,7 +249,7 @@ def partialCredit(
     res = []
     try:
         # In Python 3, we need to create the zipped iterator explicitly
-        file_loc_pairs = zip(itertools.repeat(vcfname), locations)
+        file_loc_pairs = list(zip(itertools.repeat(vcfname), locations))
 
         res = runParallel(
             pool,

@@ -24,7 +24,7 @@ def csvread(filename):
             # ignore version line
             continue
 
-        for k in record.keys():
+        for k in list(record.keys()):
             try:
                 record[k] = int(record[k])
             except:
@@ -43,32 +43,32 @@ def main():
     data2 = csvread(sys.argv[2])
 
     all_keys_1 = set()
-    for l in data1.values():
+    for l in list(data1.values()):
         all_keys_1 |= set(l.keys())
     all_keys_2 = set()
-    for l in data2.values():
+    for l in list(data2.values()):
         all_keys_2 |= set(l.keys())
 
     if len(all_keys_1 - all_keys_2) or len(all_keys_2 - all_keys_1):
-        print >> sys.stderr, "ERROR -- missing metrics:"
-        print >> sys.stderr, "-------------------------\n"
-        print >> sys.stderr, "In 1 but not 2: %s" % str(all_keys_1 - all_keys_2)
-        print >> sys.stderr, "In 2 but not 1: %s" % str(all_keys_1 - all_keys_2)
-        print >> sys.stderr, "-------------------------"
+        print("ERROR -- missing metrics:", file=sys.stderr)
+        print("-------------------------\n", file=sys.stderr)
+        print("In 1 but not 2: %s" % str(all_keys_1 - all_keys_2), file=sys.stderr)
+        print("In 2 but not 1: %s" % str(all_keys_1 - all_keys_2), file=sys.stderr)
+        print("-------------------------", file=sys.stderr)
         sys.exit(1)
 
     all_labels_1 = set(data1.keys())
     all_labels_2 = set(data2.keys())
 
     if len(all_labels_1 - all_labels_2) or len(all_labels_2 - all_labels_1):
-        print >> sys.stderr, "ERROR -- missing rows:"
-        print >> sys.stderr, "-------------------------\n"
-        print >> sys.stderr, "In 1 but not 2: %s" % str(all_labels_1 - all_labels_2)
-        print >> sys.stderr, "In 2 but not 1: %s" % str(all_labels_1 - all_labels_2)
-        print >> sys.stderr, "-------------------------"
+        print("ERROR -- missing rows:", file=sys.stderr)
+        print("-------------------------\n", file=sys.stderr)
+        print("In 1 but not 2: %s" % str(all_labels_1 - all_labels_2), file=sys.stderr)
+        print("In 2 but not 1: %s" % str(all_labels_1 - all_labels_2), file=sys.stderr)
+        print("-------------------------", file=sys.stderr)
         sys.exit(1)
 
-    print "Comparing %i labels and %i metrics..." % (len(all_labels_1), len(all_keys_1))
+    print("Comparing %i labels and %i metrics..." % (len(all_labels_1), len(all_keys_1)))
 
     different_metrics = []
 
@@ -112,11 +112,11 @@ def main():
                                               "Non-numeric mismatch"))
 
     if different_metrics:
-        print >> sys.stderr, "ERROR -- Metric differences detected:"
-        print >> sys.stderr, "-------------------------------------\n"
+        print("ERROR -- Metric differences detected:", file=sys.stderr)
+        print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print >> sys.stderr, "%s / %s: %s != %s difference: %s" % m
-        print >> sys.stderr, "-------------------------------------"
+            print("%s / %s: %s != %s difference: %s" % m, file=sys.stderr)
+        print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 
 

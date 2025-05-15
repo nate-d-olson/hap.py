@@ -97,7 +97,7 @@ def roc(roc_table, output_path,
                 header = l.split("\t")
             else:
                 rec = {}
-                for k, v in itertools.izip(header, l.split("\t")):
+                for k, v in zip(header, l.split("\t")):
                     rec[k] = v
 
                 if filter_handling:
@@ -166,7 +166,7 @@ def roc(roc_table, output_path,
         for i, c in enumerate(RESULT_ALLCOLUMNS):
             result["all"][c] = result["all"][c].astype(RESULT_ALLDTYPES[i], raise_on_error=False)
 
-    for k, v in result.items():
+    for k, v in list(result.items()):
         result[k] = _postprocessRocData(pandas.DataFrame(v, columns=RESULT_ALLCOLUMNS))
 
         # compute ratios

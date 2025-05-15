@@ -194,7 +194,7 @@ def parse_args():
         "--feature-table",
         dest="features",
         default=False,
-        choices=Somatic.FeatureSet.sets.keys(),
+        choices=list(Somatic.FeatureSet.sets.keys()),
         help="Select a feature table to output.",
     )
 
@@ -394,9 +394,9 @@ def parse_args():
 
     try:
         if type(args.af_strat_binsize) is str:
-            args.af_strat_binsize = map(float, args.af_strat_binsize.split(","))
+            args.af_strat_binsize = list(map(float, args.af_strat_binsize.split(",")))
         else:
-            args.af_strat_binsize = map(float, [args.af_strat_binsize])
+            args.af_strat_binsize = list(map(float, [args.af_strat_binsize]))
 
         if not args.af_strat_binsize:
             raise Exception("Bin size list is empty")
@@ -976,11 +976,11 @@ def main():
                 )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print(
+                    print((
                         "FP/ambiguity classes with info (multiple classes can "
                         + "overlap):\n"
                         + ambie.to_string(index=False)
-                    )
+                    ))
                 ambie.to_csv(args.output + ".ambiclasses.csv")
                 metrics_output["metrics"].append(
                     dataframeToMetricsTable("ambiclasses", ambie)
@@ -1009,7 +1009,7 @@ def main():
                 )
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
-                    print(
+                    print((
                         "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
                         + ambie.to_string(
                             formatters={
@@ -1019,7 +1019,7 @@ def main():
                             },
                             index=False,
                         )
-                    )
+                    ))
                 ambie.to_csv(args.output + ".ambireasons.csv")
                 metrics_output["metrics"].append(
                     dataframeToMetricsTable("ambireasons", ambie)
@@ -1352,7 +1352,7 @@ def main():
         logging.info("\n" + res.to_string())
         # in default mode, print(result summary to stdout)
         if not args.quiet and not args.verbose:
-            print("\n" + res.to_string())
+            print(("\n" + res.to_string()))
 
         res["sompyversion"] = vstring
 

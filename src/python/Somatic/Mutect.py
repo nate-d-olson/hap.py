@@ -184,7 +184,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
 
         rec["TAG"] = tag
 
-        for k, v in rec.items():
+        for k, v in list(rec.items()):
             if isinstance(v, list):
                 rec[k] = ",".join(list(map(str, v)))
 

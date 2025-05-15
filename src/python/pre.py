@@ -47,8 +47,8 @@ import Haplo.partialcredit
 def hasChrPrefix(chrlist):
     """ returns if list of chr names has a chr prefix or not """
 
-    noprefix = map(str, range(23)) + ["X", "Y", "MT"]
-    withprefix = ["chr" + x for x in map(str, range(23)) + ["X", "Y", "M"]]
+    noprefix = list(map(str, list(range(23)))) + ["X", "Y", "MT"]
+    withprefix = ["chr" + x for x in list(map(str, list(range(23)))) + ["X", "Y", "M"]]
 
     count_noprefix = len(list(set(noprefix) & set(chrlist)))
     count_prefix = len(list(set(withprefix) & set(chrlist)))
@@ -392,7 +392,7 @@ def main():
         exit(0)
 
     if args.version:
-        print("pre.py %s" % Tools.version)  # noqa:E999
+        print(("pre.py %s" % Tools.version))  # noqa:E999
         exit(0)
 
     args.input = args.input[0]

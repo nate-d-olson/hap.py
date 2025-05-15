@@ -22,7 +22,7 @@ import json
 def field(val):
     """ extract field into result, guess type """
     if "," in val:
-        val = map(field, val.split(","))
+        val = list(map(field, val.split(",")))
     else:
         done = False
         try:

@@ -14,16 +14,14 @@ import pandas
 
 from Tools.vcfextract import vcfExtract
 
-from Strelka import extractStrelkaSNVFeatures, extractStrelkaIndelFeatures
-from Mutect import extractMutectSNVFeatures, extractMutectIndelFeatures
-from Varscan2 import extractVarscan2SNVFeatures, extractVarscan2IndelFeatures
-from Pisces import extractPiscesSNVFeatures, extractPiscesIndelFeatures
+from .Strelka import extractStrelkaSNVFeatures, extractStrelkaIndelFeatures
+from .Mutect import extractMutectSNVFeatures, extractMutectIndelFeatures
+from .Varscan2 import extractVarscan2SNVFeatures, extractVarscan2IndelFeatures
+from .Pisces import extractPiscesSNVFeatures, extractPiscesIndelFeatures
 
 
-class FeatureSet(object):
+class FeatureSet(object, metaclass=abc.ABCMeta):
     """ VCF paired Feature set for somatic comparison """
-
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         self.chr_depth = {}

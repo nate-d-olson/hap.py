@@ -52,7 +52,7 @@ def sessionInfo() -> Dict[str, Any]:
                 "description": f"{sys.argv[0]} generated this JSON file via command line {' '.join(sys.argv)}",
             }
         },
-        "environment": {str(k): str(v) for k, v in os.environ.items()},
+        "environment": {str(k): str(v) for k, v in list(os.environ.items())},
     }
 
     # platform.dist() is removed in Python 3.8+, use distro module if available

@@ -17,9 +17,9 @@ import logging
 import traceback
 import subprocess
 import multiprocessing
-import cPickle
+import pickle
 import tempfile
-from itertools import islice, izip, repeat
+from itertools import islice, repeat
 
 from . import LoggingWriter
 
@@ -58,7 +58,7 @@ def unpickleSequentially(plist):
         if not data:
             fname = plist.pop(0)
             with open(fname) as f:
-                data = cPickle.load(f)
+                data = pickle.load(f)
             os.unlink(fname)
         if data:
             yield data.pop(0)
@@ -93,7 +93,7 @@ def runParallel(pool, fun, par, *args, **kwargs):
 
     """
     if pool:
-        result = pool.map(parMapper, izip(par, repeat( { "fun": fun, "args": args, "kwargs": kwargs } )))
+        result = pool.map(parMapper, zip(par, repeat( { "fun": fun, "args": args, "kwargs": kwargs } )))
     else:
         result = []
         for c in par:

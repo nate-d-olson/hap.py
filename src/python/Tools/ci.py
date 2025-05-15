@@ -10,7 +10,7 @@
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
 
-from __future__ import division
+
 from math import log1p
 
 import numpy as np

@@ -111,7 +111,7 @@ def replaceNaNs(xobject):
     """
 
     if type(xobject) is dict:
-        for k in xobject.keys():
+        for k in list(xobject.keys()):
             if type(xobject[k]) is dict or type(xobject[k]) is list or type(xobject[k]) is float:
                 xobject[k] = replaceNaNs(xobject[k])
     elif type(xobject) is list:

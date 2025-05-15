@@ -64,7 +64,7 @@ def fastaNonNContigLengths(fastafile):
         with open(tf.name) as f:
             fasta_info = json.load(f)
 
-        for k, v in fasta_info.items():
+        for k, v in list(fasta_info.items()):
             fastacontiglengths[k] = int(v["n_trimmed_length"])
     finally:
         os.unlink(tf.name)
@@ -75,7 +75,7 @@ def fastaNonNContigLengths(fastafile):
 def calculateLength(fastacontiglengths, locations):
     """ Calculate total length of contigs overlapping a set of locations """
     if not locations:
-        return sum([fastacontiglengths[x] for x in fastacontiglengths.keys()])
+        return sum([fastacontiglengths[x] for x in list(fastacontiglengths.keys())])
 
     total_length = 0
     for l in re.split("[ ,]", locations):

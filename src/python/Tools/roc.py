@@ -70,10 +70,8 @@ def tableROC(tbl, label_column, feature_column, filter_column=None,
             pass
 
 
-class ROC(object):
+class ROC(object, metaclass=abc.ABCMeta):
     """ROC calculator base class"""
-
-    __metaclass__ = abc.ABCMeta
 
     classes = {}
 
@@ -111,7 +109,7 @@ class ROC(object):
 
     @classmethod
     def list(cls):
-        return cls.classes.keys()
+        return list(cls.classes.keys())
 
 
 class StrelkaSNVRoc(ROC):

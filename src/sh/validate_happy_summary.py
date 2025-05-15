@@ -30,7 +30,7 @@ if __name__ == '__main__':
     happy_summary = csv.DictReader(open(args.happy_summary))
 
     # compare first row of som.py stats to PASS/ALL rows in hap.py summary
-    s = sompy_stats.next()
+    s = next(sompy_stats)
 
     if s["type"] == "SNVs":
         vtype = "SNP"

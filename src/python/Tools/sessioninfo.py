@@ -45,7 +45,7 @@ def sessionInfo():
                       "module": "%s" % os.path.basename(sys.argv[0]),
                       "description": "%s generated this JSON file via command line %s" % (
                           sys.argv[0], " ".join(sys.argv))}},
-              'environment': {str(k): str(os.environ[k]) for k in os.environ.keys()}}
+              'environment': {str(k): str(os.environ[k]) for k in list(os.environ.keys())}}
 
     result["python_prefix"] = sys.prefix
     if hasattr(sys, 'real_prefix'):

@@ -160,7 +160,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         # Ref and alt allele counts for tier1 and tier2
         allele_ref = rec["REF"]
         try:
-            t_allele_ref_counts = map(float, rec['S.2.' + allele_ref + 'U'])
+            t_allele_ref_counts = list(map(float, rec['S.2.' + allele_ref + 'U']))
         except Exception:
             t_allele_ref_counts = [0, 0]
 
@@ -181,7 +181,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
             t_tier1_allele_rate = t_allele_alt_counts[0] / float(t_allele_alt_counts[0] + t_allele_ref_counts[0])
 
         try:
-            n_allele_ref_counts = map(float, rec['S.1.' + allele_ref + 'U'])
+            n_allele_ref_counts = list(map(float, rec['S.1.' + allele_ref + 'U']))
         except Exception:
             n_allele_ref_counts = [0, 0]
 
@@ -250,7 +250,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                         pass
         except Exception:
             pass
-        for k, v in evs_featurenames.items():
+        for k, v in list(evs_featurenames.items()):
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 
@@ -493,7 +493,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         except Exception:
             pass
 
-        for k, v in evs_featurenames.items():
+        for k, v in list(evs_featurenames.items()):
             if not "E." + v in qrec:
                 qrec["E." + v] = 0
 

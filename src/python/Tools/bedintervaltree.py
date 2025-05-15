@@ -76,7 +76,7 @@ class BedIntervalTree(object):
         if not chrom and label:
             return self.nt_count_by_label[label]
         elif not chrom and not label:
-            return sum([self.nt_count_by_label[x] for x in self.nt_count_by_label.keys()])
+            return sum([self.nt_count_by_label[x] for x in list(self.nt_count_by_label.keys())])
 
         total_length = 0
         for x in self.tree[chrom].find(start, end):
