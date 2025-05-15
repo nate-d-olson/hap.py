@@ -82,12 +82,11 @@ def create_python_environment(source_dir, args):
     subprocess.check_call(cmds)
 
     # Install requirements from file
-    requirements_file = os.path.join(source_dir, "happy.requirements.py3.txt")
+    requirements_file = os.path.join(source_dir, "happy.requirements.py.txt")
     if not os.path.exists(requirements_file):
-        requirements_file = os.path.join(source_dir, "happy.requirements.txt")
-        print(
-            "Warning: Using Python 2 requirements file. Consider creating happy.requirements.py3.txt",
-            file=sys.stderr,
+        raise Exception(
+            f"Requirements file {requirements_file} does not exist. "
+            "Please check the installation script."
         )
 
     cmds = [ve_pip, "install", "--no-cache-dir", "-r", requirements_file]
@@ -125,9 +124,6 @@ def build_haplotypes(source_dir, build_dir, args):
         f"{source_dir}/configure.sh {args.configuration} {args.setup} {args.targetdir}"
     )
 
-    if args.sge:
-        config_command += " -DUSE_SGE=ON"
-
     if args.build_rtgtools:
         config_command += " -DBUILD_VCFEVAL=ON"
         if args.rtgtools_wrapper:
@@ -135,7 +131,8 @@ def build_haplotypes(source_dir, build_dir, args):
                 raise Exception(
                     f"RTG-tools wrapper {args.rtgtools_wrapper} doesn't exist."
                 )
-            config_command += f"-DVCFEVAL_WRAPPER={os.path.abspath(args.rtgtools_wrapper).replace(' ', '\\ ')}"
+            wrapper_path = os.path.abspath(args.rtgtools_wrapper).replace(" ", "\\ ")
+            config_command += f"-DVCFEVAL_WRAPPER={wrapper_path}"
 
     to_run = f"{boost_prefix}cd {build_dir} && {boost_prefix} {config_command}"
     print(to_run, file=sys.stderr)
@@ -149,13 +146,11 @@ def build_haplotypes(source_dir, build_dir, args):
 
     setupscript += boost_prefix
 
-    to_run = f"{setupscript}cd {build_dir} && {setupscript} make -j{args.processes}"
+    to_run = f"{setupscript}cd {build_dir} &&make -j{args.processes}"
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
-    to_run = (
-        f"{setupscript}cd {build_dir} && {setupscript} make -j{args.processes} install"
-    )
+    to_run = f"{setupscript}cd {build_dir} &&make -j{args.processes} install"
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
@@ -175,15 +170,6 @@ def main():
 
     parser = argparse.ArgumentParser("hap.py installer (Python 3)")
     parser.add_argument("targetdir", help="Target installation directory")
-
-    parser.add_argument(
-        "--sge-mode",
-        dest="sge",
-        action="store_true",
-        default=False,
-        help="Enable SGE mode, which will require an additional command "
-        'line option "--force-interactive" to run interactively.',
-    )
 
     parser.add_argument(
         "--python",

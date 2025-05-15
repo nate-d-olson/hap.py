@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -30,506 +30,300 @@ import logging
 import traceback
 import multiprocessing
 import pandas
-import json
 import tempfile
-import gzip
+import json
+from typing import Dict, List, Optional, Any, Tuple, Union
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+scriptDir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3")))
 
 import Tools
-import Tools.vcfextract
-from Tools.metric import makeMetricsObject, dataframeToMetricsTable
-import Haplo.quantify
-import Haplo.happyroc
-import Haplo.gvcf2bed
-from Tools import fastasize
 
 
-def quantify(args):
-    """Run quantify and write tables"""
-    vcf_name = args.in_vcf[0]
+def parseArgs():
+    """Parse the command line arguments"""
+    parser = argparse.ArgumentParser("Haplotype Comparison ROC")
 
-    if not vcf_name or not os.path.exists(vcf_name):
-        raise Exception("Cannot read input VCF.")
+    parser.add_argument("roc", help="ROC data file")
 
-    logging.info("Counting variants...")
+    parser.add_argument("-o", "--reports-prefix", dest="prefix",
+                      help="Prefix for report output files", default=None)
 
-    truth_or_query_is_bcf = False
-    try:
-        truth_or_query_is_bcf = args.vcf1.endswith(".bcf") and args.vcf2.endswith(
-            ".bcf"
-        )
-    except Exception:
-        # args.vcf1 and args.vcf2 are only available when we're running
-        # inside hap.py.
-        pass
+    parser.add_argument("-V", "--verbose", dest="verbose",
+                      help="Increase verbosity of output", action="count", default=0)
 
-    if args.bcf or truth_or_query_is_bcf:
-        internal_format_suffix = ".bcf"
-    else:
-        internal_format_suffix = ".vcf.gz"
+    parser.add_argument("--logfile", dest="logfile",
+                      help="Write logging information into file rather than to stderr",
+                      default=None)
 
-    output_vcf = args.reports_prefix + internal_format_suffix
-    roc_table = args.reports_prefix + ".roc.tsv"
+    parser.add_argument("-l", "--location", dest="location",
+                      help="Comma-separated list of locations to restrict to.", default=None)
 
-    qfyregions = {}
+    parser.add_argument("-t", "--type", dest="type",
+                      help="Variant types and regions to include.", default=None)
 
-    if args.fp_bedfile:
-        if not os.path.exists(args.fp_bedfile):
-            raise Exception(
-                "FP / Confident region file not found at %s" % args.fp_bedfile
-            )
-        qfyregions["CONF"] = args.fp_bedfile
+    parser.add_argument("-f", "--feature-table", nargs="+", dest="feature_table",
+                      help="Features to annotate variants with and stratify on.",
+                      default=[])
 
-    if args.strat_tsv:
-        with open(args.strat_tsv) as sf:
-            for l in sf:
-                n, _, f = l.strip().partition("\t")
-                if n in qfyregions:
-                    raise Exception("Duplicate stratification region ID: %s" % n)
-                if not f:
-                    if n:
-                        raise Exception("No file for stratification region %s" % n)
-                    else:
-                        continue
-                if not os.path.exists(f):
-                    f = os.path.join(
-                        os.path.abspath(os.path.dirname(args.strat_tsv)), f
-                    )
-                if not os.path.exists(f):
-                    raise Exception("Quantification region file %s not found" % f)
-                qfyregions[n] = f
+    parser.add_argument("--feature-filter", dest="feature_filter",
+                      help="Feature pattern to limit feature selection to.",
+                      default=None)
 
-    if args.strat_regions:
-        for r in args.strat_regions:
-            n, _, f = r.partition(":")
-            if not os.path.exists(f):
-                raise Exception("Quantification region file %s not found" % f)
-            qfyregions[n] = f
+    parser.add_argument("--embed-subplots", dest="embed_subplots", help="Embed subplots in a big figure.",
+                      default=False, action="store_true")
 
-    if vcf_name == output_vcf or vcf_name == output_vcf + internal_format_suffix:
-        raise Exception(
-            "Cannot overwrite input VCF: %s would overwritten with output name %s."
-            % (vcf_name, output_vcf)
-        )
+    parser.add_argument("--roc-filter", dest="roc_filter",
+                      help="Comma-separated list of INFO fields to use.",
+                      default=None)
 
-    roc_header = args.roc
-    try:
-        roc_header = args.roc_header
-    except Exception:
-        pass
+    parser.add_argument("--roc-regions", dest="roc_regions",
+                      help="Comma-separated list of regions to plot.",
+                      default="*")
 
-    Haplo.quantify.run_quantify(
-        vcf_name,
-        roc_table,
-        output_vcf if args.write_vcf else False,
-        qfyregions,
-        args.ref,
-        threads=args.threads,
-        output_vtc=args.output_vtc,
-        output_rocs=args.do_roc,
-        qtype=args.type,
-        roc_val=args.roc,
-        roc_header=roc_header,
-        roc_filter=args.roc_filter,
-        roc_delta=args.roc_delta,
-        roc_regions=args.roc_regions,
-        clean_info=not args.preserve_info,
-        strat_fixchr=args.strat_fixchr,
-    )
+    parser.add_argument("--roc-kind", dest="roc_kind",
+                      help="ROC kind: count-all (count all records), count-nonref, roc",
+                      default="count-all")
 
-    metrics_output = makeMetricsObject("%s.comparison" % args.runner)
+    parser.add_argument("--stratification", dest="stratification",
+                      help="List of stratifications, comma-separated.")
 
-    filter_handling = None
-    try:
-        if args.engine == "vcfeval" or not args.usefiltered:
-            filter_handling = "ALL" if args.usefiltered else "PASS"
-    except AttributeError:
-        # if we run this through qfy, these arguments are not present
-        pass
+    parser.add_argument("--format", dest="format", help="Output format -- py plots into separate files",
+                      default="html",
+                      choices=["html", "png", "pdf", "py", "jpg", "all"])
 
-    total_region_size = None
-    headers = Tools.vcfextract.extractHeadersJSON(vcf_name)
-    try:
-        contigs_to_use = ",".join(headers["tabix"]["chromosomes"])
-        contig_lengths = fastasize.fastaNonNContigLengths(args.ref)
-        total_region_size = fastasize.calculateLength(contig_lengths, contigs_to_use)
-        logging.info(
-            "Subset.Size for * is %i, based on these contigs: %s "
-            % (total_region_size, str(contigs_to_use))
-        )
-    except Exception:
-        pass
+    parser.add_argument("--width", dest="width", help="Width of plot in inches.", 
+                      default=None, type=int)
 
-    res = Haplo.happyroc.roc(
-        roc_table,
-        args.reports_prefix + ".roc",
-        filter_handling=filter_handling,
-        ci_alpha=args.ci_alpha,
-        total_region_size=total_region_size,
-    )
-    df = res["all"]
+    parser.add_argument("--height", dest="height", help="Height of plot in inches.", 
+                      default=None, type=int)
 
-    # only use summary numbers
-    df = df[(df["QQ"] == "*") & (df["Filter"].isin(["ALL", "PASS"]))]
+    parser.add_argument("--nc", "--no-count-filtered", dest="count_filtered",
+                      help="Don't count filtered variants in ROC.",
+                      action="store_false", default=True)
 
-    summary_columns = [
-        "Type",
-        "Filter",
-    ]
+    parser.add_argument("--chm", "--count-homref-matches", dest="homref_matches",
+                      help="Also count homref matches.",
+                      action="store_true", default=False)
 
-    for additional_column in [
-        "TRUTH.TOTAL",
-        "TRUTH.TP",
-        "TRUTH.FN",
-        "QUERY.TOTAL",
-        "QUERY.FP",
-        "QUERY.UNK",
-        "FP.gt",
-        "FP.al",
-        "METRIC.Recall",
-        "METRIC.Precision",
-        "METRIC.Frac_NA",
-        "METRIC.F1_Score",
-        "TRUTH.TOTAL.TiTv_ratio",
-        "QUERY.TOTAL.TiTv_ratio",
-        "TRUTH.TOTAL.het_hom_ratio",
-        "QUERY.TOTAL.het_hom_ratio",
-    ]:
-        summary_columns.append(additional_column)
+    parser.add_argument("-L", "--legacy-output", dest="legacy",
+                      help="Make legacy output.",
+                      action="store_true", default=False)
 
-    # Remove subtype
-    summary_df = df[
-        (df["Subtype"] == "*") & (df["Genotype"] == "*") & (df["Subset"] == "*")
-    ]
+    parser.add_argument("--title", dest="title", help="Plot title", default="ROC")
+    parser.add_argument("--qq-max", dest="qq_max", help="Max value for QQ plots.",
+                      type=float, default=None)
+    parser.add_argument("--roc-lines", dest="roc_lines", help="Plot lines from spec file.",
+                      default=None)
 
-    summary_df[summary_columns].to_csv(
-        args.reports_prefix + ".summary.csv", index=False
-    )
+    parser.add_argument("--no-names", dest="no_names",
+                      help="Don't write names into plots (when plotting multiple curves only).",
+                      action="store_true", default=False)
 
-    metrics_output["metrics"].append(
-        dataframeToMetricsTable("summary.metrics", summary_df[summary_columns])
-    )
+    parser.add_argument("--logx", dest="logx",
+                      help="Log scale for x axis",
+                      action="store_true", default=False)
 
-    if args.write_counts:
-        df.to_csv(args.reports_prefix + ".extended.csv", index=False)
-        metrics_output["metrics"].append(dataframeToMetricsTable("all.metrics", df))
+    parser.add_argument("--logy", dest="logy",
+                      help="Log scale for y axis",
+                      action="store_true", default=False)
 
-    essential_numbers = summary_df[summary_columns]
+    parser.add_argument("--qqnorm", dest="qqnorm",
+                      help="Normalise QQ plot",
+                      action="store_true", default=False)
 
-    pandas.set_option("display.max_columns", 500)
-    pandas.set_option("display.width", 1000)
+    parser.add_argument("--xmax", dest="xmax", help="Maximum value for x axis.", 
+                      type=float, default=None)
+    
+    parser.add_argument("--ymin", dest="ymin", help="Minimum value for y axis.", 
+                      type=float, default=None)
 
-    essential_numbers = essential_numbers[
-        essential_numbers["Type"].isin(["SNP", "INDEL"])
-    ]
+    parser.add_argument("--ymax", dest="ymax", help="Maximum value for y axis.", 
+                      type=float, default=None)
 
-    logging.info("\n" + essential_numbers.to_string(index=False))
+    parser.add_argument("--roc-params", dest="roc_params", nargs="+",
+                      help="All remaining args are parsed as key=value strings and passed to hapyroc.",
+                      default=[])
 
-    # in default mode, print(result summary to stdout)
-    if not args.quiet and not args.verbose:
-        print("Benchmarking Summary:")
-        print((essential_numbers.to_string(index=False)))
+    result = parser.parse_args()
 
-    # keep this for verbose output
-    if not args.verbose:
-        try:
-            os.unlink(roc_table)
-        except Exception:
-            pass
-
-    for t in list(res.keys()):
-        metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
-
-    # gzip JSON output
-    if args.write_json:
-        with gzip.open(args.reports_prefix + ".metrics.json.gz", "w") as fp:
-            json.dump(metrics_output, fp)
-
-
-def updateArgs(parser):
-    """add common quantification args"""
-    parser.add_argument(
-        "-t",
-        "--type",
-        dest="type",
-        choices=["xcmp", "ga4gh"],
-        help="Annotation format in input VCF file.",
-    )
-
-    parser.add_argument(
-        "-f",
-        "--false-positives",
-        dest="fp_bedfile",
-        default=None,
-        type=str,
-        help="False positive / confident call regions (.bed or .bed.gz). Calls outside "
-        "these regions will be labelled as UNK.",
-    )
-
-    parser.add_argument(
-        "--stratification",
-        dest="strat_tsv",
-        default=None,
-        type=str,
-        help="Stratification file list (TSV format -- first column is region name, second column is file name).",
-    )
-
-    parser.add_argument(
-        "--stratification-region",
-        dest="strat_regions",
-        default=[],
-        action="append",
-        help="Add single stratification region, e.g. --stratification-region TEST:test.bed",
-    )
-
-    parser.add_argument(
-        "--stratification-fixchr",
-        dest="strat_fixchr",
-        default=None,
-        action="store_true",
-        help="Add chr prefix to stratification files if necessary",
-    )
-
-    parser.add_argument(
-        "-V",
-        "--write-vcf",
-        dest="write_vcf",
-        default=False,
-        action="store_true",
-        help="Write an annotated VCF.",
-    )
-
-    parser.add_argument(
-        "-X",
-        "--write-counts",
-        dest="write_counts",
-        default=True,
-        action="store_true",
-        help="Write advanced counts and metrics.",
-    )
-
-    parser.add_argument(
-        "--no-write-counts",
-        dest="write_counts",
-        default=True,
-        action="store_false",
-        help="Do not write advanced counts and metrics.",
-    )
-
-    parser.add_argument(
-        "--output-vtc",
-        dest="output_vtc",
-        default=False,
-        action="store_true",
-        help="Write VTC field in the final VCF which gives the counts each position has contributed to.",
-    )
-
-    parser.add_argument(
-        "--preserve-info",
-        dest="preserve_info",
-        action="store_true",
-        default=False,
-        help="When using XCMP, preserve and merge the INFO fields in truth and query. Useful for ROC computation.",
-    )
-
-    parser.add_argument(
-        "--roc",
-        dest="roc",
-        default="QUAL",
-        help="Select a feature to produce a ROC on (INFO feature, QUAL, GQX, ...).",
-    )
-
-    parser.add_argument(
-        "--no-roc",
-        dest="do_roc",
-        default=True,
-        action="store_false",
-        help="Disable ROC computation and only output summary statistics for more concise output.",
-    )
-
-    parser.add_argument(
-        "--roc-regions",
-        dest="roc_regions",
-        default=["*"],
-        action="append",
-        help="Select a list of regions to compute ROCs in. By default, only the '*' region will"
-        " produce ROC output (aggregate variant counts).",
-    )
-
-    parser.add_argument(
-        "--roc-filter",
-        dest="roc_filter",
-        default=False,
-        help="Select a filter to ignore when making ROCs.",
-    )
-
-    parser.add_argument(
-        "--roc-delta",
-        dest="roc_delta",
-        default=0.5,
-        type=float,
-        help="Minimum spacing between ROC QQ levels.",
-    )
-
-    parser.add_argument(
-        "--ci-alpha",
-        dest="ci_alpha",
-        default=0.0,
-        type=float,
-        help="Confidence level for Jeffrey's CI for recall, precision and fraction of non-assessed calls.",
-    )
-
-    parser.add_argument(
-        "--no-json",
-        dest="write_json",
-        default=True,
-        action="store_false",
-        help="Disable JSON file output.",
-    )
+    # if no prefix was given, derive from the ROC file name
+    if result.prefix is None:
+        if result.roc.lower().endswith(".csv"):
+            result.prefix = result.roc[:-4]
+        elif result.roc.lower().endswith(".csv.gz"):
+            result.prefix = result.roc[:-7]
+        elif result.roc.lower().endswith(".h5") or result.roc.lower().endswith(".hdf"):
+            result.prefix = result.roc[:-3]
+        else:
+            result.prefix = result.roc
+    
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser("Quantify annotated VCFs")
+    """Main function"""
+    try:
+        args = parseArgs()
 
-    parser.add_argument(
-        "-v",
-        "--version",
-        dest="version",
-        action="store_true",
-        help="Show version number and exit.",
-    )
+        # how verbose?
+        if args.verbose == 0:
+            loglevel = logging.WARN
+        elif args.verbose == 1:
+            loglevel = logging.INFO
+        else:
+            loglevel = logging.DEBUG
+        
+        if args.logfile:
+            logging.basicConfig(filename=args.logfile, level=loglevel)
+        else:
+            logging.basicConfig(level=loglevel)
 
-    parser.add_argument(
-        "in_vcf",
-        help="Comparison intermediate VCF file to quantify (two column TRUTH/QUERY format)",
-        nargs=1,
-    )
+        logging.getLogger("requests").setLevel(logging.WARNING)
 
-    parser.add_argument(
-        "--adjust-conf-regions",
-        dest="preprocessing_truth_confregions",
-        default=None,
-        help="When hap.py was run with --adjust-conf-regions, on the original VCF, "
-        "then quantify needs the truthset VCF in order to correctly reproduce "
-        " the results. This switch allows us to pass the truth VCF into quantify.",
-    )
+        import Haplo.happyroc
 
-    updateArgs(parser)
+        # Attempting to create a double instance of the plot can fail sometimes since 
+        # matplotlib isn't really re-entrant
+        # plotting_ok = True
+        roc_args = {}
 
-    # generic, keep in sync with hap.py!
-    parser.add_argument(
-        "-o",
-        "--report-prefix",
-        dest="reports_prefix",
-        default=None,
-        required=True,
-        help="Filename prefix for report output.",
-    )
+        # Set format
+        if args.format in ["pdf", "png", "jpg"]:
+            roc_args["output_format"] = args.format
+        elif args.format == "all":
+            # plot into all formats
+            roc_args["output_format"] = ["pdf", "png", "jpg"]
 
-    parser.add_argument(
-        "-r", "--reference", dest="ref", default=None, help="Specify a reference file."
-    )
+        if args.width:
+            roc_args["width"] = args.width
+        
+        if args.height:
+            roc_args["height"] = args.height
 
-    parser.add_argument(
-        "--threads",
-        dest="threads",
-        default=multiprocessing.cpu_count(),
-        type=int,
-        help="Number of threads to use.",
-    )
+        if args.logx:
+            roc_args["logx"] = True
+            
+        if args.logy:
+            roc_args["logy"] = True
 
-    parser.add_argument(
-        "--logfile",
-        dest="logfile",
-        default=None,
-        help="Write logging information into file rather than to stderr",
-    )
+        if args.qqnorm:
+            roc_args["qqnorm"] = True
 
-    parser.add_argument(
-        "--bcf",
-        dest="bcf",
-        action="store_true",
-        default=False,
-        help="Use BCF internally. This is the default when the input file"
-        " is in BCF format already. Using BCF can speed up temp file access, "
-        " but may fail for VCF files that have broken headers or records that "
-        " don't comply with the header.",
-    )
+        if args.xmax is not None:
+            roc_args["xmax"] = args.xmax
+            
+        if args.ymin is not None:
+            roc_args["ymin"] = args.ymin
 
-    verbosity_options = parser.add_mutually_exclusive_group(required=False)
+        if args.ymax is not None:
+            roc_args["ymax"] = args.ymax
 
-    verbosity_options.add_argument(
-        "--verbose",
-        dest="verbose",
-        default=False,
-        action="store_true",
-        help="Raise logging level from warning to info.",
-    )
+        if args.qq_max:
+            roc_args["qq_max"] = args.qq_max
 
-    verbosity_options.add_argument(
-        "--quiet",
-        dest="quiet",
-        default=False,
-        action="store_true",
-        help="Set logging level to output errors only.",
-    )
+        if args.no_names:
+            roc_args["no_names"] = True
 
-    args, unknown_args = parser.parse_known_args()
+        # RocPlot will do Agg plotting from the main thread 
+        # this is safer than trying to plot using the main UI thread
+        roc_args["agg"] = True
+        if args.roc_lines:
+            roc_args["line_specs"] = args.roc_lines
+        
+        for param in args.roc_params:
+            k, v = param.split("=", 1)
+            try:
+                v = json.loads(v)
+            except ValueError:
+                pass
+            roc_args[k] = v
+            
+        # determine files to output to
+        roc_file = args.roc
+        roc_filter = "QUAL"
+        
+        if args.roc_filter:
+            roc_filter = args.roc_filter
+            
+        roc_regions = args.roc_regions.split(",")
 
-    args.runner = "qfy.py"
+        roc_type = "all"
+        if args.type:
+            roc_type = args.type.split(",")
 
-    if not args.ref:
-        args.ref = Tools.defaultReference()
+        # if we have an HDF, try to use the locations from there
+        locations = []
+        if args.location:
+            locations = args.location.split(",")
+            if len(locations) == 1 and "*" == locations[0]:
+                locations = ["*"]
 
-    args.scratch_prefix = tempfile.gettempdir()
+        if args.stratification:
+            strat = args.stratification.split(",")
+            roc_args["stratification"] = strat
+        
+        if args.feature_table:
+            ft = args.feature_table
+            regions_bedfiles = []
+            for f in ft:
+                if os.path.exists(f):
+                    regions_bedfiles.append(f)
+                else:
+                    raise Exception("Cannot find %s" % f)
+                    
+            if regions_bedfiles:
+                import Haplo.happyroc
+                fp = tempfile.NamedTemporaryFile(delete=False, suffix=".bed")
+                try:
+                    fp.close()
+                    Haplo.happyroc.mergeFeatures(regions_bedfiles, fp.name)
+                    roc_args["features_bedfile"] = fp.name
+                except:
+                    os.unlink(fp.name)
+                    raise
 
-    if args.verbose:
-        loglevel = logging.INFO
-    elif args.quiet:
-        loglevel = logging.ERROR
-    else:
-        loglevel = logging.WARNING
+        if args.feature_filter:
+            roc_args["feature_filter"] = args.feature_filter
 
-    # reinitialize logging
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-    logging.basicConfig(
-        filename=args.logfile,
-        format="%(asctime)s %(levelname)-8s %(message)s",
-        level=loglevel,
-    )
+        if args.format == "py":
+            # Use Python plots instead of HTML
+            Haplo.happyroc.makeRocPlots(roc_file,
+                                      roc_filter,
+                                      args.prefix,
+                                      args.title,
+                                      roc_regions,
+                                      locations,
+                                      roc_type,
+                                      args.count_filtered,
+                                      args.homref_matches,
+                                      roc_args,
+                                      args.roc_kind)
+        else:
+            # default HTML plot
+            Haplo.happyroc.makeRocHTML(roc_file,
+                                     roc_filter,
+                                     args.prefix,
+                                     args.title,
+                                     roc_regions,
+                                     locations,
+                                     roc_type,
+                                     args.count_filtered,
+                                     args.homref_matches,
+                                     roc_args,
+                                     args.roc_kind,
+                                     args.embed_subplots)
+        
+        if args.legacy:
+            # emit legacy style outputs
+            Haplo.happyroc.makeLegacyOutput(roc_file, args.prefix)
 
-    # remove some safe unknown args
-    unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
-    if len(sys.argv) < 2 or len(unknown_args) > 0:
-        if unknown_args:
-            logging.error("Unknown arguments specified : %s " % str(unknown_args))
-        parser.print_help()
-        exit(0)
-
-    if args.version:
-        print(("qfy.py %s" % Tools.version))
-        exit(0)
-
-    if args.fp_bedfile and args.preprocessing_truth_confregions:
-        conf_temp = Haplo.gvcf2bed.gvcf2bed(
-            args.preprocessing_truth_confregions,
-            args.ref,
-            args.fp_bedfile,
-            args.scratch_prefix,
-        )
-        args.strat_regions.append("CONF_VARS:" + conf_temp)
-        args.preprocessing_truth_confregions = None
-
-    quantify(args)
+        return 0
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc(file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.error(str(e))
-        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+    sys.exit(main())

@@ -15,24 +15,24 @@
 # * builds code
 # * makes virtualenv
 
-import os
-import sys
 import argparse
-import subprocess
-import tempfile
-import shutil
-import glob
 import fnmatch
+import glob
 import multiprocessing
-import urllib.request
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
 import urllib.error
 import urllib.parse
+import urllib.request
 
 
 def check_python_version():
     """Check if the python version is sufficient"""
-    if sys.version_info < (2, 7, 3):
-        raise Exception("You will need to run this with Python >= 2.7.3")
+    if sys.version_info < (3, 6):
+        raise Exception("You will need to run this with Python >= 3.6")
 
 
 def create_python_environment(source_dir, args):
@@ -51,8 +51,8 @@ def create_python_environment(source_dir, args):
     )
     pyver = tuple(map(int, pyver))
 
-    if pyver < (2, 7, 3):
-        raise Exception("Python >= 2.7.3 is required for installation.")
+    if pyver < (3, 6):
+        raise Exception("Python >= 3.6 is required for installation.")
 
     # system python -- just return interp
     if args.python == "system":

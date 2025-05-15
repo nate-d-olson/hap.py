@@ -43,11 +43,12 @@
 #include <limits>
 #include <list>
 #include <vector>
+#include <reverse>
 
 #include "Fasta.hh"
 #include "Error.hh"
 
-#include <boost/range/adaptor/reversed.hpp>
+
 
 namespace variant {
 

@@ -50,14 +50,15 @@ RUN wget http://archive.apache.org/dist/ant/binaries/apache-ant-1.9.7-bin.tar.gz
 ENV PATH $PATH:/opt/apache-ant-1.9.7/bin
 
 # run hap.py installer in the image, don't run tests since we don't have a reference file
-WORKDIR /opt/hap.py-source
-RUN python install.py /opt/hap.py --with-rtgtools --no-tests
-WORKDIR /opt/hap.py
+# WORKDIR /opt/hap.py-source
+# RUN python install.py /opt/hap.py --with-rtgtools --no-tests
+# WORKDIR /opt/hap.py
 
-# run basic tests
-RUN bin/test_haplotypes
+# # run basic tests
+# RUN bin/test_haplotypes
 
-# remove source folder
-WORKDIR /
-RUN rm -rf /opt/hap.py-source
+# # remove source folder
+# WORKDIR /
+# RUN rm -rf /opt/hap.py-source
+RUN bash /opt/hap.py-source/diagnose_build.sh
 

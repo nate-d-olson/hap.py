@@ -16,25 +16,33 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
+"""
+Module for running RTG's vcfeval for variant comparison.
+Provides functionality to compare VCF files using the vcfeval tool.
+"""
+
 import logging
+import os
+import shlex
+import shutil
 import subprocess
 import tempfile
 import time
-import shutil
-import pipes
+from typing import Any, List, Optional
 
 import Haplo.version  # pylint: disable=E0611,E0401
 
 
-def findVCFEval():
-    """Return default version of rtgtools if hap.py was built with
-    rtgtools included.
+def findVCFEval() -> str:
+    """Return default version of rtgtools if hap.py was built with rtgtools included.
+
+    Returns:
+        Path to rtg executable or 'rtg' if not found
     """
     if Haplo.version.has_vcfeval:
         base = os.path.join(
             os.path.dirname(__file__),
-            "..",  # python27
+            "..",  # python
             "..",  # lib
             "..",  # hap.py-base
             "libexec",
@@ -48,9 +56,9 @@ def findVCFEval():
         elif os.path.isfile(bfile2) and os.access(bfile2, os.X_OK):
             return bfile2
         else:
-            logging.warn(
-                ("Could not find our included version of rtg-tools at %s. " % base)
-                + "To use vcfeval for comparison, you might have to specify "
+            logging.warning(
+                f"Could not find our included version of rtg-tools at {base}. "
+                "To use vcfeval for comparison, you might have to specify "
                 "its location on the command line."
             )
             return "rtg"
@@ -59,113 +67,135 @@ def findVCFEval():
         return "rtg"
 
 
-def runVCFEval(vcf1, vcf2, target, args):
-    """Run VCFEval and convert it's output to something quantify
-    understands
+def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[str]]:
+    """Run VCFEval and convert its output to something quantify understands.
+
+    Args:
+        vcf1: First VCF file (baseline)
+        vcf2: Second VCF file (query)
+        target: Output file path
+        args: Command line arguments
+
+    Returns:
+        List of output files or None if failed
     """
     starttime = time.time()
 
-    vtf = tempfile.NamedTemporaryFile(
+    with tempfile.NamedTemporaryFile(
         dir=args.scratch_prefix, prefix="vcfeval.result", suffix=".dir"
-    )
-    vtf.close()
+    ) as vtf:
+        pass  # Just create the file to get the name
 
     del_sdf = False
 
     try:
+        # Check for existing SDF template
         if not args.engine_vcfeval_template and os.path.isdir(args.ref[:-3] + ".sdf"):
-            logging.info("Using vcfeval template from %s" % (args.ref[:-3] + ".sdf"))
+            logging.info(f"Using vcfeval template from {args.ref[:-3] + '.sdf'}")
             args.engine_vcfeval_template = args.ref[:-3] + ".sdf"
+
+        # Create template if needed
         if not args.engine_vcfeval_template or not os.path.exists(
             args.engine_vcfeval_template
         ):
-            logging.warn(
+            logging.warning(
                 "Creating template for vcfeval. "
-                + (
-                    "You can speed this up by supplying a SDF template that corresponds to %s"
-                    % args.ref
-                )
+                f"You can speed this up by supplying a SDF template that corresponds to {args.ref}"
             )
             del_sdf = True
-            stf = tempfile.NamedTemporaryFile(
+            with tempfile.NamedTemporaryFile(
                 dir=args.scratch_prefix, prefix="vcfeval.sdf", suffix=".dir"
-            )
-            stf.close()
+            ) as stf:
+                pass  # Just create the file to get the name
+
             args.engine_vcfeval_template = stf.name
-            runme = "%s format -o %s %s" % (
-                pipes.quote(args.engine_vcfeval),
-                pipes.quote(args.engine_vcfeval_template),
-                pipes.quote(args.ref),
-            )
+
+            # Quote paths for shell safety
+            quoted_engine = shlex.quote(args.engine_vcfeval)
+            quoted_template = shlex.quote(args.engine_vcfeval_template)
+            quoted_ref = shlex.quote(args.ref)
+
+            runme = f"{quoted_engine} format -o {quoted_template} {quoted_ref}"
+
             logging.info(runme)
-            po = subprocess.Popen(
-                runme, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            process = subprocess.Popen(
+                runme,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
             )
-            o, e = po.communicate()
-            po.wait()
-            rc = po.returncode
+            stdout, stderr = process.communicate()
+            rc = process.returncode
+
             if rc != 0:
                 raise Exception(
-                    "Error running rtg tools. Return code was %i, output: %s / %s \n"
-                    % (rc, o, e)
+                    f"Error running rtg tools. Return code was {rc}, "
+                    f"output: {stdout} / {stderr}"
                 )
-            elif o.strip() or e.strip():
-                logging.info("RTG output: \n%s\n / \n%s\n" % (o, e))
+            elif stdout.strip() or stderr.strip():
+                logging.info(f"RTG output: \n{stdout}\n / \n{stderr}\n")
 
-        runme = "%s vcfeval -b %s -c %s -t %s -o %s -T %i -m ga4gh --ref-overlap" % (
-            pipes.quote(args.engine_vcfeval),
-            pipes.quote(vcf1),
-            pipes.quote(vcf2),
-            pipes.quote(args.engine_vcfeval_template),
-            vtf.name,
-            args.threads,
+        # Quote paths for shell safety
+        quoted_engine = shlex.quote(args.engine_vcfeval)
+        quoted_vcf1 = shlex.quote(vcf1)
+        quoted_vcf2 = shlex.quote(vcf2)
+        quoted_template = shlex.quote(args.engine_vcfeval_template)
+        quoted_output = shlex.quote(vtf.name)
+
+        runme = (
+            f"{quoted_engine} vcfeval -b {quoted_vcf1} -c {quoted_vcf2} "
+            f"-t {quoted_template} -o {quoted_output} -T {args.threads} "
+            f"-m ga4gh --ref-overlap"
         )
 
         if not args.pass_only:
             runme += " --all-records"
 
         if args.roc:
-            runme += " -f %s" % pipes.quote(args.roc)
+            runme += f" -f {shlex.quote(args.roc)}"
 
         if args.engine_scmp_distance:
-            runme += " --Xloose-match-distance=%i" % args.engine_scmp_distance
+            runme += f" --Xloose-match-distance={args.engine_scmp_distance}"
 
         logging.info(runme)
-        po = subprocess.Popen(
-            runme, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        process = subprocess.Popen(
+            runme,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
         )
 
-        o, e = po.communicate()
-
-        po.wait()
-
-        rc = po.returncode
+        stdout, stderr = process.communicate()
+        rc = process.returncode
 
         if rc != 0:
             raise Exception(
-                "Error running rtg tools / vcfeval. Return code was %i, output: %s / %s \n"
-                % (rc, o, e)
+                f"Error running rtg tools / vcfeval. Return code was {rc}, "
+                f"output: {stdout} / {stderr}"
             )
-        elif o.strip() or e.strip():
-            logging.info("vcfeval output: \n%s\n / \n%s\n" % (o, e))
+        elif stdout.strip() or stderr.strip():
+            logging.info(f"vcfeval output: \n{stdout}\n / \n{stderr}\n")
 
         # in GA4GH mode, this is what vcfeval should output
         shutil.copy(os.path.join(vtf.name, "output.vcf.gz"), target)
         shutil.copy(os.path.join(vtf.name, "output.vcf.gz.tbi"), target + ".tbi")
     finally:
-        # remove temp path
+        # remove temp paths
         try:
             shutil.rmtree(vtf.name)
-        except Exception:
+        except OSError:
             pass
+
         if del_sdf:
             try:
                 shutil.rmtree(args.engine_vcfeval_template)
-            except Exception:
+            except OSError:
                 pass
 
     elapsed = time.time() - starttime
-    logging.info("vcfeval for %s vs. %s -- time taken %.2f" % (vcf1, vcf2, elapsed))
+    logging.info(f"vcfeval for {vcf1} vs. {vcf2} -- time taken {elapsed:.2f}")
 
     if os.path.exists(target) and os.path.exists(target + ".tbi"):
         return [target, target + ".tbi"]

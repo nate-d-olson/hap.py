@@ -31,3 +31,7 @@ Thumbs.db
 /cmake-build-debug
 /build
 /.vscode
+
+## local for now
+build_logs/**
+*.bak

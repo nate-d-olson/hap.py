@@ -10,20 +10,33 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import gzip
-import logging
 import os
-import pipes
 import subprocess
-import tempfile
-
+import logging
 import pandas
+import tempfile
+import gzip
+import pipes
+from typing import List, Tuple, Optional, Dict, Any, Union
+
+import Tools
+
 
 scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
-def runShellCommand(*args):
-    """Run a shell command (e.g. bcf tools), and return output"""
+def runShellCommand(*args) -> Tuple[str, str, int]:
+    """ Run a shell command (e.g. bcf tools), and return output
+    
+    Args:
+        *args: Command and arguments to run
+
+    Returns:
+        Tuple of (stdout, stderr, return_code)
+        
+    Raises:
+        Exception: If the command returns a non-zero exit code
+    """
     qargs = []
     for a in args:
         if a.strip() != "|":
@@ -34,13 +47,11 @@ def runShellCommand(*args):
     cmd_line = " ".join(qargs)
     logging.info(cmd_line)
 
-    po = subprocess.Popen(
-        cmd_line,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )  # text mode for Python 3 compatibility
+    po = subprocess.Popen(cmd_line,
+                          shell=True,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE,
+                          universal_newlines=True)  # text mode output
 
     stdout, stderr = po.communicate()
 
@@ -49,333 +60,220 @@ def runShellCommand(*args):
     return_code = po.returncode
 
     if return_code != 0:
-        raise Exception(
-            "Command line {} got return code {}.\nSTDOUT: {}\nSTDERR: {}".format(
-                cmd_line, return_code, stdout, stderr
-            )
-        )
+        logging.error("Failed to run command %s" % cmd_line)
+        logging.error("stderr: %s" % stderr)
+        logging.error("stdout: %s" % stdout)
+        raise Exception("Failed to run command %s" % cmd_line)
 
     return stdout, stderr, return_code
 
 
-def runBcftools(*args):
+def runBcftools(*args) -> Tuple[str, str, int]:
+    """ Run BCF tools
+    
+    Args:
+        *args: Arguments for bcftools
+
+    Returns:
+        Tuple of (stdout, stderr, return_code)
     """
-    Wraps runShellCommand for compatibility.
+    return runShellCommand("bcftools", *args)
 
-    :param args: Arguments to pass to bcftools
-    :return: stdout from the command
+
+def runBcftoolsView(*args) -> Tuple[str, str, int]:
+    """ Run BCF tools view
+    
+    Args:
+        *args: Arguments for bcftools view
+
+    Returns:
+        Tuple of (stdout, stderr, return_code)
     """
-    stdout, stderr, return_code = runShellCommand("bcftools", *args)
-    return stdout
+    newargs = ["view"]
+    newargs.extend(args)
+    return runBcftools(*newargs)
 
 
-def parseStats(output, colname="count"):
-    """Parse BCFTOOLS Stats Output"""
-
-    result = {}
-    for x in output.split("\n"):
-        if x.startswith("SN"):
-            vx = x.split("\t")
-            name = vx[2].replace("number of ", "").replace(":", "")
-            count = int(vx[3])
-            result[name] = count
-
-    result = pandas.DataFrame(list(result.items()), columns=["type", colname])
-    return result
-
-
-def countVCFRows(filename):
-    """Count the number of rows in a VCF
-    :param filename: VCF file name
-    :return: number of rows
+def getHeader(filename: str) -> List[str]:
+    """ Return VCF header as a list of strings
+    
+    Args:
+        filename: VCF filename
+        
+    Returns:
+        List of header lines
     """
-    if filename.endswith(".gz"):
-        f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
-    else:
-        f = open(filename, "r", encoding="utf-8")
+    if not os.path.exists(filename):
+        raise Exception("File not found: %s" % filename)
 
-    count = 0
-    for s in f:
-        if not s.startswith("#"):
-            count += 1
-
-    f.close()
-    return count
-
-
-def concatenateParts(output, *args):
-    """Concatenate BCF files
-
-
-    Trickier than it sounds because when there are many files we might run into
-    various limits like the number of open files, or the length of a command line.
-
-    This function will bcftools concat in a tree-like fashion to avoid this.
-    """
-    to_delete = []
-    try:
-        if output.endswith(".bcf"):
-            outputformat = "b"
-            outputext = ".bcf"
-        else:
-            outputformat = "z"
-            outputext = ".vcf.gz"
-        if len(args) < 10:
-            for x in args:
-                if not os.path.exists(x + ".tbi") and not os.path.exists(x + ".csi"):
-                    to_delete.append(x + ".csi")
-                    runBcftools("index", "-f", x)
-            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output] + list(args)
-            runBcftools(*cmdlist)
-        else:
-            # block in chunks (TODO: make parallel)
-            tf1 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
-            tf2 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
-            to_delete.append(tf1.name)
-            to_delete.append(tf2.name)
-            to_delete.append(tf1.name + ".csi")
-            to_delete.append(tf2.name + ".csi")
-            mid_point = (
-                len(args) // 2
-            )  # Use integer division for Python 3 compatibility
-            half1 = [tf1.name] + list(args[:mid_point])
-            half2 = [tf2.name] + list(args[mid_point:])
-            concatenateParts(*half1)
-            runBcftools("index", tf1.name)
-            concatenateParts(*half2)
-            runBcftools("index", tf2.name)
-            concatenateParts(output, tf1.name, tf2.name)
-    finally:
-        for f in to_delete:
+    for f in [filename + ".tbi", filename + ".csi"]:
+        if not os.path.exists(f):
+            logging.info("Running tabix/bcftools on %s" % filename)
+            # generate index
             try:
-                os.unlink(f)
+                stdout, stderr, ret = runShellCommand("tabix", "-p", "vcf", filename)
+                break
             except Exception:
-                pass
+                try:
+                    stdout, stderr, ret = runShellCommand("bcftools", "index", "-f", filename)
+                    break
+                except:
+                    logging.warn("Failed to tabix %s" % filename)
 
-
-# noinspection PyShadowingBuiltins
-def preprocessVCF(
-    input_filename,
-    output_filename,
-    location="",
-    pass_only=True,
-    chrprefix=True,
-    norm=False,
-    regions=None,
-    targets=None,
-    reference="fake_reference_path",
-    filters_only=None,
-    somatic_allele_conversion=False,
-    sample="SAMPLE",
-    filter_nonref=True,
-    convert_gvcf=False,
-    num_threads=4,
-):
-    """Preprocess a VCF + create index
-
-    :param input_filename: the input VCF / BCF / ...
-    :param output_filename: the output VCF
-    :param location: optional location string -- comma separated
-    :param pass_only: only return passing variants
-    :param chrprefix: fix chromosome prefix
-    :param norm: run through bcftools norm to leftshift indels
-    :param regions: specify a subset of regions (traversed using tabix index, which must exist)
-    :param targets: specify a subset of target regions (streaming traversal)
-    :param reference: reference fasta file to use
-    :param filters_only: require a set of filters (overridden by pass_only)
-    :param somatic_allele_conversion: assume the input file is a somatic call file and squash
-                                      all columns into one, putting all FORMATs into INFO
-                                      This is used to treat Strelka somatic files
-                                      Possible values for this parameter:
-                                      True [="half"] / "hemi" / "het" / "hom" / "half"
-                                      to assign one of the following genotypes to the
-                                      resulting sample:  1 | 0/1 | 1/1 | ./1
-    :param sample: name of the output sample column when using somatic_allele_conversion
-    :param filter_nonref: remove any variants genotyped as <NON_REF>
-    """
-    # ToDo: refactor for simplicity and performance
-
-    vargs = [
-        "bcftools",
-        "view",
-        "--threads",
-        str(num_threads),
-        "-O",
-        "v",
-        input_filename,
-        "|",
-    ]
-
-    if convert_gvcf:
-        # prefilter for variant sites (all genome VCF sites have a NON_REF allele, hence use 2 here)
-        vargs += ["bcftools", "view", "-I", "-e", "N_ALT < 2", "-O", "u", "|"]
-        # strip uninteresting details and arrays which prevent allele trimming
-        vargs += [
-            "bcftools",
-            "annotate",
-            "-x",
-            "INFO,^FORMAT/GT,FORMAT/DP,FORMAT/GQ",
-            "-O",
-            "u",
-            "|",
-        ]
-        # trim missing alleles, don't compute the AD/AF fields
-        vargs += ["bcftools", "view", "-a", "-I", "-O", "u", "|"]
-        # remove variants with NON_REF alleles, don't compute the AD/AF fields
-        vargs += [
-            "bcftools",
-            "view",
-            "-I",
-            "-e",
-            'ALT[*] = "<NON_REF>"',
-            "-O",
-            "v",
-            "|",
-        ]
-
-    vargs += ["bcftools", "view", "-O", "v"]
-
-    if filter_nonref:
-        vargs += [
-            "|",
-            "python",
-            "{}/remove_nonref_gt_variants.py".format(scriptDir),
-            "|",
-            "bcftools",
-            "view",
-            "-O",
-            "v",
-        ]
-
-    if type(location) is list:
-        location = ",".join(location)
-
-    if pass_only:
-        vargs += ["-f", "PASS,."]
-    elif filters_only:
-        vargs += ["-f", filters_only]
-
-    if chrprefix:
-        vargs += [
-            "|",
-            "perl",
-            "-pe",
-            "s/^([0-9XYM])/chr$1/",
-            "|",
-            "perl",
-            "-pe",
-            "s/chrMT/chrM/",
-            "|",
-            "bcftools",
-            "view",
-        ]
-
-    if targets:
-        vargs += ["-T", targets, "|", "bcftools", "view"]
-
-    if location:
-        vargs += ["-t", location, "|", "bcftools", "view"]
-
-    if output_filename.endswith("vcf.gz"):
-        int_suffix = "vcf.gz"
-    else:
-        int_suffix = ".bcf"
-
-    tff = tempfile.NamedTemporaryFile(delete=False, suffix=int_suffix)
+    header_line = []
 
     try:
-        # anything needs tabix? if so do an intermediate stage where we
-        # index first
-        if regions:
-            if int_suffix == "vcf.gz":
-                vargs += ["-o", tff.name, "-O", "z"]
-                _, _, _ = runShellCommand(*vargs)
-                _, _, _ = runShellCommand("bcftools", "index", "-t", tff.name)
-            else:
-                vargs += ["-o", tff.name, "-O", "b"]
-                _, _, _ = runShellCommand(*vargs)
-                _, _, _ = runShellCommand("bcftools", "index", tff.name)
-            vargs = ["bcftools", "view", tff.name, "-R", regions]
+        stdout, stderr, ret = runBcftoolsView("-h", filename)
+    except Exception as e:
+        logging.error("Cannot process file %s" % filename)
+        raise e
 
-        if somatic_allele_conversion:
-            if type(somatic_allele_conversion) is not str:
-                somatic_allele_conversion = "half"
-            vargs += [
-                "|",
-                "alleles",
-                "-",
-                "-o",
-                "-.vcf",
-                "--gt",
-                somatic_allele_conversion,
-                "--sample",
-                sample,
-                "|",
-                "bcftools",
-                "view",
-            ]
-
-        if norm:
-            vargs += ["|", "bcftools", "norm", "-f", reference, "-c", "x", "-D"]
-
-        vargs += ["-o", output_filename]
-        if int_suffix == "vcf.gz":
-            vargs += ["-O", "z"]
-            istabix = True
-        else:
-            vargs += ["-O", "b"]
-            istabix = False
-
-        _, _, _ = runShellCommand(*vargs)
-
-        if istabix:
-            _, _, _ = runShellCommand("bcftools", "index", "-t", output_filename)
-        else:
-            _, _, _ = runShellCommand("bcftools", "index", output_filename)
-
-    except Exception as ex:
-        print(
-            "Error running BCFTOOLS; please check your file for compatibility issues issues using vcfcheck"
-        )
-        raise ex
-
-    finally:
-        try:
-            os.unlink(tff.name)
-        except Exception:
-            pass
-        try:
-            os.unlink(tff.name + ".tbi")
-        except Exception:
-            pass
-        try:
-            os.unlink(tff.name + ".csi")
-        except Exception:
-            pass
-
-
-def bedOverlapCheck(filename):
-    """Check for overlaps / out of order in a bed file"""
-    if filename.endswith(".gz"):
-        f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
-    else:
-        f = open(filename, "r", encoding="utf-8")
-    last = -1
-    lines = 1
-    thischr = None
-    for line in f:
-        l = line.split("\t")
-        if len(l) < 3:
+    for line in stdout.splitlines():
+        if not line.strip():
             continue
-        if thischr is not None and thischr != l[0]:
-            last = -1
-        thischr = l[0]
-        if (last - 1) > int(l[1]):
-            logging.warn(
-                "%s has overlapping regions at %s:%i (line %i)"
-                % (filename, l[0], int(l[1]), lines)
-            )
-            return 1
-        last = int(l[2])
-        lines += 1
-    return 0
+        header_line.append(line)
+
+    return header_line
+
+
+def getHeaderAndVariants(filename: str) -> Tuple[List[str], List[List[str]]]:
+    """ Read variants into a variant list
+    
+    Args:
+        filename: VCF filename
+        
+    Returns:
+        Tuple of (header lines, variant records)
+    """
+
+    header_line = []
+    allvariants = []
+
+    try:
+        stdout, stderr, ret = runBcftoolsView(filename)
+    except Exception as e:
+        logging.error("Cannot process file %s" % filename)
+        raise e
+
+    for line in stdout.splitlines():
+        if not line.strip():
+            continue
+
+        if line.startswith("#"):
+            header_line.append(line)
+            continue
+
+        rec = line.split("\t")
+
+        if len(rec) < 8:
+            continue
+
+        allvariants.append(rec)
+
+    return header_line, allvariants
+
+
+def getGA4GHVariants(filename: str, regions: Optional[str] = None) -> List[Dict[str, Any]]:
+    """ Get variant list from pyvcf
+    
+    Args:
+        filename: VCF filename
+        regions: Optional regions to restrict to
+        
+    Returns:
+        List of variant records
+    """
+    from vcf.parser import _Parse
+    import vcf
+
+    if not os.path.exists(filename):
+        raise Exception("File not found: %s" % filename)
+
+    reader = vcf.Reader(filename=filename)
+
+    # Determining sample list here
+    samples = reader.samples
+    logging.info("Using samples %s" % str(samples))
+
+    if len(samples) == 0:
+        raise Exception("No samples in VCF.")
+
+    result = []
+    region_index = 0
+    region_count = 0
+
+    def addVar(record):
+        # TODO check if variant normalisation works as advertised
+        if len(record.REF) > len(record.ALT) and len(record.ALT[0]) > 0 and len(record.REF) > 1:
+            # This looks like a deletion
+            record.REF = record.REF[0:len(record.ALT[0])] + record.REF[len(record.ALT[0]):]
+            record.ALT[0] = record.ALT[0][0:1]
+            record.POS += (len(record.ALT[0]) - 1)
+        varinfo = {
+            "reference": record.REF,
+            "position": record.POS,
+            "info": dict(record.INFO),
+            "id": record.ID,
+            "quality": record.QUAL,
+            "filter": record.FILTER,
+            "calls": []
+        }
+
+        # TODO check if this is the right thing to do with record.ALT
+        if len(record.ALT) == 0 or record.ALT[0] is None:
+            varinfo["alternates"] = ["N"]
+        else:
+            varinfo["alternates"] = [a for a in record.ALT]
+
+        for c in record.samples:
+            # TODO this needs to be changed if we want to use this for true multiallelic variants
+            call = {"genotype": [] if c.gt_alleles is None else c.gt_alleles, "phaseset": c.phased}
+            for x in dir(c.data):
+                if x.startswith("_"):
+                    continue
+                if x == "GT":
+                    continue
+                val = getattr(c.data, x, None)
+
+                if val is None:
+                    call[x.lower()] = None
+                else:
+                    if isinstance(val, list):
+                        if x in ["AD", "PL"]:
+                            val = list(map(int, val))
+                        else:
+                            val = list(map(float, val))
+                    elif x == "GQ":
+                        val = int(val)
+                    else:
+                        # TODO problematic if we need integers here
+                        val = float(val)
+
+                    call[x.lower()] = val
+
+            varinfo["calls"].append(call)
+
+        varinfo["samples"] = samples
+        varinfo["contig"] = record.CHROM
+
+        return varinfo
+
+    # read regional data
+    if regions is not None:
+        reader2 = vcf.Reader(filename=filename)
+        regs = regions.split(",")
+        region_count = len(regs)
+        for r in regs:
+            region_index += 1
+            logging.info("%i / %i : Processing region %s" % (region_index, region_count, r))
+            try:
+                for record in reader2.fetch(r):
+                    result.append(addVar(record))
+            except ValueError:
+                logging.warn("No variants in region %s" % r)
+    else:
+        # read all data
+        for record in reader:
+            result.append(addVar(record))
+
+    return result

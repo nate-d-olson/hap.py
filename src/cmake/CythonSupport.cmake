@@ -4,41 +4,47 @@
 
 include(CMakeParseArguments)
 
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+find_package(Python COMPONENTS Interpreter Development NumPy REQUIRED)
 
 # Find Cython executable for Python 3
-execute_process(
-    COMMAND ${Python3_EXECUTABLE} -c "import Cython.Build; print(Cython.Build.cython_executable)"
-    OUTPUT_VARIABLE CYTHON_EXECUTABLE
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
-)
+# if(NOT CYTHON_EXECUTABLE)
+#     execute_process(
+#         COMMAND ${Python_EXECUTABLE} -c "import Cython.Build; print(Cython.Build)"
+#         OUTPUT_VARIABLE CYTHON_EXECUTABLE
+#         OUTPUT_STRIP_TRAILING_WHITESPACE
+#         ERROR_QUIET
+#     )
+# endif()
 
 if(NOT CYTHON_EXECUTABLE)
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} -c "import sys; sys.stdout.write(sys.exec_prefix)"
+        COMMAND ${Python_EXECUTABLE} -c "import sys; sys.stdout.write(sys.exec_prefix)"
         OUTPUT_VARIABLE PYTHON_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    find_program(CYTHON_EXECUTABLE 
-        NAMES cython cython.py cython3
-        HINTS ${PYTHON_PREFIX}/bin
-    )
+    # find_program(CYTHON_EXECUTABLE 
+    #     NAMES cython cython.py cython3
+    #     HINTS ${PYTHON_PREFIX}/bin
+    # )
 endif()
 
+
+
 if(NOT CYTHON_EXECUTABLE)
-    message(FATAL_ERROR "Cython not found. Please install Cython for Python 3.")
+    set(CYTHON_EXECUTABLE "${PYTHON_PREFIX}/bin/cython")
+    message(STATUS "Using hardcoded Cython executable: ${CYTHON_EXECUTABLE}")
 endif()
 
 message(STATUS "Found Cython: ${CYTHON_EXECUTABLE}")
 
 # Detect NumPy include directory
-if(Python3_NumPy_FOUND)
-    set(NUMPY_INCLUDE_DIR "${Python3_NumPy_INCLUDE_DIRS}")
-    message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
-else()
-    message(WARNING "NumPy headers not found. Some Cython modules may not build correctly.")
-endif()
+# if(Python3_NumPy_FOUND)
+set(NUMPY_INCLUDE_DIR "${Python_NumPy_INCLUDE_DIRS}")
+include_directories(${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
+message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+# else()
+    # message(WARNING "NumPy headers not found. Some Cython modules may not build correctly.")
+# endif()
 
 # Function to add a Cython module
 function(add_cython_module _name _source)

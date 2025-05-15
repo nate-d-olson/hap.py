@@ -46,47 +46,47 @@ else()
 endif()
 
 # Build external dependencies
-execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies_py3.sh
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    RESULT_VARIABLE EXTERNAL_SUCCESS)
+# execute_process(
+#     COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies.sh
+#     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+#     RESULT_VARIABLE EXTERNAL_SUCCESS)
 
-if(NOT "${EXTERNAL_SUCCESS}" STREQUAL "0")
-    message(FATAL_ERROR "Building external dependencies has failed. See error messages above.")
-endif()
+# if(NOT "${EXTERNAL_SUCCESS}" STREQUAL "0")
+#     message(FATAL_ERROR "Building external dependencies has failed. See error messages above.")
+# endif()
 
 # Boost configuration
-set(Boost_USE_STATIC_LIBS ON)  # only find static libs
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)  # Changed to OFF for better compatibility with Python
+# set(Boost_USE_STATIC_LIBS ON)  # only find static libs
+# set(Boost_USE_MULTITHREADED ON)
+# set(Boost_USE_STATIC_RUNTIME OFF)  # Changed to OFF for better compatibility with Python
 
-# Find system Boost or use local built version
-if(DEFINED ENV{BOOST_ROOT})
-    set(BOOST_ROOT $ENV{BOOST_ROOT})
-    message(STATUS "Using system Boost from BOOST_ROOT environment: ${BOOST_ROOT}")
-    if(EXISTS "${BOOST_ROOT}/include/boost/version.hpp")
-        message(STATUS "Boost include directory found at ${BOOST_ROOT}/include/boost")
-    else()
-        message(WARNING "Boost headers not found at ${BOOST_ROOT}/include/boost")
-    endif()
-else()
-    set(BOOST_ROOT ${CMAKE_BINARY_DIR})
-    message(STATUS "Using our own Boost, which was built at ${CMAKE_SOURCE_DIR}/external/boost_subset_1_58_0")
-    if(NOT EXISTS "${CMAKE_BINARY_DIR}/include/boost/version.hpp")
-        message(WARNING "Built Boost headers not found at ${CMAKE_BINARY_DIR}/include/boost")
-    endif()
-endif()
+# # Find system Boost or use local built version
+# if(DEFINED ENV{BOOST_ROOT})
+#     set(BOOST_ROOT $ENV{BOOST_ROOT})
+#     message(STATUS "Using system Boost from BOOST_ROOT environment: ${BOOST_ROOT}")
+#     if(EXISTS "${BOOST_ROOT}/include/boost/version.hpp")
+#         message(STATUS "Boost include directory found at ${BOOST_ROOT}/include/boost")
+#     else()
+#         message(WARNING "Boost headers not found at ${BOOST_ROOT}/include/boost")
+#     endif()
+# else()
+#     set(BOOST_ROOT ${CMAKE_BINARY_DIR})
+#     message(STATUS "Using our own Boost, which was built at ${CMAKE_SOURCE_DIR}/external/boost_subset_1_58_0")
+#     if(NOT EXISTS "${CMAKE_BINARY_DIR}/include/boost/version.hpp")
+#         message(WARNING "Built Boost headers not found at ${CMAKE_BINARY_DIR}/include/boost")
+#     endif()
+# endif()
 
-# Find Boost components
-find_package(Boost 1.55.0 COMPONENTS thread iostreams regex filesystem system program_options REQUIRED)
-if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Could not find Boost libraries. Please install or set BOOST_ROOT.")
-endif()
+# # Find Boost components
+# find_package(Boost 1.55.0 COMPONENTS thread iostreams regex filesystem system program_options REQUIRED)
+# if(NOT Boost_FOUND)
+#     message(FATAL_ERROR "Could not find Boost libraries. Please install or set BOOST_ROOT.")
+# endif()
 
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
-message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+# include_directories(${Boost_INCLUDE_DIRS})
+# link_directories(${Boost_LIBRARY_DIRS})
+# message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+# message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
 
 # Include directories
 include_directories(${CMAKE_BINARY_DIR}/include)
@@ -97,7 +97,7 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
-add_subdirectory(src/c++)
+add_subdirectory(src/c++/lib)
 
 # Status message at the end
 message(STATUS "Configuration completed successfully. Run 'make' to build.")

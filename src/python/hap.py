@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -26,702 +26,602 @@
 import argparse
 import json
 import logging
-import multiprocessing
 import os
+import subprocess
 import sys
 import tempfile
-import time
 import traceback
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+scriptDir = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3")))
 
-import Haplo.blocksplit
-import Haplo.gvcf2bed
-import Haplo.partialcredit
-import Haplo.quantify
-import Haplo.scmp
-import Haplo.vcfeval
-import Haplo.xcmp
-import pre
-import qfy
 import Tools
-from Tools import bcftools, vcfextract
-from Tools.bcftools import bedOverlapCheck
-from Tools.fastasize import fastaContigLengths
-from Tools.parallel import getPool, runParallel
-from Tools.sessioninfo import sessionInfo
+from Tools import vcfextract
 
 
-def main():
+def parseArgs():
+    """Parse command line arguments"""
+
     parser = argparse.ArgumentParser("Haplotype Comparison")
 
-    # input
     parser.add_argument(
-        "-v",
-        "--version",
-        dest="version",
-        action="store_true",
-        help="Show version number and exit.",
+        "ref", help="Reference sequence file (FASTA)", default=Tools.defaultReference()
     )
 
-    parser.add_argument(
-        "-r", "--reference", dest="ref", default=None, help="Specify a reference file."
-    )
+    parser.add_argument("query", help="Query VCF file")
 
-    # output
+    parser.add_argument("truth", help="Truth VCF file")
+
     parser.add_argument(
         "-o",
-        "--report-prefix",
-        dest="reports_prefix",
+        "--reports-prefix",
+        dest="prefix",
+        help="Prefix for report output files",
         default=None,
-        help="Filename prefix for report output.",
     )
+
     parser.add_argument(
-        "--scratch-prefix",
-        dest="scratch_prefix",
+        "-V",
+        "--verbose",
+        dest="verbose",
+        help="Increase verbosity of output",
+        action="count",
+        default=0,
+    )
+
+    parser.add_argument(
+        "--logfile",
+        dest="logfile",
+        help="Write logging information into file rather than to stderr",
         default=None,
-        help="Directory for scratch files.",
     )
+
     parser.add_argument(
-        "--keep-scratch",
-        dest="delete_scratch",
-        default=True,
+        "--no-write-counts",
+        dest="writeCounts",
+        help="Do not write count metrics for feature stratification",
         action="store_false",
-        help="Filename prefix for scratch report output.",
+        default=True,
     )
 
-    # add quantification args
-    qfy.updateArgs(parser)
+    parser.add_argument(
+        "-r",
+        "--regions",
+        dest="regions",
+        help="Regions to restrict analysis to, must have corresponding .bed file. "
+        ", separated. e.g. chr1,chr2.",
+        default=None,
+    )
 
-    # control preprocessing
-    pre.updateArgs(parser)
     parser.add_argument(
-        "--convert-gvcf-truth",
-        dest="convert_gvcf_truth",
-        action="store_true",
-        default=False,
-        help="Convert the truth set from genome VCF format to a VCF before processing.",
+        "-R",
+        "--regions-file",
+        dest="regions_file",
+        help="Restrict analysis to given (sparse) regions. The file must be a BED file.",
+        default=None,
     )
+
     parser.add_argument(
-        "--convert-gvcf-query",
-        dest="convert_gvcf_query",
-        action="store_true",
-        default=False,
-        help="Convert the query set from genome VCF format to a VCF before processing.",
+        "-t",
+        "--type",
+        dest="type",
+        help="Variant types and regions to include, e.g. INDEL, SNP, ALL, NOCALL. "
+        "Specify multiple types with , or use ALL to include everything",
+        default="ALL",
     )
+
     parser.add_argument(
-        "--preprocess-truth",
-        dest="preprocessing_truth",
-        action="store_true",
-        default=False,
-        help="Preprocess truth file with same settings as query (default is to accept truth in original format).",
+        "-f",
+        "--feature-table",
+        nargs="+",
+        dest="feature_table",
+        help="Features to annotate variants with and stratify on.",
+        default=[],
     )
+
+    parser.add_argument(
+        "-m",
+        "--stratification",
+        dest="stratification",
+        help="List of stratifications, comma-separated (super- and subfeatures "
+        "are joined by :). For example: CONF,CONF:HET.",
+    )
+
+    parser.add_argument(
+        "--confident-regions-truth",
+        dest="conf_truth",
+        help="Confident call regions in truth (e.g. from GIAB), a BED file.",
+    )
+
+    parser.add_argument(
+        "--confident-regions-query",
+        dest="conf_query",
+        help="Confident call regions in query (e.g. from GIAB), a BED file.",
+    )
+
+    parser.add_argument(
+        "--no-optimize",
+        dest="optimize",
+        help="Do not use DP optimization, ensures optimal Answer at the expense "
+        "of runtime for complex regions.",
+        action="store_false",
+        default=True,
+    )
+
+    parser.add_argument(
+        "-X",
+        "--roc",
+        dest="roc",
+        help="Enable ROC computation (use QUAL for roc-feature to take the VCF QUAL)",
+        default=None,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--roc-filter",
+        dest="roc_filter",
+        help="When using -X, info field to use, e.g. GQX",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--roc-delta",
+        dest="roc_delta",
+        help="When using -X, precision delta for ROC (for faster ROC calculation)",
+        default=0.1,
+        type=float,
+    )
+
+    parser.add_argument(
+        "-P",
+        "--preprocessed",
+        dest="preprocessing",
+        help=(
+            "Don't preprocess, use these files (comma-separated: "
+            "truth.vcf.gz,query.vcf.gz[,regions.bed.gz])"
+        ),
+        default=None,
+    )
+
     parser.add_argument(
         "--usefiltered-truth",
         dest="usefiltered_truth",
+        help="Use filtered variant calls in truth file (by default, only PASS is used)",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--usefiltered-query",
+        dest="usefiltered_query",
+        help="Use filtered variant calls in query file (by default, only PASS is used)",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--no-leftshift",
+        dest="leftshift",
+        help="Don't left-shift variants before comparison (default is to left-shift)",
+        action="store_false",
+        default=True,
+    )
+
+    parser.add_argument(
+        "--location-features",
+        dest="location_features",
+        help=(
+            "Create a 3-column feature table with a feature name / contig / region; "
+            "this can be used to create stratifications for each contig / region combination"
+        ),
+        default=None,
+    )
+
+    parser.add_argument(
+        "--no-decompose",
+        dest="decompose",
+        help="Don't decompose complex variants (i.e. MNPs, \
+                           complex substitutions with length > 1)",
+        action="store_false",
+        default=True,
+    )
+
+    parser.add_argument(
+        "--bcftools-norm",
+        dest="bcftools_norm",
+        help="Use bcftools norm instead of our internal implementation",
         action="store_true",
         default=False,
-        help="Use filtered variant calls in truth file (by default, only PASS calls in the truth file are used)",
     )
+
     parser.add_argument(
-        "--preprocessing-window-size",
-        dest="preprocess_window",
-        default=10000,
-        type=int,
-        help="Preprocessing window size (variants further apart than that size are not expected to interfere).",
+        "--python-only",
+        dest="pythononly",
+        help="Use hap.py Python implementation (not the quantify executable)",
+        action="store_true",
+        default=False,
     )
+
     parser.add_argument(
         "--adjust-conf-regions",
-        dest="preprocessing_truth_confregions",
-        action="store_true",
-        default=True,
-        help="Adjust confident regions to include variant locations. Note this will only include variants "
-        "that are included in the CONF regions already when viewing with bcftools; this option only "
-        "makes sure insertions are padded correctly in the CONF regions (to capture these, both the "
-        "base before and after must be contained in the bed file).",
-    )
-    parser.add_argument(
-        "--no-adjust-conf-regions",
-        dest="preprocessing_truth_confregions",
-        action="store_false",
-        help="Do not adjust confident regions for insertions.",
-    )
-
-    # detailed control of comparison
-    parser.add_argument(
-        "--unhappy",
-        "--no-haplotype-comparison",
-        dest="no_hc",
+        dest="adjust_conf_regions",
+        help="Automatically adjust confident regions based on distance \
+                           from global / filtered variants",
         action="store_true",
         default=False,
-        help="Disable haplotype comparison (only count direct GT matches as TP).",
     )
 
     parser.add_argument(
-        "-w",
-        "--window-size",
-        dest="window",
-        default=50,
-        type=int,
-        help="Minimum distance between variants such that they fall into the same superlocus.",
-    )
-
-    # xcmp-specific stuff
-    parser.add_argument(
-        "--xcmp-enumeration-threshold",
-        dest="max_enum",
-        default=16768,
-        type=int,
-        help="Enumeration threshold / maximum number of sequences to enumerate per block.",
+        "--unhappy",
+        dest="unhappy",
+        help="Use legacy bcftools-based comparison for platform testing purposes",
+        action="store_true",
+        default=False,
     )
 
     parser.add_argument(
-        "--xcmp-expand-hapblocks",
-        dest="hb_expand",
-        default=30,
-        type=int,
-        help="Expand haplotype blocks by this many basepairs left and right.",
-    )
-    parser.add_argument(
-        "--threads",
-        dest="threads",
-        default=multiprocessing.cpu_count(),
-        type=int,
-        help="Number of threads to use.",
+        "--lose",
+        dest="lose",
+        help="Set this to enable partial credit for heterozygous calls (diploid test)",
+        default=0,
+        type=float,
     )
 
     parser.add_argument(
         "--engine",
         dest="engine",
+        help="Comparison engine to use.",
         default="xcmp",
         choices=["xcmp", "vcfeval", "scmp-somatic", "scmp-distance"],
-        help="Comparison engine to use.",
     )
 
     parser.add_argument(
         "--engine-vcfeval-path",
-        dest="engine_vcfeval",
-        required=False,
-        default=Haplo.vcfeval.findVCFEval(),
-        help='This parameter should give the path to the "rtg" executable. '
-        "The default is %s" % Haplo.vcfeval.findVCFEval(),
+        dest="vcfeval_path",
+        help="Path to RTG Tools vcfeval executable",
+        default=None,
     )
 
     parser.add_argument(
         "--engine-vcfeval-template",
-        dest="engine_vcfeval_template",
-        required=False,
-        help="Vcfeval needs the reference sequence formatted in its own file format "
-        "(SDF -- run rtg format -o ref.SDF ref.fa). You can specify this here "
-        "to save time when running hap.py with vcfeval. If no SDF folder is "
-        "specified, hap.py will create a temporary one.",
-    )
-
-    parser.add_argument(
-        "--scmp-distance",
-        dest="engine_scmp_distance",
-        required=False,
-        default=30,
-        type=int,
-        help="For distance-based matching (vcfeval and scmp), this is the distance between variants to use.",
-    )
-
-    parser.add_argument(
-        "--lose-match-distance",
-        dest="engine_scmp_distance",
-        required=False,
-        type=int,
-        help="For distance-based matching (vcfeval and scmp), this is the distance between variants to use.",
-    )
-
-    if Tools.has_sge:
-        parser.add_argument(
-            "--force-interactive",
-            dest="force_interactive",
-            default=False,
-            action="store_true",
-            help="Force running interactively (i.e. when JOB_ID is not in the environment)",
-        )
-
-    parser.add_argument("_vcfs", help="Two VCF files.", default=[], nargs="*")
-
-    parser.add_argument(
-        "--logfile",
-        dest="logfile",
+        dest="vcfeval_template",
+        help="Path to RTG Tools SDF template",
         default=None,
-        help="Write logging information into file rather than to stderr",
     )
 
-    verbosity_options = parser.add_mutually_exclusive_group(required=False)
-
-    verbosity_options.add_argument(
-        "--verbose",
-        dest="verbose",
-        default=False,
+    parser.add_argument(
+        "--preserveAllVariants",
+        dest="preserve_all_variants",
+        help="Use --preserve-all-variants VCFeval setting (take the first truth match "
+        "for each query, using the match number as allele count.)",
         action="store_true",
-        help="Raise logging level from warning to info.",
-    )
-
-    verbosity_options.add_argument(
-        "--quiet",
-        dest="quiet",
         default=False,
+    )
+
+    parser.add_argument(
+        "--threads",
+        dest="threads",
+        help="Number of threads to use",
+        default=multiprocessing.cpu_count(),
+    )
+
+    parser.add_argument(
+        "--scratch-prefix",
+        dest="scratch_prefix",
+        help="Directory for scratch files",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--output-vtc",
+        dest="output_vtc",
+        help="Write variant compare outputs in VTC format if prefix is specified",
         action="store_true",
-        help="Set logging level to output errors only.",
+        default=False,
     )
 
-    args, unknown_args = parser.parse_known_args()
-
-    if not Tools.has_sge:
-        args.force_interactive = True
-
-    if args.verbose:
-        loglevel = logging.INFO
-    elif args.quiet:
-        loglevel = logging.ERROR
-    else:
-        loglevel = logging.WARNING
-
-    # reinitialize logging
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-    logging.basicConfig(
-        filename=args.logfile,
-        format="%(asctime)s %(levelname)-8s %(message)s",
-        level=loglevel,
+    parser.add_argument(
+        "--gender",
+        dest="gender",
+        help="Gender, determines how to handle X/Y",
+        default="female",
+        choices=["male", "female", "auto", "none"],
     )
 
-    # remove some safe unknown args
-    unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
-    if len(sys.argv) < 2 or len(unknown_args) > 0:
-        if unknown_args:
-            logging.error("Unknown arguments specified : %s " % str(unknown_args))
-        parser.print_help()
-        exit(1)
+    parser.add_argument(
+        "--window-size",
+        dest="window",
+        help="Preprocessing window size. Set this to 0 to disable windowing.",
+        default=20000,
+        type=int,
+    )
 
-    print("Hap.py %s" % Tools.version)
-    if args.version:
-        exit(0)
+    parser.add_argument(
+        "--xcmp-enumeration-threshold",
+        dest="enum_threshold",
+        help=(
+            "Maximum number of enumerations per window for xcmp (use > 0 to disable "
+            "window-based decomposition of difficult regions)."
+        ),
+        default=10,
+        type=int,
+    )
 
-    if args.roc:
-        args.write_vcf = True
+    parser.add_argument(
+        "--pass-only",
+        dest="pass_only",
+        help="Keep only PASS variants",
+        action="store_true",
+        default=False,
+    )
 
-    # sanity-check regions bed file (HAP-57)
-    if args.regions_bedfile:
-        logging.info("Checking input regions.")
-        if bedOverlapCheck(args.regions_bedfile):
-            raise Exception(
-                "The regions bed file (specified using -R) has overlaps, this will not work with xcmp."
-                " You can either use -T, or run the file through bedtools merge"
+    parser.add_argument(
+        "--fixchr",
+        dest="fixchr",
+        help="Add chr prefix to VCF records where needed",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--no-fixchr",
+        dest="fixchr",
+        help="Do not fix chr prefix",
+        action="store_false",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--set-globals",
+        dest="globals",
+        help="Set global flagss for preprocessing",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--force-interactive",
+        dest="forceinteractive",
+        help="Force to run interactively, i.e. do not submit to SGE",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--force-overwrite",
+        dest="forceoverwrite",
+        help="Force to overwrite existing result files.",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--preprocess-truth",
+        dest="preprocess_truth",
+        help=(
+            "Preprocessing flag string for truth, e.g. DECOMPOSE,\
+                            NO_COMPLEX_BRANCH,NO_LEFTSHIFT"
+        ),
+        default=None,
+    )
+
+    parser.add_argument(
+        "--preprocess-query",
+        dest="preprocess_query",
+        help=(
+            "Preprocessing flag string for query, e.g. DECOMPOSE,\
+                            NO_COMPLEX_BRANCH,NO_LEFTSHIFT"
+        ),
+        default=None,
+    )
+
+    parser.add_argument(
+        "--preprocess-window",
+        dest="preprocess_window",
+        help="Window size for preprocessing",
+        type=int,
+        default=1000,
+    )
+
+    parser.add_argument(
+        "--write-vcf",
+        dest="write_vcf",
+        help="Write annotated VCF file for debugging",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--output-vtc-max-size",
+        dest="output_vtc_max_size",
+        help="Maximum size for output VTC file",
+        default=2048,
+        type=int,
+    )
+
+    parser.add_argument(
+        "--write-counts",
+        dest="write_counts",
+        help="Write count metrics for feature stratification",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--false-positives",
+        dest="false_positives",
+        help="Suppress false positives from output, taking the given BED file as truth",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--qq-plot",
+        dest="qq_plot",
+        help=(
+            "Make Q-Q plots for all stratifications; "
+            "this only works when false_positives is given."
+        ),
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--no-fixchr-truth",
+        dest="fixchr_truth",
+        help="Do not fix chr prefixes in truth",
+        action="store_false",
+        default=True,
+    )
+
+    parser.add_argument(
+        "--no-fixchr-query",
+        dest="fixchr_query",
+        help="Do not fix chr prefixes in query",
+        action="store_false",
+        default=True,
+    )
+
+    result = parser.parse_args()
+
+    # check engine options
+
+    if result.engine == "vcfeval":
+        if not result.vcfeval_path:
+            parser.error(
+                "Path to vcfeval (--engine-vcfeval-path) required when engine=vcfeval"
+            )
+        if not os.path.exists(result.vcfeval_path):
+            parser.error("RTG Tools vcfeval not found at %s" % result.vcfeval_path)
+
+        if not result.vcfeval_template:
+            parser.error(
+                "Path to vcfeval template (--engine-vcfeval-template) required when engine=vcfeval"
+            )
+        if not os.path.exists(result.vcfeval_template):
+            parser.error(
+                "RTG Tools vcfeval template not found at %s" % result.vcfeval_template
             )
 
-    if args.fp_bedfile and not os.path.exists(args.fp_bedfile):
-        raise Exception("FP/confident call region bed file does not exist.")
-
-    if not args.force_interactive and "JOB_ID" not in os.environ:
-        parser.print_help()
-        raise Exception("Please qsub me so I get approximately 1 GB of RAM per thread.")
-
-    if not args.ref:
-        args.ref = Tools.defaultReference()
-
-    if not args.ref or not os.path.exists(args.ref):
-        raise Exception("Please specify a valid reference path using -r.")
-
-    if not args.reports_prefix:
-        raise Exception("Please specify an output prefix using -o ")
-
-    if not os.path.exists(os.path.dirname(os.path.abspath(args.reports_prefix))):
-        raise Exception(
-            "The output path does not exist. Please specify a valid output path and prefix using -o"
+    elif result.engine != "xcmp" and not result.unhappy:
+        parser.error(
+            "Engine %s is not supported in this version of hap.py" % result.engine
         )
 
-    if os.path.basename(args.reports_prefix) == "" or os.path.isdir(
-        args.reports_prefix
-    ):
-        raise Exception(
-            "The output path should specify a file name prefix. Please specify a valid output path "
-            "and prefix using -o. For example, -o /tmp/test will create files named /tmp/test* ."
-        )
+    if result.unhappy and result.engine != "xcmp":
+        parser.error("--unhappy can only be used with the xcmp engine")
 
-    # noinspection PyProtectedMember
-    if not args._vcfs or len(args._vcfs) != 2:
-        raise Exception("Please specify exactly two input VCFs.")
+    if result.threads:
+        result.threads = int(result.threads)
 
-    # noinspection PyProtectedMember
-    args.vcf1 = args._vcfs[0]
-    # noinspection PyProtectedMember
-    args.vcf2 = args._vcfs[1]
+    if result.type:
+        result.type = result.type.upper()
 
-    if not os.path.exists(args.vcf1):
-        raise Exception("Input file %s does not exist." % args.vcf1)
-    if not os.path.exists(args.vcf2):
-        raise Exception("Input file %s does not exist." % args.vcf2)
+    # if no regions were given, this will look at all of them.
+    if result.regions:
+        # regions are specified as VCF chrom IDs
+        result.regions = result.regions.split(",")
 
-    tempfiles = []
+    return result
 
-    # turn on allele conversion
-    if (
-        args.engine == "scmp-somatic" or args.engine == "scmp-distance"
-    ) and not args.somatic_allele_conversion:
-        args.somatic_allele_conversion = True
-        if args.engine == "scmp-distance":
-            args.somatic_allele_conversion = "first"
 
-    # somatic allele conversion should also switch off decomposition
-    if args.somatic_allele_conversion and (
-        "-D" not in sys.argv and "--decompose" not in sys.argv
-    ):
-        args.preprocessing_decompose = False
-
-    # xcmp/scmp support bcf; others don't
-    if args.engine in ["xcmp", "scmp-somatic", "scmp-distance"] and (
-        args.bcf or (args.vcf1.endswith(".bcf") and args.vcf2.endswith(".bcf"))
-    ):
-        internal_format_suffix = ".bcf"
-    else:
-        internal_format_suffix = ".vcf.gz"
-
-    # write session info and args file
-    session = sessionInfo()
-    session["final_args"] = args.__dict__
-    with open(args.reports_prefix + ".runinfo.json", "w") as sessionfile:
-        json.dump(session, sessionfile)
-
+def main():
+    """Main method"""
     try:
-        logging.info("Comparing %s and %s" % (args.vcf1, args.vcf2))
+        args = parseArgs()
 
-        logging.info("Preprocessing truth: %s" % args.vcf1)
-        starttime = time.time()
+        # Default threshold for ROC
+        flt_threshold = -1
 
-        ttf = tempfile.NamedTemporaryFile(
-            delete=False,
-            dir=args.scratch_prefix,
-            prefix="truth.pp",
-            suffix=internal_format_suffix,
-        )
-        ttf.close()
+        # how verbose?
+        if args.verbose == 0:
+            loglevel = logging.WARN
+        elif args.verbose == 1:
+            loglevel = logging.INFO
+        else:
+            loglevel = logging.DEBUG
+
+        if args.logfile:
+            logging.basicConfig(filename=args.logfile, level=loglevel)
+        else:
+            logging.basicConfig(level=loglevel)
+
+        logging.getLogger("requests").setLevel(logging.WARNING)
 
         if (
-            args.engine.endswith("somatic")
-            and args.preprocessing_truth
-            and (
-                args.preprocessing_leftshift
-                or args.preprocessing_norm
-                or args.preprocessing_decompose
-            )
+            args.prefix is not None
+            and os.path.exists(args.prefix + ".summary.csv")
+            and not args.forceoverwrite
         ):
-            args.preprocessing_truth = False
-            logging.info("Turning off pre.py preprocessing for somatic comparisons")
-
-        if args.preprocessing_truth:
-            if args.filter_nonref:
-                logging.info("Filtering out any variants genotyped as <NON_REF>")
-
-        ## Only converting truth gvcf to vcf if both arguments are true
-        convert_gvcf_truth = False
-        if args.convert_gvcf_truth or args.convert_gvcf_to_vcf:
-            logging.info("Converting genome VCF to VCF")
-            convert_gvcf_truth = True
-
-        tempfiles.append(ttf.name)
-        tempfiles.append(ttf.name + ".csi")
-        tempfiles.append(ttf.name + ".tbi")
-        args.gender = pre.preprocess(
-            args.vcf1,
-            ttf.name,
-            args.ref,
-            args.locations,
-            None if args.usefiltered_truth else "*",  # filters
-            args.fixchr,
-            args.regions_bedfile,
-            args.targets_bedfile,
-            args.preprocessing_leftshift if args.preprocessing_truth else False,
-            args.preprocessing_decompose if args.preprocessing_truth else False,
-            args.preprocessing_norm if args.preprocessing_truth else False,
-            args.preprocess_window,
-            args.threads,
-            args.gender,
-            args.somatic_allele_conversion,
-            "TRUTH",
-            filter_nonref=args.filter_nonref if args.preprocessing_truth else False,
-            convert_gvcf_to_vcf=convert_gvcf_truth,
-        )
-
-        args.vcf1 = ttf.name
-
-        if args.fp_bedfile and args.preprocessing_truth_confregions:
-            conf_temp = Haplo.gvcf2bed.gvcf2bed(
-                args.vcf1, args.ref, args.fp_bedfile, args.scratch_prefix
+            # check if the output file exists already
+            logging.error(
+                "Results file %s exists already. Use --force-overwrite to overwrite."
+                % (args.prefix + ".summary.csv")
             )
-            tempfiles.append(conf_temp)
-            args.strat_regions.append("CONF_VARS:" + conf_temp)
-
-        h1 = vcfextract.extractHeadersJSON(args.vcf1)
-
-        elapsed = time.time() - starttime
-        logging.info("preprocess for %s -- time taken %.2f" % (args.vcf1, elapsed))
-
-        # once we have preprocessed the truth file we can resolve the locations
-        # doing this here improves the time for query preprocessing below
-        reference_contigs = set(fastaContigLengths(args.ref).keys())
-
-        if not args.locations:
-            # default set of locations is the overlap between truth and reference
-            args.locations = list(reference_contigs & set(h1["tabix"]["chromosomes"]))
-            if not args.locations:
-                raise Exception("Truth and reference have no chromosomes in common!")
-        elif type(args.locations) is not list:
-            args.locations = args.locations.split(",")
-
-        args.locations = sorted(args.locations)
-
-        logging.info("Preprocessing query: %s" % args.vcf2)
-        if args.filter_nonref:
-            logging.info("Filtering out any variants genotyped as <NON_REF>")
-
-        ## Only converting truth gvcf to vcf if both arguments are true
-        convert_gvcf_query = False
-        if args.convert_gvcf_query or args.convert_gvcf_to_vcf:
-            logging.info("Converting genome VCF to VCF")
-            convert_gvcf_query = True
-
-        starttime = time.time()
-
-        if args.pass_only:
-            filtering = "*"
-        else:
-            filtering = args.filters_only
-
-        qtf = tempfile.NamedTemporaryFile(
-            delete=False,
-            dir=args.scratch_prefix,
-            prefix="query.pp",
-            suffix=internal_format_suffix,
-        )
-        qtf.close()
-        tempfiles.append(qtf.name)
-        tempfiles.append(qtf.name + ".csi")
-        tempfiles.append(qtf.name + ".tbi")
-
-        if args.engine.endswith("somatic") and (
-            args.preprocessing_leftshift
-            or args.preprocessing_norm
-            or args.preprocessing_decompose
-        ):
-            args.preprocessing_leftshift = False
-            args.preprocessing_norm = False
-            args.preprocessing_decompose = False
-            logging.info(
-                "Turning off pre.py preprocessing (query) for somatic comparisons"
-            )
-
-        pre.preprocess(
-            args.vcf2,
-            qtf.name,
-            args.ref,
-            str(",".join(args.locations)),
-            filtering,
-            args.fixchr,
-            args.regions_bedfile,
-            args.targets_bedfile,
-            args.preprocessing_leftshift,
-            args.preprocessing_decompose,
-            args.preprocessing_norm,
-            args.preprocess_window,
-            args.threads,
-            args.gender,  # same gender as truth above
-            args.somatic_allele_conversion,
-            "QUERY",
-            filter_nonref=args.filter_nonref,
-            convert_gvcf_to_vcf=convert_gvcf_query,
-        )
-
-        args.vcf2 = qtf.name
-        h2 = vcfextract.extractHeadersJSON(args.vcf2)
-
-        elapsed = time.time() - starttime
-        logging.info("preprocess for %s -- time taken %.2f" % (args.vcf2, elapsed))
-
-        if not h1["tabix"]:
-            raise Exception("Truth file is not indexed after preprocesing.")
-
-        if not h2["tabix"]:
-            raise Exception("Query file is not indexed after preprocessing.")
-
-        for _xc in args.locations:
-            if _xc not in h2["tabix"]["chromosomes"]:
-                logging.warn("No calls for location %s in query!" % _xc)
-
-        pool = getPool(args.threads)
-        if args.threads > 1 and args.engine == "xcmp":
-            logging.info("Running using %i parallel processes." % args.threads)
-
-            # find balanced pieces
-            # cap parallelism at 64 since otherwise bcftools concat below might run out
-            # of file handles
-            args.pieces = min(args.threads, 64)
-            res = runParallel(
-                pool, Haplo.blocksplit.blocksplitWrapper, args.locations, args
-            )
-
-            if None in res:
-                raise Exception("One of the blocksplit processes failed.")
-
-            tempfiles += res
-
-            args.locations = []
-            for f in res:
-                with open(f) as fp:
-                    for l in fp:
-                        ll = l.strip().split("\t", 3)
-                        if len(ll) < 3:
-                            continue
-                        xchr = ll[0]
-                        start = int(ll[1]) + 1
-                        end = int(ll[2])
-                        args.locations.append("%s:%i-%i" % (xchr, start, end))
-
-        # count variants before normalisation
-        if "samples" not in h1 or not h1["samples"]:
-            raise Exception("Cannot read sample names from truth VCF file")
-
-        if "samples" not in h2 or not h2["samples"]:
-            raise Exception("Cannot read sample names from query VCF file")
-
-        tf = tempfile.NamedTemporaryFile(
-            delete=False,
-            dir=args.scratch_prefix,
-            prefix="hap.py.result.",
-            suffix=internal_format_suffix,
-        )
-        tf.close()
-        tempfiles.append(tf.name)
-        tempfiles.append(tf.name + ".tbi")
-        tempfiles.append(tf.name + ".csi")
-        output_name = tf.name
+            return 1
 
         if args.engine == "xcmp":
-            # do xcmp
-            logging.info("Using xcmp for comparison")
-            res = runParallel(pool, Haplo.xcmp.xcmpWrapper, args.locations, args)
-            tempfiles += [x for x in res if x is not None]  # VCFs
+            # Use hap.py
+            logging.info("Using haplotype comparison engine.")
+            import Haplo.haplotypes
+            import Haplo.happyroc
+            import Haplo.quantify
 
-            if None in res:
-                raise Exception("One of the xcmp jobs failed.")
+            Haplo.quantify.run(args)
 
-            if len(res) == 0:
-                raise Exception(
-                    "Input files/regions do not contain variants (0 haplotype blocks were processed)."
-                )
-
-            # concatenate + index
-            logging.info("Concatenating variants...")
-            runme_list = [x for x in res if x is not None]
-            if len(runme_list) == 0:
-                raise Exception("No outputs to concatenate!")
-
-            logging.info("Concatenating...")
-            bcftools.concatenateParts(output_name, *runme_list)
-            logging.info("Indexing...")
-            bcftools.runBcftools("index", output_name)
-            # passed to quantify
-            args.type = "xcmp"
-            # xcmp extracts whichever field we're using into the QQ info field
-            args.roc_header = args.roc
-            args.roc = "IQQ"
-        elif args.engine == "vcfeval":
-            tempfiles += Haplo.vcfeval.runVCFEval(
-                args.vcf1, args.vcf2, output_name, args
-            )
-            # passed to quantify
-            args.type = "ga4gh"
-        elif args.engine.startswith("scmp"):
-            tempfiles += Haplo.scmp.runSCmp(args.vcf1, args.vcf2, output_name, args)
-            # passed to quantify
-            args.type = "ga4gh"
-        else:
-            raise Exception("Unknown comparison engine: %s" % args.engine)
-
-        if args.preserve_info and args.engine == "vcfeval":
-            # if we use vcfeval we need to merge the INFO fields back in.
-            tf = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
-            tempfiles.append(tf)
-            print("TRUTH_IN", file=tf)
-            print("QUERY_IN", file=tf)
-            tf.close()
-            info_file = tempfile.NamedTemporaryFile(suffix=".vcf.gz", delete=False)
-            tempfiles.append(info_file.name)
-            info_file.close()
-
-            bcftools.runBcftools(
-                "merge",
-                args.vcf1,
-                args.vcf2,
-                "--force-samples",
-                "-m",
-                "all",
-                "|",
-                "bcftools",
-                "reheader",
-                "-s",
-                tf.name,
-                "|",
-                "bcftools",
-                "view",
-                "-o",
-                info_file.name,
-                "-O",
-                "z",
-            )
-            bcftools.runBcftools("index", info_file.name)
-
-            merged_info_file = tempfile.NamedTemporaryFile(
-                suffix=".vcf.gz", delete=False
-            )
-            tempfiles.append(merged_info_file.name)
-            merged_info_file.close()
-
-            bcftools.runBcftools(
-                "merge",
-                output_vcf,
-                info_file.name,
-                "-m",
-                "all",
-                "|",
-                "bcftools",
-                "view",
-                "-s",
-                "^TRUTH_IN,QUERY_IN",
-                "-X",
-                "-U",
-                "-o",
-                merged_info_file.name,
-                "-O",
-                "z",
-            )
-            output_name = merged_info_file.name
-
-        args.in_vcf = [output_name]
-        args.runner = "hap.py"
-        qfy.quantify(args)
-
-    finally:
-        if args.delete_scratch:
-            for x in tempfiles:
+            if args.roc:
+                if not args.roc_filter:
+                    logging.info("Creating ROC curve using QUAL")
+                    filter_key = "QUAL"
+                else:
+                    logging.info("Creating ROC curve using %s" % args.roc_filter)
+                    filter_key = args.roc_filter
                 try:
-                    os.remove(x)
-                except Exception:
-                    pass
+                    Haplo.happyroc.makeRocs(
+                        args.prefix, filter_key, args.roc_delta, args.type
+                    )
+                except Exception as e:
+                    logging.error(str(e))
+                    logging.info(
+                        "Could not create ROC file, possibly because there were not enough TP/FP variants."
+                    )
+        elif args.engine == "vcfeval":
+            # Use RTG Tools vcfeval
+            logging.info("Using RTG vcfeval engine.")
+
+            # Long import...
+            from Tools import rtgtools
+
+            rtgtools.runRTGTools(args)
+
+            # Make a happy file
+            vcfextract.makeHappyVCF(args)
+
+            if args.roc:
+                if not args.roc_filter:
+                    logging.info("Creating ROC curve using QUAL")
+                    filter_key = "QUAL"
+                else:
+                    logging.info("Creating ROC curve using %s" % args.roc_filter)
+                    filter_key = args.roc_filter
+                try:
+                    import Haplo.happyroc
+
+                    Haplo.happyroc.makeRocs(
+                        args.prefix, filter_key, args.roc_delta, args.type
+                    )
+                except Exception as e:
+                    logging.error(str(e))
+                    logging.info(
+                        "Could not create ROC file, possibly because there were not enough TP/FP variants."
+                    )
         else:
-            logging.info("Scratch files kept : %s" % (str(tempfiles)))
+            logging.error("Unsupported engine: %s" % args.engine)
+
+        return 0
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc(file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        logging.error(str(e))
-        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+    sys.exit(main())

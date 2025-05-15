@@ -1,6 +1,7 @@
-FROM python:3.12
+FROM mambaorg/micromamba:2.1.1
 
-ENV DEBIAN_FRONTEND=noninteractive
+
+USER root
 
 RUN apt-get update && \
     apt-get install -y \
@@ -15,13 +16,13 @@ RUN apt-get update && \
         pkg-config \     
         software-properties-common \
         wget \
-        zlib1g-dev && \
+        zlib1g-dev \
+        htslib \
+        bcftools \
+        samtools \
+        boost-defaults \
+        libklibc-dev && \
     apt-get clean -y
-
-## Installing cpp dependencies
-RUN git clone https://github.com/microsoft/vcpkg.git
-RUN cd vcpkg && ./bootstrap-vcpkg.sh
-ENV PATH=$PATH:/$(pwd)
 
 # copy git repository into the image
 RUN mkdir -p /opt/hap.py-source
