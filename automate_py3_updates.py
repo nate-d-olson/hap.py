@@ -326,7 +326,7 @@ def main():
     files_updated = 0
     for i, file in enumerate(python_files):
         if i % 10 == 0 and args.verbose:
-            print(f"Processing file {i+1}/{len(python_files)}: {file}")
+            print(f"Processing file {i + 1}/{len(python_files)}: {file}")
         if updater.update_file(file):
             files_updated += 1
 

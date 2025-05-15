@@ -46,9 +46,10 @@ def tableROC(
     Returns:
         A pandas.DataFrame with TP/FP/FN/precision/recall columns.
     """
-    with tempfile.NamedTemporaryFile(delete=False) as tf1, tempfile.NamedTemporaryFile(
-        delete=False
-    ) as tf2:
+    with (
+        tempfile.NamedTemporaryFile(delete=False) as tf1,
+        tempfile.NamedTemporaryFile(delete=False) as tf2,
+    ):
         try:
             fields = [feature_column, label_column]
             if filter_column:

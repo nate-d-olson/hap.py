@@ -72,11 +72,14 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
     if args["haploid_x"]:
         to_run += " --haploid-x 1"
 
-    with tempfile.NamedTemporaryFile(
-        delete=False, prefix="stderr", suffix=".log"
-    ) as tfe, tempfile.NamedTemporaryFile(
-        delete=False, prefix="stdout", suffix=".log"
-    ) as tfo:
+    with (
+        tempfile.NamedTemporaryFile(
+            delete=False, prefix="stderr", suffix=".log"
+        ) as tfe,
+        tempfile.NamedTemporaryFile(
+            delete=False, prefix="stdout", suffix=".log"
+        ) as tfo,
+    ):
         finished = False
         try:
             logging.info(f"Running '{to_run}'")
@@ -139,11 +142,14 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
             f"--window {bargs['dist']} --nblocks {bargs['pieces']} -f 0"
         )
 
-        with tempfile.NamedTemporaryFile(
-            delete=False, prefix="stderr", suffix=".log"
-        ) as tfe, tempfile.NamedTemporaryFile(
-            delete=False, prefix="stdout", suffix=".log"
-        ) as tfo:
+        with (
+            tempfile.NamedTemporaryFile(
+                delete=False, prefix="stderr", suffix=".log"
+            ) as tfe,
+            tempfile.NamedTemporaryFile(
+                delete=False, prefix="stdout", suffix=".log"
+            ) as tfo,
+        ):
             try:
                 logging.info(f"Running '{to_run}'")
                 subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)

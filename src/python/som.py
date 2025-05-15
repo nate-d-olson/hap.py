@@ -477,7 +477,6 @@ def resolve_vtype(args):
 
 
 def summary_from_featuretable(f, args):
-
     # define vtype to match those in hap.py
     vtype = resolve_vtype(args)
 
@@ -731,7 +730,6 @@ def extended_from_featuretable(f, args):
 
 # noinspection PyBroadException
 def main():
-
     args = parse_args()
 
     if args.scratch_prefix:

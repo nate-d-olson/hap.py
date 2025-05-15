@@ -442,7 +442,7 @@ def main():
     # Check each file
     for i, file in enumerate(python_files):
         if i % 10 == 0:
-            print(f"Scanning file {i+1}/{len(python_files)}: {file}")
+            print(f"Scanning file {i + 1}/{len(python_files)}: {file}")
         checker.check_file(file)
 
     # Report results
