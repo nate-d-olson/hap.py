@@ -1,12 +1,22 @@
 # Python 3 Migration Status and Plan
 
-## Current Status (Updated May 15, 2025)
+## Current Status (Updated May 16, 2025)
 
 ### Progress Overview
 - Total Python files: 49
 - Fully migrated files: 35 (71.4%)
 - Partially migrated files: 14 (28.6%)
 - Total remaining issues: 42
+
+### Recent Fixes
+- Fixed 6 files that were truncated during the Python 3 migration:
+  * src/python/Haplo/happyroc.py
+  * src/python/Somatic/Pisces.py
+  * src/python/Somatic/Strelka.py
+  * src/python/Somatic/Varscan2.py
+  * src/python/Tools/bcftools.py
+  * src/python/Tools/roc.py
+- See [TRUNCATED_FILES_REPORT.md](TRUNCATED_FILES_REPORT.md) for details
 
 ### Issues by Type
 1. String/Unicode Issues (56 occurrences)

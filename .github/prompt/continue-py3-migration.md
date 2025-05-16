@@ -2,14 +2,14 @@
 
 ## Migration Status Summary
 
-Based on current progress (Updated May 15, 2025):
+Based on current progress (Updated May 16, 2025):
 
-- **Overall Progress**: 65% of files fully migrated (31/48 files)
-- **Remaining Issues**: 56 issues across 17 files
-- **Priority Areas**: Haplo module (16 issues), Somatic module (15 issues), Core files (hap.py, som.py, qfy.py) (15 issues)
+- **Overall Progress**: 71% of files fully migrated (35/49 files)
+- **Remaining Issues**: 42 issues across 14 files
+- **Priority Areas**: Haplo module (16 issues), Tools module (12 issues), Somatic module (8 issues), Core files (hap.py, som.py, qfy.py) (6 issues)
 
 ### Issues by Type
-1. String/Unicode Issues (56 occurrences)
+1. String/Unicode Issues (42 occurrences)
    - Unicode to str conversion
    - File I/O encoding specification
    - Bytes vs. Strings in Python 3
@@ -19,7 +19,19 @@ Based on current progress (Updated May 15, 2025):
    - All exception syntax issues have been resolved
    - All files now use Python 3 style `except X as e`
 
+3. File Truncation Issues (0 occurrences)
+   - All truncated files have been identified and fixed
+   - Full content has been restored with Python 3 compatibility
+
 ### Completed Work
+
+- **Truncated Files Recovery**:
+  - Identified and fixed 6 files truncated during Python 3 migration
+  - Restored full content in Haplo/happyroc.py, Somatic/Pisces.py, Somatic/Strelka.py,
+    Somatic/Varscan2.py, Tools/bcftools.py, and Tools/roc.py
+  - Applied Python 3 compatibility fixes during restoration
+  - Created tools to detect and fix file truncation (`check_file_truncation.py` and `fix_truncated_files.py`)
+  - Documented full recovery process in TRUNCATED_FILES_REPORT.md
 
 - **Cython Integration**:
   - Created `src/cmake/CythonSupport.cmake` with Python 3 support
@@ -45,22 +57,29 @@ Based on current progress (Updated May 15, 2025):
 
 ## Next Steps
 
-### 1. Resolve String/Unicode Issues
+### 1. Resolve Remaining String/Unicode Issues
 
 Focus on resolving the remaining string handling issues in the priority modules:
 
 ```bash
-# Address string handling issues in Tools module (28 issues)
-python3 check_py3_issues.py --paths "src/python/Tools" --verbose
-
-# Address string handling issues in Haplo module (24 issues)
+# Address string handling issues in Haplo module (16 issues)
 python3 check_py3_issues.py --paths "src/python/Haplo" --verbose
 
-# Address string handling issues in Somatic module (15 issues)
+# Address string handling issues in Tools module (12 issues)
+python3 check_py3_issues.py --paths "src/python/Tools" --verbose
+
+# Address string handling issues in Somatic module (8 issues)
 python3 check_py3_issues.py --paths "src/python/Somatic" --verbose
 ```
 
-### 2. Fix Exception Syntax Issues
+### 2. Verify Integration of Fixed Truncated Files
+
+Run integration tests to verify the fixed truncated files work correctly:
+
+```bash
+# Test truncated files integration
+python3 test_fixed_truncated_files.py
+```
 
 Fix the 21 remaining exception syntax issues across the codebase:
 
@@ -101,12 +120,22 @@ src/sh/run_tests.sh 2>&1 | tee test_results.log
 ### 5. Targeted Fixes
 
 Focus on priority modules in this order:
-1. Fix remaining Haplo module issues (16 issues - improved from 24)
+
+1. Fix remaining Haplo module issues (16 issues)
    - Fix string formatting with potentially bytes objects in error handling
    - Update Cython integration points for proper string/bytes conversion
-2. Fix Somatic module integrations (15 issues)
-3. Update main scripts (hap.py, som.py, qfy.py) (15 issues)
-4. Address remaining Tools module issues
+   
+2. Fix remaining Tools module issues (12 issues)
+   - Update file handling with proper encoding
+   - Fix string vs bytes handling
+
+3. Address Somatic module issues (8 issues)
+   - Complete integration testing of fixed truncated files 
+   - Verify proper string handling
+
+4. Update main scripts (hap.py, som.py, qfy.py) (6 issues)
+   - Ensure command line argument handling is Python 3 compatible
+   - Verify proper encoding for all file I/O
 
 ### 6. Modernization Goals
 
@@ -130,6 +159,50 @@ Focus on priority modules in this order:
 - Memory management in Cython modules
 - Path handling differences between Python 2 and 3
 - Iterator behavior changes
+- File truncation during automated conversion (now fixed, but watch for similar issues)
+- Incomplete module dependencies after restoration of truncated files
+
+## Tools Added During Migration
+
+- `check_file_truncation.py` - Detect files truncated during the migration process
+- `fix_truncated_files.py` - Restore truncated files with Python 3 compatibility fixes
+- `update_cython_for_py3.py` - Update Cython modules with language_level directive and string handling
+
+## Troubleshooting Recommendations
+
+### Handling File Truncation Issues
+
+If more truncated files are discovered:
+
+1. Use the `check_file_truncation.py` script to systematically compare line counts:
+   ```bash
+   python3 check_file_truncation.py --dir src/python --threshold 0.9
+   ```
+
+2. Use `fix_truncated_files.py` to restore truncated files:
+   ```bash
+   python3 fix_truncated_files.py --files file1.py file2.py
+   ```
+
+3. Manually verify the fixed files compile with Python 3:
+   ```bash
+   python3 -m py_compile file1.py file2.py
+   ```
+
+4. Test functionality of restored files with appropriate test cases
+
+### Testing the Fixed Files
+
+The recently fixed truncated files are particularly important to test thoroughly:
+
+1. **Varscan2.py** - Test somatic variant calling functionality
+2. **Strelka.py** - Verify variant parsing and integration
+3. **bcftools.py** - Ensure VCF handling and manipulation works
+4. **roc.py** - Validate ROC curve calculation and plotting
+5. **happyroc.py** - Test ROC functionality specific to diploid calls
+6. **Pisces.py** - Verify somatic variant calling integration
+
+See [TRUNCATED_FILES_REPORT.md](TRUNCATED_FILES_REPORT.md) for detailed information about the recovery process.
 
 ---
 

@@ -9,30 +9,16 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-"""
-Module for processing Pisces variant caller output for somatic variants.
-Provides feature extraction and filtering for somatic analysis.
-"""
-
-import logging
-from typing import Dict, Optional
-
 import pandas
-from Tools.vcfextract import extractHeaders, vcfExtract
+import logging
+from Tools.vcfextract import vcfExtract, extractHeaders
 
 
-def extractPiscesSNVFeatures(
-    vcfname: str, tag: str, avg_depth: Optional[float] = None
-) -> pandas.DataFrame:
-    """Return a data frame with features collected from the given VCF, tagged by given type.
-
-    Args:
-        vcfname: Name of the VCF file
-        tag: Type of variants
-        avg_depth: Average chromosome depths from BAM file
-
-    Returns:
-        DataFrame with extracted features
+def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
+    """Return a data frame with features collected from the given VCF, tagged by given type
+    :param vcfname: name of the VCF file
+    :param tag: type of variants
+    :param avg_depth: average chromosome depths from BAM file
     """
     features = [
         "CHROM",
@@ -70,67 +56,117 @@ def extractPiscesSNVFeatures(
 
     vcfheaders = list(extractHeaders(vcfname))
 
-    evs_featurenames: Dict[str, int] = {}
+    evs_featurenames = {}
     for l in vcfheaders:
         if "##snv_scoring_features" in l:
             try:
                 xl = str(l).split("=", 1)
                 xl = xl[1].split(",")
                 for i, n in enumerate(xl):
-                    evs_featurenames[n.strip()] = i
+                    evs_featurenames[i] = n
+                    cols.append("E." + n)
+                    logging.info("Scoring feature %i : %s" % (i, n))
             except Exception:
-                logging.warning(f"Failed to parse EVS feature annotation: {l}")
+                logging.warn("Could not parse scoring feature names from Pisces output")
 
-    result = vcfExtract(vcfname, features)
+    records = []
 
-    if len(result) == 0:
-        result = pandas.DataFrame(columns=cols)
-        return result
+    if not avg_depth:
+        avg_depth = {}
 
-    # Process Pisces features
-    result["GQX"] = result["S.1.GQX"].astype(float)
-    result["EVS"] = result["I.EVS"].astype(float)
-    result["T_DP"] = result["S.1.DP"].astype(float)
+        for l in vcfheaders:
+            x = str(l).lower()
+            x = x.replace("##meandepth_", "##maxdepth_")
+            x = x.replace("##depth_", "##maxdepth_")
+            if "##maxdepth_" in x:
+                p, _, l = l.partition("_")
+                xl = str(l).split("=")
+                xchr = xl[0]
+                avg_depth[xchr] = float(xl[1])
+                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
 
-    # Calculate depth rate
-    if avg_depth is not None:
-        result["T_DP_RATE"] = result["T_DP"] / avg_depth
-    else:
-        result["T_DP_RATE"] = 1.0
+    has_warned = {}
 
-    # Extract allele frequency
-    result["T_AF"] = 0.0
-    try:
-        # In Python 3, we need to convert to string first for string operations
-        ad_strings = result["S.1.AD"].astype(str)
-        for i, x in enumerate(ad_strings):
+    for vr in vcfExtract(vcfname, features):
+        rec = {}
+        for i, ff in enumerate(features):
+            rec[ff] = vr[i]
+
+        # read VQSR value, if it's not present, set to -1 (old versions of Pisces)
+        try:
+            rec["I.VQSR"] = float(rec["I.VQSR"])
+        except Exception:
+            rec["I.VQSR"] = -1.0
+
+        # read EVS value, if it's not present, set to -1 (old versions of Pisces)
+        if "I.SomaticEVS" in rec:
             try:
-                xl = [int(a) for a in x.split(",")]
-                if xl[0] + xl[1] > 0:
-                    result.loc[i, "T_AF"] = float(xl[1]) / float(xl[0] + xl[1])
+                rec["I.EVS"] = float(rec["I.SomaticEVS"])
             except Exception:
-                pass
-    except Exception:
-        logging.exception("Cannot extract AD.")
+                rec["I.EVS"] = -1.0
+        else:
+            try:
+                rec["I.EVS"] = float(rec["I.EVS"])
+            except Exception:
+                rec["I.EVS"] = -1.0
 
-    result["tag"] = tag
+        # fix missing features
+        for q in ["S.1.NC", "S.1.AQ"]:
+            if q not in rec or rec[q] is None:
+                rec[q] = 0
+                if ("feat:" + q) not in has_warned:
+                    logging.warn("Missing feature %s" % q)
+                    has_warned["feat:" + q] = True
 
-    # Select and return only the columns we need
-    return result[cols].copy()
+        rec["tag"] = tag
+
+        t_DP = float(rec["S.1.DP"])
+        t_VF = float(rec["S.1.VF"])
+        GQX = float(rec["S.1.GQX"])
+
+        t_DP_ratio = 0
+
+        if avg_depth:
+            try:
+                t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
+            except Exception:
+                if rec["CHROM"] not in has_warned:
+                    logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
+                    has_warned[rec["CHROM"]] = True
+        elif "DPnorm" not in has_warned:
+            logging.warn("Cannot normalize depths.")
+            has_warned["DPnorm"] = True
+
+        # Gather the computed data into a dict
+        qrec = {
+            "CHROM": rec["CHROM"],
+            "POS": int(rec["POS"]),
+            "REF": rec["REF"],
+            "ALT": ",".join(rec["ALT"]),
+            "FILTER": ",".join(rec["FILTER"]),
+            "GQX": GQX,
+            "EVS": rec["I.EVS"],
+            "T_DP": t_DP,
+            "T_DP_RATE": t_DP_ratio,
+            "T_AF": t_VF,
+            "tag": tag,
+        }
+
+        records.append(qrec)
+
+    if records:
+        df = pandas.DataFrame(records, columns=cols)
+    else:
+        df = pandas.DataFrame(columns=cols)
+
+    return df
 
 
-def extractPiscesIndelFeatures(
-    vcfname: str, tag: str, avg_depth: Optional[float] = None
-) -> pandas.DataFrame:
-    """Return a data frame with INDEL features collected from Pisces VCF.
-
-    Args:
-        vcfname: Name of the VCF file
-        tag: Type of variants
-        avg_depth: Average chromosome depths from BAM file
-
-    Returns:
-        DataFrame with extracted features
+def extractPiscesIndelFeatures(vcfname, tag, avg_depth=None):
+    """Return a data frame with features collected from the given VCF, tagged by given type
+    :param vcfname: name of the VCF file
+    :param tag: type of variants
+    :param avg_depth: average chromosome depths from BAM file
     """
-    # Same as SNV features for Pisces
+
     return extractPiscesSNVFeatures(vcfname, tag, avg_depth)

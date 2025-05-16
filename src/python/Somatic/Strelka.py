@@ -1,4 +1,3 @@
-#!/usr/bin/env python33
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -10,430 +9,593 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import pandas as pd
+import pandas
 import logging
-import re
-from typing import List, Dict, Any, Optional, Tuple, Union
-
-# Import from our updated Python 3 modules
-from Tools.vcfextract import extract_header
+from Tools.vcfextract import vcfExtract, extractHeaders
 
 
-def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Dict[str, float]] = None) -> pd.DataFrame:
+def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
     """Return a data frame with features collected from the given VCF, tagged by given type
-    
-    Args:
-        vcf_name: name of the VCF file
-        tag: type of variants
-        avg_depth: average chromosome depths from BAM file
-    
-    Returns:
-        DataFrame with extracted features
+    :param vcfname: name of the VCF file
+    :param tag: type of variants
+    :param avg_depth: average chromosome depths from BAM file
     """
-    features = ["CHROM", "POS", "REF", "ALT", "FILTER",
-                "I.NT", "I.SOMATIC", "I.QSS_NT",
-                "I.VQSR", "I.EVS", "I.EVSF", "I.SomaticEVS",
-                "I.SGT", "I.MQ", "I.MQ0",
-                "I.SNVSB", "I.ReadPosRankSum",
-                "S.1.SDP", "S.2.SDP",
-                "S.1.FDP", "S.2.FDP",
-                "S.1.DP", "S.2.DP",
-                "S.1.AU", "S.2.AU",
-                "S.1.CU", "S.2.CU",
-                "S.1.GU", "S.2.GU",
-                "S.1.TU", "S.2.TU"]
+    features = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "I.NT",
+        "I.SOMATIC",
+        "I.QSS_NT",
+        "I.VQSR",
+        "I.EVS",
+        "I.EVSF",
+        "I.SomaticEVS",
+        "I.SGT",
+        "I.MQ",
+        "I.MQ0",
+        "I.SNVSB",
+        "I.ReadPosRankSum",
+        "S.1.SDP",
+        "S.2.SDP",
+        "S.1.FDP",
+        "S.2.FDP",
+        "S.1.DP",
+        "S.2.DP",
+        "S.1.AU",
+        "S.2.AU",
+        "S.1.CU",
+        "S.2.CU",
+        "S.1.GU",
+        "S.2.GU",
+        "S.1.TU",
+        "S.2.TU",
+    ]
 
-    cols = ["CHROM", "POS", "REF", "ALT",
-            "NT", "NT_REF", "QSS_NT", "FILTER", "SomaticEVS", "EVS", "VQSR",
-            "N_FDP_RATE", "T_FDP_RATE", "N_SDP_RATE", "T_SDP_RATE",
-            "N_DP", "T_DP", "N_DP_RATE", "T_DP_RATE",
-            "N_AF", "T_AF",
-            "MQ", "MQ0",
-            "SNVSB",
-            "ReadPosRankSum", "tag"]
+    cols = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "NT",
+        "NT_REF",
+        "QSS_NT",
+        "FILTER",
+        "SomaticEVS",
+        "EVS",
+        "VQSR",
+        "N_FDP_RATE",
+        "T_FDP_RATE",
+        "N_SDP_RATE",
+        "T_SDP_RATE",
+        "N_DP",
+        "T_DP",
+        "N_DP_RATE",
+        "T_DP_RATE",
+        "N_AF",
+        "T_AF",
+        "MQ",
+        "MQ0",
+        "SNVSB",
+        "ReadPosRankSum",
+        "tag",
+    ]
 
-    # Extract headers from the VCF file
-    vcf_headers = extract_header(vcf_name, extract_columns=False)
-    
-    # Process header information to find EVS features
+    vcfheaders = list(extractHeaders(vcfname))
+
     evs_featurenames = {}
-    for header_line in vcf_headers.get("header_lines", []):
-        if '##snv_scoring_features' in header_line:
+    for l in vcfheaders:
+        if "##snv_scoring_features" in l:
             try:
-                xl = str(header_line).split('=', 1)
-                if len(xl) > 1:
-                    feature_names = xl[1].strip().split(',')
-                    for i, fn in enumerate(feature_names):
-                        evs_featurenames[i] = fn.strip()
-            except Exception as e:
-                logging.warning(f"Failed to parse EVS features from header: {e}")
-    
-    # Extract variant records
-    vcf_data = []
-    try:
-        with open(vcf_name, 'r') as vcf_file:
-            for line in vcf_file:
-                if line.startswith('#'):
-                    continue
-                
-                fields = line.strip().split('\t')
-                record = {}
-                
-                # Extract basic fields
-                if len(fields) >= 8:
-                    record["CHROM"] = fields[0]
-                    record["POS"] = int(fields[1])
-                    record["REF"] = fields[3]
-                    record["ALT"] = fields[4]
-                    record["FILTER"] = fields[6]
-                    
-                    # Extract INFO fields
-                    info_dict = {}
-                    for info_item in fields[7].split(';'):
-                        if '=' in info_item:
-                            key, value = info_item.split('=', 1)
-                            info_dict[key] = value
-                        else:
-                            info_dict[info_item] = True
-                    
-                    # Add INFO fields with "I." prefix
-                    for key, value in info_dict.items():
-                        record[f"I.{key}"] = value
-                    
-                    # Extract sample fields if available
-                    if len(fields) > 9 and len(fields) >= 11:  # Normal and Tumor samples
-                        format_keys = fields[8].split(':')
-                        
-                        # Process normal sample (index 1)
-                        normal_values = fields[9].split(':')
-                        for i, key in enumerate(format_keys):
-                            if i < len(normal_values):
-                                record[f"S.1.{key}"] = normal_values[i]
-                        
-                        # Process tumor sample (index 2)
-                        tumor_values = fields[10].split(':')
-                        for i, key in enumerate(format_keys):
-                            if i < len(tumor_values):
-                                record[f"S.2.{key}"] = tumor_values[i]
-                    
-                    vcf_data.append(record)
-    
-    except Exception as e:
-        logging.error(f"Error reading VCF file {vcf_name}: {e}")
-        return pd.DataFrame(columns=cols)
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(vcf_data)
-    
-    # Process and transform data
-    result = []
-    for idx, row in df.iterrows():
-        entry = {}
-        
-        # Basic variant information
-        entry["CHROM"] = row.get("CHROM", "")
-        entry["POS"] = row.get("POS", 0)
-        entry["REF"] = row.get("REF", "")
-        entry["ALT"] = row.get("ALT", "")
-        entry["FILTER"] = row.get("FILTER", "")
-        entry["tag"] = tag
-        
-        # Extract INFO fields
-        entry["NT"] = row.get("I.NT", "")
-        
-        # Parse Somatic Genotype
-        sgt = row.get("I.SGT", "")
-        if sgt and "->" in sgt:
-            sgt_parts = sgt.split("->")
-            if len(sgt_parts) >= 1:
-                entry["NT_REF"] = sgt_parts[0]
-        
-        # Extract numeric values, handling type conversion
-        for numeric_field in ["I.QSS_NT", "I.VQSR", "I.EVS", "I.SomaticEVS", "I.MQ", "I.MQ0", "I.SNVSB", "I.ReadPosRankSum"]:
-            short_name = numeric_field.split('.')[-1]
+                xl = str(l).split("=", 1)
+                xl = xl[1].split(",")
+                for i, n in enumerate(xl):
+                    evs_featurenames[i] = n
+                    cols.append("E." + n)
+                    logging.info("Scoring feature %i : %s" % (i, n))
+            except Exception:
+                logging.warn(
+                    "Could not parse scoring feature names from Strelka output"
+                )
+
+    records = []
+
+    if not avg_depth:
+        avg_depth = {}
+
+        for l in vcfheaders:
+            x = str(l).lower()
+            x = x.replace("##meandepth_", "##maxdepth_")
+            x = x.replace("##depth_", "##maxdepth_")
+            if "##maxdepth_" in x:
+                p, _, l = l.partition("_")
+                xl = str(l).split("=")
+                xchr = xl[0]
+                avg_depth[xchr] = float(xl[1])
+                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
+
+    has_warned = {}
+
+    for vr in vcfExtract(vcfname, features):
+        rec = {}
+        for i, ff in enumerate(features):
+            rec[ff] = vr[i]
+
+        # read VQSR value, if it's not present, set to -1 (old versions of Strelka)
+        try:
+            rec["I.VQSR"] = float(rec["I.VQSR"])
+        except Exception:
+            rec["I.VQSR"] = -1.0
+
+        # read EVS value, if it's not present, set to -1 (old versions of Strelka)
+        if "I.SomaticEVS" in rec:
             try:
-                value = row.get(numeric_field, "")
-                if value and value != ".":
-                    entry[short_name] = float(value)
-                else:
-                    entry[short_name] = float('nan')
-            except (ValueError, TypeError):
-                entry[short_name] = float('nan')
-        
-        # Process depth and allele fields
-        normal_sdp = float(row.get("S.1.SDP", 0) or 0)
-        tumor_sdp = float(row.get("S.2.SDP", 0) or 0)
-        normal_fdp = float(row.get("S.1.FDP", 0) or 0)
-        tumor_fdp = float(row.get("S.2.FDP", 0) or 0)
-        normal_dp = float(row.get("S.1.DP", 0) or 0)
-        tumor_dp = float(row.get("S.2.DP", 0) or 0)
-        
-        entry["N_DP"] = normal_dp
-        entry["T_DP"] = tumor_dp
-        
-        # Calculate rates
-        if normal_dp > 0:
-            entry["N_FDP_RATE"] = normal_fdp / normal_dp
-            entry["N_SDP_RATE"] = normal_sdp / normal_dp
+                rec["I.EVS"] = float(rec["I.SomaticEVS"])
+            except Exception:
+                rec["I.EVS"] = -1.0
         else:
-            entry["N_FDP_RATE"] = 0.0
-            entry["N_SDP_RATE"] = 0.0
-        
-        if tumor_dp > 0:
-            entry["T_FDP_RATE"] = tumor_fdp / tumor_dp
-            entry["T_SDP_RATE"] = tumor_sdp / tumor_dp
+            try:
+                rec["I.EVS"] = float(rec["I.EVS"])
+            except Exception:
+                rec["I.EVS"] = -1.0
+
+        # fix missing features
+        for q in [
+            "I.QSS_NT",
+            "I.MQ",
+            "I.MQ0",
+            "I.SNVSB",
+            "I.ReadPosRankSum",
+            "S.1.SDP",
+            "S.2.SDP",
+            "S.1.FDP",
+            "S.2.FDP",
+            "S.1.DP",
+            "S.2.DP",
+            "S.1.AU",
+            "S.2.AU",
+            "S.1.CU",
+            "S.2.CU",
+            "S.1.GU",
+            "S.2.GU",
+            "S.1.TU",
+            "S.2.TU",
+        ]:
+            if q not in rec or rec[q] is None:
+                rec[q] = 0
+                if ("feat:" + q) not in has_warned:
+                    logging.warn("Missing feature %s" % q)
+                    has_warned["feat:" + q] = True
+
+        rec["tag"] = tag
+
+        NT = rec["I.NT"]
+        NT_is_ref = int(NT == "ref")
+        QSS_NT = int(rec["I.QSS_NT"])
+
+        try:
+            MQ = float(rec["I.MQ"])
+        except Exception:
+            MQ = None
+
+        try:
+            MQ_ZERO = float(rec["I.MQ0"])
+        except Exception:
+            MQ_ZERO = None
+
+        n_FDP = float(rec["S.1.FDP"])
+        t_FDP = float(rec["S.2.FDP"])
+        n_SDP = float(rec["S.1.SDP"])
+        t_SDP = float(rec["S.2.SDP"])
+        n_DP = float(rec["S.1.DP"])
+        t_DP = float(rec["S.2.DP"])
+
+        n_FDP_ratio = n_FDP / n_DP if n_DP != 0 else 0
+        t_FDP_ratio = t_FDP / t_DP if t_DP != 0 else 0
+
+        n_SDP_ratio = n_SDP / (n_DP + n_SDP) if (n_DP + n_SDP) != 0 else 0
+        t_SDP_ratio = t_SDP / (t_DP + t_SDP) if (t_DP + t_SDP) != 0 else 0
+
+        n_DP_ratio = 0
+        t_DP_ratio = 0
+
+        if avg_depth:
+            try:
+                n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
+                t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
+            except Exception:
+                if rec["CHROM"] not in has_warned:
+                    logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
+                    has_warned[rec["CHROM"]] = True
+        elif "DPnorm" not in has_warned:
+            logging.warn("Cannot normalize depths.")
+            has_warned["DPnorm"] = True
+
+        # Ref and alt allele counts for tier1 and tier2
+        allele_ref = rec["REF"]
+        try:
+            t_allele_ref_counts = list(map(float, rec["S.2." + allele_ref + "U"]))
+        except Exception:
+            t_allele_ref_counts = [0, 0]
+
+        alleles_alt = rec["ALT"]
+
+        try:
+            t_allele_alt_counts = [0, 0]
+            for a in alleles_alt:
+                for i in range(2):
+                    t_allele_alt_counts[i] += float(rec["S.2." + a + "U"][i])
+        except Exception:
+            t_allele_alt_counts = [0, 0]
+
+        # Compute the tier1 and tier2 alt allele rates.
+        if t_allele_alt_counts[0] + t_allele_ref_counts[0] == 0:
+            t_tier1_allele_rate = 0
         else:
-            entry["T_FDP_RATE"] = 0.0
-            entry["T_SDP_RATE"] = 0.0
-        
-        # Calculate depth rates if average depth information is available
-        if avg_depth and entry["CHROM"] in avg_depth:
-            chrom_depth = avg_depth[entry["CHROM"]]
-            if chrom_depth > 0:
-                entry["N_DP_RATE"] = normal_dp / chrom_depth
-                entry["T_DP_RATE"] = tumor_dp / chrom_depth
-        
-        # Calculate allele frequencies
-        ref_base = entry["REF"]
-        alt_base = entry["ALT"].split(',')[0] if entry["ALT"] else ""
-        
-        normal_ref_count = 0
-        tumor_ref_count = 0
-        normal_alt_count = 0
-        tumor_alt_count = 0
-        
-        # Extract counts for reference allele
-        if ref_base == 'A':
-            normal_ref_count = float(row.get("S.1.AU", "0").split(',')[0] or 0)
-            tumor_ref_count = float(row.get("S.2.AU", "0").split(',')[0] or 0)
-        elif ref_base == 'C':
-            normal_ref_count = float(row.get("S.1.CU", "0").split(',')[0] or 0)
-            tumor_ref_count = float(row.get("S.2.CU", "0").split(',')[0] or 0)
-        elif ref_base == 'G':
-            normal_ref_count = float(row.get("S.1.GU", "0").split(',')[0] or 0)
-            tumor_ref_count = float(row.get("S.2.GU", "0").split(',')[0] or 0)
-        elif ref_base == 'T':
-            normal_ref_count = float(row.get("S.1.TU", "0").split(',')[0] or 0)
-            tumor_ref_count = float(row.get("S.2.TU", "0").split(',')[0] or 0)
-        
-        # Extract counts for alternate allele
-        if alt_base == 'A':
-            normal_alt_count = float(row.get("S.1.AU", "0").split(',')[0] or 0)
-            tumor_alt_count = float(row.get("S.2.AU", "0").split(',')[0] or 0)
-        elif alt_base == 'C':
-            normal_alt_count = float(row.get("S.1.CU", "0").split(',')[0] or 0)
-            tumor_alt_count = float(row.get("S.2.CU", "0").split(',')[0] or 0)
-        elif alt_base == 'G':
-            normal_alt_count = float(row.get("S.1.GU", "0").split(',')[0] or 0)
-            tumor_alt_count = float(row.get("S.2.GU", "0").split(',')[0] or 0)
-        elif alt_base == 'T':
-            normal_alt_count = float(row.get("S.1.TU", "0").split(',')[0] or 0)
-            tumor_alt_count = float(row.get("S.2.TU", "0").split(',')[0] or 0)
-        
-        # Calculate allele frequencies
-        normal_total = normal_ref_count + normal_alt_count
-        tumor_total = tumor_ref_count + tumor_alt_count
-        
-        if normal_total > 0:
-            entry["N_AF"] = normal_alt_count / normal_total
+            t_tier1_allele_rate = t_allele_alt_counts[0] / float(
+                t_allele_alt_counts[0] + t_allele_ref_counts[0]
+            )
+
+        try:
+            n_allele_ref_counts = list(map(float, rec["S.1." + allele_ref + "U"]))
+        except Exception:
+            n_allele_ref_counts = [0, 0]
+
+        alleles_alt = rec["ALT"]
+
+        try:
+            n_allele_alt_counts = [0, 0]
+            for a in alleles_alt:
+                for i in range(2):
+                    n_allele_alt_counts[i] += float(rec["S.1." + a + "U"][i])
+        except Exception:
+            n_allele_alt_counts = [0, 0]
+
+        # Compute the tier1 and tier2 alt allele rates.
+        if n_allele_alt_counts[0] + n_allele_ref_counts[0] == 0:
+            n_tier1_allele_rate = 0
         else:
-            entry["N_AF"] = 0.0
-        
-        if tumor_total > 0:
-            entry["T_AF"] = tumor_alt_count / tumor_total
-        else:
-            entry["T_AF"] = 0.0
-        
-        result.append(entry)
-    
-    # Create final DataFrame with properly ordered columns
-    final_df = pd.DataFrame(result)
-    
-    # Ensure all required columns exist (fill with NaN if missing)
-    for col in cols:
-        if col not in final_df.columns:
-            final_df[col] = float('nan')
-    
-    # Return DataFrame with columns in specified order
-    return final_df[cols]
+            n_tier1_allele_rate = n_allele_alt_counts[0] / float(
+                n_allele_alt_counts[0] + n_allele_ref_counts[0]
+            )
+
+        try:
+            snvsb = rec["I.SNVSB"]
+        except Exception:
+            snvsb = 0
+
+        try:
+            rprs = rec["I.ReadPosRankSum"]
+        except Exception:
+            rprs = 0
+
+        # Gather the computed data into a dict
+        qrec = {
+            "CHROM": rec["CHROM"],
+            "POS": int(rec["POS"]),
+            "REF": rec["REF"],
+            "ALT": ",".join(rec["ALT"]),
+            "FILTER": ",".join(rec["FILTER"]),
+            "NT": NT,
+            "NT_REF": NT_is_ref,
+            "QSS_NT": QSS_NT,
+            "VQSR": rec["I.VQSR"],
+            "EVS": rec["I.EVS"],
+            "N_FDP_RATE": n_FDP_ratio,
+            "T_FDP_RATE": t_FDP_ratio,
+            "N_SDP_RATE": n_SDP_ratio,
+            "T_SDP_RATE": t_SDP_ratio,
+            "N_DP": n_DP,
+            "T_DP": t_DP,
+            "N_DP_RATE": n_DP_ratio,
+            "T_DP_RATE": t_DP_ratio,
+            "N_AF": n_tier1_allele_rate,
+            "T_AF": t_tier1_allele_rate,
+            "MQ": MQ,
+            "MQ0": MQ_ZERO,
+            "SNVSB": snvsb,
+            "ReadPosRankSum": rprs,
+            "tag": tag,
+        }
+        # ESF features
+        try:
+            for i, v in enumerate(rec["I.EVSF"]):
+                if i in evs_featurenames:
+                    try:
+                        qrec["E." + evs_featurenames[i]] = float(v)
+                    except Exception:
+                        # failure to parse
+                        pass
+        except Exception:
+            pass
+        for k, v in list(evs_featurenames.items()):
+            if "E." + v not in qrec:
+                qrec["E." + v] = 0
+
+        records.append(qrec)
+
+    if records:
+        df = pandas.DataFrame(records, columns=cols)
+    else:
+        df = pandas.DataFrame(columns=cols)
+
+    return df
 
 
-def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[Dict[str, float]] = None) -> pd.DataFrame:
-    """Return a data frame with indel features collected from the given Strelka VCF
-    
-    Args:
-        vcf_name: name of the VCF file
-        tag: type of variants
-        avg_depth: average chromosome depths from BAM file
-    
-    Returns:
-        DataFrame with extracted indel features
+def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
+    """Return a data frame with features collected from the given VCF, tagged by given type
+    :param vcfname: name of the VCF file
+    :param tag: type of variants
+    :param avg_depth: average chromosome depths from BAM file
     """
-    features = ["CHROM", "POS", "REF", "ALT", "FILTER",
-                "I.NT", "I.SOMATIC", "I.QSI_NT",
-                "I.VQSR", "I.EVSF",
-                "I.SGT", "I.MQ", "I.MQ0",
-                "I.ReadPosRankSum",
-                "S.1.SDP", "S.2.SDP",
-                "S.1.DP", "S.2.DP",
-                "S.1.TIR", "S.1.TAR", "S.2.TIR", "S.2.TAR"]
+    features = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "FILTER",
+        "I.NT",
+        "I.SOMATIC",
+        "I.QSI_NT",
+        "I.EVS",
+        "I.EVSF",
+        "I.SomaticEVS",
+        "I.SGT",
+        "I.RC",
+        "I.RU",
+        "I.IC",
+        "I.IHP",
+        "I.MQ",
+        "I.MQ0",
+        "S.1.DP",
+        "S.2.DP",
+        "S.1.TAR",
+        "S.2.TAR",
+        "S.1.TIR",
+        "S.2.TIR",
+        "S.1.TOR",
+        "S.2.TOR",
+        "S.1.BCN50",
+        "S.2.BCN50",
+        "S.1.FDP50",
+        "S.2.FDP50",
+    ]
 
-    cols = ["CHROM", "POS", "REF", "ALT",
-            "NT", "NT_REF", "QSI_NT", "FILTER",
-            "N_SDP_RATE", "T_SDP_RATE",
-            "N_DP", "T_DP", "N_DP_RATE", "T_DP_RATE",
-            "N_AF", "T_AF",
-            "MQ", "MQ0",
-            "ReadPosRankSum", "tag"]
+    cols = [
+        "CHROM",
+        "POS",
+        "REF",
+        "ALT",
+        "LENGTH",
+        "INDELTYPE",
+        "FILTER",
+        "NT",
+        "NT_REF",
+        "EVS",
+        "QSI_NT",
+        "N_DP",
+        "T_DP",
+        "N_DP_RATE",
+        "T_DP_RATE",
+        "N_BCN",
+        "T_BCN",
+        "N_FDP",
+        "T_FDP",
+        "N_AF",
+        "T_AF",
+        "SGT",
+        "RC",
+        "RU",
+        "RU_LEN",
+        "IC",
+        "IHP",
+        "MQ",
+        "MQ0",
+        "tag",
+    ]
 
-    # Extract variant records
-    vcf_data = []
-    try:
-        with open(vcf_name, 'r') as vcf_file:
-            for line in vcf_file:
-                if line.startswith('#'):
-                    continue
-                
-                fields = line.strip().split('\t')
-                record = {}
-                
-                # Extract basic fields
-                if len(fields) >= 8:
-                    record["CHROM"] = fields[0]
-                    record["POS"] = int(fields[1])
-                    record["REF"] = fields[3]
-                    record["ALT"] = fields[4]
-                    record["FILTER"] = fields[6]
-                    
-                    # Extract INFO fields
-                    info_dict = {}
-                    for info_item in fields[7].split(';'):
-                        if '=' in info_item:
-                            key, value = info_item.split('=', 1)
-                            info_dict[key] = value
-                        else:
-                            info_dict[info_item] = True
-                    
-                    # Add INFO fields with "I." prefix
-                    for key, value in info_dict.items():
-                        record[f"I.{key}"] = value
-                    
-                    # Extract sample fields if available
-                    if len(fields) > 9 and len(fields) >= 11:  # Normal and Tumor samples
-                        format_keys = fields[8].split(':')
-                        
-                        # Process normal sample (index 1)
-                        normal_values = fields[9].split(':')
-                        for i, key in enumerate(format_keys):
-                            if i < len(normal_values):
-                                record[f"S.1.{key}"] = normal_values[i]
-                        
-                        # Process tumor sample (index 2)
-                        tumor_values = fields[10].split(':')
-                        for i, key in enumerate(format_keys):
-                            if i < len(tumor_values):
-                                record[f"S.2.{key}"] = tumor_values[i]
-                    
-                    vcf_data.append(record)
-    
-    except Exception as e:
-        logging.error(f"Error reading VCF file {vcf_name}: {e}")
-        return pd.DataFrame(columns=cols)
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(vcf_data)
-    
-    # Process and transform data
-    result = []
-    for idx, row in df.iterrows():
-        entry = {}
-        
-        # Basic variant information
-        entry["CHROM"] = row.get("CHROM", "")
-        entry["POS"] = row.get("POS", 0)
-        entry["REF"] = row.get("REF", "")
-        entry["ALT"] = row.get("ALT", "")
-        entry["FILTER"] = row.get("FILTER", "")
-        entry["tag"] = tag
-        
-        # Extract INFO fields
-        entry["NT"] = row.get("I.NT", "")
-        
-        # Parse Somatic Genotype
-        sgt = row.get("I.SGT", "")
-        if sgt and "->" in sgt:
-            sgt_parts = sgt.split("->")
-            if len(sgt_parts) >= 1:
-                entry["NT_REF"] = sgt_parts[0]
-        
-        # Extract numeric values, handling type conversion
-        for numeric_field in ["I.QSI_NT", "I.VQSR", "I.MQ", "I.MQ0", "I.ReadPosRankSum"]:
-            short_name = numeric_field.split('.')[-1]
+    records = []
+
+    vcfheaders = list(extractHeaders(vcfname))
+
+    evs_featurenames = {}
+
+    for l in vcfheaders:
+        if "##indel_scoring_features" in l:
             try:
-                value = row.get(numeric_field, "")
-                if value and value != ".":
-                    entry[short_name] = float(value)
-                else:
-                    entry[short_name] = float('nan')
-            except (ValueError, TypeError):
-                entry[short_name] = float('nan')
-        
-        # Process depth fields
-        normal_sdp = float(row.get("S.1.SDP", 0) or 0)
-        tumor_sdp = float(row.get("S.2.SDP", 0) or 0)
-        normal_dp = float(row.get("S.1.DP", 0) or 0)
-        tumor_dp = float(row.get("S.2.DP", 0) or 0)
-        
-        entry["N_DP"] = normal_dp
-        entry["T_DP"] = tumor_dp
-        
-        # Calculate rates
-        if normal_dp > 0:
-            entry["N_SDP_RATE"] = normal_sdp / normal_dp
+                xl = str(l).split("=", 1)
+                xl = xl[1].split(",")
+                for i, n in enumerate(xl):
+                    evs_featurenames[i] = n
+                    cols.append("E." + n)
+                    logging.info("Scoring feature %i : %s" % (i, n))
+            except Exception:
+                logging.warn(
+                    "Could not parse scoring feature names from Strelka output"
+                )
+
+    if not avg_depth:
+        avg_depth = {}
+
+        for l in vcfheaders:
+            x = str(l).lower()
+            x = x.replace("##meandepth_", "##maxdepth_")
+            x = x.replace("##depth_", "##maxdepth_")
+            if "##maxdepth_" in x:
+                p, _, l = l.partition("_")
+                xl = str(l).split("=")
+                xchr = xl[0]
+                avg_depth[xchr] = float(xl[1])
+                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
+
+    has_warned = {}
+    for vr in vcfExtract(vcfname, features):
+        rec = {}
+        for i, ff in enumerate(features):
+            rec[ff] = vr[i]
+        rec["tag"] = tag
+
+        if "I.SomaticEVS" in rec:
+            try:
+                rec["I.EVS"] = float(rec["I.SomaticEVS"])
+            except Exception:
+                rec["I.EVS"] = -1.0
         else:
-            entry["N_SDP_RATE"] = 0.0
-        
-        if tumor_dp > 0:
-            entry["T_SDP_RATE"] = tumor_sdp / tumor_dp
-        else:
-            entry["T_SDP_RATE"] = 0.0
-        
-        # Calculate depth rates if average depth information is available
-        if avg_depth and entry["CHROM"] in avg_depth:
-            chrom_depth = avg_depth[entry["CHROM"]]
-            if chrom_depth > 0:
-                entry["N_DP_RATE"] = normal_dp / chrom_depth
-                entry["T_DP_RATE"] = tumor_dp / chrom_depth
-        
-        # Calculate allele frequencies for indels
-        normal_alt_count = float(row.get("S.1.TIR", "0").split(',')[0] or 0)
-        normal_ref_count = float(row.get("S.1.TAR", "0").split(',')[0] or 0)
-        tumor_alt_count = float(row.get("S.2.TIR", "0").split(',')[0] or 0)
-        tumor_ref_count = float(row.get("S.2.TAR", "0").split(',')[0] or 0)
-        
-        # Calculate allele frequencies
-        normal_total = normal_ref_count + normal_alt_count
-        tumor_total = tumor_ref_count + tumor_alt_count
-        
-        if normal_total > 0:
-            entry["N_AF"] = normal_alt_count / normal_total
-        else:
-            entry["N_AF"] = 0.0
-        
-        if tumor_total > 0:
-            entry["T_AF"] = tumor_alt_count / tumor_total
-        else:
-            entry["T_AF"] = 0.0
-        
-        result.append(entry)
-    
-    # Create final DataFrame
-    final_df = pd.DataFrame(result)
-    
-    # Ensure all required columns exist (fill with NaN if missing)
-    for col in cols:
-        if col not in final_df.columns:
-            final_df[col] = float('nan')
-    
-    # Return DataFrame with columns in specified order
-    return final_df[cols]
+            try:
+                rec["I.EVS"] = float(rec["I.EVS"])
+            except Exception:
+                rec["I.EVS"] = -1.0
+
+        # fix missing features
+        for q in [
+            "I.QSI_NT",
+            "I.RC",
+            "I.IC",
+            "I.IHP",
+            "S.1.DP",
+            "S.2.DP",
+            "S.1.BCN50",
+            "S.2.BCN50",
+            "S.1.FDP50",
+            "S.2.FDP50",
+        ]:
+            if q not in rec or rec[q] is None:
+                rec[q] = 0
+                if ("feat:" + q) not in has_warned:
+                    logging.warn("Missing feature %s" % q)
+                    has_warned["feat:" + q] = True
+
+        for q in ["S.1.TAR", "S.2.TAR", "S.1.TIR", "S.2.TIR", "S.1.TOR", "S.2.TOR"]:
+            if q not in rec or rec[q] is None:
+                rec[q] = [0, 0]
+                if ("feat:" + q) not in has_warned:
+                    logging.warn("Missing feature %s" % q)
+                    has_warned["feat:" + q] = True
+
+        NT = rec["I.NT"]
+        NT_is_ref = int(NT == "ref")
+        QSI_NT = int(rec["I.QSI_NT"])
+
+        n_DP = float(rec["S.1.DP"])
+        t_DP = float(rec["S.2.DP"])
+
+        in_del = 0
+
+        max_len = len(rec["REF"])
+        min_len = len(rec["REF"])
+
+        for a in rec["ALT"]:
+            if len(a) > len(rec["REF"]):
+                in_del |= 1
+            else:
+                in_del |= 2
+            min_len = min(len(a), min_len)
+            max_len = max(len(a), max_len)
+
+        ilen = max_len - min_len
+
+        n_DP_ratio = 0
+        t_DP_ratio = 0
+
+        if avg_depth:
+            try:
+                n_DP_ratio = n_DP / float(avg_depth[rec["CHROM"]])
+                t_DP_ratio = t_DP / float(avg_depth[rec["CHROM"]])
+            except Exception:
+                if rec["CHROM"] not in has_warned:
+                    logging.warn("Cannot normalize depths on %s" % rec["CHROM"])
+                    has_warned[rec["CHROM"]] = True
+        elif "DPnorm" not in has_warned:
+            logging.warn("Cannot normalize depths.")
+            has_warned["DPnorm"] = True
+
+        # extract observed AF from strelka counts. TIR = ALT; TAR = REF
+        try:
+            n_af = float(rec["S.1.TIR"][0]) / (
+                float(rec["S.1.TIR"][0]) + float(rec["S.1.TAR"][0])
+            )
+        except Exception:
+            n_af = 0
+
+        try:
+            t_af = float(rec["S.2.TIR"][0]) / (
+                float(rec["S.2.TIR"][0]) + float(rec["S.2.TAR"][0])
+            )
+        except Exception:
+            t_af = 0
+
+        # Gather the computed data into a dict
+        qrec = {
+            "CHROM": rec["CHROM"],
+            "POS": int(rec["POS"]),
+            "REF": rec["REF"],
+            "ALT": ",".join(rec["ALT"]),
+            "LENGTH": ilen,
+            "INDELTYPE": in_del,
+            "FILTER": ",".join(rec["FILTER"]),
+            "NT": NT,
+            "NT_REF": NT_is_ref,
+            "QSI_NT": QSI_NT,
+            "N_DP": n_DP,
+            "T_DP": t_DP,
+            "N_DP_RATE": n_DP_ratio,
+            "T_DP_RATE": t_DP_ratio,
+            "N_AF": n_af,
+            "T_AF": t_af,
+            "SGT": rec["I.SGT"],
+            "tag": tag,
+        }
+
+        # fields with defaults
+        fields = [
+            {"n": "EVS", "s": "I.EVS", "def": 0, "t": float},
+            {"n": "VQSR", "s": "I.VQSR", "def": 0, "t": float},
+            {"n": "RC", "s": "I.RC", "def": 0, "t": int},
+            {"n": "RU", "s": "I.RU", "def": ""},
+            {"n": "RU_LEN", "s": "I.RU", "def": 0, "t": len},
+            {"n": "IC", "s": "I.IC", "def": 0, "t": int},
+            {"n": "IHP", "s": "I.IHP", "def": 0, "t": int},
+            {"n": "MQ", "s": "I.MQ", "def": 0.0, "t": float},
+            {"n": "MQ0", "s": "I.MQ0", "def": 0.0, "t": float},
+            {"n": "N_BCN", "s": "S.1.BCN50", "def": 0.0, "t": float},
+            {"n": "T_BCN", "s": "S.2.BCN50", "def": 0.0, "t": float},
+            {"n": "N_FDP", "s": "S.1.FDP50", "def": 0.0, "t": float},
+            {"n": "T_FDP", "s": "S.2.FDP50", "def": 0.0, "t": float},
+        ]
+
+        for fd in fields:
+            try:
+                res = rec[fd["s"]]
+                if "t" in fd:
+                    res = fd["t"](res)
+            except Exception:
+                res = fd["def"]
+
+            qrec[fd["n"]] = res
+
+        # ESF features
+        try:
+            for i, v in enumerate(rec["I.EVSF"]):
+                if i in evs_featurenames:
+                    try:
+                        qrec["E." + evs_featurenames[i]] = float(v)
+                    except Exception:
+                        # failure to parse
+                        pass
+        except Exception:
+            pass
+
+        for k, v in list(evs_featurenames.items()):
+            if "E." + v not in qrec:
+                qrec["E." + v] = 0
+
+        records.append(qrec)
+
+    if records:
+        df = pandas.DataFrame(records, columns=cols)
+    else:
+        df = pandas.DataFrame(columns=cols)
+
+    return df
