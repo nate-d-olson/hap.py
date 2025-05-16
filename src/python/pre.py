@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -34,7 +34,13 @@ import time
 import pipes
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+# Update path for Python 3
+lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
+if os.path.exists(lib_path):
+    sys.path.append(lib_path)
+else:
+    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
+    sys.path.append(fallback_path)
 
 import Tools
 from Tools import vcfextract
@@ -147,7 +153,7 @@ def preprocess(
                 if f["key"] == "FILTER":
                     allfilters.append(f["values"]["ID"])
             except Exception:
-                logging.warn("ignoring header: %s" % str(f))
+                logging.warn("ignoring header: %s" % f.decode('utf-8') if isinstance(f, bytes) else str(f))
 
         required_filters = None
         if filters:

@@ -47,7 +47,7 @@ try:
         return t.decode('utf-8')
         
 except Exception as e:
-    logging.warning("Could not initialize C++ components: {}".format(e.decode("utf-8") if isinstance(e, bytes) else str(e)))
+    logging.warning("Could not initialize C++ components: {}".format(e.decode("utf-8") if isinstance(e, bytes) else e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)))
     
     # Define fallback versions of the functions
     def get_version():

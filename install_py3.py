@@ -135,7 +135,8 @@ def build_haplotypes(source_dir, build_dir, args):
                 raise Exception(
                     f"RTG-tools wrapper {args.rtgtools_wrapper} doesn't exist."
                 )
-            config_command += f"-DVCFEVAL_WRAPPER={os.path.abspath(args.rtgtools_wrapper).replace(' ', '\\ ')}"
+            wrapper_path = os.path.abspath(args.rtgtools_wrapper).replace(' ', '\\ ')
+            config_command += f"-DVCFEVAL_WRAPPER={wrapper_path}"
 
     to_run = f"{boost_prefix}cd {build_dir} && {boost_prefix} {config_command}"
     print(to_run, file=sys.stderr)

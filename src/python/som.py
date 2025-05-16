@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -1364,7 +1364,7 @@ def main():
         # save results
         res.to_csv(args.output + ".stats.csv")
 
-        with open(args.output + ".metrics.json", "w") as fp:
+        with open(args.output + ".metrics.json", "w", encoding="utf-8") as fp:
             json.dump(metrics_output, fp)
 
         if args.happy_stats:
@@ -1393,7 +1393,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(str(e))
+        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))

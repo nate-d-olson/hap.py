@@ -1,3 +1,4 @@
+#!/usr/bin/env python33
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -12,32 +13,33 @@ import gzip
 from bx.intervals.intersection import Interval
 from bx.intervals.intersection import IntervalTree
 from collections import defaultdict
+from typing import List, Union, Callable, Optional, Dict, Any
 
 
-class BedIntervalTree(object):
+class BedIntervalTree:
+    """Reads in a BED file and converts it to an interval tree for searching"""
+    
     def __init__(self):
-        """reads in a BED file and converts it to an interval tree for searching"""
         self.tree = defaultdict(IntervalTree)
         self.intCount = 0
 
         def mkzero():
             return int(0)
-
         self.count_by_label = defaultdict(mkzero)
         self.nt_count_by_label = defaultdict(mkzero)
 
-    def __str__(self):
-        return str(self.intCount) + " intervals"
+    def __str__(self) -> str:
+        return f"{self.intCount} intervals"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def _addEntryToTree(self, bedentry, label):
-        """Add a BED entry to the tree
-        :param bedentry: BED entry [chr, start, stop(, optional extra fields)]
-        :type bedentry: list of int and string
-        :param label: the label for the entry
-        :type label: str
+    def _addEntryToTree(self, bedentry: List, label: str) -> None:
+        """ Add a BED entry to the tree
+        
+        Args:
+            bedentry: BED entry [chr, start, stop(, optional extra fields)]
+            label: the label for the entry
         """
         chrom = bedentry[0]
         start = int(bedentry[1]) + 1
@@ -49,37 +51,40 @@ class BedIntervalTree(object):
         self.nt_count_by_label[label] += end - start
         self.intCount += 1
 
-    def intersect(self, chrom, start, end):
-        """Return all overlapping intervals in chr:[start,end)
-        :param chrom: Chromosome
-        :param start: start (1-based)
-        :param end: end
-        :rtype: list of Interval
-
-        Intervals have a value associated, this value is an array -- the first column will be
-        the label, followed by the bed columns
-
+    def intersect(self, chrom: str, start: int, end: int) -> List[Interval]:
+        """ Return all overlapping intervals in chr:[start,end)
+        
+        Args:
+            chrom: Chromosome
+            start: start (1-based)
+            end: end
+            
+        Returns:
+            List of Interval objects
+            
+        Note:
+            Intervals have a value associated, this value is an array -- the first column will be
+            the label, followed by the bed columns
         """
         return self.tree[chrom].find(start, end)
 
-    def countbases(self, chrom=None, start=0, end=0, label=None):
-        """Return the number of bases covered by intervals in chr:[start,end)
-        :param chrom: Chromosome
-        :param start: start (1-based)
-        :param end: end
-        :param label: label
-        :rtype: int
-
-        Intervals have a value associated, this value is an array -- the first column will be
-        the label, followed by the bed columns
-
+    def countbases(self, chrom: Optional[str] = None, start: int = 0, end: int = 0, 
+                  label: Optional[str] = None) -> int:
+        """ Return the number of bases covered by intervals in chr:[start,end)
+        
+        Args:
+            chrom: Chromosome
+            start: start (1-based)
+            end: end
+            label: label
+            
+        Returns:
+            Number of bases covered
         """
         if not chrom and label:
             return self.nt_count_by_label[label]
         elif not chrom and not label:
-            return sum(
-                [self.nt_count_by_label[x] for x in list(self.nt_count_by_label.keys())]
-            )
+            return sum([self.nt_count_by_label[x] for x in self.nt_count_by_label.keys()])
 
         total_length = 0
         for x in self.tree[chrom].find(start, end):
@@ -87,52 +92,66 @@ class BedIntervalTree(object):
                 total_length += x.end - x.start
         return total_length
 
-    def count(self, label=None):
-        """Return number of records per label
-        :param label: string label
-        :return: number of intervals which have the given label
+    def count(self, label: Optional[str] = None) -> int:
+        """ Return number of records per label
+        
+        Args:
+            label: string label
+            
+        Returns:
+            Number of intervals which have the given label
         """
         if not label:
             return self.intCount
         else:
             return self.count_by_label[label]
 
-    def addFromBed(self, bed_file, label="fp", fixchr=False):
-        """Add all intervals from a bed file, attaching a given label
-        :param bed_file: Bed File
-        :param label: either a string label or a function to work on the bed columns
-        :param fixchr: fix chr prefix for contig names
+    def addFromBed(self, bed_file: str, label: Union[str, Callable] = "fp", fixchr: bool = False) -> None:
+        """ Add all intervals from a bed file, attaching a given label
+        
+        Args:
+            bed_file: Bed File path
+            label: Either a string label or a function to work on the bed columns
+            fixchr: Fix chr prefix for contig names
 
-        label can be something like this:
+        Notes:
+            label can be something like this:
 
-            def labeller(entry):
-                # return column 4
-                return entry[3]
+                def labeller(entry):
+                    # return column 4
+                    return entry[3]
 
-        When None is passed, we'll use the first value in the bed column that comes up
-        -> chr start end <this one>
-
+            When None is passed, we'll use the first value in the bed column that comes up
+            -> chr start end <this one>
         """
         if bed_file.endswith(".gz"):
-            bed = gzip.open(bed_file)
+            with gzip.open(bed_file, 'rt') as bed:
+                self._process_bed_file(bed, label, fixchr)
         else:
-            bed = open(bed_file)
-
-        if hasattr(label, "__call__"):
+            with open(bed_file, 'r') as bed:
+                self._process_bed_file(bed, label, fixchr)
+    
+    def _process_bed_file(self, bed_file, label: Union[str, Callable], fixchr: bool) -> None:
+        """Process the bed file content
+        
+        Args:
+            bed_file: Open file object for reading
+            label: Label or labeler function
+            fixchr: Fix chr prefix for contig names
+        """
+        if callable(label):
             labeller = label
         elif label:
             labeller = lambda _: label
         else:
             labeller = lambda e: ",".join(map(str, e[3:]))
 
-        for entry in bed:
+        for entry in bed_file:
             # split comma / semicolon entries
             fields = entry.replace(";", "\t").replace(",", "\t").strip().split("\t")
             if fixchr:
                 fields[0] = "chr" + fields[0].replace("chr", "")
 
-            # we've made sure.
-            # noinspection PyCallingNonCallable
-            label = labeller(fields)
-
-            self._addEntryToTree(fields, label)
+            # Apply the labeller function
+            entry_label = labeller(fields)
+            self._addEntryToTree(fields, entry_label)

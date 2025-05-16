@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -34,7 +34,13 @@ import time
 import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+# Update path for Python 3
+lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
+if os.path.exists(lib_path):
+    sys.path.append(lib_path)
+else:
+    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
+    sys.path.append(fallback_path)
 
 import Haplo.blocksplit
 import Haplo.gvcf2bed
@@ -386,7 +392,7 @@ def main():
     # write session info and args file
     session = sessionInfo()
     session["final_args"] = args.__dict__
-    with open(args.reports_prefix + ".runinfo.json", "w") as sessionfile:
+    with open(args.reports_prefix + ".runinfo.json", "w", encoding="utf-8") as sessionfile:
         json.dump(session, sessionfile)
 
     try:
@@ -715,13 +721,13 @@ def main():
                 except Exception:
                     pass
         else:
-            logging.info("Scratch files kept : %s" % (str(tempfiles)))
+            logging.info("Scratch files kept : %s" % (tempfiles.decode('utf-8') if isinstance(tempfiles, bytes) else str(tempfiles)))
 
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(str(e))
+        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -47,233 +46,131 @@ def tableROC(
     Returns:
         A pandas.DataFrame with TP/FP/FN/precision/recall columns.
     """
-
-    with tempfile.NamedTemporaryFile(delete=False) as tf1, tempfile.NamedTemporaryFile(
-        delete=False
-    ) as tf2:
-        tf1_name = tf1.name
-        tf2_name = tf2.name
-    try:
-        fields = [feature_column, label_column]
-        if filter_column:
-            fields.append(filter_column)
-
-        tbl[fields].to_csv(tf2_name, sep="\t", index=False)
-
-        cmdline = "roc -t %s -v %s --verbose " % (label_column, feature_column)
-        if filter_column:
-            cmdline += " -f %s" % filter_column
-        if filter_name:
-            cmdline += " -n %s" % filter_name
-        if roc_reversed:
-            cmdline += " -R 1"
-        cmdline += " -o %s %s" % (tf1_name, tf2_name)
-
-        logging.info("Running %s" % cmdline)
-
-        subprocess.check_call(cmdline, shell=True)
+    with (
+        tempfile.NamedTemporaryFile(delete=False) as tf1,
+        tempfile.NamedTemporaryFile(delete=False) as tf2,
+    ):
         try:
-            result = pandas.read_csv(tf1_name, sep="\t")
-        except Exception:
-            raise Exception("Cannot parse ROC output.")
-        return result
-    finally:
-        try:
-            os.unlink(tf1_name)
-        except Exception:
-            pass
-        try:
-            os.unlink(tf2_name)
-        except Exception:
-            pass
+            fields = [feature_column, label_column]
+            if filter_column:
+                fields.append(filter_column)
+
+            tbl[fields].to_csv(tf2.name, sep="\t", index=False)
+
+            cmdline = f"roc -t {label_column} -v {feature_column} --verbose "
+            if filter_column:
+                cmdline += f" -f {filter_column}"
+            if filter_name:
+                cmdline += f" -n {filter_name}"
+            if roc_reversed:
+                cmdline += " -R 1"
+            cmdline += f" -o {tf1.name} {tf2.name}"
+
+            logging.info(f"Running {cmdline}")
+
+            subprocess.check_call(cmdline, shell=True)
+            try:
+                result = pandas.read_table(tf1.name)
+            except Exception:
+                raise Exception("Cannot parse ROC output.")
+            return result
+        finally:
+            try:
+                os.unlink(tf1.name)
+            except Exception:
+                pass
+            try:
+                os.unlink(tf2.name)
+            except Exception:
+                pass
 
 
-class ROC(metaclass=abc.ABCMeta):
-    """ROC calculator base class"""
+class ROC(abc.ABC):
+    """ROC calculator base class."""
 
     classes: ClassVar[Dict[str, Type["ROC"]]] = {}
     features: ClassVar[Dict[str, str]] = {}
 
     def __init__(self) -> None:
-        self.ftable: str = ""
+        self.ftable = ""
         self.ftname: str = ""
 
     @abc.abstractmethod
     def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        """Create ROC from feature table
+        """Create ROC from feature table.
 
         Args:
-            tbl: The input table with variant data
+            tbl: The input data table
 
         Returns:
-            DataFrame with ROC curve data
+            DataFrame containing ROC curve data
         """
         pass
 
     @classmethod
     def make(cls, cname: str) -> "ROC":
-        """Create an instance of a ROC calculator
+        """Factory method to create ROC instances.
 
         Args:
-            cname: Name of the ROC calculator to create
+            cname: Name of the ROC class to instantiate
 
         Returns:
-            An instance of the requested ROC calculator
+            An initialized ROC calculator instance
         """
-        # noinspection PyCallingNonCallable
+        # Create an instance of the requested ROC class
         c = cls.classes[cname]()
         c.ftname = cls.features[cname]
         return c
 
     @classmethod
-    def register(cls, name: str, ftname: str, cons: Type["ROC"]) -> None:
-        """Register a ROC calculator
+    def register(cls, name: str, feature_name: str) -> callable:
+        """Register a new ROC class.
 
         Args:
-            name: The name of the calculator
-            ftname: The features/feature table name (will be accessible in the ftname attribute)
-            cons: Class constructor
-        """
-        cls.classes[name] = cons
-        cls.features[name] = ftname
-
-    @classmethod
-    def list(cls) -> list:
-        """List all registered ROC calculators
+            name: Name to register the class under
+            feature_name: Name of the feature to use
 
         Returns:
-            List of all registered ROC calculator names
+            Decorator function that registers the class
         """
-        return list(cls.classes.keys())
+
+        def _wrap(subclass):
+            cls.classes[name] = subclass
+            cls.features[name] = feature_name
+            return subclass
+
+        return _wrap
 
 
-class StrelkaSNVRoc(ROC):
-    """ROC calculator for Strelka SNVs"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""  # Added to resolve missing attribute error
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        tbl.loc[tbl["NT"] != "ref", "QSS_NT"] = 0
-        return tableROC(tbl, "tag", "QSS_NT", "FILTER", "QSS_ref")
-
-
-ROC.register("strelka.snv.qss", "hcc.strelka.snv", StrelkaSNVRoc)
-
-
-class StrelkaSNVVQSRRoc(ROC):
-    """ROC calculator for Strelka SNVs (newer versions which use VQSR)"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
+@ROC.register("qual", "QUAL")
+class QualROC(ROC):
+    """QUAL-based ROC implementation."""
 
     def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        tbl.loc[tbl["NT"] != "ref", "VQSR"] = 0
-        return tableROC(tbl, "tag", "VQSR", "FILTER", "LowQscore")
+        """Create ROC from feature table using QUAL.
+
+        Args:
+            tbl: The input data table
+
+        Returns:
+            DataFrame containing ROC curve data
+        """
+        return tableROC(tbl, "type", self.ftname, filter_column="filter")
 
 
-ROC.register("strelka.snv.vqsr", "hcc.strelka.snv", StrelkaSNVVQSRRoc)
-
-
-class StrelkaSNVEVSRoc(ROC):
-    """ROC calculator for Strelka SNVs (newer versions where VQSR is called EVS)"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        tbl.loc[tbl["NT"] != "ref", "EVS"] = 0
-        return tableROC(tbl, "tag", "EVS", "FILTER", "LowEVS")
-
-
-ROC.register("strelka.snv", "hcc.strelka.snv", StrelkaSNVEVSRoc)
-
-
-class StrelkaIndelRoc(ROC):
-    """ROC calculator for Strelka Indels"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
+@ROC.register("vqslod", "VQSLOD")
+class VQSLODROC(ROC):
+    """VQSLOD-based ROC implementation."""
 
     def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        # fix QSI for NT != ref
-        tbl.loc[tbl["NT"] != "ref", "QSI_NT"] = 0
-        return tableROC(tbl, "tag", "QSI_NT", "FILTER", "QSI_ref")
+        """Create ROC from feature table using VQSLOD.
 
+        Args:
+            tbl: The input data table
 
-ROC.register("strelka.indel", "hcc.strelka.indel", StrelkaIndelRoc)
-
-
-class StrelkaIndelEVSRoc(ROC):
-    """ROC calculator for Strelka Indels"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        # fix QSI for NT != ref
-        return tableROC(tbl, "tag", "EVS", "FILTER", "LowEVS")
-
-
-ROC.register("strelka.indel.evs", "hcc.strelka.indel", StrelkaIndelEVSRoc)
-
-
-class Varscan2SNVRoc(ROC):
-    """ROC calculator for Varscan2 SNVs"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        return tableROC(tbl, "tag", "SSC")
-
-
-ROC.register("varscan2.snv", "hcc.varscan2.snv", Varscan2SNVRoc)
-
-
-class Varscan2IndelRoc(ROC):
-    """ROC calculator for Varscan2 Indels"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        return tableROC(tbl, "tag", "SSC")
-
-
-ROC.register("varscan2.indel", "hcc.varscan2.indel", Varscan2IndelRoc)
-
-
-class MutectSNVRoc(ROC):
-    """ROC calculator for MuTect SNVs"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        return tableROC(tbl, "tag", "TLOD", "FILTER", "t_lod_fstar")
-
-
-ROC.register("mutect.snv", "hcc.mutect.snv", MutectSNVRoc)
-
-
-class MutectIndelRoc(ROC):
-    """ROC calculator for MuTect Indels"""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ftname: str = ""
-
-    def from_table(self, tbl: pandas.DataFrame) -> pandas.DataFrame:
-        return tableROC(tbl, "tag", "TLOD", "FILTER", "t_lod_fstar")
-
-
-ROC.register("mutect.indel", "hcc.mutect.indel", MutectIndelRoc)
+        Returns:
+            DataFrame containing ROC curve data
+        """
+        return tableROC(tbl, "type", self.ftname, roc_reversed=True)
+        return tableROC(tbl, "type", self.ftname, roc_reversed=True)
+        return tableROC(tbl, "type", self.ftname, roc_reversed=True)

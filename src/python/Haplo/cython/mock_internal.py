@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python33
 """
 This module provides a mock implementation of the Haplo.cython._internal module.
 It can be used for testing Python code that depends on the C++ functionality

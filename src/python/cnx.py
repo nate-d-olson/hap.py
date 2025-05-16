@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -71,7 +71,7 @@ def main():
         args.output += ".json"
 
     logging.info("Writing %s" % args.output)
-    with open(args.output, "w") as fp:
+    with open(args.output, "w", encoding="utf-8") as fp:
         json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(",", ": "))
 
 
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(str(e))
+        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

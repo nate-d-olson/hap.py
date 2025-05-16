@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python33
 # coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
@@ -14,24 +14,35 @@
 #
 # Process raw counts coming out of quantify
 
-import logging
 import os
-import pipes
-import subprocess
 import tempfile
-
+import subprocess
+import copy
+import json
+import logging
 import Tools
+import pipes
+from typing import Dict, List, Union, Optional, Any, Tuple, Set, TextIO
+
 from Tools.bcftools import runBcftools
 
 
-def _locations_tmp_bed_file(locations):
-    """turn a list of locations into a bed file"""
-    if type(locations) is str:
+def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
+    """ Turn a list of locations into a bed file 
+    
+    Args:
+        locations: List of locations as strings or comma-separated string
+        
+    Returns:
+        Path to temporary BED file
+        
+    Raises:
+        Exception: For invalid location formats
+    """
+    if isinstance(locations, str):
         locations = locations.split(",")
-    if type(locations) is not list:
-        raise Exception(
-            "Invalid list of locations (must be str or list): %s" % str(locations)
-        )
+    if not isinstance(locations, list):
+        raise Exception(f"Invalid list of locations (must be str or list): {str(locations)}")
 
     llocations = []
 
@@ -39,179 +50,252 @@ def _locations_tmp_bed_file(locations):
         xchr, _, _pos = l.partition(":")
         start, _, end = _pos.partition("-")
         if not xchr:
-            raise Exception("Invalid chromosome name in %s" % str(l))
+            raise Exception(f"Invalid chromosome name in {str(l)}")
         try:
             start = int(start)
-        except Exception:
+        except:
             start = 0
 
         try:
             end = int(end)
-        except Exception:
-            end = 2**31 - 1
+        except:
+            end = 2 ** 31 - 1
 
-        llocations.append((xchr, start, end))
+        llocations.append([xchr, start, end])
 
-    locations = sorted(llocations)
+    # setup temporary file for locations
+    fd, tpath = tempfile.mkstemp(suffix=".bed")
+    os.close(fd)
 
-    tf = tempfile.NamedTemporaryFile(
-        delete=False, mode="w", encoding="utf-8"
-    )  # text mode with encoding for Python 3
-    for xchr, start, end in locations:
-        print("%s\t%i\t%i" % (xchr, start - 1, end), file=tf)
-    tf.close()
+    with open(tpath, "w") as f:
+        for l in llocations:
+            f.write("%s\t%i\t%i\n" % tuple(l))
 
-    return tf.name
+    return tpath
 
 
-def run_quantify(
-    filename,
-    output_file=None,
-    write_vcf=False,
-    regions=None,
-    reference=Tools.defaultReference(),
-    locations=None,
-    threads=1,
-    output_vtc=False,
-    output_rocs=False,
-    qtype=None,
-    roc_file=None,
-    roc_val=None,
-    roc_header=None,
-    roc_filter=None,
-    roc_delta=None,
-    roc_regions=None,
-    clean_info=True,
-    strat_fixchr=False,
-):
-    """Run quantify and return parsed JSON
-
-    :param filename: the VCF file name
-    :param output_file: output file name (if None, will use a temp file)
-    :param write_vcf: write annotated VCF (give filename)
-    :type write_vcf: str
-    :param regions: dictionary of stratification region names and file names
-    :param reference: reference fasta path
-    :param locations: a location to use
-    :param output_vtc: enable / disable the VTC field
-    :param output_rocs: enable / disable output of ROCs by QQ level
-    :param roc_file: filename for a TSV file with ROC observations
-    :param roc_val: field to use for ROC QQ
-    :param roc_header: name of ROC value for tables
-    :param roc_filter: ROC filtering settings
-    :param roc_delta: ROC minimum spacing between levels
-    :param roc_regions: List of regions to output full ROCs for
-    :param clean_info: remove unused INFO fields
-    :param strat_fixchr: fix chr naming in stratification regions
-    :returns: parsed counts JSON
+def run(args: Any) -> None:
+    """Run comparison and create summary statistics
+    
+    Args:
+        args: Parsed command line arguments
     """
+    import Haplo.xcmp
+    import Haplo.vcfeval
+    import Haplo.scmp
 
-    if not output_file:
-        output_file = tempfile.NamedTemporaryFile().name
+    outfiles = {}
 
-    run_str = "quantify %s -o %s" % (pipes.quote(filename), pipes.quote(output_file))
-    run_str += " -r %s" % pipes.quote(reference)
-    run_str += " --threads %i" % threads
+    outprefix = args.prefix
+    if not outprefix:
+        fd, outprefix = tempfile.mkstemp()
+        os.close(fd)
 
-    if output_vtc:
-        run_str += " --output-vtc 1"
+    if args.type != "ALL":
+        typelist = args.type.split(",")
     else:
-        run_str += " --output-vtc 0"
+        typelist = ["INDEL", "SNP", "COMPLEX"]
 
-    if output_rocs:
-        run_str += " --output-rocs 1"
-    else:
-        run_str += " --output-rocs 0"
+    logging.info("Variant types to process: %s" % str(typelist))
 
-    if qtype:
-        run_str += " --type %s" % qtype
+    outvcfs = []
+    for t in typelist:
+        t_outprefix = outprefix + "." + t
+        if args.unhappy:
+            outfiles[t] = u_unhappy(args.truth, args.query, args.ref,
+                                  args.regions, args.regions_file,
+                                  t_outprefix, t.lower(),
+                                  args.usefiltered_truth, args.usefiltered_query)
+        else:
+            if args.gender == "auto" or args.gender == "none":
+                logging.warning("Auto / none for gender selection are not supported. Using female.")
+                is_male = False
+            else:
+                is_male = args.gender.lower() == "male"
+                
+            if args.engine == "xcmp":
+                # Use C++ haplotype comparison
+                outfiles[t] = u_happyc(args.truth, args.query, args.ref,
+                                    args.regions, args.regions_file,
+                                    outprefix, t, args.preprocessing,
+                                    args.window, args.fixchr_truth, args.fixchr_query,
+                                    args.scratch_prefix, args.feature_table,
+                                    args.usefiltered_truth, args.usefiltered_query,
+                                    args.leftshift, args.decompose,
+                                    args.bcftools_norm,
+                                    args.threads, args.engine, args.preserve_all_variants,
+                                    args.write_vcf, args.output_vtc, args.output_vtc_max_size,
+                                    args.lose, args.xcmp_enumeration_threshold, is_male,
+                                    pass_only=args.pass_only, conf_truth=args.conf_truth,
+                                    conf_query=args.conf_query, optimize=args.optimize,
+                                    preprocess_truth=args.preprocess_truth,
+                                    preprocess_query=args.preprocess_query,
+                                    preprocess_window=args.preprocess_window,
+                                    location_features=args.location_features,
+                                    adjust_conf_regions=args.adjust_conf_regions,
+                                    fp_bedfile=args.false_positives)
+            elif args.engine == "vcfeval":
+                # Use RTG vcfeval
+                outfiles[t] = v_vcfeval(args.truth, args.query, args.ref,
+                                     args.regions, args.regions_file,
+                                     outprefix, t, args.preprocessing,
+                                     args.window, args.fixchr_truth, args.fixchr_query,
+                                     args.scratch_prefix,
+                                     args.usefiltered_truth, args.usefiltered_query,
+                                     args.threads, args.vcfeval_path, args.vcfeval_template,
+                                     args.preserve_all_variants,
+                                     args.write_vcf, args.output_vtc, args.output_vtc_max_size,
+                                     feature_table=args.feature_table)
+            # elif args.engine == "scmp-somatic" or \
+            #         (args.engine == "scmp-distance"):
+            #     pass
+            else:
+                raise Exception(f"Invalid engine name: {args.engine}")
 
-    if roc_file:
-        run_str += " --output-roc %s" % pipes.quote(roc_file)
+        if args.write_vcf and os.path.exists(t_outprefix + ".vcf.gz"):
+            outvcfs.append(t_outprefix + ".vcf.gz")
 
-    if roc_val:
-        run_str += " --qq %s" % pipes.quote(roc_val)
-        if roc_header != roc_val:
-            # for xcmp, we extract the QQ value into the IQQ INFO field
-            # we pass the original name along here
-            run_str += " --qq-header %s" % pipes.quote(roc_header)
+    _write_outfiles(outfiles, outprefix, typelist, args.writeCounts)
+    if outvcfs:
+        xvcf = outprefix + ".vcf.gz"
+        # open and pipe to bgzip
+        _merge_vcfs(outvcfs, xvcf)
 
-    if roc_filter:
-        run_str += " --roc-filter '%s'" % pipes.quote(roc_filter)
 
-    if roc_delta:
-        run_str += " --roc-delta %f" % roc_delta
+def _make_cmdline(args: List[str]) -> str:
+    """Make a command line from arguments
+    
+    Args:
+        args: List of command line arguments
+        
+    Returns:
+        Formatted command line string
+    """
+    qargs = []
+    for a in args:
+        if a.strip() != "|":
+            qargs.append(pipes.quote(a))
+        else:
+            qargs.append("|")
+    return " ".join(qargs)
 
-    if clean_info:
-        run_str += " --clean-info 1"
-    else:
-        run_str += " --clean-info 0"
 
-    if strat_fixchr:
-        run_str += " --fix-chr-regions 1"
-    else:
-        run_str += " --fix-chr-regions 0"
+def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
+    """Merge VCFs
+    
+    Args:
+        vcfs: List of VCF files to merge
+        outvcf: Output VCF file path
+    """
+    if os.path.exists(outvcf):
+        try:
+            os.unlink(outvcf)
+        except:
+            pass
 
-    if write_vcf:
-        if not write_vcf.endswith(".vcf.gz") and not write_vcf.endswith(".bcf"):
-            write_vcf += ".vcf.gz"
-        run_str += " -v %s" % pipes.quote(write_vcf)
+    cmd_line = ["bcftools", "concat", "-a"]
+    cmd_line.extend(vcfs)
+    cmd_line.extend(["-o", outvcf])
 
-    if regions:
-        for k, v in regions.items():
-            run_str += " -R '%s:%s'" % (k, v)
+    cmd_line_str = _make_cmdline(cmd_line)
+    logging.info(cmd_line_str)
 
-    if roc_regions:
-        for r in roc_regions:
-            run_str += " --roc-regions '%s'" % r
+    po = subprocess.Popen(cmd_line_str,
+                          shell=True,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE,
+                          universal_newlines=True)
 
-    location_file = None
-    if locations:
-        location_file = _locations_tmp_bed_file(locations)
-        run_str += " --only '%s'" % location_file
+    stdout, stderr = po.communicate()
 
-    tfe = tempfile.NamedTemporaryFile(
-        delete=False, prefix="stderr", suffix=".log", mode="w", encoding="utf-8"
-    )
-    tfo = tempfile.NamedTemporaryFile(
-        delete=False, prefix="stdout", suffix=".log", mode="w", encoding="utf-8"
-    )
+    po.wait()
 
-    logging.info("Running '%s'" % run_str)
+    return_code = po.returncode
 
-    try:
-        subprocess.check_call(run_str, shell=True, stdout=tfo, stderr=tfe)
-    except Exception:
-        tfo.close()
-        tfe.close()
-        with open(tfo.name, encoding="utf-8") as f:
-            for l in f:
-                logging.error("[stdout] " + l.replace("\n", ""))
-        os.unlink(tfo.name)
-        with open(tfe.name, encoding="utf-8") as f:
-            for l in f:
-                logging.error("[stderr] " + l.replace("\n", ""))
-        os.unlink(tfe.name)
-        if location_file:
-            os.unlink(location_file)
-        raise
+    if return_code != 0:
+        logging.error(f"bcftools concat error: {stderr}")
+        raise Exception(f"Failed to concatenate {str(vcfs)}")
 
-    tfo.close()
-    tfe.close()
-    with open(tfo.name, encoding="utf-8") as f:
-        for l in f:
-            logging.info("[stdout] " + l.replace("\n", ""))
-    os.unlink(tfo.name)
-    with open(tfe.name, encoding="utf-8") as f:
-        for l in f:
-            logging.info("[stderr] " + l.replace("\n", ""))
-    os.unlink(tfe.name)
-    if location_file:
-        os.unlink(location_file)
+    # index vcf
+    cmd_line = ["bcftools", "index", outvcf]
 
-    if write_vcf and write_vcf.endswith(".bcf"):
-        runBcftools("index", write_vcf)
-    elif write_vcf:
-        to_run = "tabix -p vcf %s" % pipes.quote(write_vcf)
-        logging.info("Running '%s'" % to_run)
-        subprocess.check_call(to_run, shell=True)
+    cmd_line_str = _make_cmdline(cmd_line)
+    logging.info(cmd_line_str)
+
+    po = subprocess.Popen(cmd_line_str,
+                          shell=True,
+                          stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE,
+                          universal_newlines=True)
+
+    stdout, stderr = po.communicate()
+
+    po.wait()
+
+    return_code = po.returncode
+
+    if return_code != 0:
+        logging.error(f"bcftools index error: {stderr}")
+        logging.warning(f"Failed to index {outvcf}")
+
+
+def _write_outfiles(outfiles: Dict[str, Dict[str, Any]], 
+                   outprefix: str, 
+                   typelist: List[str], 
+                   writeCounts: bool) -> None:
+    """Write output files
+    
+    Args:
+        outfiles: Dictionary of output files by variant type
+        outprefix: Output file prefix
+        typelist: List of variant types
+        writeCounts: Whether to write count metrics
+    """
+    # write CSV outputs
+    of_summary = open(outprefix + ".summary.csv", "w")
+    of_extended = None
+    of_metrics = None
+
+    file_header = False
+
+    header_lines = []
+    data = {}
+
+    for t in typelist:
+        if t in outfiles:
+            try:
+                if not file_header:
+                    header_lines.append("#" + outfiles[t]["summary_header"])
+                    file_header = True
+                data[t] = outfiles[t]["summary_csv"]
+            except:
+                pass  # might not have all outputs
+
+    for h in header_lines:
+        of_summary.write(h + "\n")
+
+    for t in sorted(data.keys()):
+        for l in data[t].splitlines():
+            if not l.startswith("Type"):
+                of_summary.write(l + "\n")
+
+    for t in typelist:
+        try:
+            if of_extended is None and writeCounts and "extended_csv" in outfiles[t]:
+                of_extended = open(outprefix + ".extended.csv", "w")
+                of_extended.write(outfiles[t]["extended_header"] + "\n")
+
+            if of_extended and "extended_csv" in outfiles[t]:
+                for l in outfiles[t]["extended_csv"].splitlines():
+                    if not l.startswith("#"):
+                        of_extended.write(l + "\n")
+
+            if of_metrics is None and writeCounts and "metrics" in outfiles[t]:
+                of_metrics = open(outprefix + ".metrics.json.gz", "wb")
+                import gzip
+                of_metrics = gzip.GzipFile(fileobj=of_metrics)
+
+            if of_metrics and "metrics" in outfiles[t]:
+                of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode('utf-8'))
+        except:
+            pass  # might not have all outputs
