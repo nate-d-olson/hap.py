@@ -650,20 +650,13 @@ def main():
                     os.remove(x)
 
         else:
-            logging.info(
-                "Scratch files kept : %s"
-                % (
-                    tempfiles.decode("utf-8")
-                    if isinstance(tempfiles, bytes)
-                    else str(tempfiles)
-                )
-            )
+            logging.info(f"Scratch files kept: {tempfiles}")
 
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
+        logging.error(str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

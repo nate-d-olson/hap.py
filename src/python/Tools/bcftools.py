@@ -370,3 +370,43 @@ def bedOverlapCheck(filename):
         last = int(l[2])
         lines += 1
     return 0
+
+
+def run_command(cmd_line, shell=True, fail_message=None):
+    """Unified command execution with better error handling
+
+    Args:
+        cmd_line: Command line to execute (string or list)
+        shell: Whether to use shell execution
+        fail_message: Custom error message on failure
+
+    Returns:
+        Tuple of (stdout, stderr) as strings
+
+    Raises:
+        Exception: If command execution fails
+    """
+    logging.info(cmd_line if isinstance(cmd_line, str) else " ".join(cmd_line))
+
+    try:
+        process = subprocess.Popen(
+            cmd_line,
+            shell=shell,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,  # Return strings, not bytes
+        )
+
+        stdout, stderr = process.communicate()
+        return_code = process.returncode
+
+        if return_code != 0:
+            error_msg = fail_message or f"Command failed with return code {return_code}"
+            logging.error(f"{error_msg}\nSTDOUT: {stdout}\nSTDERR: {stderr}")
+            raise Exception(f"{error_msg}: {stderr}")
+
+        return stdout, stderr
+    except Exception as e:
+        error_msg = fail_message or "Command execution failed"
+        logging.error(f"{error_msg}: {str(e)}")
+        raise Exception(f"{error_msg}: {str(e)}")

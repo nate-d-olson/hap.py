@@ -49,6 +49,7 @@ More information can be found below in the [usage section](#usage).
   * [Other requirements](#other-requirements)
 
 ## Motivation
+
 ### Complex variant comparison
 
 A major challenge when comparing VCF files for diploid samples is the handling
@@ -123,6 +124,7 @@ is the representation of MNVs as individual SNPs vs. as complex variants.
 Consider the following case:
 
 *Complex variant representation*:
+
 ```
 chrQ  16    GGG    TTT         0/1
 ```
@@ -130,6 +132,7 @@ chrQ  16    GGG    TTT         0/1
 vs.
 
 *Atomized representation*:
+
 ```
 chrQ  16    G      T         0/1
 chrQ  17    G      T         0/1
@@ -324,6 +327,7 @@ There are various workaround / testing switches:
 ### Docker
 
 Clone this repository and build a Docker image as follows.
+
 ```
 $ sudo docker build .
 $ sudo docker images
@@ -332,15 +336,20 @@ REPOSITORY     TAG            IMAGE ID            CREATED             VIRTUAL SI
 $ sudo docker run -ti --rm 3d03a99b3d81 bin/bash
 $/ /opt/hap.py/bin/hap.py
 ```
+
 A pre-built docker image can be found here: [https://hub.docker.com/r/pkrusche/hap.py](https://hub.docker.com/r/pkrusche/hap.py). It can
 be obtained by running:
+
 ```bash
 docker pull pkrusche/hap.py
 ```
+
 If the current directory contains a clone of the hap.py repository, hap.py can be run in Docker as follows:
+
 ```bash
 sudo docker run -it -v `pwd`:/data pkrusche/hap.py /opt/hap.py/bin/hap.py /data/example/PG_performance.vcf.gz /data/example/performance.vcf.gz -o /data/test
 ```
+
 The `-v` argument mounts the current directory as `/data` in the Docker image. The output should also
 appear in the current directory.
 
@@ -363,20 +372,27 @@ You will need these tools / libraries on your system to compile the code:
 
 Then to compile:
 
-1.  Get a hap.py checkout:
+1. Get a hap.py checkout:
+
     ```bash
     git clone https://github.com/sequencing/hap.py
     ```
-2.  Make a build folder
+
+2. Make a build folder
+
     ```bash
     mkdir hap.py-build
     cd hap.py-build
     ```
-3.  Run CMake
+
+3. Run CMake
+
     ```bash
     cmake ../hap.py
     ```
-4.  Build
+
+4. Build
+
     ```bash
     make
     ```
@@ -395,10 +411,11 @@ up-to-date.
 The source for hap.py contains a script [configure.sh](configure.sh) which shows some basic additional
 configuration flags, and an automated way to pre-package CMake setups. Here is a list of additional flags for CMake to change compile options help it find dependencies:
 
-*  `-DCMAKE_BUILD_TYPE=Debug` -- set the build type, allowed values are `Debug` and `Release`
-*  `-DCMAKE_C_COMPILER=/usr/bin/gcc` and `-DCMAKE_CXX_COMPILER=/usr/bin/g++` -- change the compiler path
-*  `-DCMAKE_INSTALL_PREFIX=/usr/local` -- set an installation directory that will be used by make install.
-*  `-DBOOST_ROOT=$HOME/boost_1_55_0_install` -- set the path to Boost. Run the following commands to compile and install boost:
+* `-DCMAKE_BUILD_TYPE=Debug` -- set the build type, allowed values are `Debug` and `Release`
+* `-DCMAKE_C_COMPILER=/usr/bin/gcc` and `-DCMAKE_CXX_COMPILER=/usr/bin/g++` -- change the compiler path
+* `-DCMAKE_INSTALL_PREFIX=/usr/local` -- set an installation directory that will be used by make install.
+* `-DBOOST_ROOT=$HOME/boost_1_55_0_install` -- set the path to Boost. Run the following commands to compile and install boost:
+
 ```bash
 cd ~
 wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
@@ -407,16 +424,16 @@ cd boost_1_55_0
 ./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options
 ./b2 --prefix=$HOME/boost_1_55_0_install install
 ```
-*  `-DUSE_SGE` -- enable the `--force-interactive` switch in hap.py.
-*  `-DBUILD_VCFEVAL=ON` -- Download and build rtgtools / vcfeval. This is a comparison engine that can be used
+
+* `-DUSE_SGE` -- enable the `--force-interactive` switch in hap.py.
+* `-DBUILD_VCFEVAL=ON` -- Download and build rtgtools / vcfeval. This is a comparison engine that can be used
    as an alternative to the built-in xcmp in hap.py. To successfully build and run vcfeval, you will need:
-   - A Java JRE, newer than 1.8.x
-   - ant > 1.9.2 (older versions of ant will not successfully build rtgtools)
+  * A Java JRE, newer than 1.8.x
+  * ant > 1.9.2 (older versions of ant will not successfully build rtgtools)
    See [src/sh/illumina-setup.sh]() for an example. If running Java requires any special setup
    (or to configure any other environment variables), you can specify a wrapper script using
    `-DVCFEVAL_WRAPPER={absolute_path_to_wrapper_script}`. See [src/sh/rtg-wrapper.sh]() for an
    example.
-
 
 ## System requirements
 
@@ -485,3 +502,26 @@ export BOOST_ROOT=$HOME/boost_1_55_0_install
 
 The complete list of dependencies / packages to install beforehand can be found
 in the [Dockerfile](Dockerfile).
+
+# Python 3 Modernization
+
+This branch contains a modernized version of hap.py that focuses on the core functionality using Python 3. For details on the changes made and how to use the modernized version, please see [PYTHON3_CORE.md](PYTHON3_CORE.md).
+
+## Key Features
+
+* Python 3.6+ compatibility
+* Focus on vcfeval as the comparison engine
+* Stratified performance metrics using BED files
+* Improved build system and dependency management
+
+## Quick Start
+
+```bash
+# Build with Python 3
+python3 install.py /path/to/install/dir
+
+# Test core functionality
+./test_py3_core.sh
+```
+
+For more detailed information, see the [full documentation](PYTHON3_CORE.md).

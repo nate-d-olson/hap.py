@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -32,6 +32,8 @@ import urllib.request
 
 def check_python_version():
     """Check if the python version is sufficient"""
+    if sys.version_info < (3, 6):
+        raise Exception("Python >= 3.6 is required for installation.")
 
 
 def create_python_environment(source_dir, args):
@@ -39,15 +41,16 @@ def create_python_environment(source_dir, args):
     :return: shebang with path to the python executable
     """
     interp = args.python_interp
-    pyver = (
-        subprocess.check_output(
-            interp + " -c \"import sys; print ','.join(map(str, list(sys.version_info["
-            '0:3])))"',
-            shell=True,
-        )
-        .strip()
-        .split(",")
-    )
+    pyver_output = subprocess.check_output(
+        f"{interp} -c \"import sys; print(','.join(map(str, list(sys.version_info[0:3]))))\"",
+        shell=True,
+    ).strip()
+
+    # Convert bytes to str if needed in Python 3
+    if isinstance(pyver_output, bytes):
+        pyver_output = pyver_output.decode("utf-8")
+
+    pyver = tuple(map(int, pyver_output.split(",")))
     pyver = tuple(map(int, pyver))
 
     if pyver < (2, 7, 3):
@@ -101,9 +104,20 @@ def create_python_environment(source_dir, args):
             cmds.insert(1, " --cert")
             cmds.insert(2, deleteme)
 
-        for x in open(os.path.join(source_dir, "happy.requirements.txt")):
-            print(" ".join([*cmds, x]), file=sys.stderr)
-            subprocess.check_call(" ".join([*cmds, x]), shell=True)
+        # First try to use the py3 core requirements file
+        requirements_file = os.path.join(source_dir, "happy.core-requirements.py3.txt")
+        if not os.path.exists(requirements_file):
+            # Fall back to regular py3 requirements file
+            requirements_file = os.path.join(source_dir, "happy.requirements.py3.txt")
+            if not os.path.exists(requirements_file):
+                # Use the default requirements file as last resort
+                requirements_file = os.path.join(source_dir, "happy.requirements.txt")
+        
+        with open(requirements_file, "r") as req_file:
+            for x in req_file:
+                if x.strip() and not x.strip().startswith(("#", "//")):
+                    print(" ".join([*cmds, x]), file=sys.stderr)
+                    subprocess.check_call(" ".join([*cmds, x]), shell=True)
     finally:
         if deleteme:
             os.unlink(deleteme)

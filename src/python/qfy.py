@@ -241,7 +241,7 @@ def quantify(args):
     # gzip JSON output
     if args.write_json:
         with gzip.open(
-            args.reports_prefix + ".metrics.json.gz", "w", encoding="utf-8"
+            args.reports_prefix + ".metrics.json.gz", "wt", encoding="utf-8"
         ) as fp:
             json.dump(metrics_output, fp)
 
@@ -528,6 +528,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
+        logging.error(str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

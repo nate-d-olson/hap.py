@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -30,7 +31,13 @@ import tempfile
 import time
 from typing import Any, List, Optional
 
-import Haplo.version  # pylint: disable=E0611,E0401
+# Set up versioning
+try:
+    from Haplo import version
+    has_vcfeval = getattr(version, 'has_vcfeval', False)
+except ImportError:
+    # Version module not available, assume vcfeval is not included
+    has_vcfeval = False
 
 
 def findVCFEval() -> str:
@@ -39,15 +46,16 @@ def findVCFEval() -> str:
     Returns:
         Path to rtg executable or 'rtg' if not found
     """
-    if Haplo.version.has_vcfeval:
-        base = os.path.join(
-            os.path.dirname(__file__),
+    if has_vcfeval:
+        script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+        base = os.path.abspath(os.path.join(
+            script_dir,  # Haplo
             "..",  # python
-            "..",  # lib
+            "..",  # src
             "..",  # hap.py-base
             "libexec",
             "rtg-tools-install",
-        )
+        ))
         # prefer wrapper when it's there
         bfile = os.path.join(base, "rtg-wrapper.sh")
         bfile2 = os.path.join(base, "rtg")
@@ -155,7 +163,7 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
         if args.roc:
             runme += f" -f {shlex.quote(args.roc)}"
 
-        if args.engine_scmp_distance:
+        if hasattr(args, 'engine_scmp_distance') and args.engine_scmp_distance:
             runme += f" --Xloose-match-distance={args.engine_scmp_distance}"
 
         logging.info(runme)
