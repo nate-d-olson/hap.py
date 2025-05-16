@@ -190,19 +190,6 @@ else
 fi
 
 ##############################################################
-# Test Hap.py scmp allele and distance-based comparison
-##############################################################
-
-/bin/bash ${DIR}/run_scmp_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Integration test FAILED!"
-	exit 1
-else
-	echo "Integration test SUCCEEDED!"
-fi
-
-##############################################################
 # Test Hap.py on tricky test cases
 ##############################################################
 
@@ -266,17 +253,4 @@ if [[ $? -ne 0 ]]; then
 	exit 1
 else
 	echo "PG integration test SUCCEEDED!"
-fi
-
-##############################################################
-# Test Hap.py + integration
-##############################################################
-
-/bin/bash ${DIR}/run_sompy_test.sh
-
-if [[ $? -ne 0 ]]; then
-	echo "Som.py test FAILED!"
-	exit 1
-else
-	echo "Som.py test SUCCEEDED!"
 fi

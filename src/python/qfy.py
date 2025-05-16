@@ -252,7 +252,7 @@ def updateArgs(parser):
         "-t",
         "--type",
         dest="type",
-        choices=["xcmp", "ga4gh"],
+        choices=["ga4gh"],
         help="Annotation format in input VCF file.",
     )
 
@@ -329,7 +329,7 @@ def updateArgs(parser):
         dest="preserve_info",
         action="store_true",
         default=False,
-        help="When using XCMP, preserve and merge the INFO fields in truth and query. Useful for ROC computation.",
+        help="Preserve and merge the INFO fields in truth and query. Useful for ROC computation.",
     )
 
     parser.add_argument(

@@ -47,9 +47,7 @@ import Haplo.blocksplit
 import Haplo.gvcf2bed
 import Haplo.partialcredit
 import Haplo.quantify
-import Haplo.scmp
 import Haplo.vcfeval
-import Haplo.xcmp
 import pre
 import qfy
 import Tools
@@ -173,23 +171,6 @@ def main():
         type=int,
         help="Minimum distance between variants such that they fall into the same superlocus.",
     )
-
-    # xcmp-specific stuff
-    parser.add_argument(
-        "--xcmp-enumeration-threshold",
-        dest="max_enum",
-        default=16768,
-        type=int,
-        help="Enumeration threshold / maximum number of sequences to enumerate per block.",
-    )
-
-    parser.add_argument(
-        "--xcmp-expand-hapblocks",
-        dest="hb_expand",
-        default=30,
-        type=int,
-        help="Expand haplotype blocks by this many basepairs left and right.",
-    )
     parser.add_argument(
         "--threads",
         dest="threads",
@@ -201,8 +182,8 @@ def main():
     parser.add_argument(
         "--engine",
         dest="engine",
-        default="xcmp",
-        choices=["xcmp", "vcfeval", "scmp-somatic", "scmp-distance"],
+        default="vcfeval",
+        choices=["vcfeval"],
         help="Comparison engine to use.",
     )
 
@@ -223,23 +204,6 @@ def main():
         "(SDF -- run rtg format -o ref.SDF ref.fa). You can specify this here "
         "to save time when running hap.py with vcfeval. If no SDF folder is "
         "specified, hap.py will create a temporary one.",
-    )
-
-    parser.add_argument(
-        "--scmp-distance",
-        dest="engine_scmp_distance",
-        required=False,
-        default=30,
-        type=int,
-        help="For distance-based matching (vcfeval and scmp), this is the distance between variants to use.",
-    )
-
-    parser.add_argument(
-        "--lose-match-distance",
-        dest="engine_scmp_distance",
-        required=False,
-        type=int,
-        help="For distance-based matching (vcfeval and scmp), this is the distance between variants to use.",
     )
 
     if Tools.has_sge:
@@ -607,43 +571,10 @@ def main():
         tempfiles.append(tf.name + ".csi")
         output_name = tf.name
 
-        if args.engine == "xcmp":
-            # do xcmp
-            logging.info("Using xcmp for comparison")
-            res = runParallel(pool, Haplo.xcmp.xcmpWrapper, args.locations, args)
-            tempfiles += [x for x in res if x is not None]  # VCFs
-
-            if None in res:
-                raise Exception("One of the xcmp jobs failed.")
-
-            if len(res) == 0:
-                raise Exception(
-                    "Input files/regions do not contain variants (0 haplotype blocks were processed)."
-                )
-
-            # concatenate + index
-            logging.info("Concatenating variants...")
-            runme_list = [x for x in res if x is not None]
-            if len(runme_list) == 0:
-                raise Exception("No outputs to concatenate!")
-
-            logging.info("Concatenating...")
-            bcftools.concatenateParts(output_name, *runme_list)
-            logging.info("Indexing...")
-            bcftools.runBcftools("index", output_name)
-            # passed to quantify
-            args.type = "xcmp"
-            # xcmp extracts whichever field we're using into the QQ info field
-            args.roc_header = args.roc
-            args.roc = "IQQ"
-        elif args.engine == "vcfeval":
+        if args.engine == "vcfeval":
             tempfiles += Haplo.vcfeval.runVCFEval(
                 args.vcf1, args.vcf2, output_name, args
             )
-            # passed to quantify
-            args.type = "ga4gh"
-        elif args.engine.startswith("scmp"):
-            tempfiles += Haplo.scmp.runSCmp(args.vcf1, args.vcf2, output_name, args)
             # passed to quantify
             args.type = "ga4gh"
         else:
@@ -690,7 +621,7 @@ def main():
 
             bcftools.runBcftools(
                 "merge",
-                output_vcf,
+                output_name,
                 info_file.name,
                 "-m",
                 "all",
