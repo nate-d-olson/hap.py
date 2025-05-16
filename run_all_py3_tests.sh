@@ -46,7 +46,7 @@ echo "----------------------------------------"
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     echo -n "Running $test_name... "
     if eval "$test_command"; then
         echo "PASSED"

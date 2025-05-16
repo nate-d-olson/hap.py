@@ -7,8 +7,8 @@ This is a set of programs based on [htslib](https://github.com/samtools/htslib)
 to benchmark variant calls against gold standard truth datasets.
 
 > **Note:** This project has been migrated from Python 2 to Python 3.
-> The core functionality (vcfeval engine and stratified metrics) has been successfully 
-> migrated. See the [Python 3 migration tools](PYTHON3_MIGRATION_TOOLS.md) 
+> The core functionality (vcfeval engine and stratified metrics) has been successfully
+> migrated. See the [Python 3 migration tools](PYTHON3_MIGRATION_TOOLS.md)
 > and the [migration status](PYTHON3_MIGRATION_FINAL.md) for details.
 
 To compare a VCF against a gold standard dataset, use the following commmand line

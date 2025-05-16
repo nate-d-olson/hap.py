@@ -35,11 +35,11 @@ if(NOT CYTHON_EXECUTABLE)
         OUTPUT_QUIET
         ERROR_QUIET
     )
-    
+
     if(NOT PIP_RESULT EQUAL 0)
         message(FATAL_ERROR "Cython not found and pip installation failed. Please install Cython manually.")
     endif()
-    
+
     # Check if installation succeeded
     execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "import Cython; print(Cython.__version__)"
@@ -48,11 +48,11 @@ if(NOT CYTHON_EXECUTABLE)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
-    
+
     if(NOT CYTHON_RESULT EQUAL 0)
         message(FATAL_ERROR "Cython installation verification failed. Please install Cython manually.")
     endif()
-    
+
     # Get the Cython executable path again
     execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "import Cython.Build; print(Cython.Build.cython_executable)"

@@ -3,20 +3,22 @@
 
 from __future__ import division, print_function
 
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport free, malloc
 from libc.string cimport memcpy
 
 import numpy as np
+
 cimport numpy as np
+
 
 # Fast sequence handling with proper Python 3 bytes/string conversion
 cpdef bytes complement_sequence(seq_input):
     """
     Return the complement of a DNA sequence.
-    
+
     Args:
         seq_input: String or bytes sequence to complement
-        
+
     Returns:
         bytes: Complemented sequence as bytes
     """
@@ -26,7 +28,7 @@ cpdef bytes complement_sequence(seq_input):
         seq = seq_input.encode('ascii')
     else:
         seq = seq_input  # Assume bytes
-    
+
     cdef:
         size_t i, n = len(seq)
         char* c_seq = seq  # This works in Python 3 because bytes maps to char*
@@ -56,16 +58,16 @@ cpdef bytes complement_sequence(seq_input):
 cpdef bytes reverse_complement(seq_input):
     """
     Return the reverse complement of a DNA sequence.
-    
+
     Args:
         seq_input: String or bytes sequence to reverse complement
-        
+
     Returns:
         bytes: Reverse complemented sequence as bytes
     """
     # First get complement
     cdef bytes comp_seq = complement_sequence(seq_input)
-    
+
     # Then reverse it
     return comp_seq[::-1]
 
@@ -73,15 +75,15 @@ cpdef bytes reverse_complement(seq_input):
 def process_sequence(seq_input):
     """
     Process a DNA sequence, returning a string.
-    
+
     Args:
         seq_input: Input sequence (string or bytes)
-    
+
     Returns:
         str: Processed sequence as a Python string
     """
     cdef bytes result = reverse_complement(seq_input)
-    
+
     # Convert back to string if input was string
     if isinstance(seq_input, str):
         return result.decode('ascii')

@@ -2,7 +2,6 @@
 # Test module for fastasize.py functionality with Python 3
 
 import logging
-import os
 import sys
 from pathlib import Path
 

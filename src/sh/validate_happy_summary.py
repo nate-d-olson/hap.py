@@ -6,7 +6,6 @@ import argparse
 import csv
 import logging
 import sys
-from typing import Dict, List, Set, Tuple
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO

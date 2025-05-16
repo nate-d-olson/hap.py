@@ -25,7 +25,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -150,36 +150,50 @@ def test_cython_string_handling(module_name: str) -> Dict[str, bool]:
                 results["basic_functionality"] = False
                 logger.error(f"Basic functionality test failed: {e}")
                 traceback.print_exc()
-                
+
         # Test string encoding/decoding specifically
         if hasattr(module, "get_version") or hasattr(module, "test_module"):
             logger.info(f"Testing string encoding/decoding in {module_name}")
             try:
                 # Test with a function that returns a string (most modules have one of these)
-                test_function = getattr(module, "get_version", None) or getattr(module, "test_module", None)
+                test_function = getattr(module, "get_version", None) or getattr(
+                    module, "test_module", None
+                )
                 if test_function:
                     result = test_function()
                     if isinstance(result, str):
-                        logger.info(f"String encoding test passed: returned string '{result}'")
+                        logger.info(
+                            f"String encoding test passed: returned string '{result}'"
+                        )
                         results["string_encoding"] = True
-                    elif isinstance(result, dict) and any(isinstance(v, str) for v in result.values()):
-                        logger.info(f"String encoding test passed: returned dict with string values")
+                    elif isinstance(result, dict) and any(
+                        isinstance(v, str) for v in result.values()
+                    ):
+                        logger.info(
+                            "String encoding test passed: returned dict with string values"
+                        )
                         results["string_encoding"] = True
                     else:
-                        logger.warning(f"String encoding test inconclusive: unexpected return type {type(result)}")
+                        logger.warning(
+                            f"String encoding test inconclusive: unexpected return type {type(result)}"
+                        )
                         results["string_encoding"] = None
             except Exception as e:
                 results["string_encoding"] = False
                 logger.error(f"String encoding test failed: {e}")
                 traceback.print_exc()
-                
+
         # Test Unicode handling if the module has appropriate functions
-        if hasattr(module, "complement_sequence") or hasattr(module, "reverse_complement"):
+        if hasattr(module, "complement_sequence") or hasattr(
+            module, "reverse_complement"
+        ):
             logger.info(f"Testing Unicode handling in {module_name}")
             try:
                 # Create test data with Unicode characters
                 test_str = "ACGTÑÄÖÜŽ"
-                test_func = getattr(module, "complement_sequence", None) or getattr(module, "reverse_complement", None)
+                test_func = getattr(module, "complement_sequence", None) or getattr(
+                    module, "reverse_complement", None
+                )
                 if test_func:
                     # This should not raise UnicodeDecodeError if properly handled
                     result = test_func(test_str)
@@ -238,10 +252,10 @@ def test_mock_implementations() -> bool:
 
 def run_build_test(build_dir: str) -> bool:
     """Run a build test to check if Cython modules can be built.
-    
+
     Args:
         build_dir: Path to build directory
-        
+
     Returns:
         True if build test passes, False otherwise
     """
@@ -252,14 +266,15 @@ def run_build_test(build_dir: str) -> bool:
             # Write a simple Cython module
             test_pyx_path = os.path.join(temp_dir, "test_py3_compat.pyx")
             with open(test_pyx_path, "w", encoding="utf-8") as f:
-                f.write("""# cython: language_level=3
+                f.write(
+                    """# cython: language_level=3
 # distutils: language=c++
 
 """
-"""
+                    """
 Test module for Python 3 compatibility checks
 """
-"""
+                    """
 
 from libc.stdlib cimport malloc, free
 from cpython.ref cimport PyObject
@@ -267,8 +282,8 @@ from cpython.ref cimport PyObject
 # String handling functions for testing
 def encode_decode_test(s):
     """
-"""Test string encoding/decoding"""
-"""
+                    """Test string encoding/decoding"""
+                    """
     if isinstance(s, str):
         # Python str to C++ string
         cdef bytes encoded = s.encode('utf-8')
@@ -282,51 +297,54 @@ def encode_decode_test(s):
 # Memory management test
 cdef class TestWrapper:
     cdef char* _data
-    
+
     def __cinit__(self):
         self._data = <char*>malloc(10 * sizeof(char))
         if self._data == NULL:
             raise MemoryError()
-    
+
     def __dealloc__(self):
         if self._data != NULL:
             free(self._data)
-            
+
 def create_and_destroy():
     """
-"""Create and destroy an object to test memory management"""
-"""
+                    """Create and destroy an object to test memory management"""
+                    """
     obj = TestWrapper()
     return "Memory test passed"
 
 def test_module():
     """
-"""Test if the module is working properly"""
-"""
+                    """Test if the module is working properly"""
+                    """
     return {
         "encoding_test": encode_decode_test("Test äöüñ"),
         "memory_test": create_and_destroy()
     }
-""")
-            
+"""
+                )
+
             # Try to build the Cython module
             build_cmd = [
-                sys.executable, "-m", "pip", "install", "-e", temp_dir,
-                "--install-option=--cython-language-level=3"
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "-e",
+                temp_dir,
+                "--install-option=--cython-language-level=3",
             ]
-            
+
             logger.info(f"Running build command: {' '.join(build_cmd)}")
             proc = subprocess.run(
-                build_cmd, 
-                cwd=temp_dir,
-                capture_output=True,
-                text=True
+                build_cmd, cwd=temp_dir, capture_output=True, text=True
             )
-            
+
             if proc.returncode != 0:
                 logger.error(f"Build failed with error:\n{proc.stderr}")
                 return False
-                
+
             logger.info("Build completed successfully")
             return True
     except Exception as e:
@@ -355,7 +373,7 @@ def main():
         sys.exit(1)
 
     logger.info(f"Python path: {sys.path}")
-    
+
     # Run build test if requested
     if args.build_test:
         if run_build_test(args.build_dir):
@@ -394,15 +412,21 @@ def main():
         for module_name, tests in string_test_results.items():
             logger.info(f"Module: {module_name}")
             for test_name, result in tests.items():
-                status = "✓ PASS" if result else "✗ FAIL" if result is False else "? INCONCLUSIVE"
+                status = (
+                    "✓ PASS"
+                    if result
+                    else "✗ FAIL"
+                    if result is False
+                    else "? INCONCLUSIVE"
+                )
                 logger.info(f"  {test_name}: {status}")
-                
+
         # Check overall success
         string_tests_success = all(
             all(result for result in tests.values() if result is not None)
             for tests in string_test_results.values()
         )
-        
+
         if string_tests_success:
             logger.info("All string handling tests passed!")
         else:
@@ -416,7 +440,7 @@ def main():
         logger.info("\n===== ALL TESTS PASSED =====")
     else:
         logger.error("\n===== SOME TESTS FAILED =====")
-        
+
     sys.exit(0 if success else 1)
 
 

@@ -117,7 +117,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - INDEL identification
   - Complex variant handling
 
-#### 2.2 Region-based Stratification 
+#### 2.2 Region-based Stratification
 - **Test file:** `run_quantify_stratification_test.sh`
 - **Purpose:** Verify stratification by regions
 - **Test cases:**

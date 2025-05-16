@@ -20,17 +20,16 @@ statistics for variant calling evaluation.
 # Import commonly used functions directly from cython_compat
 
 # Import Python standard libraries and compatibility code
-from __future__ import absolute_import, division, print_function
 
 # Import Cython modules with Python fallbacks
 from .cython_compat import (
-    complement_sequence,
-    reverse_complement,
     VariantProcessor,
-    compute_roc_points,
     cmp_chromosomes,
-    sort_chromosomes,
+    complement_sequence,
+    compute_roc_points,
     is_using_cython,
+    reverse_complement,
+    sort_chromosomes,
 )
 
 # Version information

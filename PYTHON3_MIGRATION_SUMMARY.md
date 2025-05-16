@@ -65,7 +65,7 @@ The following tests are available to verify the Python 3 port:
    ```bash
    # Option 1: Install with Python 3 installer
    python3 install_py3.py /path/to/install/dir
-   
+
    # Option 2: Build from source with CMake
    cmake ../hap.py -DBUILD_PYTHON3=ON
    make

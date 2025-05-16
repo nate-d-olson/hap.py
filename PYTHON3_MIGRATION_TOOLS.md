@@ -113,7 +113,7 @@ In Python 3, there's a clear distinction between binary data (bytes) and text st
    ```python
    # Python 2
    with open(filename, 'r') as f:
-   
+
    # Python 3
    with open(filename, 'r', encoding="utf-8") as f:
    ```
@@ -122,7 +122,7 @@ In Python 3, there's a clear distinction between binary data (bytes) and text st
    ```python
    # Python 2
    output = subprocess.check_output(["command"])
-   
+
    # Python 3
    output = subprocess.check_output(["command"], universal_newlines=True)
    ```
@@ -131,7 +131,7 @@ In Python 3, there's a clear distinction between binary data (bytes) and text st
    ```python
    # Python 2
    text = str(some_bytes)
-   
+
    # Python 3
    text = some_bytes.decode('utf-8') if isinstance(some_bytes, bytes) else str(some_bytes)
    ```

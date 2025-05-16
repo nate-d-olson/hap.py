@@ -1,8 +1,9 @@
 # cython: language_level=3
 # distutils: language=c++
 # Helper functions for string encoding/decoding and safe C++ interactions
-from libc.stdlib cimport malloc, free
-from libc.stdio cimport FILE, fopen, fclose
+from libc.stdio cimport FILE, fclose, fopen
+from libc.stdlib cimport free, malloc
+
 
 cdef bytes _ensure_bytes(s):
     """Convert a Python string to bytes."""
@@ -52,7 +53,7 @@ cdef class Buffer:
         if self.data != NULL:
             free(self.data)
             self.data = NULL
-            
+
 # Example of proper reference handling
 cdef class VariantWrapper:
     cdef Variant* c_variant
@@ -61,7 +62,7 @@ cdef class VariantWrapper:
     def __cinit__(self, owner):
         self._owner = owner  # Store reference to prevent garbage collection
         self.c_variant = get_variant_from_owner(owner)
-        
+
     def __dealloc__(self):
         # No need to free c_variant as it's owned by _owner
         pass

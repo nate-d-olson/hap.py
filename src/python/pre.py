@@ -135,7 +135,7 @@ def preprocess(
         mf = subprocess.check_output(
             "vcfcheck %s --check-bcf-errors 1" % pipes.quote(vcf_input), shell=True
         )
-        
+
         # Decode the output from bytes to string
         if isinstance(mf, bytes):
             mf = mf.decode("utf-8")
