@@ -16,39 +16,44 @@ This package contains modules for comparing haplotypes and calculating
 statistics for variant calling evaluation.
 """
 
-__version__ = "0.3.15"
-has_sge = False
+# Haplo package initialization for Python 3
+# Import commonly used functions directly from cython_compat
 
-import logging
-import os
+# Import Python standard libraries and compatibility code
+from __future__ import absolute_import, division, print_function
 
-# Check if we should use the mock implementation (useful for testing/development)
-use_mock = os.environ.get("HAPLO_USE_MOCK", "0").lower() in ("1", "true", "yes", "on")
+# Import Cython modules with Python fallbacks
+from .cython_compat import (
+    complement_sequence,
+    reverse_complement,
+    VariantProcessor,
+    compute_roc_points,
+    cmp_chromosomes,
+    sort_chromosomes,
+    is_using_cython,
+)
 
-if use_mock:
-    # Explicitly use the mock implementation
-    try:
-        from Haplo.cython.mock_internal import *  # noqa
+# Version information
+__version__ = "0.4.0"
 
-        logging.info("Using mock C++ implementation for Haplo module")
-    except ImportError:
-        logging.warning(
-            "Could not import mock Haplo implementation. Functionality will be limited."
-        )
-else:
-    # Try to use the real C++ implementation, fall back to mock if needed
-    try:
-        # Try to import the C++ implementation
-        from Haplo.cython._internal import *  # noqa
-    except ImportError:
-        try:
-            # Fall back to mock implementation
-            from Haplo.cython.mock_internal import *  # noqa
+# Check if we're using Cython or Python implementations
+_module_info = is_using_cython()
 
-            logging.warning(
-                "Could not import Haplo C++ extension module. Using mock implementation instead."
-            )
-        except ImportError:
-            logging.warning(
-                "Could not import Haplo C++ extension module or mock implementation. Functionality will be limited."
-            )
+
+# Info about package
+def get_module_info():
+    """Get information about the module implementation."""
+    result = {"version": __version__, "modules": _module_info}
+    return result
+
+
+# Package exports
+__all__ = [
+    "complement_sequence",
+    "reverse_complement",
+    "VariantProcessor",
+    "compute_roc_points",
+    "cmp_chromosomes",
+    "sort_chromosomes",
+    "get_module_info",
+]

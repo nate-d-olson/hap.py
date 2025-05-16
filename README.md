@@ -6,14 +6,19 @@ Peter Krusche <pkrusche@illumina.com>
 This is a set of programs based on [htslib](https://github.com/samtools/htslib)
 to benchmark variant calls against gold standard truth datasets.
 
-> **Note:** This project is currently being migrated from Python 2 to Python 3.
-> Significant progress has been made on Cython/C++ integration. See the
-> [Python 3 migration status](PYTHON3_MIGRATION.md) document for details and current progress.
+> **Note:** This project has been migrated from Python 2 to Python 3.
+> The core functionality (vcfeval engine and stratified metrics) has been successfully 
+> migrated. See the [Python 3 migration tools](PYTHON3_MIGRATION_TOOLS.md) 
+> and the [migration status](PYTHON3_MIGRATION_FINAL.md) for details.
 
 To compare a VCF against a gold standard dataset, use the following commmand line
 to perform genotype-level haplotype comparison.
 
 ```bash
+# With Python 3 (recommended)
+python3 /path/to/bin/hap.py.py3 truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+
+# Legacy Python 2 version
 hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 ```
 
@@ -277,12 +282,25 @@ coverage of the truthset.
 
 ### Helper script
 
-The simplest way to install hap.py is to use the helper script and your system Python install
-(requires these packages: Cython, Scipy, numpy, pandas, pybedtools, pysam, bx-python).
+The simplest way to install hap.py is to use the helper script and your system Python install.
 
-This command installs everything into ~/hap.py-install:
+#### Python 3 Installation (recommended)
 
+```bash
+# Create and activate a Python 3 virtual environment
+python3 -m venv venv_py3
+source venv_py3/bin/activate
+
+# Install Python dependencies
+pip install -r happy.requirements.py3.txt
+
+# Install using the Python 3 installer
+python3 install_py3.py /path/to/install/dir
 ```
+
+#### Legacy Python 2 Installation
+
+```bash
 python install.py ~/hap.py-install
 ```
 
@@ -366,7 +384,7 @@ You will need these tools / libraries on your system to compile the code:
 * CMake &gt; 2.8
 * GCC/G++ 4.9.2+ for compiling
 * Boost 1.55+
-* Python 2, version 2.7.8 or greater
+* Python 3.7+ (recommended) or Python 2.7.8+
 * Python packages: Pandas, Numpy, Scipy, pysam, bx-python
 * Java 1.8 when using vcfeval.
 
@@ -385,10 +403,10 @@ Then to compile:
     cd hap.py-build
     ```
 
-3. Run CMake
+3. Run CMake (for Python 3, add -DBUILD_PYTHON3=ON)
 
     ```bash
-    cmake ../hap.py
+    cmake ../hap.py -DBUILD_PYTHON3=ON
     ```
 
 4. Build
@@ -400,7 +418,7 @@ Then to compile:
 If this is successful, the bin subdirectory of your build folder will contain binaries and scripts:
 
 ```bash
-$ python bin/hap.py --version
+$ python3 bin/hap.py.py3 --version
 Hap.py v0.3.7
 ```
 
@@ -503,25 +521,40 @@ export BOOST_ROOT=$HOME/boost_1_55_0_install
 The complete list of dependencies / packages to install beforehand can be found
 in the [Dockerfile](Dockerfile).
 
-# Python 3 Modernization
+# Python 3 Migration
 
-This branch contains a modernized version of hap.py that focuses on the core functionality using Python 3. For details on the changes made and how to use the modernized version, please see [PYTHON3_CORE.md](PYTHON3_CORE.md).
+This repository contains a modernized version of hap.py that works with Python 3. For details on the changes made and how to use the modernized version, please see:
+
+- [Migration Status](PYTHON3_MIGRATION_FINAL.md) - Current state and test plan
+- [Migration Tools](PYTHON3_MIGRATION_TOOLS.md) - Tools for fixing remaining issues
+- [Core Documentation](PYTHON3_CORE.md) - Technical details of the Python 3 implementation
 
 ## Key Features
 
-* Python 3.6+ compatibility
-* Focus on vcfeval as the comparison engine
+* Python 3.7+ compatibility
+* Focus on vcfeval as the primary comparison engine
 * Stratified performance metrics using BED files
 * Improved build system and dependency management
+* Better string handling and error reporting
 
 ## Quick Start
 
 ```bash
-# Build with Python 3
-python3 install.py /path/to/install/dir
+# Create and activate a Python 3 virtual environment
+python3 -m venv venv_py3
+source venv_py3/bin/activate
+
+# Install Python dependencies
+pip install -r happy.requirements.py3.txt
+
+# Install using the Python 3 installer
+python3 install_py3.py /path/to/install/dir
 
 # Test core functionality
 ./test_py3_core.sh
+
+# Use hap.py with Python 3
+python3 /path/to/install/dir/bin/hap.py.py3 truth.vcf query.vcf -r reference.fa -o output_prefix
 ```
 
 For more detailed information, see the [full documentation](PYTHON3_CORE.md).

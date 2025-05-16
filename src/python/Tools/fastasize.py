@@ -48,7 +48,7 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
 
     fastacontiglengths = {}
 
-    with open(fastafile + ".fai") as fai:
+    with open(fastafile + ".fai", encoding="utf-8") as fai:
         for l in fai:
             row = l.strip().split("\t")
             fastacontiglengths[row[0]] = int(row[1])
@@ -98,7 +98,7 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
             logging.error("cat | grep | tr | wc error: %s" % stderr)
             raise Exception("Failed to count non-N bases in %s" % fastafile)
 
-        v = int(open(t).read().strip())
+        v = int(open(t, encoding="utf-8").read().strip())
         result = {"all": v}
 
         # also figure contig-by-contig

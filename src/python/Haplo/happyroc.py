@@ -96,7 +96,7 @@ def roc(
     """
     result = {}
     header = None
-    with open(roc_table) as rt:
+    with open(roc_table, encoding="utf-8") as rt:
         for l in rt:
             l = l.strip()
             if not header:

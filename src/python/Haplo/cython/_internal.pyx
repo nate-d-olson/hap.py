@@ -2,8 +2,8 @@
 # Internal C++ wrapper module for hap.py
 # For Python 3 integration of the C++ components
 
-# cython: language_level=3
 # distutils: language=c++
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 
@@ -42,15 +42,15 @@ try:
     def get_version():
         """Get the hap.py version string"""
         cdef string v = version_string()
-        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8')
+        return v.decode('utf-8')
 
     def get_build_time():
         """Get the hap.py build timestamp"""
         cdef string t = build_timestamp()
-        return t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8')
+        return t.decode('utf-8')
 
 except Exception as e:
-    logging.warning("Could not initialize C++ components: {}".format(e.decode("utf-8") if isinstance(e, bytes) else e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)))
+    logging.warning("Could not initialize C++ components: {}".format(str(e)))
 
     # Define fallback versions of the functions
     def get_version():
@@ -66,15 +66,9 @@ def is_available():
     """Check if the C++ components are available"""
     try:
         v = get_version()
-        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v != "unknown (C++ module not loaded)"
+        return v != "unknown (C++ module not loaded)"
     except:
-        return False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False
-        """Get the hap.py version string (fallback)"""
-        return "0.0.0-fallback"
-
-    def get_build_time() -> str:
-        """Get the hap.py build timestamp (fallback)"""
-        return "unknown"
+        return False
 
     # Add placeholder functions for any other functionality needed
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Compare two extended csv files
 
@@ -7,7 +7,7 @@ import sys
 
 
 def csvread(filename):
-    f = open(filename)
+    f = open(filename, encoding="utf-8")
     freader = csv.DictReader(f)
     data = {}
     label_columns = [

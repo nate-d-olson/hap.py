@@ -59,6 +59,15 @@ if [ ! -f ${TLD}/zlib-1.2.8/libz.a ]; then
     rm -rf ${TLD}/zlib-1.2.8
     tar xzf ${DIR}/zlib-1.2.8.tar.gz
     cd zlib-1.2.8
+    echo "Patching zutil.h to remove fdopen macro conflict"
+    patch -p0 << 'EOF'
+*** Begin Patch
+*** Update File: zutil.h
+@@
+-#        define fdopen(fd,mode) NULL /* No fdopen() */
++#        /* #define fdopen(fd,mode) NULL */ /* No fdopen() */
+*** End Patch
+EOF
     ./configure --prefix ${ISD}
     make -j${CPU_COUNT}
     make install

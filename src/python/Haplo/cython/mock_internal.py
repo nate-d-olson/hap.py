@@ -130,5 +130,3 @@ def get_build_time() -> str:
 def test_module() -> Dict[str, str]:
     """Test if the module is working properly (mock implementation)"""
     return {"version": get_version(), "build_time": get_build_time()}
-    return {"version": get_version(), "build_time": get_build_time()}
-    return {"version": get_version(), "build_time": get_build_time()}

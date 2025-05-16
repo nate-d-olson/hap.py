@@ -1,56 +1,68 @@
-# CythonSupport.py3.cmake - Python 3 compatible Cython support for CMake
-# Author: [Your Name]
-# Based on the original CythonSupport.cmake with updates for Python 3
+# CythonSupport.cmake - Enhanced for Python 3 compatibility
+# This file provides support for building Cython modules with CMake
 
 include(CMakeParseArguments)
 
-# Find Python 3 interpreter and development components (NumPy detection handled manually)
-find_package(Python3 COMPONENTS Interpreter Development) # NumPy will be detected manually
+# Find Python 3 components
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
-# Manually determine NumPy include directory as fallback
-if(NOT Python3_NumPy_FOUND)
-    message(STATUS "NumPy not found via find_package(Python3 ... NumPy). Trying manual detection.")
+# Find Cython executable for Python 3
+execute_process(
+    COMMAND ${Python3_EXECUTABLE} -c "import Cython.Build; print(Cython.Build.cython_executable)"
+    OUTPUT_VARIABLE CYTHON_EXECUTABLE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+
+if(NOT CYTHON_EXECUTABLE)
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
-        OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_MANUAL # Use a different variable name
+        COMMAND ${Python3_EXECUTABLE} -c "import sys; sys.stdout.write(sys.exec_prefix)"
+        OUTPUT_VARIABLE PYTHON_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_VARIABLE NUMPY_ERROR_MANUAL # Use a different variable name
     )
-    if(NOT NUMPY_ERROR_MANUAL AND NUMPY_INCLUDE_DIR_MANUAL)
-        set(Python3_NumPy_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR_MANUAL})
-        set(Python3_NumPy_FOUND TRUE)
-        message(STATUS "Found NumPy include directory manually: ${NUMPY_INCLUDE_DIR_MANUAL}")
-    else()
-        message(WARNING "Manual NumPy detection failed. Error: ${NUMPY_ERROR_MANUAL}")
-        # Attempt to find NumPy using a different Python executable if the first one failed
-        find_package(PythonInterp 3 REQUIRED)
-        if(PYTHON_EXECUTABLE)
-            message(STATUS "Trying NumPy detection with Python interpreter: ${PYTHON_EXECUTABLE}")
-            execute_process(
-                COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
-                OUTPUT_VARIABLE NUMPY_INCLUDE_DIR_PYTHON_INTERP
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                ERROR_VARIABLE NUMPY_ERROR_PYTHON_INTERP
-            )
-            if(NOT NUMPY_ERROR_PYTHON_INTERP AND NUMPY_INCLUDE_DIR_PYTHON_INTERP)
-                set(Python3_NumPy_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR_PYTHON_INTERP})
-                set(Python3_NumPy_FOUND TRUE)
-                message(STATUS "Found NumPy include directory via PYTHON_EXECUTABLE: ${NUMPY_INCLUDE_DIR_PYTHON_INTERP}")
-            else()
-                message(FATAL_ERROR "NumPy not found. Please install numpy for Python 3. Error with PYTHON_EXECUTABLE: ${NUMPY_ERROR_PYTHON_INTERP}")
-            endif()
-        else()
-            message(FATAL_ERROR "NumPy not found and no suitable Python interpreter found. Please install numpy for Python 3.")
-        endif()
-    endif()
+    find_program(CYTHON_EXECUTABLE
+        NAMES cython cython.py cython3
+        HINTS ${PYTHON_PREFIX}/bin
+    )
 endif()
 
-# Find the Cython executable in PATH
-find_program(CYTHON_EXECUTABLE
-    NAMES cython3 cython
-    REQUIRED
-)
-message(STATUS "Found Cython executable: ${CYTHON_EXECUTABLE}")
+if(NOT CYTHON_EXECUTABLE)
+    # Try pip installation if Cython not found
+    message(WARNING "Cython not found. Attempting pip installation...")
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -m pip install Cython
+        RESULT_VARIABLE PIP_RESULT
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+    
+    if(NOT PIP_RESULT EQUAL 0)
+        message(FATAL_ERROR "Cython not found and pip installation failed. Please install Cython manually.")
+    endif()
+    
+    # Check if installation succeeded
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import Cython; print(Cython.__version__)"
+        RESULT_VARIABLE CYTHON_RESULT
+        OUTPUT_VARIABLE CYTHON_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    
+    if(NOT CYTHON_RESULT EQUAL 0)
+        message(FATAL_ERROR "Cython installation verification failed. Please install Cython manually.")
+    endif()
+    
+    # Get the Cython executable path again
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import Cython.Build; print(Cython.Build.cython_executable)"
+        OUTPUT_VARIABLE CYTHON_EXECUTABLE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+endif()
+
+message(STATUS "Found Cython: ${CYTHON_EXECUTABLE}")
 
 # Detect NumPy include directory
 if(Python3_NumPy_FOUND)
@@ -121,6 +133,8 @@ function(add_cython_module _name _source)
         set_target_properties(${_name} PROPERTIES
             PREFIX ""
             OUTPUT_NAME "${_name}"
+            CXX_STANDARD 11
+            CXX_STANDARD_REQUIRED ON
         )
 
         # Platform-specific extensions and settings

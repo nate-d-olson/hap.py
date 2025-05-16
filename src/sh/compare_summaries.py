@@ -6,7 +6,7 @@ import sys
 
 
 def csvread(filename):
-    f = open(filename)
+    f = open(filename, encoding="utf-8")
 
     header = None
     rows = []

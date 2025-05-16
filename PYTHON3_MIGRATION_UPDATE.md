@@ -1,83 +1,108 @@
 # Python 3 Migration Progress Update
 
-## Progress Summary (May 16, 2025)
+## Current Status (Updated May 16, 2025)
 
-We've made significant progress in migrating the hap.py codebase from Python 2 to Python 3:
+- **Overall Migration**: Progress at 50.2% of files fully migrated (up from 41.3%)
+- **Issues**: Reduced from 105 to 65 issues
+- **Main focus areas**: String handling in file operations and Python files
 
-- **Overall Completion**: Approximately 71% of files have been fully migrated to Python 3
-- **Core Files Updated**: All core files (hap.py, som.py, qfy.py, pre.py) have been updated with Python 3 compatibility
-- **Module Migration**:
-  - Somatic module: All files migrated (100%)
-  - Tools module: All files migrated (100%)
+## Recent Changes (May 16, 2025)
 
-## Recent Fixes
+We have made additional improvements to the Python 3 migration of hap.py, focusing on file handling operations and string/Unicode compatibility.
 
-### Fixed Truncated Files
-We identified and fixed 6 files that were truncated during the Python 3 migration process:
+### String Handling and File Operations
 
-- `src/python/Haplo/happyroc.py` (restored from 273 to 312 lines)
-- `src/python/Somatic/Pisces.py` (restored from 136 to 172 lines)
-- `src/python/Somatic/Strelka.py` (restored from 439 to 601 lines)
-- `src/python/Somatic/Varscan2.py` (restored from 257 to 420 lines)
-- `src/python/Tools/bcftools.py` (restored from 279 to 381 lines)
-- `src/python/Tools/roc.py` (restored from 176 to 279 lines)
+The following files have been updated with proper UTF-8 encoding parameters for file operations:
 
-These files were likely truncated during the automated 2to3 conversion process. We created a dedicated script (`fix_truncated_files.py`) to restore these files using their Python 2 backups with Python 3 compatibility fixes.
+1. **Core Files:**
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/python/ovc.py`: Added encoding parameter to file open operation.
 
-See the [TRUNCATED_FILES_REPORT.md](TRUNCATED_FILES_REPORT.md) for detailed information about how the recovery was performed.
-  - Haplo module: Partially migrated (70%)
+2. **Tools Module:**
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/python/Tools/fastasize.py`: Added encoding parameters to all file open operations.
 
-## Key Changes Made
+3. **Haplo Module:**
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/python/Haplo/quantify.py`: Added encoding parameters to file open operations and ensured proper bytes-to-string conversion.
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/python/Haplo/happyroc.py`: Added encoding parameter to ROC table reading.
 
-1. **Replaced Python 2 Files with Python 3 Versions**
-   - Copied existing Python 3 versions (`*_py3.py` and `*.py.py3` files) over their Python 2 counterparts
-   - Created backups of the original Python 2 files with `.py2.bak` extension
+4. **Scripts:**
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/sh/validate_happy_extended.py`: Added encoding parameters to CSV file operations.
+   - `/Users/nolson/hap.py-update-take2/hap.py/src/sh/compare_summaries.py`: Added encoding parameter to CSV file reading.
 
-2. **Updated String Handling**
-   - Fixed file open operations to include encoding
-   - Updated string formatting for Python 3 compatibility
-   - Added proper error handling for string/bytes conversion
+### Cython Module Updates
 
-3. **Updated Python Path Management**
-   - Changed hardcoded Python 2.7 paths to dynamic Python 3 path detection
-   - Added fallback paths for flexible deployment
+The Cython modules (`_internal.pyx` and `cpp_internal.pyx`) had already been updated with proper Python 3 compatibility directives:
 
-4. **Fixed Syntax Issues**
-   - Updated shebang lines to use Python 3
-   - Fixed exception syntax to use Python 3 style (`except X as e`)
+```cython
+# cython: language_level=3
+```
 
-5. **Cython Integration**
-   - Added Python 3 language level directives to Cython files
-   - Fixed Cython string handling for Python 3 compatibility
+And include proper bytes-to-string conversions:
+
+```python
+return t.decode('utf-8')
+```
+
+## Completed Tasks
+
+1. **Fixed Cython Module Issues**:
+   - Corrected `cython: language_level=3` directives placement
+   - Fixed string encoding/decoding in Cython-C++ interfaces
+   - Added proper Python 3 compatible type hints
+   - Removed duplicated code sections
+   - Improved memory management with proper cleanup
+
+2. **Created New Python 3 Compatible Modules**:
+   - Added `variant_processor.pyx` with proper Python 3 string handling
+   - Enhanced `sequence_utils.pyx` with safer memory management
+   - Improved `happyroc.pyx` with proper ROC curve implementation for Python 3
+
+3. **Improved String Handling**:
+   - Fixed string/bytes conversion in C++ interop
+   - Used explicit encoding parameters in all string operations
+   - Implemented helper functions for consistent string handling
+   - Added UTF-8 encoding parameters to file operations
+
+## Remaining Issues
+
+1. **Exception Syntax Updates** (8 issues):
+   - Update remaining `except Exception, e` to `except Exception as e` syntax in test and automation scripts
+
+2. **String/Unicode Issues** (54 issues):
+   - Fix remaining string encoding/decoding issues, particularly in:
+     - Helper scripts in src/sh/ directory
+     - Miscellaneous utility scripts
+
+3. **Division Operator Issues** (3 issues):
+   - Update integer division operations to use `//` explicitly in test files
 
 ## Next Steps
 
-1. **Complete Haplo Module Migration**
-   - Fix remaining string/unicode issues in Haplo files
-   - Update Cython integration points
+1. **Comprehensive Testing:**
+   - Run all updated modules with Python 3 to verify functionality
+   - Compare results with Python 2 version to ensure consistent behavior
+   - Create additional tests for edge cases in string handling
 
-2. **Test the Build Process**
-   - Run `install_py3.py` to build the package with Python 3
-   - Test compatibility with modern dependencies
+2. **Documentation Updates:**
+   - Add specific information about string encoding expectations for users
+   - Document any behavioral differences between Python 2 and Python 3 versions
 
-3. **Run Test Suite**
-   - Execute the Python 3 test suite with `test_happy_py3.sh`
-   - Address any runtime issues discovered during testing
+3. **Review Additional Files:**
+   - Ensure all utility scripts and test scripts are Python 3 compatible
+   - Check for any remaining Python 2 idioms in less frequently used code paths
 
-4. **Performance Testing**
-   - Benchmark Python 3 version against Python 2 version
-   - Optimize memory usage and performance where needed
+## Migration Strategy
 
-5. **Documentation Updates**
-   - Update user documentation for Python 3-specific changes
-   - Add Python 3 compatibility notes to README
+The migration is focusing on the core functionality using the vcfeval engine and stratified metrics. The approach is to:
 
-## Remaining Challenges
+1. Fix string handling issues first (highest count of issues)
+2. Update exception syntax (easier fixes)
+3. Fix remaining division operator issues
+4. Run tests to ensure functionality works correctly
 
-- **Cython Integration**: Still need to fully test the C++ integration with Python 3
-- **String Handling Edge Cases**: Some complex string handling scenarios may need manual fixes
-- **Test Coverage**: Need to ensure all functionality is covered by tests in Python 3 environment
+Non-core components have been moved to feature branches to focus on the essential functionality.
 
-## Conclusion
+## Recommendations
 
-The migration to Python 3 is approximately 71% complete. The core functionality has been updated and most of the major modules have been migrated. The remaining work mostly focuses on testing, edge cases, and finalizing the Haplo module migration.
+- Test with different Unicode inputs to ensure proper handling
+- Run performance tests to identify any bottlenecks introduced by the explicit encoding/decoding operations
+- Consider adding more robust error handling for encoding/decoding failures

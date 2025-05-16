@@ -65,7 +65,7 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
     fd, tpath = tempfile.mkstemp(suffix=".bed")
     os.close(fd)
 
-    with open(tpath, "w") as f:
+    with open(tpath, "w", encoding="utf-8") as f:
         for l in llocations:
             f.write("%s\t%i\t%i\n" % tuple(l))
 
@@ -250,7 +250,7 @@ def _write_outfiles(
         writeCounts: Whether to write count metrics
     """
     # write CSV outputs
-    of_summary = open(outprefix + ".summary.csv", "w")
+    of_summary = open(outprefix + ".summary.csv", "w", encoding="utf-8")
     of_extended = None
     of_metrics = None
 
@@ -280,7 +280,7 @@ def _write_outfiles(
     for t in typelist:
         try:
             if of_extended is None and writeCounts and "extended_csv" in outfiles[t]:
-                of_extended = open(outprefix + ".extended.csv", "w")
+                of_extended = open(outprefix + ".extended.csv", "w", encoding="utf-8")
                 of_extended.write(outfiles[t]["extended_header"] + "\n")
 
             if of_extended and "extended_csv" in outfiles[t]:
@@ -326,7 +326,7 @@ def _parse_vcfeval_stats(stats_file: str) -> Tuple[Dict[str, int], Dict[str, flo
     }
 
     try:
-        with open(stats_file) as f:
+        with open(stats_file, encoding="utf-8") as f:
             for line in f:
                 if line.startswith("#"):
                     continue

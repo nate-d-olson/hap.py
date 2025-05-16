@@ -84,7 +84,7 @@ def quantify(args):
         qfyregions["CONF"] = args.fp_bedfile
 
     if args.strat_tsv:
-        with open(args.strat_tsv) as sf:
+        with open(args.strat_tsv, encoding="utf-8") as sf:
             for l in sf:
                 n, _, f = l.strip().partition("\t")
                 if n in qfyregions:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Compare som.py stats.csv and hap.py summary.csv files
 
@@ -6,6 +6,7 @@ import argparse
 import csv
 import logging
 import sys
+from typing import Dict, List, Set, Tuple
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
@@ -32,8 +33,8 @@ def eval_equal(metric_name, count_a, count_b):
 
 if __name__ == "__main__":
     args = parse_args()
-    sompy_stats = csv.DictReader(open(args.sompy_stats))
-    happy_summary = csv.DictReader(open(args.happy_summary))
+    sompy_stats = csv.DictReader(open(args.sompy_stats, encoding="utf-8"))
+    happy_summary = csv.DictReader(open(args.happy_summary, encoding="utf-8"))
 
     # compare first row of som.py stats to PASS/ALL rows in hap.py summary
     s = next(sompy_stats)

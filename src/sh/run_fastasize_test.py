@@ -1,11 +1,17 @@
+#!/usr/bin/env python3
+# Test module for fastasize.py functionality with Python 3
+
 import logging
 import os
 import sys
+from pathlib import Path
 
 logging.getLogger().setLevel(logging.INFO)
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "python", "Tools")))
+# Use pathlib for more readable path operations
+script_dir = Path(__file__).resolve().parent
+tools_dir = script_dir.parent / "python" / "Tools"
+sys.path.append(str(tools_dir))
 
 from fastasize import calculateLength
 

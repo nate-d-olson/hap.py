@@ -32,7 +32,7 @@ def eval_equal(metric_name, count_a, count_b):
 
 
 def parse_sompy_stats(path):
-    sompy_stats = csv.DictReader(open(path))
+    sompy_stats = csv.DictReader(open(path, encoding="utf-8"))
     result = dict()
     for s in sompy_stats:
         subset = s["type"]
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     sompy_stats = parse_sompy_stats(path=args.sompy_stats)
-    happy_extended = csv.DictReader(open(args.happy_extended))
+    happy_extended = csv.DictReader(open(args.happy_extended, encoding="utf-8"))
 
     outcomes = dict(ALL=set(), PASS=set())
     for h in happy_extended:

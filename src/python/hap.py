@@ -542,7 +542,7 @@ def main():
 
             args.locations = []
             for f in res:
-                with open(f) as fp:
+                with open(f, encoding="utf-8") as fp:
                     for l in fp:
                         ll = l.strip().split("\t", 3)
                         if len(ll) < 3:
