@@ -71,11 +71,11 @@ fi
 # Check if build was successful
 if [ -d "${BUILD_DIR}/build_py3" ]; then
     echo -e "${GREEN}Build directory was created successfully.${NC}"
-    
+
     # Test migrated modules
     echo -e "${GREEN}Testing migrated Python 3 modules...${NC}"
     python test_migrated_modules.py --src-dir "${BUILD_DIR}/build_py3/src"
-    
+
     echo -e "${GREEN}Testing completed. Log files are available at:${NC}"
     echo -e "${YELLOW}${BUILD_DIR}/build_py3.log${NC}"
     echo

@@ -178,8 +178,7 @@ def run_cpp_tests(build_dir: str) -> bool:
                 build_dir,
                 "--use-mock",
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             check=False,
         )
@@ -237,7 +236,7 @@ def main():
     fail_count = 0
 
     for package, module_results in list(results.items()):
-        for module, success in list(module_results.items()):
+        for _module, success in list(module_results.items()):
             if success:
                 success_count += 1
             else:

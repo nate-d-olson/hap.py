@@ -68,4 +68,3 @@ if [[ $? != 0 ]]; then
 	echo "summary differs! -- diff ${TMP_OUT}.summary.csv ${DIR}/../../example/NIST_indels/expected.summary.1.csv"
 	exit 1
 fi
-

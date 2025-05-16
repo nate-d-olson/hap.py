@@ -11,7 +11,7 @@ import sys
 
 def find_exception_syntax_issues(file_path):
     """Find Python 2 style exception handling in a file"""
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         content = f.read()
 
     # Pattern to match Python 2 exception handling (except X, e:)

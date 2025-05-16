@@ -141,4 +141,3 @@ if [[ ! -z $BUILD_VCFEVAL ]]; then
         chmod +x ${ISD}/libexec/rtg-tools-install/rtg-wrapper.sh
     fi
 fi
-

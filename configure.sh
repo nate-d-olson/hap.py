@@ -57,7 +57,7 @@ if [[ -z $CONFIGTYPE ]]; then
             echo "using Illumina configuration."
             SPECIALCONFIG="${DIR}/src/sh/illumina-setup.sh"
             . ${DIR}/src/sh/illumina-setup.sh
-        fi        
+        fi
     fi
 else
     echo "using $CONFIGTYPE configuration."
@@ -137,4 +137,3 @@ if [[ ! -z $SPECIALCONFIG ]]; then
     echo ""
     echo "***********************************************************"
 fi
-

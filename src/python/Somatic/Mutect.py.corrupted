@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright                    m = re.search("normal_sample_name=([^\s]+)", clopts)
                     if m:
@@ -24,11 +23,12 @@ Date:   2/10/2015
 Author: Peter Krusche <pkrusche@illumina.com>
 """
 
-import pandas
 import logging
 import re
 
-from Tools.vcfextract import vcfExtract, extractHeadersJSON
+import pandas
+from Tools.vcfextract import extractHeadersJSON, vcfExtract
+
 
 def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
         """ Return a data frame with features collected from the given VCF, tagged by given type """

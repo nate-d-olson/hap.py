@@ -104,7 +104,7 @@ extern const uint64_t VT_REF;
 
 // calltype names -- look up via calltype >> 4
 extern const char * CT_NAMES [];
-// this is encoded in the high 4 bits 
+// this is encoded in the high 4 bits
 extern const uint64_t CT_NUCLEOTIDES;     // count nucleotides
 extern const uint64_t CT_ALLELES;         // count alleles
 extern const uint64_t CT_HOMREF;          // locations with only one allele seen with copy number 2

@@ -64,5 +64,3 @@ else
     echo "Haploid test successful"
     rm -rf ${TMP_OUT}.*
 fi
-
-

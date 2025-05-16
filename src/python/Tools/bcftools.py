@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -10,6 +9,7 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
+import contextlib
 import gzip
 import logging
 import os
@@ -92,7 +92,7 @@ def countVCFRows(filename):
     if filename.endswith(".gz"):
         f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
     else:
-        f = open(filename, "r", encoding="utf-8")
+        f = open(filename, encoding="utf-8")
 
     count = 0
     for s in f:
@@ -125,7 +125,7 @@ def concatenateParts(output, *args):
                 if not os.path.exists(x + ".tbi") and not os.path.exists(x + ".csi"):
                     to_delete.append(x + ".csi")
                     runBcftools("index", "-f", x)
-            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output] + list(args)
+            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output, *list(args)]
             runBcftools(*cmdlist)
         else:
             # block in chunks (TODO: make parallel)
@@ -138,8 +138,8 @@ def concatenateParts(output, *args):
             mid_point = (
                 len(args) // 2
             )  # Use integer division for Python 3 compatibility
-            half1 = [tf1.name] + list(args[:mid_point])
-            half2 = [tf2.name] + list(args[mid_point:])
+            half1 = [tf1.name, *list(args[:mid_point])]
+            half2 = [tf2.name, *list(args[mid_point:])]
             concatenateParts(*half1)
             runBcftools("index", tf1.name)
             concatenateParts(*half2)
@@ -147,10 +147,8 @@ def concatenateParts(output, *args):
             concatenateParts(output, tf1.name, tf2.name)
     finally:
         for f in to_delete:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(f)
-            except Exception:
-                pass
 
 
 # noinspection PyShadowingBuiltins
@@ -239,7 +237,7 @@ def preprocessVCF(
         vargs += [
             "|",
             "python",
-            "{}/remove_nonref_gt_variants.py".format(scriptDir),
+            f"{scriptDir}/remove_nonref_gt_variants.py",
             "|",
             "bcftools",
             "view",
@@ -276,10 +274,7 @@ def preprocessVCF(
     if location:
         vargs += ["-t", location, "|", "bcftools", "view"]
 
-    if output_filename.endswith("vcf.gz"):
-        int_suffix = "vcf.gz"
-    else:
-        int_suffix = ".bcf"
+    int_suffix = "vcf.gz" if output_filename.endswith("vcf.gz") else ".bcf"
 
     tff = tempfile.NamedTemporaryFile(delete=False, suffix=int_suffix)
 
@@ -340,18 +335,14 @@ def preprocessVCF(
         raise ex
 
     finally:
-        try:
+        with contextlib.suppress(Exception):
             os.unlink(tff.name)
-        except Exception:
-            pass
-        try:
+
+        with contextlib.suppress(Exception):
             os.unlink(tff.name + ".tbi")
-        except Exception:
-            pass
-        try:
+
+        with contextlib.suppress(Exception):
             os.unlink(tff.name + ".csi")
-        except Exception:
-            pass
 
 
 def bedOverlapCheck(filename):
@@ -359,7 +350,7 @@ def bedOverlapCheck(filename):
     if filename.endswith(".gz"):
         f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
     else:
-        f = open(filename, "r", encoding="utf-8")
+        f = open(filename, encoding="utf-8")
     last = -1
     lines = 1
     thischr = None

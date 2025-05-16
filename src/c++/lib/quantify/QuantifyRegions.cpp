@@ -565,5 +565,3 @@ namespace variant
         return result;
     }
 }
-
-

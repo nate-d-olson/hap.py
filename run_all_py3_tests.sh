@@ -51,10 +51,10 @@ run_test() {
     local test_cmd=$2
     local test_desc=$3
     local log_file="${LOG_DIR}/${test_name}.log"
-    
+
     echo -e "${BLUE}Running test: ${test_name}${NC}"
     echo "${test_desc}"
-    
+
     # Add to report
     cat >> "${TEST_REPORT}" << EOF
 ### ${test_name}
@@ -66,13 +66,13 @@ ${test_cmd}
 \`\`\`
 
 EOF
-    
+
     # Run the test
     set +e
     eval "${test_cmd}" > "${log_file}" 2>&1
     local result=$?
     set -e
-    
+
     # Add result to report
     if [ ${result} -eq 0 ]; then
         echo -e "${GREEN}✓ Test passed${NC}"
@@ -92,7 +92,7 @@ $(tail -n 20 "${log_file}")
 
 EOF
     fi
-    
+
     return ${result}
 }
 

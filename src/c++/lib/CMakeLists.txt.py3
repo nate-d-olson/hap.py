@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 include(${CMAKE_SOURCE_DIR}/src/cmake/CythonSupport.cmake)
 
 # Collect source files
-file(GLOB_RECURSE HAPLO_SRCS 
+file(GLOB_RECURSE HAPLO_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/align/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/diploidgraphs/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/quantify/*.cpp
@@ -19,7 +19,7 @@ file(GLOB_RECURSE HAPLO_SRCS
 add_library(haplotypes STATIC ${HAPLO_SRCS})
 
 # Include directories
-target_include_directories(haplotypes PUBLIC 
+target_include_directories(haplotypes PUBLIC
     ${CMAKE_SOURCE_DIR}/src/c++/include
     ${CMAKE_BINARY_DIR}/include
     ${Boost_INCLUDE_DIRS}

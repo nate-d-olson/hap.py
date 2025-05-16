@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -16,6 +15,7 @@ handling of variant classification data.
 """
 
 import abc
+import contextlib
 import logging
 import os
 import subprocess
@@ -75,14 +75,11 @@ def tableROC(
                 raise Exception("Cannot parse ROC output.")
             return result
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(tf1.name)
-            except Exception:
-                pass
-            try:
+
+            with contextlib.suppress(Exception):
                 os.unlink(tf2.name)
-            except Exception:
-                pass
 
 
 class ROC(abc.ABC):

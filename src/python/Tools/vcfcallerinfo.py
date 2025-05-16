@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -9,14 +8,15 @@
 #
 # https://github.com/sequencing/licenses/blob/master/Simplified-BSD-License.txt
 
-import tempfile
-import subprocess
+import contextlib
+import json
 import logging
 import os
-import json
+import subprocess
+import tempfile
 
 
-class CallerInfo(object):
+class CallerInfo:
     """Class for collecting caller info and version"""
 
     def __init__(self):
@@ -51,7 +51,7 @@ class CallerInfo(object):
         vfh = {}
         try:
             sp = subprocess.Popen(
-                "vcfhdr2json '%s' '%s'" % (vcfname, tf.name),
+                f"vcfhdr2json '{vcfname}' '{tf.name}'",
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -59,14 +59,12 @@ class CallerInfo(object):
             o, e = sp.communicate()
 
             if sp.returncode != 0:
-                raise Exception("vcfhdr2json call failed: %s / %s" % (o, e))
+                raise Exception(f"vcfhdr2json call failed: {o} / {e}")
 
             vfh = json.load(open(tf.name))
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(tf.name)
-            except Exception:
-                pass
 
         cp = ["unknown", "unknown", ""]
         gatk_callers = ["haplotypecaller", "unifiedgenotyper", "mutect"]
@@ -108,33 +106,28 @@ class CallerInfo(object):
                     self.callers.append(["octopus", "unknown", str(hf["values"])])
                 elif k.startswith("GATKCommandLine"):
                     caller = "GATK"
-                    try:
+                    with contextlib.suppress(Exception):
                         caller += "-" + hf["values"]["ID"]
-                    except Exception:
-                        pass
+
                     version = "unknown"
-                    try:
+                    with contextlib.suppress(Exception):
                         version = hf["values"]["Version"]
-                    except Exception:
-                        pass
+
                     options = ""
-                    try:
+                    with contextlib.suppress(Exception):
                         options = hf["values"]["CommandLineOptions"]
-                    except Exception:
-                        pass
+
                     if any(g in caller.lower() for g in gatk_callers):
                         self.callers.append([caller, version, options])
                 elif k.startswith("SentieonCommandLine"):
                     caller = "Sentieon"
-                    try:
+                    with contextlib.suppress(Exception):
                         caller += "-" + hf["values"]["ID"]
-                    except Exception:
-                        pass
+
                     version = "unknown"
-                    try:
+                    with contextlib.suppress(Exception):
                         version = hf["values"]["Version"]
-                    except Exception:
-                        pass
+
                     options = ""
                     if any(s in caller.lower() for s in sent_callers):
                         self.callers.append([caller, version])
@@ -157,7 +150,7 @@ class CallerInfo(object):
         o, e = sp.communicate()
 
         if sp.returncode != 0:
-            raise Exception("Samtools call failed: %s / %s" % (o, e))
+            raise Exception(f"Samtools call failed: {o} / {e}")
 
         for line in o.split("\n"):
             if not line.startswith("@PG"):
@@ -178,13 +171,10 @@ class CallerInfo(object):
                         cp[0] = cp[0].split("-")[0]
                 except Exception:
                     pass
-            try:
+            with contextlib.suppress(Exception):
                 cp[1] = x["VN"]
-            except Exception:
-                pass
-            try:
+
+            with contextlib.suppress(Exception):
                 cp[2] = x["CL"]
-            except Exception:
-                pass
 
             self.aligners.append(cp)

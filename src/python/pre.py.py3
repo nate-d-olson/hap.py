@@ -47,10 +47,10 @@ import Haplo.partialcredit
 
 def hasChrPrefix(chrlist: List[str]) -> bool:
     """Returns if list of chr names has a chr prefix or not
-    
+
     Args:
         chrlist: List of chromosome names
-        
+
     Returns:
         True if the chromosomes have a 'chr' prefix, False otherwise
     """
@@ -71,11 +71,11 @@ def hasChrPrefix(chrlist: List[str]) -> bool:
 
 def fixChrNames(chrlist: List[str], withchr: bool = True) -> List[str]:
     """Returns a list with fixed chromosome names
-    
+
     Args:
         chrlist: List of chromosome names
         withchr: Whether to add or remove 'chr' prefix
-        
+
     Returns:
         List of standardized chromosome names
     """
@@ -104,10 +104,10 @@ def fixChrNames(chrlist: List[str], withchr: bool = True) -> List[str]:
 
 def runRScript(script: str) -> Tuple[str, str, int]:
     """Run an R script
-    
+
     Args:
         script: R script to run
-        
+
     Returns:
         Tuple of (stdout, stderr, return_code)
     """
@@ -144,11 +144,11 @@ def runRScript(script: str) -> Tuple[str, str, int]:
     return stdout, stderr, return_code
 
 
-def fixVCF(vcf_file: str, destination: str, locations: Optional[str] = None, 
-           reference: Optional[str] = None, bgzip: bool = True, 
+def fixVCF(vcf_file: str, destination: str, locations: Optional[str] = None,
+           reference: Optional[str] = None, bgzip: bool = True,
            threads: int = multiprocessing.cpu_count()) -> None:
     """Check and fix a VCF
-    
+
     Args:
         vcf_file: Input VCF file
         destination: Output destination

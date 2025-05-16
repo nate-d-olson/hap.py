@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -17,11 +16,11 @@
 # -- we don't want to read in any of the data since we have a lot more of it.
 #
 
-import re
 import logging
-import pandas
-import numpy as np
+import re
 
+import numpy as np
+import pandas
 from Tools import ci
 
 RESULT_ALLCOLUMNS = [

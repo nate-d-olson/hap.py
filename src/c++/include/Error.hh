@@ -27,7 +27,7 @@
 
 /**
  *  \brief Error handling helper
- *  
+ *
  * \file Error.hh
  * \author Peter Krusche
  * \email pkrusche@illumina.com

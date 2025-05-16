@@ -30,10 +30,10 @@ check_python() {
         echo -e "${RED}Error: Python 3 is required but not found in PATH${NC}"
         exit 1
     fi
-    
+
     PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
     echo -e "${GREEN}Using Python ${PYTHON_VERSION}${NC}"
-    
+
     # Check for required packages
     python3 -c "import numpy, pandas, cython" &> /dev/null || {
         echo -e "${RED}Error: Required Python packages not found. Please install:${NC}"
@@ -45,36 +45,36 @@ check_python() {
 # Function to build C++ components
 build_cpp() {
     echo -e "${BLUE}Building C++ components...${NC}"
-    
+
     # Create build directory if it doesn't exist
     mkdir -p "${BUILD_DIR}"
-    
+
     # Use Python 3 install script
     python3 "${SCRIPT_DIR}/install_py3.py" "${BUILD_DIR}" 2>&1 | tee "${LOG_DIR}/cpp_build.log"
-    
+
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
         echo -e "${RED}Failed to build C++ components. See ${LOG_DIR}/cpp_build.log for details${NC}"
-        
+
         # Try to extract specific errors
         grep -A 10 "error:" "${LOG_DIR}/cpp_build.log" > "${LOG_DIR}/cpp_errors.log" || true
         echo -e "${YELLOW}Extracted error messages to ${LOG_DIR}/cpp_errors.log${NC}"
-        
+
         exit 1
     fi
-    
+
     echo -e "${GREEN}Successfully built C++ components${NC}"
 }
 
 # Function to run tests with mock implementation
 test_mock() {
     echo -e "${BLUE}Testing with mock C++ implementation...${NC}"
-    
+
     # Set environment variable to use mock
     export HAPLO_USE_MOCK=1
-    
+
     # Run enhanced validation script
     python3 "${SCRIPT_DIR}/validate_cpp_integration_enhanced.py" --build-dir "${BUILD_DIR}" --use-mock --verbose
-    
+
     if [ $? -ne 0 ]; then
         echo -e "${RED}Mock implementation tests failed${NC}"
         return 1
@@ -87,13 +87,13 @@ test_mock() {
 # Function to run tests with actual C++ implementation
 test_real() {
     echo -e "${BLUE}Testing with real C++ implementation...${NC}"
-    
+
     # Clear environment variable
     unset HAPLO_USE_MOCK
-    
+
     # Run enhanced validation script
     python3 "${SCRIPT_DIR}/validate_cpp_integration_enhanced.py" --build-dir "${BUILD_DIR}" --verbose
-    
+
     if [ $? -ne 0 ]; then
         echo -e "${RED}Real implementation tests failed${NC}"
         return 1
@@ -106,9 +106,9 @@ test_real() {
 # Function to test Python 3 modules
 test_py3_modules() {
     echo -e "${BLUE}Testing Python 3 modules...${NC}"
-    
+
     python3 "${SCRIPT_DIR}/test_python3_compatibility_enhanced.py" --build-dir "${BUILD_DIR}" --verbose
-    
+
     if [ $? -ne 0 ]; then
         echo -e "${RED}Python 3 module tests failed${NC}"
         return 1
@@ -143,7 +143,7 @@ test_py3_modules || SUCCESS=1
 # Test with mock implementation
 test_mock || SUCCESS=1
 
-# Test with real implementation 
+# Test with real implementation
 test_real || SUCCESS=1
 
 # Print summary

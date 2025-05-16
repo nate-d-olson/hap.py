@@ -32,7 +32,7 @@ def process_pyx_file(file_path: Path, backup: bool = True) -> bool:
         return False
 
     # Read the file
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         content = f.read()
 
     original_content = content
@@ -103,7 +103,7 @@ def process_pxd_file(file_path: Path, backup: bool = True) -> bool:
         return False
 
     # Read the file
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         content = f.read()
 
     original_content = content
@@ -238,24 +238,24 @@ try:
     if USE_MOCK:
         # Force using mock implementation
         raise ImportError("Using mock implementation as requested")
-    
+
     # Try to import the Cython modules
     from ._internal import *
     from .cpp_internal import *
-    
+
     # Add any other Cython modules here
-    
+
     # Signal that we're using the real implementation
     USING_MOCK = False
-    
+
 except ImportError as e:
     warnings.warn(f"Failed to import Cython modules: {e}. Using mock implementation.")
     logging.warning(f"Failed to import Cython modules: {e}. Using mock implementation.")
-    
+
     # Fall back to mock implementation
     from .mock_internal import *
     # Add other mock imports here
-    
+
     # Signal that we're using the mock implementation
     USING_MOCK = True
 

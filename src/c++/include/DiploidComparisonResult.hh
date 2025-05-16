@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -41,7 +41,7 @@
 
 #include <iostream>
 #include "HaploCompare.hh"
-#include "GraphReference.hh" 
+#include "GraphReference.hh"
 #include "Variant.hh"
 
 #include <json/json.h>
@@ -93,7 +93,7 @@ static inline DiploidType makeDiploidType(bool het, bool homref)
         {
             return dt_hom;
         }
-    }    
+    }
 }
 
 std::ostream & operator<<(std::ostream & o, DiploidType oc);
@@ -111,12 +111,12 @@ struct DiploidComparisonResult
     std::string chr;
     int64_t start;
     int64_t end;
-    
+
     // outcome
     DiploidComparisonOutcome outcome;
 
     // combinatorics + performance: how many possibilities did we look at
-    int64_t n_paths1, n_paths2, 
+    int64_t n_paths1, n_paths2,
             n_pathsc; ///< and how many "expensive" comparisons / alignments did we do
 
     int64_t n_nonsnp;
@@ -125,12 +125,12 @@ struct DiploidComparisonResult
     DiploidType type1, type2;
 
     // hap-cmp / DiploidCompare outputs
-    // 
+    //
     // for matches, no diffs are given.
     // for hom<->hom(ref) mismatches, there will be one diff
     // for het<->hom(ref) mismatches, there will be one diff
     //    ... giving the diff of the alternate against the hom sequence
-    // for het<->het mismatches, we give one diff 
+    // for het<->het mismatches, we give one diff
     //    ... between the two alt calls
     //
     // If one of the inputs was het-alt, we need to give two diffs:

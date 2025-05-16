@@ -1,5 +1,4 @@
 #!/usr/bin/env python33
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,25 +22,24 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
+import contextlib
 import logging
-import tempfile
-import subprocess
+import os
 import pipes
-import json
-import re
-from typing import Dict, List, Optional, Set, Tuple, Union
+import subprocess
+import tempfile
+from typing import Dict, List
 
 
 def fastaContigLengths(fastafile: str) -> Dict[str, int]:
-    """ Return contig lengths in a fasta file
-    
+    """Return contig lengths in a fasta file
+
     Args:
         fastafile: Path to the FASTA file
-        
+
     Returns:
         Dictionary mapping contig names to lengths
-        
+
     Raises:
         Exception: If the FASTA file is not indexed
     """
@@ -50,7 +48,7 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
 
     fastacontiglengths = {}
 
-    with open(fastafile + ".fai", "r") as fai:
+    with open(fastafile + ".fai") as fai:
         for l in fai:
             row = l.strip().split("\t")
             fastacontiglengths[row[0]] = int(row[1])
@@ -59,12 +57,12 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
 
 
 def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
-    """ Return contig lengths in a fasta file excluding
+    """Return contig lengths in a fasta file excluding
     N bases.
-    
+
     Args:
         fastafile: Path to the FASTA file
-        
+
     Returns:
         Dictionary mapping contig names to non-N lengths
     """
@@ -76,15 +74,19 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
     fd, t = tempfile.mkstemp(prefix="fasta_tmp")
     os.close(fd)
     try:
-        cmd_line = "cat %s | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > %s" % (
-            pipes.quote(fastafile), pipes.quote(t))
+        cmd_line = "cat {} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > {}".format(
+            pipes.quote(fastafile),
+            pipes.quote(t),
+        )
         logging.info(cmd_line)
 
-        po = subprocess.Popen(cmd_line,
-                              shell=True,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE,
-                              universal_newlines=True)
+        po = subprocess.Popen(
+            cmd_line,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
 
         stdout, stderr = po.communicate()
 
@@ -96,21 +98,22 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
             logging.error("cat | grep | tr | wc error: %s" % stderr)
             raise Exception("Failed to count non-N bases in %s" % fastafile)
 
-        v = int(open(t, "r").read().strip())
+        v = int(open(t).read().strip())
         result = {"all": v}
 
         # also figure contig-by-contig
         cts = fastaContigLengths(fastafile)
         for c in cts:
-            cmd_line = "samtools faidx %s %s | grep -v '>' | tr -cd 'ACGTacgt' | wc -c" % (
-                pipes.quote(fastafile), pipes.quote(c))
+            cmd_line = f"samtools faidx {pipes.quote(fastafile)} {pipes.quote(c)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
             logging.debug(cmd_line)
 
-            po = subprocess.Popen(cmd_line,
-                                  shell=True,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  universal_newlines=True)
+            po = subprocess.Popen(
+                cmd_line,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
 
             stdout, stderr = po.communicate()
 
@@ -120,26 +123,26 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
 
             if return_code != 0:
                 logging.error("samtools faidx | grep | tr | wc error: %s" % stderr)
-                raise Exception("Failed to count non-N bases in %s:%s" % (fastafile, c))
+                raise Exception(f"Failed to count non-N bases in {fastafile}:{c}")
 
             result[c] = int(stdout.strip())
     finally:
-        try:
+        with contextlib.suppress(Exception):
             os.unlink(t)
-        except:
-            pass
 
     return result
 
 
-def fastaSampleRegions(fastafile: str, n_regions: int = 10, region_length: int = 10000) -> List[str]:
-    """ Sample regions from a fasta file
-    
+def fastaSampleRegions(
+    fastafile: str, n_regions: int = 10, region_length: int = 10000
+) -> List[str]:
+    """Sample regions from a fasta file
+
     Args:
         fastafile: Path to the FASTA file
         n_regions: Number of regions to sample
         region_length: Length of each region
-        
+
     Returns:
         List of sampled regions in format "chrom:start-end"
     """
@@ -164,11 +167,13 @@ def fastaSampleRegions(fastafile: str, n_regions: int = 10, region_length: int =
     active_regions = []
 
     for c in sorted(cts.keys()):
-        ar_count = int(1.5 + (n_regions - len(active_regions)) * cts[c] / max(1.0, total))
+        ar_count = int(
+            1.5 + (n_regions - len(active_regions)) * cts[c] / max(1.0, total)
+        )
         logging.info("Adding %i regions from %s of %i bp", ar_count, c, cts[c])
 
         if ar_count > 0 and 11 * region_length < cts[c]:
-            for x in range(ar_count):
+            for _x in range(ar_count):
                 # make sure we leave 10*region_length bp between active regions, and also try
                 # reasonable hard to not have +-10*region_length overlap with any existing
                 # active region
@@ -187,11 +192,18 @@ def fastaSampleRegions(fastafile: str, n_regions: int = 10, region_length: int =
 
                         if ar_chr == c:
                             # require 10*region_length distance to AR boundaries
-                            if (start < ar_start and start + 11 * region_length > ar_start) or \
-                               (start > ar_start - 11 * region_length and start < ar_end + 11 * region_length):
+                            if (
+                                start < ar_start
+                                and start + 11 * region_length > ar_start
+                            ) or (
+                                start > ar_start - 11 * region_length
+                                and start < ar_end + 11 * region_length
+                            ):
                                 position_ok = False
                                 tries += 1
-                                start = random.randint(0, max(0, cts[c] - region_length))
+                                start = random.randint(
+                                    0, max(0, cts[c] - region_length)
+                                )
                                 break
 
                 if position_ok:

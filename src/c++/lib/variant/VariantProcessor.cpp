@@ -502,5 +502,3 @@ void trimAlleles(Variants & vars)
 
 
 }
-
-

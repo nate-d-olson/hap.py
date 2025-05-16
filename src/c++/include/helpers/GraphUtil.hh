@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -48,7 +48,7 @@ namespace graphutil
 {
 
 /** default formatter does nothing */
-template <typename _t> 
+template <typename _t>
 struct dotFormatter
 {
     void operator()(std::ostream & , _t const & )
@@ -56,7 +56,7 @@ struct dotFormatter
     }
 };
 
-template <typename _e> 
+template <typename _e>
 struct dotEdgeTyper
 {
     std::string operator()(_e const & )
@@ -67,14 +67,14 @@ struct dotEdgeTyper
 
 
 /**
- * Generic dot writing. 
- * 
- * Edge class _e must have u and v elements of type size_t which 
+ * Generic dot writing.
+ *
+ * Edge class _e must have u and v elements of type size_t which
  * point into nodes vector.
- * 
+ *
  */
-template<typename _n, typename _e, 
-         typename _node_formatter=dotFormatter<_n>, 
+template<typename _n, typename _e,
+         typename _node_formatter=dotFormatter<_n>,
          typename _edge_formatter=dotFormatter<_e>,
          typename _edge_typer=dotEdgeTyper<_e>
         >
@@ -87,7 +87,7 @@ static inline void writeGraphDot(
     _node_formatter nf;
     _edge_formatter ef;
     _edge_typer et;
-    
+
     std::ofstream output (filename);
 
     output << "digraph G { \n";
@@ -194,4 +194,3 @@ void outDegrees(
 }
 
 }   // namespace graphutil
-

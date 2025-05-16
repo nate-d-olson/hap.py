@@ -1,5 +1,4 @@
 #!/usr/bin/env python33
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -14,35 +13,34 @@
 #
 # Process raw counts coming out of quantify
 
-import os
-import tempfile
-import subprocess
-import copy
+import contextlib
 import json
 import logging
-import Tools
+import os
 import pipes
-from typing import Dict, List, Union, Optional, Any, Tuple, Set, TextIO
-
-from Tools.bcftools import runBcftools
+import subprocess
+import tempfile
+from typing import Any, Dict, List, Union
 
 
 def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
-    """ Turn a list of locations into a bed file 
-    
+    """Turn a list of locations into a bed file
+
     Args:
         locations: List of locations as strings or comma-separated string
-        
+
     Returns:
         Path to temporary BED file
-        
+
     Raises:
         Exception: For invalid location formats
     """
     if isinstance(locations, str):
         locations = locations.split(",")
     if not isinstance(locations, list):
-        raise Exception(f"Invalid list of locations (must be str or list): {str(locations)}")
+        raise Exception(
+            f"Invalid list of locations (must be str or list): {str(locations)}"
+        )
 
     llocations = []
 
@@ -59,7 +57,7 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
         try:
             end = int(end)
         except:
-            end = 2 ** 31 - 1
+            end = 2**31 - 1
 
         llocations.append([xchr, start, end])
 
@@ -76,13 +74,10 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
 
 def run(args: Any) -> None:
     """Run comparison and create summary statistics
-    
+
     Args:
         args: Parsed command line arguments
     """
-    import Haplo.xcmp
-    import Haplo.vcfeval
-    import Haplo.scmp
 
     outfiles = {}
 
@@ -102,50 +97,93 @@ def run(args: Any) -> None:
     for t in typelist:
         t_outprefix = outprefix + "." + t
         if args.unhappy:
-            outfiles[t] = u_unhappy(args.truth, args.query, args.ref,
-                                  args.regions, args.regions_file,
-                                  t_outprefix, t.lower(),
-                                  args.usefiltered_truth, args.usefiltered_query)
+            outfiles[t] = u_unhappy(
+                args.truth,
+                args.query,
+                args.ref,
+                args.regions,
+                args.regions_file,
+                t_outprefix,
+                t.lower(),
+                args.usefiltered_truth,
+                args.usefiltered_query,
+            )
         else:
             if args.gender == "auto" or args.gender == "none":
-                logging.warning("Auto / none for gender selection are not supported. Using female.")
+                logging.warning(
+                    "Auto / none for gender selection are not supported. Using female."
+                )
                 is_male = False
             else:
                 is_male = args.gender.lower() == "male"
-                
+
             if args.engine == "xcmp":
                 # Use C++ haplotype comparison
-                outfiles[t] = u_happyc(args.truth, args.query, args.ref,
-                                    args.regions, args.regions_file,
-                                    outprefix, t, args.preprocessing,
-                                    args.window, args.fixchr_truth, args.fixchr_query,
-                                    args.scratch_prefix, args.feature_table,
-                                    args.usefiltered_truth, args.usefiltered_query,
-                                    args.leftshift, args.decompose,
-                                    args.bcftools_norm,
-                                    args.threads, args.engine, args.preserve_all_variants,
-                                    args.write_vcf, args.output_vtc, args.output_vtc_max_size,
-                                    args.lose, args.xcmp_enumeration_threshold, is_male,
-                                    pass_only=args.pass_only, conf_truth=args.conf_truth,
-                                    conf_query=args.conf_query, optimize=args.optimize,
-                                    preprocess_truth=args.preprocess_truth,
-                                    preprocess_query=args.preprocess_query,
-                                    preprocess_window=args.preprocess_window,
-                                    location_features=args.location_features,
-                                    adjust_conf_regions=args.adjust_conf_regions,
-                                    fp_bedfile=args.false_positives)
+                outfiles[t] = u_happyc(
+                    args.truth,
+                    args.query,
+                    args.ref,
+                    args.regions,
+                    args.regions_file,
+                    outprefix,
+                    t,
+                    args.preprocessing,
+                    args.window,
+                    args.fixchr_truth,
+                    args.fixchr_query,
+                    args.scratch_prefix,
+                    args.feature_table,
+                    args.usefiltered_truth,
+                    args.usefiltered_query,
+                    args.leftshift,
+                    args.decompose,
+                    args.bcftools_norm,
+                    args.threads,
+                    args.engine,
+                    args.preserve_all_variants,
+                    args.write_vcf,
+                    args.output_vtc,
+                    args.output_vtc_max_size,
+                    args.lose,
+                    args.xcmp_enumeration_threshold,
+                    is_male,
+                    pass_only=args.pass_only,
+                    conf_truth=args.conf_truth,
+                    conf_query=args.conf_query,
+                    optimize=args.optimize,
+                    preprocess_truth=args.preprocess_truth,
+                    preprocess_query=args.preprocess_query,
+                    preprocess_window=args.preprocess_window,
+                    location_features=args.location_features,
+                    adjust_conf_regions=args.adjust_conf_regions,
+                    fp_bedfile=args.false_positives,
+                )
             elif args.engine == "vcfeval":
                 # Use RTG vcfeval
-                outfiles[t] = v_vcfeval(args.truth, args.query, args.ref,
-                                     args.regions, args.regions_file,
-                                     outprefix, t, args.preprocessing,
-                                     args.window, args.fixchr_truth, args.fixchr_query,
-                                     args.scratch_prefix,
-                                     args.usefiltered_truth, args.usefiltered_query,
-                                     args.threads, args.vcfeval_path, args.vcfeval_template,
-                                     args.preserve_all_variants,
-                                     args.write_vcf, args.output_vtc, args.output_vtc_max_size,
-                                     feature_table=args.feature_table)
+                outfiles[t] = v_vcfeval(
+                    args.truth,
+                    args.query,
+                    args.ref,
+                    args.regions,
+                    args.regions_file,
+                    outprefix,
+                    t,
+                    args.preprocessing,
+                    args.window,
+                    args.fixchr_truth,
+                    args.fixchr_query,
+                    args.scratch_prefix,
+                    args.usefiltered_truth,
+                    args.usefiltered_query,
+                    args.threads,
+                    args.vcfeval_path,
+                    args.vcfeval_template,
+                    args.preserve_all_variants,
+                    args.write_vcf,
+                    args.output_vtc,
+                    args.output_vtc_max_size,
+                    feature_table=args.feature_table,
+                )
             # elif args.engine == "scmp-somatic" or \
             #         (args.engine == "scmp-distance"):
             #     pass
@@ -164,10 +202,10 @@ def run(args: Any) -> None:
 
 def _make_cmdline(args: List[str]) -> str:
     """Make a command line from arguments
-    
+
     Args:
         args: List of command line arguments
-        
+
     Returns:
         Formatted command line string
     """
@@ -182,16 +220,14 @@ def _make_cmdline(args: List[str]) -> str:
 
 def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
     """Merge VCFs
-    
+
     Args:
         vcfs: List of VCF files to merge
         outvcf: Output VCF file path
     """
     if os.path.exists(outvcf):
-        try:
+        with contextlib.suppress(Exception):
             os.unlink(outvcf)
-        except:
-            pass
 
     cmd_line = ["bcftools", "concat", "-a"]
     cmd_line.extend(vcfs)
@@ -200,11 +236,13 @@ def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
     cmd_line_str = _make_cmdline(cmd_line)
     logging.info(cmd_line_str)
 
-    po = subprocess.Popen(cmd_line_str,
-                          shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE,
-                          universal_newlines=True)
+    po = subprocess.Popen(
+        cmd_line_str,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
 
     stdout, stderr = po.communicate()
 
@@ -222,11 +260,13 @@ def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
     cmd_line_str = _make_cmdline(cmd_line)
     logging.info(cmd_line_str)
 
-    po = subprocess.Popen(cmd_line_str,
-                          shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE,
-                          universal_newlines=True)
+    po = subprocess.Popen(
+        cmd_line_str,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
 
     stdout, stderr = po.communicate()
 
@@ -239,12 +279,14 @@ def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
         logging.warning(f"Failed to index {outvcf}")
 
 
-def _write_outfiles(outfiles: Dict[str, Dict[str, Any]], 
-                   outprefix: str, 
-                   typelist: List[str], 
-                   writeCounts: bool) -> None:
+def _write_outfiles(
+    outfiles: Dict[str, Dict[str, Any]],
+    outprefix: str,
+    typelist: List[str],
+    writeCounts: bool,
+) -> None:
     """Write output files
-    
+
     Args:
         outfiles: Dictionary of output files by variant type
         outprefix: Output file prefix
@@ -293,9 +335,10 @@ def _write_outfiles(outfiles: Dict[str, Dict[str, Any]],
             if of_metrics is None and writeCounts and "metrics" in outfiles[t]:
                 of_metrics = open(outprefix + ".metrics.json.gz", "wb")
                 import gzip
+
                 of_metrics = gzip.GzipFile(fileobj=of_metrics)
 
             if of_metrics and "metrics" in outfiles[t]:
-                of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode('utf-8'))
+                of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode("utf-8"))
         except:
             pass  # might not have all outputs

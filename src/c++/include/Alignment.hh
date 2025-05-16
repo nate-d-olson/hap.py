@@ -261,5 +261,3 @@ void realignRefVar(FastaFile const & f, const char * chr, variant::RefVar const 
 void realignRefVar(FastaFile const & f, const char * chr, variant::RefVar const & rv, Alignment * aln,
                    size_t & snps, size_t & ins, size_t & dels, size_t & homref,
                    size_t& transitions, size_t& transversions);
-
-

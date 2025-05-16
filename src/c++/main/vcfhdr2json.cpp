@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
         po::options_description desc("Allowed options");
         desc.add_options()
             ("help,h", "produce help message")
-            ("version", "Show version")            
+            ("version", "Show version")
             ("input-file", po::value< std::string >(), "The input files")
             ("output-file", po::value<std::string>(), "The output file name.")
         ;
@@ -72,18 +72,18 @@ int main(int argc, char* argv[]) {
         ;
 
         po::variables_map vm;
-        
+
         po::store(po::command_line_parser(argc, argv).
                   options(cmdline_options).positional(popts).run(), vm);
-        po::notify(vm); 
+        po::notify(vm);
 
-        if (vm.count("version")) 
+        if (vm.count("version"))
         {
             std::cout << "vcfhdr2json version " << HAPLOTYPES_VERSION << "\n";
             return 0;
         }
 
-        if (vm.count("help")) 
+        if (vm.count("help"))
         {
             std::cout << desc << "\n";
             return 1;
@@ -108,9 +108,9 @@ int main(int argc, char* argv[]) {
         if (output == "")
         {
             std::cerr << "Please specify an output file.\n";
-            return 1; 
+            return 1;
         }
-    } 
+    }
     catch (po::error & e)
     {
         std::cerr << e.what() << "\n";
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 
         bcf_close(fp);
         bcf_hdr_destroy(hdr);
-    } 
+    }
     catch(std::runtime_error & e)
     {
         std::cerr << e.what() << std::endl;

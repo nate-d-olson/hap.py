@@ -41,7 +41,7 @@ applyTo: "**"
 
 ## Using GitHub Copilot
 
-Enable inline suggestions and GitHub Copilot chat to get context-aware help while developing. 
+Enable inline suggestions and GitHub Copilot chat to get context-aware help while developing.
 
 To get the most out of Copilot for bioinformatics work:
 

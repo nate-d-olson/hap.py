@@ -42,4 +42,3 @@ else
     echo "FP region test successful"
     rm -rf ${TMP_OUT}.*
 fi
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python33
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -45,14 +44,14 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
             if f["key"] == "GATKCommandLine" and f["values"]["ID"].lower() == "mutect":
                 clopts = f["values"]["CommandLineOptions"]
                 # ... tumor_sample_name=HCC2218_tumour ... normal_sample_name=HCC2218_normal
-                m = re.search("tumor_sample_name=([^\s]+)", clopts)
+                m = re.search("tumor_sample_name=([^\\s]+)", clopts)
                 if m:
                     tsn = m.group(1)
                     for i, x in enumerate(samples):
                         if x == tsn:
                             t_sample = "S.%i." % (i + 1)
                             break
-                m = re.search("normal_sample_name=([^\s]+)", clopts)
+                m = re.search("normal_sample_name=([^\\s]+)", clopts)
                 if m:
                     nsn = m.group(1)
                     for i, x in enumerate(samples):
@@ -64,8 +63,7 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
         logging.warning("Unable to detect tumour / normal sample order from VCF header")
 
     logging.info(
-        "Normal sample name : %s (prefix %s) / tumour sample name : %s (prefix %s)"
-        % (nsn, n_sample, tsn, t_sample)
+        f"Normal sample name : {nsn} (prefix {n_sample}) / tumour sample name : {tsn} (prefix {t_sample})"
     )
 
     features = [
@@ -151,27 +149,21 @@ def extractMutectSNVFeatures(vcfname, tag, avg_depth=None):
 
         # calculate VAFs
         depth_t = rec[t_sample + "DP"]
-        ref_t = rec["REF_COUNT_T"]
+        rec["REF_COUNT_T"]
         alt_t = rec["ALT_COUNT_T"]
 
         # normalise depth
         depth_t_norm = depth_t / float(avg_depth) if avg_depth else 0.0
 
-        if depth_t <= 0:
-            vaf_t = 0.0
-        else:
-            vaf_t = alt_t / float(depth_t)
+        vaf_t = 0.0 if depth_t <= 0 else alt_t / float(depth_t)
 
         depth_n = rec[n_sample + "DP"]
-        ref_n = rec["REF_COUNT_N"]
+        rec["REF_COUNT_N"]
         alt_n = rec["ALT_COUNT_N"]
 
         depth_n_norm = depth_n / float(avg_depth) if avg_depth else 0.0
 
-        if depth_n <= 0:
-            vaf_n = 0.0
-        else:
-            vaf_n = alt_n / float(depth_n)
+        vaf_n = 0.0 if depth_n <= 0 else alt_n / float(depth_n)
 
         rec["VAF_T"] = vaf_t
         rec["VAF_N"] = vaf_n

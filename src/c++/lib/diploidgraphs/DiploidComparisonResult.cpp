@@ -101,13 +101,13 @@ std::ostream & operator<<(std::ostream & o, DiploidType oc)
 
 std::ostream & operator<<(std::ostream & o, DiploidComparisonResult const & cr)
 {
-    o << cr.chr << "\t" << cr.start << "\t" << cr.end+1 << "\t" 
-      << cr.outcome << "\t" 
-      << cr.type1 << "\t" 
+    o << cr.chr << "\t" << cr.start << "\t" << cr.end+1 << "\t"
+      << cr.outcome << "\t"
+      << cr.type1 << "\t"
       << cr.type2 << "\t"
-      << cr.n_paths1 << "\t" 
+      << cr.n_paths1 << "\t"
       << cr.n_paths2;
-    
+
     if(cr.outcome == dco_mismatch)
     {
         o << "\t" << cr.n_pathsc;
@@ -129,18 +129,18 @@ std::ostream & operator<<(std::ostream & o, DiploidComparisonResult const & cr)
     return o;
 }
 
-void printDiploidComparisonResult(std::ostream & partial_bed, 
+void printDiploidComparisonResult(std::ostream & partial_bed,
     DiploidComparisonResult const & dcr, bool output_sequences)
 {
-    partial_bed << 
-        dcr.chr << "\t" << 
+    partial_bed <<
+        dcr.chr << "\t" <<
         dcr.start << "\t" <<
         dcr.end+1 << "\t" <<
         dcr.outcome << "\t" <<
         dcr.type1 << "\t" <<
         dcr.type2 << "\t" <<
         dcr.n_paths1 << ":" << dcr.n_paths2 << ":" << dcr.n_pathsc << ":" << dcr.n_nonsnp;
-    
+
     if(dcr.outcome == dco_mismatch)
     {
         if(dcr.type1 == dt_hetalt || dcr.type2 == dt_hetalt)
@@ -280,12 +280,12 @@ Json::Value toJson(DiploidComparisonResult const & cr)
     val["end"] = Json::Value::Int64(cr.end+1);
     val["ref"] = cr.refsq;
 
-    {    
+    {
         std::ostringstream oss;
         oss << cr.outcome;
         val["res"] = oss.str();
     }
-    {    
+    {
         std::ostringstream oss;
         oss << cr.type1;
         val["type1"] = oss.str();
@@ -307,7 +307,7 @@ Json::Value toJson(DiploidComparisonResult const & cr)
     }
     else
     {
-        val["hps"] = 1;        
+        val["hps"] = 1;
     }
 
     if(cr.outcome == dco_mismatch)

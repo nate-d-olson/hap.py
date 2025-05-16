@@ -245,7 +245,7 @@ def find_matching_variants(query_variants, truth_variants):
     matches = []
     for q_var in query_variants:
         for t_var in truth_variants:
-            if (q_var['chrom'] == t_var['chrom'] and 
+            if (q_var['chrom'] == t_var['chrom'] and
                 abs(q_var['pos'] - t_var['pos']) <= 5 and
                 q_var['ref'] == t_var['ref'] and
                 q_var['alt'] == t_var['alt']):
@@ -269,7 +269,7 @@ def find_matching_variants(query_variants, truth_variants):
         if (chrom, pos) not in truth_by_pos:
             truth_by_pos[(chrom, pos)] = []
         truth_by_pos[(chrom, pos)].append(t_var)
-    
+
     matches = []
     for q_var in query_variants:
         q_chrom = q_var['chrom']

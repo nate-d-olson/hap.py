@@ -41,5 +41,3 @@ else
     echo "Leftshifting test succeeded."
     rm -rf ${TMP_OUT}.*
 fi
-
-

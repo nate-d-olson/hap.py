@@ -15,7 +15,7 @@ def update_cython_file(file_path, apply=False, verbose=False):
         return False
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
     except UnicodeDecodeError:
         print(f"Warning: Unable to read {file_path} as UTF-8. Skipping.")
@@ -143,7 +143,7 @@ def main():
     if apply:
         print(f"Applied fixes to {files_updated} files")
     else:
-        print(f"Run with --apply to apply fixes")
+        print("Run with --apply to apply fixes")
 
     return 0
 

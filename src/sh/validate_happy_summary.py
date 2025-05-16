@@ -2,10 +2,10 @@
 
 # Compare som.py stats.csv and hap.py summary.csv files
 
-import sys
 import argparse
 import csv
 import logging
+import sys
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO

@@ -248,4 +248,3 @@ fi
 
 rm -f ${TMP_OUT}*
 echo "Integration test SUCCEEDED!"
-

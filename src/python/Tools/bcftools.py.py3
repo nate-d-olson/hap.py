@@ -27,13 +27,13 @@ scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 def runShellCommand(*args) -> Tuple[str, str, int]:
     """ Run a shell command (e.g. bcf tools), and return output
-    
+
     Args:
         *args: Command and arguments to run
 
     Returns:
         Tuple of (stdout, stderr, return_code)
-        
+
     Raises:
         Exception: If the command returns a non-zero exit code
     """
@@ -70,7 +70,7 @@ def runShellCommand(*args) -> Tuple[str, str, int]:
 
 def runBcftools(*args) -> Tuple[str, str, int]:
     """ Run BCF tools
-    
+
     Args:
         *args: Arguments for bcftools
 
@@ -82,7 +82,7 @@ def runBcftools(*args) -> Tuple[str, str, int]:
 
 def runBcftoolsView(*args) -> Tuple[str, str, int]:
     """ Run BCF tools view
-    
+
     Args:
         *args: Arguments for bcftools view
 
@@ -96,10 +96,10 @@ def runBcftoolsView(*args) -> Tuple[str, str, int]:
 
 def getHeader(filename: str) -> List[str]:
     """ Return VCF header as a list of strings
-    
+
     Args:
         filename: VCF filename
-        
+
     Returns:
         List of header lines
     """
@@ -138,10 +138,10 @@ def getHeader(filename: str) -> List[str]:
 
 def getHeaderAndVariants(filename: str) -> Tuple[List[str], List[List[str]]]:
     """ Read variants into a variant list
-    
+
     Args:
         filename: VCF filename
-        
+
     Returns:
         Tuple of (header lines, variant records)
     """
@@ -175,11 +175,11 @@ def getHeaderAndVariants(filename: str) -> Tuple[List[str], List[List[str]]]:
 
 def getGA4GHVariants(filename: str, regions: Optional[str] = None) -> List[Dict[str, Any]]:
     """ Get variant list from pyvcf
-    
+
     Args:
         filename: VCF filename
         regions: Optional regions to restrict to
-        
+
     Returns:
         List of variant records
     """

@@ -42,10 +42,10 @@ from Tools import vcfextract
 
 def parseArgs():
     """Parse command line arguments"""
-    
+
     parser = argparse.ArgumentParser("Haplotype Comparison")
 
-    parser.add_argument("ref", help="Reference sequence file (FASTA)", 
+    parser.add_argument("ref", help="Reference sequence file (FASTA)",
                       default=Tools.defaultReference())
 
     parser.add_argument("query", help="Query VCF file")
@@ -53,7 +53,7 @@ def parseArgs():
     parser.add_argument("truth", help="Truth VCF file")
 
     parser.add_argument("-o", "--reports-prefix", dest="prefix",
-                      help="Prefix for report output files", 
+                      help="Prefix for report output files",
                       default=None)
 
     parser.add_argument("-V", "--verbose", dest="verbose",
@@ -68,16 +68,16 @@ def parseArgs():
                       help="Do not write count metrics for feature stratification",
                       action="store_false", default=True)
 
-    parser.add_argument("-r", "--regions", dest="regions", 
+    parser.add_argument("-r", "--regions", dest="regions",
                       help="Regions to restrict analysis to, must have corresponding .bed file. "
                            ", separated. e.g. chr1,chr2.",
                       default=None)
 
-    parser.add_argument("-R", "--regions-file", dest="regions_file", 
+    parser.add_argument("-R", "--regions-file", dest="regions_file",
                       help="Restrict analysis to given (sparse) regions. The file must be a BED file.",
                       default=None)
 
-    parser.add_argument("-t", "--type", dest="type", 
+    parser.add_argument("-t", "--type", dest="type",
                       help="Variant types and regions to include, e.g. INDEL, SNP, ALL, NOCALL. "
                            "Specify multiple types with , or use ALL to include everything",
                       default="ALL")
@@ -89,7 +89,7 @@ def parseArgs():
     parser.add_argument("-m", "--stratification", dest="stratification",
                       help="List of stratifications, comma-separated (super- and subfeatures "
                            "are joined by :). For example: CONF,CONF:HET.")
-    
+
     parser.add_argument("--confident-regions-truth", dest="conf_truth",
                       help="Confident call regions in truth (e.g. from GIAB), a BED file.")
 
@@ -160,7 +160,7 @@ def parseArgs():
     parser.add_argument("--lose", dest="lose",
                       help="Set this to enable partial credit for heterozygous calls (diploid test)",
                       default=0, type=float)
-    
+
     parser.add_argument("--engine", dest="engine",
                       help="Comparison engine to use.", default="xcmp",
                       choices=["xcmp", "vcfeval", "scmp-somatic", "scmp-distance"])
@@ -207,7 +207,7 @@ def parseArgs():
                       help="Keep only PASS variants", action="store_true", default=False)
 
     parser.add_argument("--fixchr", dest="fixchr",
-                      help="Add chr prefix to VCF records where needed", 
+                      help="Add chr prefix to VCF records where needed",
                       action="store_true", default=False)
 
     parser.add_argument("--no-fixchr", dest="fixchr",
@@ -234,7 +234,7 @@ def parseArgs():
                       default=None)
 
     parser.add_argument("--force-interactive", dest="forceinteractive",
-                      help="Force to run interactively, i.e. do not submit to SGE", 
+                      help="Force to run interactively, i.e. do not submit to SGE",
                       action="store_true", default=False)
 
     parser.add_argument("--force-overwrite", dest="forceoverwrite",
@@ -262,7 +262,7 @@ def parseArgs():
     parser.add_argument("--output-vtc-max-size", dest="output_vtc_max_size",
                       help="Maximum size for output VTC file",
                       default=2048, type=int)
-                      
+
     parser.add_argument("--write-counts", dest="write_counts",
                       help="Write count metrics for feature stratification",
                       action="store_true")
@@ -270,7 +270,7 @@ def parseArgs():
     parser.add_argument("--false-positives", dest="false_positives",
                       help="Suppress false positives from output, taking the given BED file as truth",
                       default=None)
-    
+
     parser.add_argument("--qq-plot", dest="qq_plot",
                       help=("Make Q-Q plots for all stratifications; "
                             "this only works when false_positives is given."),
@@ -285,20 +285,20 @@ def parseArgs():
                       action="store_false", default=True)
 
     result = parser.parse_args()
-    
+
     # check engine options
-    
+
     if result.engine == "vcfeval":
         if not result.vcfeval_path:
             parser.error("Path to vcfeval (--engine-vcfeval-path) required when engine=vcfeval")
         if not os.path.exists(result.vcfeval_path):
             parser.error("RTG Tools vcfeval not found at %s" % result.vcfeval_path)
-            
+
         if not result.vcfeval_template:
             parser.error("Path to vcfeval template (--engine-vcfeval-template) required when engine=vcfeval")
         if not os.path.exists(result.vcfeval_template):
             parser.error("RTG Tools vcfeval template not found at %s" % result.vcfeval_template)
-            
+
     elif result.engine != "xcmp" and not result.unhappy:
         parser.error("Engine %s is not supported in this version of hap.py" % result.engine)
 
@@ -315,7 +315,7 @@ def parseArgs():
     if result.regions:
         # regions are specified as VCF chrom IDs
         result.regions = result.regions.split(",")
-        
+
     return result
 
 
@@ -323,7 +323,7 @@ def main():
     """Main method"""
     try:
         args = parseArgs()
-        
+
         # Default threshold for ROC
         flt_threshold = -1
 
@@ -334,7 +334,7 @@ def main():
             loglevel = logging.INFO
         else:
             loglevel = logging.DEBUG
-            
+
         if args.logfile:
             logging.basicConfig(filename=args.logfile, level=loglevel)
         else:
@@ -355,7 +355,7 @@ def main():
             import Haplo.haplotypes
 
             Haplo.quantify.run(args)
-            
+
             if args.roc:
                 if not args.roc_filter:
                     logging.info("Creating ROC curve using QUAL")
@@ -371,15 +371,15 @@ def main():
         elif args.engine == "vcfeval":
             # Use RTG Tools vcfeval
             logging.info("Using RTG vcfeval engine.")
-            
+
             # Long import...
             from Tools import rtgtools
 
             rtgtools.runRTGTools(args)
-            
+
             # Make a happy file
             vcfextract.makeHappyVCF(args)
-            
+
             if args.roc:
                 if not args.roc_filter:
                     logging.info("Creating ROC curve using QUAL")
@@ -395,7 +395,7 @@ def main():
                     logging.info("Could not create ROC file, possibly because there were not enough TP/FP variants.")
         else:
             logging.error("Unsupported engine: %s" % args.engine)
-            
+
         return 0
     except Exception as e:
         print(str(e))

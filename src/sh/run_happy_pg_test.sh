@@ -38,7 +38,7 @@ if [[ $HAS_VCFEVAL != 0 ]]; then
 	if [[ $? != 0 ]]; then
 		echo "vcfeval summary differs! -- diff ${TMP_OUT}.vcfeval.summary.csv ${DIR}/../../example/happy/expected.vcfeval.summary.csv"
 		exit 1
-	fi	
+	fi
 fi
 
 # run hap.py
@@ -111,4 +111,3 @@ fi
 
 rm -f ${TMP_OUT}*
 echo "PG quantification test SUCCEEDED!"
-

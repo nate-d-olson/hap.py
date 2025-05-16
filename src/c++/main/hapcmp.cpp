@@ -48,7 +48,7 @@
 #include <chrono>
 #include <limits>
 
-// error needs to come after program_options. 
+// error needs to come after program_options.
 #include "Error.hh"
 
 using namespace variant;
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
             ("input-regions", po::value<std::string>(), "The input bed file specifying haplotype block regions (use - for stdin).")
             ("input-vcfs", po::value<std::vector<std::string> >(), "Two VCF files to compare (use file:sample for a specific sample column).")
             ("output-bed,b", po::value<std::string>(), "Output block results as bed files (default is to output to stdout).")
-            ("output-errors,e", po::value<std::string>(), "Output failure information.")            
+            ("output-errors,e", po::value<std::string>(), "Output failure information.")
             ("output-diffs,d", po::value<std::string>(), "Output shared and different variants to a mJSON file (one json record per line, default is to not output diffs).")
             ("reference,r", po::value<std::string>(), "The reference fasta file.")
             ("max-n-haplotypes,n", po::value<int>(), "Maximum number of haplotypes to enumerate.")
@@ -112,20 +112,20 @@ int main(int argc, char* argv[]) {
         ;
 
         po::variables_map vm;
-        
+
         po::store(po::command_line_parser(argc, argv).
                   options(cmdline_options).positional(popts).run(), vm);
-        po::notify(vm); 
+        po::notify(vm);
 
-        if (vm.count("version")) 
+        if (vm.count("version"))
         {
-            std::cout 
-                << "hapcmp version " << HAPLOTYPES_VERSION 
+            std::cout
+                << "hapcmp version " << HAPLOTYPES_VERSION
                 << "\n";
             return 0;
         }
 
-        if (vm.count("help")) 
+        if (vm.count("help"))
         {
             std::cout << desc << "\n";
             return 1;
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
             error("Please specify input regions.");
         }
 
-        if (vm.count("input-vcfs")) 
+        if (vm.count("input-vcfs"))
         {
             std::vector<std::string> vr = vm["input-vcfs"].as< std::vector<std::string> >();
 
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
             do_alignment = vm["do-alignment"].as< bool >();
         }
 
-    } 
+    }
     catch (po::error & e)
     {
         std::cerr << e.what() << "\n";
@@ -288,7 +288,7 @@ int main(int argc, char* argv[]) {
         }
         else
         {
-            error_out_stream = new std::ofstream(out_errors.c_str());            
+            error_out_stream = new std::ofstream(out_errors.c_str());
         }
 
         std::ostream * diff_out_stream = NULL;
@@ -343,12 +343,12 @@ int main(int argc, char* argv[]) {
                         }
                         else
                         {
-                            last_pos = end;                            
+                            last_pos = end;
                         }
                         last_time = end_time;
 
                         std::cerr << "[PROGRESS] Total time: " << secs_since_start << "s Pos: " << end << mbps << "\n";
-                    }                    
+                    }
                 }
 
                 try
@@ -401,7 +401,7 @@ int main(int argc, char* argv[]) {
             {
                 std::cout << line;
             }
-        }        
+        }
 
         if(regions != "-")
         {
@@ -434,4 +434,3 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
-

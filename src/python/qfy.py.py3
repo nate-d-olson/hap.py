@@ -92,10 +92,10 @@ def parseArgs():
                       default="html",
                       choices=["html", "png", "pdf", "py", "jpg", "all"])
 
-    parser.add_argument("--width", dest="width", help="Width of plot in inches.", 
+    parser.add_argument("--width", dest="width", help="Width of plot in inches.",
                       default=None, type=int)
 
-    parser.add_argument("--height", dest="height", help="Height of plot in inches.", 
+    parser.add_argument("--height", dest="height", help="Height of plot in inches.",
                       default=None, type=int)
 
     parser.add_argument("--nc", "--no-count-filtered", dest="count_filtered",
@@ -132,13 +132,13 @@ def parseArgs():
                       help="Normalise QQ plot",
                       action="store_true", default=False)
 
-    parser.add_argument("--xmax", dest="xmax", help="Maximum value for x axis.", 
-                      type=float, default=None)
-    
-    parser.add_argument("--ymin", dest="ymin", help="Minimum value for y axis.", 
+    parser.add_argument("--xmax", dest="xmax", help="Maximum value for x axis.",
                       type=float, default=None)
 
-    parser.add_argument("--ymax", dest="ymax", help="Maximum value for y axis.", 
+    parser.add_argument("--ymin", dest="ymin", help="Minimum value for y axis.",
+                      type=float, default=None)
+
+    parser.add_argument("--ymax", dest="ymax", help="Maximum value for y axis.",
                       type=float, default=None)
 
     parser.add_argument("--roc-params", dest="roc_params", nargs="+",
@@ -157,7 +157,7 @@ def parseArgs():
             result.prefix = result.roc[:-3]
         else:
             result.prefix = result.roc
-    
+
     return result
 
 
@@ -173,7 +173,7 @@ def main():
             loglevel = logging.INFO
         else:
             loglevel = logging.DEBUG
-        
+
         if args.logfile:
             logging.basicConfig(filename=args.logfile, level=loglevel)
         else:
@@ -183,7 +183,7 @@ def main():
 
         import Haplo.happyroc
 
-        # Attempting to create a double instance of the plot can fail sometimes since 
+        # Attempting to create a double instance of the plot can fail sometimes since
         # matplotlib isn't really re-entrant
         # plotting_ok = True
         roc_args = {}
@@ -197,13 +197,13 @@ def main():
 
         if args.width:
             roc_args["width"] = args.width
-        
+
         if args.height:
             roc_args["height"] = args.height
 
         if args.logx:
             roc_args["logx"] = True
-            
+
         if args.logy:
             roc_args["logy"] = True
 
@@ -212,7 +212,7 @@ def main():
 
         if args.xmax is not None:
             roc_args["xmax"] = args.xmax
-            
+
         if args.ymin is not None:
             roc_args["ymin"] = args.ymin
 
@@ -225,12 +225,12 @@ def main():
         if args.no_names:
             roc_args["no_names"] = True
 
-        # RocPlot will do Agg plotting from the main thread 
+        # RocPlot will do Agg plotting from the main thread
         # this is safer than trying to plot using the main UI thread
         roc_args["agg"] = True
         if args.roc_lines:
             roc_args["line_specs"] = args.roc_lines
-        
+
         for param in args.roc_params:
             k, v = param.split("=", 1)
             try:
@@ -238,14 +238,14 @@ def main():
             except ValueError:
                 pass
             roc_args[k] = v
-            
+
         # determine files to output to
         roc_file = args.roc
         roc_filter = "QUAL"
-        
+
         if args.roc_filter:
             roc_filter = args.roc_filter
-            
+
         roc_regions = args.roc_regions.split(",")
 
         roc_type = "all"
@@ -262,7 +262,7 @@ def main():
         if args.stratification:
             strat = args.stratification.split(",")
             roc_args["stratification"] = strat
-        
+
         if args.feature_table:
             ft = args.feature_table
             regions_bedfiles = []
@@ -271,7 +271,7 @@ def main():
                     regions_bedfiles.append(f)
                 else:
                     raise Exception("Cannot find %s" % f)
-                    
+
             if regions_bedfiles:
                 import Haplo.happyroc
                 fp = tempfile.NamedTemporaryFile(delete=False, suffix=".bed")
@@ -313,7 +313,7 @@ def main():
                                      roc_args,
                                      args.roc_kind,
                                      args.embed_subplots)
-        
+
         if args.legacy:
             # emit legacy style outputs
             Haplo.happyroc.makeLegacyOutput(roc_file, args.prefix)

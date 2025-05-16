@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -15,10 +14,10 @@ Date:   2/10/2015
 Author: Madis Rumming <mrumming@illumina.com>, Peter Krusche <pkrusche@illumina.com>
 """
 
-import pandas
 import logging
 
-from Tools.vcfextract import vcfExtract, extractHeadersJSON
+import pandas
+from Tools.vcfextract import extractHeadersJSON, vcfExtract
 
 
 def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
@@ -30,7 +29,7 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
             "No average depths available, normalized depth features cannot be calculated"
         )
 
-    hdrs = extractHeadersJSON(vcfname)
+    extractHeadersJSON(vcfname)
 
     # TODO could figure this out automatically
     nsn = "NORMAL"
@@ -39,8 +38,7 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
     t_sample = "S.2."
 
     logging.info(
-        "Normal sample name : %s (prefix %s) / tumour sample name : %s (prefix %s)"
-        % (nsn, n_sample, tsn, t_sample)
+        f"Normal sample name : {nsn} (prefix {n_sample}) / tumour sample name : {tsn} (prefix {t_sample})"
     )
 
     features = [
@@ -135,10 +133,7 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
         n_allele_ref_count = rec[n_sample + "RD"]
         alleles_alt = rec["ALT"]
 
-        if alleles_alt == ["."]:
-            n_allele_alt_count = 0
-        else:
-            n_allele_alt_count = rec[n_sample + "AD"]
+        n_allele_alt_count = 0 if alleles_alt == ["."] else rec[n_sample + "AD"]
 
         if n_allele_alt_count + n_allele_ref_count == 0:
             n_allele_rate = 0
@@ -150,10 +145,7 @@ def extractVarscan2SNVFeatures(vcfname, tag, avg_depth=None):
         t_allele_ref_count = rec[t_sample + "RD"]
         alleles_alt = rec["ALT"]
 
-        if alleles_alt == ["."]:
-            t_allele_alt_count = 0
-        else:
-            t_allele_alt_count = rec[t_sample + "AD"]
+        t_allele_alt_count = 0 if alleles_alt == ["."] else rec[t_sample + "AD"]
 
         if t_allele_alt_count + t_allele_ref_count == 0:
             t_allele_rate = 0
@@ -234,7 +226,7 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
             "No average depths available, normalized depth features cannot be calculated"
         )
 
-    hdrs = extractHeadersJSON(vcfname)
+    extractHeadersJSON(vcfname)
 
     nsn = "NORMAL"
     tsn = "TUMOR"
@@ -242,8 +234,7 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
     t_sample = "S.2."
 
     logging.info(
-        "Normal sample name : %s (prefix %s) / tumour sample name : %s (prefix %s)"
-        % (nsn, n_sample, tsn, t_sample)
+        f"Normal sample name : {nsn} (prefix {n_sample}) / tumour sample name : {tsn} (prefix {t_sample})"
     )
 
     has_warned = {}
@@ -331,10 +322,7 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
         n_allele_ref_count = rec[n_sample + "RD"]
         alleles_alt = rec["ALT"]
 
-        if alleles_alt == ["."]:
-            n_allele_alt_count = 0
-        else:
-            n_allele_alt_count = rec[n_sample + "AD"]
+        n_allele_alt_count = 0 if alleles_alt == ["."] else rec[n_sample + "AD"]
 
         if n_allele_alt_count + n_allele_ref_count == 0:
             n_allele_rate = 0
@@ -346,10 +334,7 @@ def extractVarscan2IndelFeatures(vcfname, tag, avg_depth=None):
         t_allele_ref_count = rec[t_sample + "RD"]
         alleles_alt = rec["ALT"]
 
-        if alleles_alt == ["."]:
-            t_allele_alt_count = 0
-        else:
-            t_allele_alt_count = rec[t_sample + "AD"]
+        t_allele_alt_count = 0 if alleles_alt == ["."] else rec[t_sample + "AD"]
 
         if t_allele_alt_count + t_allele_ref_count == 0:
             t_allele_rate = 0

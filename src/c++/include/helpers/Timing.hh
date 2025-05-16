@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -29,7 +29,7 @@
 /**
  * \brief Helper to get CPU time
  *
- * See http://stackoverflow.com/questions/275004/c-timer-function-to-provide-time-in-nano-seconds 
+ * See http://stackoverflow.com/questions/275004/c-timer-function-to-provide-time-in-nano-seconds
  *
  * \file Timing.hh
  * \author Peter Krusche

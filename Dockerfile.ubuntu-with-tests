@@ -13,18 +13,18 @@ RUN apt-get update && \
         libbz2-dev \
         libncurses5-dev \
         openjdk-8-jdk \
-        pkg-config \                    
+        pkg-config \
         python \
         python2.7 \
-        python2.7-dev \                    
+        python2.7-dev \
         python-setuptools \
         python-pip \
-        python-psutil \                    
+        python-psutil \
         python-numpy \
         python-pandas \
         python-distribute \
         python-pysam \
-        python-scipy \                    
+        python-scipy \
         software-properties-common \
         wget \
         zlib1g-dev && \

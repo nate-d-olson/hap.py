@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -41,6 +40,8 @@ if os.path.exists(lib_path):
 else:
     fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
     sys.path.append(fallback_path)
+
+import contextlib
 
 import Haplo.blocksplit
 import Haplo.gvcf2bed
@@ -392,11 +393,13 @@ def main():
     # write session info and args file
     session = sessionInfo()
     session["final_args"] = args.__dict__
-    with open(args.reports_prefix + ".runinfo.json", "w", encoding="utf-8") as sessionfile:
+    with open(
+        args.reports_prefix + ".runinfo.json", "w", encoding="utf-8"
+    ) as sessionfile:
         json.dump(session, sessionfile)
 
     try:
-        logging.info("Comparing %s and %s" % (args.vcf1, args.vcf2))
+        logging.info(f"Comparing {args.vcf1} and {args.vcf2}")
 
         logging.info("Preprocessing truth: %s" % args.vcf1)
         starttime = time.time()
@@ -421,9 +424,8 @@ def main():
             args.preprocessing_truth = False
             logging.info("Turning off pre.py preprocessing for somatic comparisons")
 
-        if args.preprocessing_truth:
-            if args.filter_nonref:
-                logging.info("Filtering out any variants genotyped as <NON_REF>")
+        if args.preprocessing_truth and args.filter_nonref:
+            logging.info("Filtering out any variants genotyped as <NON_REF>")
 
         ## Only converting truth gvcf to vcf if both arguments are true
         convert_gvcf_truth = False
@@ -467,7 +469,7 @@ def main():
         h1 = vcfextract.extractHeadersJSON(args.vcf1)
 
         elapsed = time.time() - starttime
-        logging.info("preprocess for %s -- time taken %.2f" % (args.vcf1, elapsed))
+        logging.info(f"preprocess for {args.vcf1} -- time taken {elapsed:.2f}")
 
         # once we have preprocessed the truth file we can resolve the locations
         # doing this here improves the time for query preprocessing below
@@ -495,10 +497,7 @@ def main():
 
         starttime = time.time()
 
-        if args.pass_only:
-            filtering = "*"
-        else:
-            filtering = args.filters_only
+        filtering = "*" if args.pass_only else args.filters_only
 
         qtf = tempfile.NamedTemporaryFile(
             delete=False,
@@ -548,7 +547,7 @@ def main():
         h2 = vcfextract.extractHeadersJSON(args.vcf2)
 
         elapsed = time.time() - starttime
-        logging.info("preprocess for %s -- time taken %.2f" % (args.vcf2, elapsed))
+        logging.info(f"preprocess for {args.vcf2} -- time taken {elapsed:.2f}")
 
         if not h1["tabix"]:
             raise Exception("Truth file is not indexed after preprocesing.")
@@ -716,18 +715,24 @@ def main():
     finally:
         if args.delete_scratch:
             for x in tempfiles:
-                try:
+                with contextlib.suppress(Exception):
                     os.remove(x)
-                except Exception:
-                    pass
+
         else:
-            logging.info("Scratch files kept : %s" % (tempfiles.decode('utf-8') if isinstance(tempfiles, bytes) else str(tempfiles)))
+            logging.info(
+                "Scratch files kept : %s"
+                % (
+                    tempfiles.decode("utf-8")
+                    if isinstance(tempfiles, bytes)
+                    else str(tempfiles)
+                )
+            )
 
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
+        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

@@ -96,7 +96,7 @@ def roc(roc_table: str, output_path: str,
     """
     result: Dict[str, List[Dict[str, str]]] = {}
     header = None
-    
+
     with open(roc_table, 'r') as rt:
         for l in rt:
             l = l.strip()
@@ -160,10 +160,10 @@ def roc(roc_table: str, output_path: str,
                     pass
 
     file_result: Dict[str, str] = {}
-    
+
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    
+
     for roc_key, rs in result.items():
         # Sort ROC scores in order of stringency
         try:
@@ -176,13 +176,13 @@ def roc(roc_table: str, output_path: str,
         filename = os.path.join(output_path, roc_key)
         roc_filename = filename + ".roc.tsv"
         file_result[roc_key] = roc_filename
-        
+
         with open(roc_filename, "w") as f:
-            cols_to_write = ["QQ", "METRIC.Recall", "METRIC.Precision", "TRUTH.TP", "TRUTH.FN", 
+            cols_to_write = ["QQ", "METRIC.Recall", "METRIC.Precision", "TRUTH.TP", "TRUTH.FN",
                             "QUERY.FP", "QUERY.UNK", "FP.gt", "FP.al"]
-            
+
             f.write("\t".join(cols_to_write) + "\n")
-            
+
             for r in rs:
                 values = [r.get(c, "") for c in cols_to_write]
                 f.write("\t".join(values) + "\n")
@@ -200,13 +200,13 @@ def roc(roc_table: str, output_path: str,
 
 
 def calculate_confidence_intervals(
-    rs: List[Dict[str, str]], 
-    output_filename: str, 
-    ci_alpha: float = 0.05, 
+    rs: List[Dict[str, str]],
+    output_filename: str,
+    ci_alpha: float = 0.05,
     total_region_size: Optional[float] = None
 ) -> None:
     """Calculate confidence intervals for ROC metrics
-    
+
     Args:
         rs: List of ROC records
         output_filename: File to write results to
@@ -215,23 +215,23 @@ def calculate_confidence_intervals(
     """
     with open(output_filename, "w") as f:
         # Write header
-        cols = ["QQ", "METRIC.Recall", "METRIC.Precision", "METRIC.Frac_NA", 
+        cols = ["QQ", "METRIC.Recall", "METRIC.Precision", "METRIC.Frac_NA",
                 "RECALL.CONF.L", "RECALL.CONF.H", "PREC.CONF.L", "PREC.CONF.H",
                 "NA.CONF.L", "NA.CONF.H"]
         f.write("\t".join(cols) + "\n")
-        
+
         for r in rs:
             try:
                 values = []
                 # QQ value
                 values.append(r["QQ"])
-                
+
                 # Original metrics
                 recall = float(r["METRIC.Recall"])
                 precision = float(r["METRIC.Precision"])
                 frac_na = float(r.get("METRIC.Frac_NA", "0"))
                 values.extend([str(recall), str(precision), str(frac_na)])
-                
+
                 # Calculate confidence intervals
                 try:
                     truth_tp = float(r["TRUTH.TP"])
@@ -239,15 +239,15 @@ def calculate_confidence_intervals(
                     query_fp = float(r["QUERY.FP"])
                     query_tp = float(r["QUERY.TP"])
                     query_unk = float(r.get("QUERY.UNK", "0"))
-                    
+
                     # Recall CI
                     recall_ci = ci.jeffreys_interval(truth_tp, truth_tp + truth_fn, ci_alpha)
                     values.extend([str(recall_ci[0]), str(recall_ci[1])])
-                    
+
                     # Precision CI
                     precision_ci = ci.jeffreys_interval(query_tp, query_tp + query_fp, ci_alpha)
                     values.extend([str(precision_ci[0]), str(precision_ci[1])])
-                    
+
                     # NA fraction CI
                     if total_region_size is not None and total_region_size > 0:
                         # Adjust for selected subset
@@ -259,15 +259,15 @@ def calculate_confidence_intervals(
                             na_ci = ci.jeffreys_interval(query_unk, subset_size, ci_alpha)
                         else:
                             na_ci = (0, 0)
-                    
+
                     values.extend([str(na_ci[0]), str(na_ci[1])])
                 except (ValueError, KeyError) as e:
                     # Use zeros if we can't calculate CIs
                     logging.warning(f"Failed to calculate confidence intervals: {e}")
                     values.extend(["0", "0", "0", "0", "0", "0"])
-                
+
                 f.write("\t".join(values) + "\n")
-                
+
             except (ValueError, KeyError) as e:
                 logging.error(f"Error processing record for CI calculation: {e}")
                 continue

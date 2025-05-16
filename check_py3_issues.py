@@ -57,7 +57,7 @@ class Python2To3Issues:
     def check_file(self, filepath):
         """Check a single file for Python 2 to 3 issues"""
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
 
             # Parse the file with AST to analyze its structure
@@ -128,18 +128,16 @@ class Python2To3Issues:
                 )
 
             # Check for dict methods that have changed
-            if isinstance(node, ast.Attribute):
-                if (
-                    isinstance(node.value, ast.Name)
-                    and node.attr in self.dict_methods_py2
-                ):
-                    self.issues["dict_methods"].append(
-                        {
-                            "file": filepath,
-                            "line": getattr(node, "lineno", "?"),
-                            "message": f"Replace {node.attr} with Python 3 equivalent",
-                        }
-                    )
+            if isinstance(node, ast.Attribute) and (
+                isinstance(node.value, ast.Name) and node.attr in self.dict_methods_py2
+            ):
+                self.issues["dict_methods"].append(
+                    {
+                        "file": filepath,
+                        "line": getattr(node, "lineno", "?"),
+                        "message": f"Replace {node.attr} with Python 3 equivalent",
+                    }
+                )
 
             # Check for division that might need to be updated
             if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
@@ -344,7 +342,7 @@ def generate_migration_report(checker, python_files):
     issues_by_module = {}
 
     # Group issues by module/package
-    for issue_type, issues in list(checker.issues.items()):
+    for _issue_type, issues in list(checker.issues.items()):
         for issue in issues:
             # Handle both dict and tuple formats
             if isinstance(issue, dict):
@@ -364,7 +362,7 @@ def generate_migration_report(checker, python_files):
     # Calculate files with no issues
     for file in python_files:
         file_has_issues = False
-        for issue_type, issues in list(checker.issues.items()):
+        for _issue_type, issues in list(checker.issues.items()):
             for issue in issues:
                 # Handle both dict and tuple formats
                 if isinstance(issue, dict) and issue.get("file") == file:

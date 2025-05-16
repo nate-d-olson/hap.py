@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,15 +22,15 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
 import logging
-import subprocess
 import multiprocessing
+import os
+import pipes
+import subprocess
+import sys
 import tempfile
 import time
-import pipes
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
@@ -42,19 +41,20 @@ else:
     fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
     sys.path.append(fallback_path)
 
+import contextlib
+
+import Haplo.partialcredit
 import Tools
 from Tools import vcfextract
-from Tools.bcftools import preprocessVCF
+from Tools.bcftools import preprocessVCF, runBcftools
 from Tools.fastasize import fastaContigLengths
-from Tools.bcftools import runBcftools
-import Haplo.partialcredit
 
 
 def hasChrPrefix(chrlist):
     """returns if list of chr names has a chr prefix or not"""
 
-    noprefix = list(map(str, list(range(23)))) + ["X", "Y", "MT"]
-    withprefix = ["chr" + x for x in list(map(str, list(range(23)))) + ["X", "Y", "M"]]
+    noprefix = [*list(map(str, list(range(23)))), "X", "Y", "MT"]
+    withprefix = ["chr" + x for x in [*list(map(str, list(range(23)))), "X", "Y", "M"]]
 
     count_noprefix = len(list(set(noprefix) & set(chrlist)))
     count_prefix = len(list(set(withprefix) & set(chrlist)))
@@ -138,10 +138,7 @@ def preprocess(
 
         if gender == "auto":
             logging.info(mf)
-            if "female" in mf:
-                gender = "female"
-            else:
-                gender = "male"
+            gender = "female" if "female" in mf else "male"
 
         h = vcfextract.extractHeadersJSON(vcf_input)
         reference_contigs = set(fastaContigLengths(reference).keys())
@@ -153,7 +150,11 @@ def preprocess(
                 if f["key"] == "FILTER":
                     allfilters.append(f["values"]["ID"])
             except Exception:
-                logging.warn("ignoring header: %s" % f.decode('utf-8') if isinstance(f, bytes) else str(f))
+                logging.warn(
+                    "ignoring header: %s" % f.decode("utf-8")
+                    if isinstance(f, bytes)
+                    else str(f)
+                )
 
         required_filters = None
         if filters:
@@ -224,10 +225,8 @@ def preprocess(
             )
     finally:
         for t in tempfiles:
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(t)
-            except Exception:
-                pass
 
     return gender
 
@@ -238,10 +237,7 @@ def preprocessWrapper(args):
     starttime = time.time()
     logging.info("Preprocessing %s" % args.input)
 
-    if args.pass_only:
-        filtering = "*"
-    else:
-        filtering = args.filters_only
+    filtering = "*" if args.pass_only else args.filters_only
 
     if args.bcf and not args.output.endswith(".bcf"):
         args.output += ".bcf"
@@ -266,7 +262,7 @@ def preprocessWrapper(args):
     )
 
     elapsed = time.time() - starttime
-    logging.info("preprocess for %s -- time taken %.2f" % (args.input, elapsed))
+    logging.info(f"preprocess for {args.input} -- time taken {elapsed:.2f}")
 
 
 def updateArgs(parser):
@@ -538,7 +534,7 @@ def main():
         exit(0)
 
     if args.version:
-        print(("pre.py %s" % Tools.version))  # noqa:E999
+        print("pre.py %s" % Tools.version)
         exit(0)
 
     args.input = args.input[0]

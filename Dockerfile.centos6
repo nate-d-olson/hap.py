@@ -17,15 +17,15 @@ RUN yum install -y \
     git \
     gzip \
     java-1.8.0-openjdk \
-    ncurses-devel \ 
+    ncurses-devel \
     perl \
     tar \
     wget \
     which \
     zlib-devel \
-    
+
 RUN yum upgrade -y && yum update -y && yum clean all
-    
+
 RUN mkdir -p /opt/illumina/haplocompare && \
      cd /opt/illumina/haplocompare && \
      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \

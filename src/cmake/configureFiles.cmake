@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
-# 
+#
 # This file is distributed under the simplified BSD license.
 # The full text can be found here (and in LICENSE.txt in the root folder of
 # this distribution):

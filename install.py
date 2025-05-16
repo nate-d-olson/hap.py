@@ -15,24 +15,23 @@
 # * builds code
 # * makes virtualenv
 
-import os
-import sys
 import argparse
-import subprocess
-import tempfile
-import shutil
-import glob
+import contextlib
 import fnmatch
+import glob
 import multiprocessing
-import urllib.request
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
 import urllib.error
 import urllib.parse
+import urllib.request
 
 
 def check_python_version():
     """Check if the python version is sufficient"""
-    if sys.version_info < (2, 7, 3):
-        raise Exception("You will need to run this with Python >= 2.7.3")
 
 
 def create_python_environment(source_dir, args):
@@ -62,10 +61,8 @@ def create_python_environment(source_dir, args):
         raise Exception("Please specify a virtualenv target installation directory.")
 
     if args.python_venv_dir_force:
-        try:
+        with contextlib.suppress(Exception):
             shutil.rmtree(args.python_venv_dir)
-        except:
-            pass
 
     if os.path.exists(args.python_venv_dir) and not args.python_venv_dir_update:
         raise Exception("The virtual environment directory already exists.")
@@ -73,20 +70,18 @@ def create_python_environment(source_dir, args):
     virtualenv_tempdir = tempfile.mkdtemp(prefix="virtualenv", dir=args.scratch_path)
     try:
         ve_tgz = os.path.join(source_dir, "external", "virtualenv-12.0.7.tar.gz")
-        to_run = "cd %s && tar xzf %s" % (virtualenv_tempdir, ve_tgz)
+        to_run = f"cd {virtualenv_tempdir} && tar xzf {ve_tgz}"
         print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
 
         ve_exec = os.path.join(virtualenv_tempdir, "virtualenv-12.0.7", "virtualenv.py")
-        to_run = "%s -p %s %s" % (ve_exec, interp, args.python_venv_dir)
+        to_run = f"{ve_exec} -p {interp} {args.python_venv_dir}"
         print(to_run, file=sys.stderr)
         subprocess.check_call(to_run, shell=True)
     finally:
         if not args.keep_scratch:
-            try:
+            with contextlib.suppress(Exception):
                 shutil.rmtree(virtualenv_tempdir)
-            except:
-                pass
 
     # install requirements
     ve_python = os.path.join(args.python_venv_dir, "bin", "python")
@@ -107,8 +102,8 @@ def create_python_environment(source_dir, args):
             cmds.insert(2, deleteme)
 
         for x in open(os.path.join(source_dir, "happy.requirements.txt")):
-            print(" ".join(cmds + [x]), file=sys.stderr)
-            subprocess.check_call(" ".join(cmds + [x]), shell=True)
+            print(" ".join([*cmds, x]), file=sys.stderr)
+            subprocess.check_call(" ".join([*cmds, x]), shell=True)
     finally:
         if deleteme:
             os.unlink(deleteme)
@@ -134,11 +129,8 @@ def replace_shebang(filename, shebang):
 
 
 def build_haplotypes(source_dir, build_dir, args):
-    if args.boost:
-        boost_prefix = "BOOST_ROOT=%s " % args.boost
-    else:
-        boost_prefix = ""
-    config_command = "%s/configure.sh %s %s %s" % (
+    boost_prefix = "BOOST_ROOT=%s " % args.boost if args.boost else ""
+    config_command = "{}/configure.sh {} {} {}".format(
         source_dir,
         args.configuration,
         args.setup,
@@ -158,7 +150,7 @@ def build_haplotypes(source_dir, build_dir, args):
                 args.rtgtools_wrapper
             ).replace(" ", "\\ ")
 
-    to_run = boost_prefix + "cd %s && %s %s" % (build_dir, boost_prefix, config_command)
+    to_run = boost_prefix + f"cd {build_dir} && {boost_prefix} {config_command}"
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
@@ -189,7 +181,7 @@ def build_haplotypes(source_dir, build_dir, args):
 
 def test_haplotypes(source_dir, python_shebang, args):
     """Run the unit + integration tests"""
-    to_run = "cd %s && %s" % (
+    to_run = "cd {} && {}".format(
         args.targetdir,
         os.path.join(source_dir, "src", "sh", "run_tests.sh"),
     )

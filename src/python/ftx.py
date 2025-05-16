@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,23 +22,23 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
 import logging
-import traceback
-import tempfile
+import os
 import shutil
+import sys
+import tempfile
+import traceback
+
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
-import Tools
-from Tools.bcftools import runBcftools, preprocessVCF
-from Tools.bamstats import bamStats
-
 import Somatic
+import Tools
+from Tools.bamstats import bamStats
+from Tools.bcftools import preprocessVCF, runBcftools
 
 
 def main():
@@ -157,7 +156,9 @@ def main():
             bres = pandas.concat(bams).groupby("CHROM").mean()
             md = {}
             for x in bres.index:
-                logging.info("Mean coverage on %s is %f" % (x, bres.loc[x]["COVERAGE"]))
+                logging.info(
+                    "Mean coverage on {} is {:f}".format(x, bres.loc[x]["COVERAGE"])
+                )
                 md[x] = float(bres.loc[x]["COVERAGE"]) * 3.0
 
         nqpath = os.path.join(scratch, "normalized_query.vcf.gz")
@@ -196,6 +197,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
+        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

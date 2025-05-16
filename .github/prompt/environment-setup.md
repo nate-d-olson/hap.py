@@ -4,7 +4,7 @@ This guide will help you set up your development environment for working on the 
 
 ## Prerequisites
 
-- Python 3.6+ 
+- Python 3.6+
 - CMake 3.12+
 - C++ compiler (gcc 7+ recommended)
 - Git
@@ -65,7 +65,7 @@ src/sh/run_tests.sh
    - Python
    - C/C++
    - CMake
-   
+
 2. Configure VS Code settings:
    - Open Command Palette (Ctrl+Shift+P / Cmd+Shift+P)
    - Search for "Preferences: Open Settings (JSON)"

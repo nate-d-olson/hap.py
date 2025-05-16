@@ -17,7 +17,7 @@
 | HAP-357 | Deal with change in Java license terms                                             |
 | HAP-359 | Hap.py crashes when ingesting variants genotyped as <NON_REF>                      |
 | HAP-360 | Apply non-ref filter to truth set when --preprocess-truth is set                   |
-| HAP-361 | Hap.py "blocksplit" processes still failing on DRAGEN gVCFs even with pre-filtering NON_REF genotypes 
+| HAP-361 | Hap.py "blocksplit" processes still failing on DRAGEN gVCFs even with pre-filtering NON_REF genotypes
 | HAP-362 | Hap.py blocksplit sometimes crashes with "invalid next size (fast)" error          |
 | HAP-363 | Use 'git describe' to obtain version number during Cmake                           |
 
@@ -335,4 +335,3 @@
 | HAP-54    | Version number does not display                                                  |
 | HAP-62    | hap.py non-verbose fail when FP regions file not found                           |
 | HAP-63    | Add more comprehensive PG hap.py test (PGv7 vs. GATK 1.6 on chr21)               |
-

@@ -1,6 +1,6 @@
 
 
-## 4. Update 
+## 4. Update
 
 Add a section specifically on build system modernization:
 

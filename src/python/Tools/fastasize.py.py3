@@ -35,13 +35,13 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 
 def fastaContigLengths(fastafile: str) -> Dict[str, int]:
     """ Return contig lengths in a fasta file
-    
+
     Args:
         fastafile: Path to the FASTA file
-        
+
     Returns:
         Dictionary mapping contig names to lengths
-        
+
     Raises:
         Exception: If the FASTA file is not indexed
     """
@@ -61,10 +61,10 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
 def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
     """ Return contig lengths in a fasta file excluding
     N bases.
-    
+
     Args:
         fastafile: Path to the FASTA file
-        
+
     Returns:
         Dictionary mapping contig names to non-N lengths
     """
@@ -134,12 +134,12 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
 
 def fastaSampleRegions(fastafile: str, n_regions: int = 10, region_length: int = 10000) -> List[str]:
     """ Sample regions from a fasta file
-    
+
     Args:
         fastafile: Path to the FASTA file
         n_regions: Number of regions to sample
         region_length: Length of each region
-        
+
     Returns:
         List of sampled regions in format "chrom:start-end"
     """

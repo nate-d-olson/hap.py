@@ -288,8 +288,8 @@ int main(int argc, char* argv[]) {
             std::vector<uint64_t> nodes_used;
             std::ofstream fout(out_fasta.c_str());
 
-            gr.enumeratePaths(chr.c_str(), start, end, 
-                              nodes, edges, 
+            gr.enumeratePaths(chr.c_str(), start, end,
+                              nodes, edges,
                               haps, 0, (size_t)-1, max_n_haplotypes,
                               &nodes_used);
 
@@ -302,7 +302,7 @@ int main(int argc, char* argv[]) {
 
                 for(size_t n_id = 0; n_id < nodes.size(); ++n_id)
                 {
-                    // nodes_used[i] gives a bit-mask of which het nodes where used 
+                    // nodes_used[i] gives a bit-mask of which het nodes where used
                     auto & n = nodes[n_id];
                     // debug-print all nodes
                     // std::cerr << n << "\n";
@@ -315,7 +315,7 @@ int main(int argc, char* argv[]) {
                     if(n.color == ReferenceNode::black)
                     {
                         node_was_used = true;
-                    } 
+                    }
                     else
                     {
                         node_was_used = (nodes_used[i] & het_mask) != 0;
@@ -328,7 +328,7 @@ int main(int argc, char* argv[]) {
                         {
                             nodes_string += " ";
                         }
-                        nodes_string += std::to_string(n_id) + ":" + n.repr();                        
+                        nodes_string += std::to_string(n_id) + ":" + n.repr();
                     }
                 }
                 nodes_string += "]";
@@ -354,4 +354,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-

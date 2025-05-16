@@ -472,4 +472,3 @@ void realignRefVar(FastaFile const & f, const char * chr, variant::RefVar const 
         }
     }
 }
-

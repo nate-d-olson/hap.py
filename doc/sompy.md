@@ -10,7 +10,7 @@ can be specified.
 
 Counting works as follows:
 
-*  Variants that are in both files count as true positives (tp). 
+*  Variants that are in both files count as true positives (tp).
 *  Variants that are only in the query become false positives or unknowns
     -  if FP regions are specified, query-only files in these regions become fp,
        and other calls become unknowns (unk)
@@ -30,7 +30,7 @@ metrics is reported as `recall_lower`, `recall_upper` and `precision_lower`,
 `precision_upper`, respectively.
 
 ```
-${HAPPY}/bin/som.py example/sompy/PG_admix_truth_snvs.vcf.gz \ 
+${HAPPY}/bin/som.py example/sompy/PG_admix_truth_snvs.vcf.gz \
                     example/sompy/strelka_admix_snvs.vcf.gz \
                     -f example/sompy/FP_admix.bed.gz \
                     -o test
@@ -51,9 +51,9 @@ These regions can be given as a bed file with at least four columns, e.g.:
 chr1    0   10000   *   all_n
 ```
 
-This would define an ambiguity region named all_n. All variants falling into 
+This would define an ambiguity region named all_n. All variants falling into
 these regions will be counted as ambi in the table above. The command line
-option `--explain_ambiguous` will show how many calls were captured by each 
+option `--explain_ambiguous` will show how many calls were captured by each
 region type.
 
 ## Feature Tables
@@ -66,7 +66,7 @@ For more information, see [/src/python/Somatic/\_\_init\_\_.py](/src/python/Soma
 
 ## ROC Curves
 
-Som.py can create ROC curve data based on feature tables. This is implemented using 
+Som.py can create ROC curve data based on feature tables. This is implemented using
 the `--roc` switch. Different variant callers produce different features, and therefore
 might require different feature tables to be computed -- the `--roc` switch therefore
 overrides the setting in `--feature-table`.
@@ -74,7 +74,7 @@ overrides the setting in `--feature-table`.
 ## Stratification by allele frequency
 
 If the feature table contains columns for an expected and an observed allele frequency,
-we can stratify precision and recall into AF bins. This feature requires a feature 
+we can stratify precision and recall into AF bins. This feature requires a feature
 table to be selected using `--feature-table` or `--roc`. The columns from which to obtain
 the AF values for TP/FN can be selected using `--af-truth`, and the columns for FP/UNK/AMBI,
 are selected using `--af-query`.

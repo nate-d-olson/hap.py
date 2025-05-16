@@ -38,7 +38,7 @@ of hg19):
                         Specify a reference file.
 ```
 
-We can extract a subset of the VCF with the `-l`, `-R`, `-T` command line options 
+We can extract a subset of the VCF with the `-l`, `-R`, `-T` command line options
 as follows:
 
 ```
@@ -64,7 +64,7 @@ We can also apply filters, or require all variants to pass:
 
 We can also attempt to canonicalize variant representations by means of left-shifting
 and decomposition. These operations are implemented in the preprocess tool which is
-part of hap.py. 
+part of hap.py.
 
 ```
   -L, --leftshift       Left-shift variants safely (off by default).
@@ -107,7 +107,7 @@ to the query VCF if necessary.
 ```
 
 Using BCF rather than gzipped VCF speeds up file I/O. However, some VCF files
-do not translate into BCF easily since BCF needs complete headers that are 
+do not translate into BCF easily since BCF needs complete headers that are
 correct for every record in the file. Therefore, this is optional for the time
 being. See also the vcfcheck tool which is deployed with hap.py, this tool will
 test if a given VCF can be translated into BCF.
@@ -131,20 +131,20 @@ The default value is 10000, which should be sufficient for short reads.
 ```
 
 The presence of the <NON_REF> symbolic allele in genome VCFs can cause problems
-for hap.py, especially if it is part of a genotype. As a workaround, we 
+for hap.py, especially if it is part of a genotype. As a workaround, we
 provide several options. Since variants genotyped as <NON_REF> cannot be
 sensibly scored, the we provide the following option, which is safe to use
 on both genome VCFs and standard VCFs:
 
 ```
-  --filter-nonref       Remove any variants genotyped as <NON_REF>.                 
+  --filter-nonref       Remove any variants genotyped as <NON_REF>.
 ```
 
 If hap.py still crashes when processing a genome VCF, we provide separate
 options to perform on-the-fly conversion of a genome VCF to a standard VCF
-by removing all <NON_REF> alleles and non-variant blocks. Note that this 
+by removing all <NON_REF> alleles and non-variant blocks. Note that this
 also removes some fields from the INFO column. These options should only
-be used on genome VCFs since attempting to convert a standard VCF will 
+be used on genome VCFs since attempting to convert a standard VCF will
 cause all biallelic variants to be filtered out (most of them).
 
 ```
@@ -265,4 +265,3 @@ chr1    100000  .   A    C,T,T  ...   GT  1/2  1/3
 ```
 chr1    100000  .   A    C,T  ...   GT  1/2  1/2
 ```
-

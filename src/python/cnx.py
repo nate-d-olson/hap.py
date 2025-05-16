@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,18 +22,17 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
-import logging
-import traceback
 import json
+import logging
+import os
+import sys
+import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
 
 import Tools
-
 from Tools.vcfcallerinfo import CallerInfo
 
 
@@ -79,6 +77,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
+        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

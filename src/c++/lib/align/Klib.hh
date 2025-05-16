@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -48,7 +48,7 @@ public:
 
     void setParameters(AlignmentParameters const & ap);
     void getParameters(AlignmentParameters & ap);
-    
+
     /**
      * @brief set target sequence
      */
@@ -71,4 +71,3 @@ protected:
     virtual void update();
 	KlibAlignmentImpl * _impl;
 };
-

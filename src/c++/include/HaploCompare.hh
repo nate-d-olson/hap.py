@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -51,12 +51,12 @@ namespace haplotypes
 
 struct HaplotypeDiff
 {
-    HaplotypeDiff() : 
-        score(-1), 
-        hap1("."), hap2("."), 
+    HaplotypeDiff() :
+        score(-1),
+        hap1("."), hap2("."),
         s1(-1), e1(-1), s2(-1), e2(-1), cigar("."),
         softclipped(0), matches(0), mismatches(0), ins(0), del(0) {}
-    
+
     int score;
 
     std::string hap1;
@@ -83,14 +83,14 @@ class HaploCompare
 public:
     HaploCompare();
     ~HaploCompare();
-    
+
     /**
      * Compare two haplotypes
      */
 
     /**
      * @brief Set to use a specific alignment object
-     * 
+     *
      * The passed pointer will be deallocated when the HaploCompare object is destroyed.
      */
     void setAlignment(std::unique_ptr<Alignment> &&);
@@ -103,24 +103,24 @@ public:
     void setAlt(const char * );
 
     /**
-     * Output 
+     * Output
      */
 
     /**
      * Use a global alignment to fully transform ref to alt.
-     * 
-     * If a local alignment will is used (a'la read realignment), 
+     *
+     * If a local alignment will is used (a'la read realignment),
      * returned variants will only be within the window r0 -> r1 and a0 -> a1
-     * 
+     *
      * getPositions will return the locations of the fragments matched in ref and alt
      * (in case of a global alignment, these will be 0 and ref/alt length -1).
-     * 
+     *
      * The score gives the alignment score for the local alignment within the positions.
-     * 
+     *
      * Changes from ref to alt within the positions can be returned as a RefVar list.
-     * 
+     *
      */
-    void getVariants(std::list<variant::RefVar> & target);  
+    void getVariants(std::list<variant::RefVar> & target);
 
 private:
     /** prevent assignment */

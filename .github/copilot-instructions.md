@@ -18,7 +18,7 @@ This fork aims to modernize the codebase for continued use and development.
 Currently in the process of converting the tool to use python3 and update dependencies to improve usability and facilitate future development. After updates, the codebase should follow Python best practices and modern Python package structure and installation. Black should be used for linting.
 
 ## Build and Installation
-Currently the install process is handled by the `install.py` script. Which accepts a build directory as a command line argument. Use a temp directory when building and testing. Do not make edits to the build directory as they will be lost next time the install script is run. The tool uses Cython. CMake is used for installing C++ dependencies and libraries and building source code. 
+Currently the install process is handled by the `install.py` script. Which accepts a build directory as a command line argument. Use a temp directory when building and testing. Do not make edits to the build directory as they will be lost next time the install script is run. The tool uses Cython. CMake is used for installing C++ dependencies and libraries and building source code.
 
 ## Testing
 After the install completes, the install script tests the install using a series of bash and Python scripts in the `src/sh` directory which are executed by the `src/sh/run_tests.sh` script. The test scripts should be run without failing on error so that all errors can be identified. As the scripts contain multiple tests with ambiguous names, the standard error and standard out should be recorded and used to determine the individual failing tests and specific parts of the codebase that are failing the test.

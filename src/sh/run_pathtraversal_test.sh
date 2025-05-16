@@ -33,4 +33,3 @@ else
     echo "Path traversal test successful"
     rm -rf ${TMP_OUT}.*
 fi
-

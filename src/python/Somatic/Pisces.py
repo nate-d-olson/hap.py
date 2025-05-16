@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -9,9 +8,10 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import pandas
 import logging
-from Tools.vcfextract import vcfExtract, extractHeaders
+
+import pandas
+from Tools.vcfextract import extractHeaders, vcfExtract
 
 
 def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
@@ -83,7 +83,7 @@ def extractPiscesSNVFeatures(vcfname, tag, avg_depth=None):
                 xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
-                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
+                logging.info(f"{xchr} depth from VCF header is {avg_depth[xchr]:f}")
 
     has_warned = {}
 

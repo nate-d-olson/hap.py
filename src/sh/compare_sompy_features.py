@@ -2,8 +2,8 @@
 
 # Compare two som.py csv files
 
-import sys
 import csv
+import sys
 
 
 def csvread(filename):
@@ -38,9 +38,7 @@ def main():
     header2, data2 = csvread(sys.argv[2])
 
     if header1 != header2 or len(header1) == 0:
-        raise Exception(
-            "Header mismatch, \n%s\n != \n%s\n" % (str(header1), str(header2))
-        )
+        raise Exception(f"Header mismatch, \n{str(header1)}\n != \n{str(header2)}\n")
 
     if len(data1) != len(data2) or len(data1) == 0:
         raise Exception("Data length mismatch, %i != %i" % (len(data1), len(data2)))

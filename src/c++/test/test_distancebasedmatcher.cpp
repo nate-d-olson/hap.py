@@ -85,4 +85,3 @@ BOOST_AUTO_TEST_CASE(testDistanceBasedMatcher)
     BOOST_CHECK_EQUAL(pass_and_score.second, (unsigned) 2l);
     BOOST_CHECK_EQUAL(am.numberOfPossibleAssignments(), (unsigned) (4l * 4l));
 }
-

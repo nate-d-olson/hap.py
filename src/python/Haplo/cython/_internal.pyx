@@ -12,14 +12,17 @@ This module provides the interface between Python and the C++ components of hap.
 It wraps the C++ library functionality for use in the Python code.
 """
 
-from libcpp.string cimport string
-from libcpp.vector cimport vector
 from libc.stdint cimport int32_t, int64_t
 from libcpp cimport bool
+from libcpp.string cimport string
+from libcpp.vector cimport vector
+
 import numpy as np
+
 cimport numpy as np
-import os
+
 import logging
+import os
 
 # Import Python builtins
 from builtins import bytes, str
@@ -40,20 +43,20 @@ try:
         """Get the hap.py version string"""
         cdef string v = version_string()
         return v.decode('utf-8')
-    
+
     def get_build_time():
         """Get the hap.py build timestamp"""
         cdef string t = build_timestamp()
         return t.decode('utf-8')
-        
+
 except Exception as e:
     logging.warning("Could not initialize C++ components: {}".format(e.decode("utf-8") if isinstance(e, bytes) else e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)))
-    
+
     # Define fallback versions of the functions
     def get_version():
         """Fallback version function when C++ is not available"""
         return "unknown (C++ module not loaded)"
-    
+
     def get_build_time():
         """Fallback build time function when C++ is not available"""
         return "unknown (C++ module not loaded)"
@@ -68,11 +71,11 @@ def is_available():
         return False
         """Get the hap.py version string (fallback)"""
         return "0.0.0-fallback"
-    
+
     def get_build_time() -> str:
         """Get the hap.py build timestamp (fallback)"""
         return "unknown"
-    
+
     # Add placeholder functions for any other functionality needed
 
 # Create a test function to verify the module is working

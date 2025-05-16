@@ -6,17 +6,17 @@ We've made significant progress in migrating the hap.py codebase from Python 2 t
 
 - **Overall Completion**: Approximately 71% of files have been fully migrated to Python 3
 - **Core Files Updated**: All core files (hap.py, som.py, qfy.py, pre.py) have been updated with Python 3 compatibility
-- **Module Migration**: 
+- **Module Migration**:
   - Somatic module: All files migrated (100%)
   - Tools module: All files migrated (100%)
-  
+
 ## Recent Fixes
 
 ### Fixed Truncated Files
 We identified and fixed 6 files that were truncated during the Python 3 migration process:
 
 - `src/python/Haplo/happyroc.py` (restored from 273 to 312 lines)
-- `src/python/Somatic/Pisces.py` (restored from 136 to 172 lines) 
+- `src/python/Somatic/Pisces.py` (restored from 136 to 172 lines)
 - `src/python/Somatic/Strelka.py` (restored from 439 to 601 lines)
 - `src/python/Somatic/Varscan2.py` (restored from 257 to 420 lines)
 - `src/python/Tools/bcftools.py` (restored from 279 to 381 lines)

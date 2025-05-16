@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -54,18 +54,18 @@ class Haplotype
 public:
     /**
      * @brief Initialize haplotype block for one chromosome
-     * 
+     *
      * @param chr chromosome/contig to base the haplotype on
      * @param reference_file name of the reference sequence file
      */
     Haplotype(const char * chr, const char * reference_file);
-    
+
     Haplotype(Haplotype const & );
     ~Haplotype();
     Haplotype const & operator=(Haplotype const &);
 
     /** add variant
-     * 
+     *
      * Order of start coordinates must be increasing.
      */
     void addVar(int64_t start, int64_t end, std::string alt);
@@ -78,29 +78,29 @@ public:
 
     /**
      * Length difference compared to reference
-     * 
+     *
      * min : minimum difference
-     * max : maximum difference 
+     * max : maximum difference
      *  (if multiple insertions/deletions are present)
-     *  
+     *
      * sum : net difference in length
-     * 
+     *
      */
     void lengthDiffs(int64_t & min, int64_t & max, int64_t & sum) const;
 
-    /** Get the haplotype's modified reference sequence 
-     * 
+    /** Get the haplotype's modified reference sequence
+     *
      * [-1, -1] : get only from start() to end()
-     * 
-     * Note that if start > start() or end < end(), they will be relative to 
+     *
+     * Note that if start > start() or end < end(), they will be relative to
      * the modified reference.
-     * 
+     *
      */
     std::string seq(int64_t start = -1, int64_t end = -1) const;
 
     /**
      * @brief Canonical representation w.r.t. reference
-     * 
+     *
      * Start and end can be used to give a region within which this block is canonical.
      */
     std::string repr(int64_t start = -1, int64_t end = -1) const;
@@ -112,9 +112,9 @@ public:
 
     /**
      * @brief Internal helper: clean up reference sequence hash (used in testing only)
-     * 
-     * To save time, we keep all reference_file Fastas in a hash. When feeding in temporary 
-     * files, this is problematic since they can't be deleted until the Fasta object is 
+     *
+     * To save time, we keep all reference_file Fastas in a hash. When feeding in temporary
+     * files, this is problematic since they can't be deleted until the Fasta object is
      * deleted.
      */
     static void resetRefs();
@@ -124,4 +124,3 @@ private:
 };
 
 } // namespace haplotypes
-

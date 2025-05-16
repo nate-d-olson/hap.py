@@ -35,10 +35,10 @@ POOL = None
 
 def getPool(threads: int) -> Optional[multiprocessing.Pool]:
     """ Get or create a process pool
-    
+
     Args:
         threads: Number of threads to use
-        
+
     Returns:
         Multiprocessing pool or None for single-threaded execution
     """
@@ -53,12 +53,12 @@ def getPool(threads: int) -> Optional[multiprocessing.Pool]:
 
 
 def splitEvery(n: Optional[int], iterable: Iterator[T]) -> Iterator[List[T]]:
-    """ Split iterable into list blocks of size n 
-    
+    """ Split iterable into list blocks of size n
+
     Args:
         n: Size of each chunk, if None yields entire iterable as one chunk
         iterable: Input iterator to split
-        
+
     Yields:
         Lists of items from the iterable with maximum size n
     """
@@ -73,17 +73,17 @@ def splitEvery(n: Optional[int], iterable: Iterator[T]) -> Iterator[List[T]]:
 
 
 def unpickleSequentially(plist: List[str]) -> Iterator[Any]:
-    """ Unpickle and concatenate sequentially 
-    
+    """ Unpickle and concatenate sequentially
+
     Args:
         plist: List of pickle file paths
-        
+
     Yields:
         Unpickled objects from the files
     """
     data = []
     plist_copy = list(plist)  # Create a copy to avoid modifying the input list
-    
+
     while plist_copy or data:
         if not data:
             fname = plist_copy.pop(0)
@@ -96,10 +96,10 @@ def unpickleSequentially(plist: List[str]) -> Iterator[Any]:
 
 def parMapper(arg: Tuple[T, Dict[str, Any]]) -> Optional[R]:
     """Wrapper function for parallel mapping
-    
+
     Args:
         arg: Tuple with (item, function_info)
-        
+
     Returns:
         Result of function call or None if exception occurred
     """
@@ -122,27 +122,27 @@ def parMapper(arg: Tuple[T, Dict[str, Any]]) -> Optional[R]:
 
 
 def runParallel(
-    pool: Optional[multiprocessing.Pool], 
-    fun: Callable[[T], R], 
-    par: List[T], 
-    *args: Any, 
+    pool: Optional[multiprocessing.Pool],
+    fun: Callable[[T], R],
+    par: List[T],
+    *args: Any,
     **kwargs: Any
 ) -> List[Optional[R]]:
     """ Run a function in parallel on all elements in par
-    
+
     Args:
         pool: Multiprocessing.Pool or None for sequential execution
         fun: Function to apply to each item
         par: List of items to process (each item is passed as the first argument to fun)
         args: Additional positional arguments for fun
         kwargs: Additional keyword arguments for fun
-    
+
     Returns:
         List of results in the same order as input items
     """
     # Create a list of (item, function_info) tuples for mapping
     func_info = {"fun": fun, "args": args, "kwargs": kwargs}
-    
+
     if pool:
         # Use izip in Python 2, but in Python 3 zip is already lazy
         result = pool.map(parMapper, zip(par, repeat(func_info)))
@@ -151,5 +151,5 @@ def runParallel(
         result = []
         for item in par:
             result.append(parMapper((item, func_info)))
-    
+
     return result

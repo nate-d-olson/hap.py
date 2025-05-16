@@ -137,4 +137,3 @@ if (GNU_COMPAT_COMPILER)
   endif ()
 
 endif()
-

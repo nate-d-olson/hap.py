@@ -1,4 +1,4 @@
-digraph G { 
+digraph G {
 node_0  [label="start: chrQ:1", shape=diamond, penwidth=2, color=cadetblue4] ;
 node_1  [label="homref chrQ:2-1", shape=box, penwidth=2, color=cadetblue4] ;
 node_2  [label="alt:  chrQ:2-4", shape=parallelogram, penwidth=2, color=cadetblue4] ;

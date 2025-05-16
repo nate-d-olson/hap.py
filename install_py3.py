@@ -16,6 +16,7 @@
 # * makes virtualenv
 
 import argparse
+import contextlib
 import fnmatch
 import glob
 import multiprocessing
@@ -28,8 +29,6 @@ import tempfile
 
 def check_python_version():
     """Check if the python version is sufficient"""
-    if sys.version_info < (3, 6):
-        raise Exception("You will need to run this with Python >= 3.6")
 
 
 def create_python_environment(source_dir, args):
@@ -59,10 +58,8 @@ def create_python_environment(source_dir, args):
         raise Exception("Please specify a virtualenv target installation directory.")
 
     if args.python_venv_dir_force:
-        try:
+        with contextlib.suppress(Exception):
             shutil.rmtree(args.python_venv_dir)
-        except:
-            pass
 
     if os.path.exists(args.python_venv_dir) and not args.python_venv_dir_update:
         raise Exception("The virtual environment directory already exists.")
@@ -73,7 +70,7 @@ def create_python_environment(source_dir, args):
     subprocess.check_call(virtualenv_cmd)
 
     # install requirements
-    ve_python = os.path.join(args.python_venv_dir, "bin", "python")
+    os.path.join(args.python_venv_dir, "bin", "python")
     ve_pip = os.path.join(args.python_venv_dir, "bin", "pip")
 
     # Install pip-tools for better dependency management
@@ -102,7 +99,7 @@ def replace_shebang(filename, shebang):
     """Replace shebang line / reheader script files"""
     print(f"Fixing shebang line in {filename}", file=sys.stderr)
 
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, encoding="utf-8") as f:
         lines = f.readlines()
 
     with open(filename, "w", encoding="utf-8") as f:
@@ -116,10 +113,7 @@ def replace_shebang(filename, shebang):
 
 
 def build_haplotypes(source_dir, build_dir, args):
-    if args.boost:
-        boost_prefix = f"BOOST_ROOT={args.boost} "
-    else:
-        boost_prefix = ""
+    boost_prefix = f"BOOST_ROOT={args.boost} " if args.boost else ""
 
     config_command = (
         f"{source_dir}/configure.sh {args.configuration} {args.setup} {args.targetdir}"
@@ -135,7 +129,7 @@ def build_haplotypes(source_dir, build_dir, args):
                 raise Exception(
                     f"RTG-tools wrapper {args.rtgtools_wrapper} doesn't exist."
                 )
-            wrapper_path = os.path.abspath(args.rtgtools_wrapper).replace(' ', '\\ ')
+            wrapper_path = os.path.abspath(args.rtgtools_wrapper).replace(" ", "\\ ")
             config_command += f"-DVCFEVAL_WRAPPER={wrapper_path}"
 
     to_run = f"{boost_prefix}cd {build_dir} && {boost_prefix} {config_command}"

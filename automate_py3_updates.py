@@ -58,7 +58,7 @@ class Python2To3Updater:
             print(f"Processing {filepath}...")
 
         try:
-            with open(filepath, "r", encoding="utf-8") as f:
+            with open(filepath, encoding="utf-8") as f:
                 content = f.read()
 
             # Make a copy of the original content
@@ -229,51 +229,39 @@ class Python2To3Updater:
 
         print("\n=== Python 3 Update Summary ===")
         print(
-            (
-                "Total changes {}: {}".format(
-                    "made" if self.apply else "identified", total_changes
-                )
+            "Total changes {}: {}".format(
+                "made" if self.apply else "identified", total_changes
             )
         )
 
         print(
-            (
-                "\nPrint statements {}: {}".format(
-                    "converted" if self.apply else "to convert",
-                    len(self.changes_made["print_statement"]),
-                )
+            "\nPrint statements {}: {}".format(
+                "converted" if self.apply else "to convert",
+                len(self.changes_made["print_statement"]),
             )
         )
         print(
-            (
-                "Exception syntax {}: {}".format(
-                    "updated" if self.apply else "to update",
-                    len(self.changes_made["except_syntax"]),
-                )
+            "Exception syntax {}: {}".format(
+                "updated" if self.apply else "to update",
+                len(self.changes_made["except_syntax"]),
             )
         )
         print(
-            (
-                "xrange {}: {}".format(
-                    "replaced" if self.apply else "to replace",
-                    len(self.changes_made["xrange"]),
-                )
+            "xrange {}: {}".format(
+                "replaced" if self.apply else "to replace",
+                len(self.changes_made["xrange"]),
             )
         )
         print(
-            (
-                "Dict methods {}: {}".format(
-                    "updated" if self.apply else "to update",
-                    len(self.changes_made["dict_methods"]),
-                )
+            "Dict methods {}: {}".format(
+                "updated" if self.apply else "to update",
+                len(self.changes_made["dict_methods"]),
             )
         )
         print(
-            (
-                "String encoding {}: {}".format(
-                    "fixed" if self.apply else "to fix",
-                    len(self.changes_made["encoding"]),
-                )
+            "String encoding {}: {}".format(
+                "fixed" if self.apply else "to fix",
+                len(self.changes_made["encoding"]),
             )
         )
         print(

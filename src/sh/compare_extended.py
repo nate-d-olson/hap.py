@@ -2,8 +2,8 @@
 
 # Compare two extended csv files
 
-import sys
 import csv
+import sys
 
 
 def csvread(filename):
@@ -118,7 +118,7 @@ def main():
         print("ERROR -- Metric differences detected:", file=sys.stderr)
         print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print("%s / %s: %s != %s difference: %s" % m, file=sys.stderr)
+            print("{} / {}: {} != {} difference: {}".format(*m), file=sys.stderr)
         print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 

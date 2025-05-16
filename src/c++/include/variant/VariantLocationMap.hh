@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -47,7 +47,7 @@ typedef std::map<int64_t, variant::Variants> VariantLocationMap;
  * @brief Combine Alleles by Location
  */
 VariantLocationMap::iterator addToLocationMap(
-    VariantLocationMap & locmap, int sample, 
+    VariantLocationMap & locmap, int sample,
     RefVar const & rv, bool is_het);
 
 /**

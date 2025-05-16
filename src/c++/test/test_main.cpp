@@ -36,4 +36,3 @@
 
 #define BOOST_TEST_MAIN haplotypes
 #include "boost/test/unit_test.hpp"
-

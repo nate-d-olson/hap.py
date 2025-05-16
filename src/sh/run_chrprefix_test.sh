@@ -104,4 +104,3 @@ else
     echo "Chr prefixed truth test successful"
     rm -rf ${TMP_OUT}.*
 fi
-

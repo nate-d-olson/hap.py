@@ -10,7 +10,7 @@ We have made significant progress towards migrating the hap.py code base from Py
    - `src/python/Tools/__init__.py.py3`
    - `src/python/Tools/bcftools.py.py3`
    - `src/python/Tools/fastasize.py.py3`
-   - `src/python/Haplo/__init__.py.py3` 
+   - `src/python/Haplo/__init__.py.py3`
    - `src/python/Haplo/quantify.py.py3`
    - `src/python/pre.py.py3`
    - `src/python/hap.py.py3`

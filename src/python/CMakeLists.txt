@@ -41,4 +41,3 @@ add_custom_command(TARGET python_src3
 
 configure_file("Haplo/version.py.in"
                "${CMAKE_BINARY_DIR}/lib/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}/Haplo/version.py")
-

@@ -16,7 +16,7 @@ This guide provides solutions for common issues encountered when working with Gi
 
 **Example Prompt**:
 ```
-@copilot I'm working on parsing VCF files where each line represents a genomic variant. 
+@copilot I'm working on parsing VCF files where each line represents a genomic variant.
 Help me write a function that filters variants based on quality score and read depth.
 ```
 

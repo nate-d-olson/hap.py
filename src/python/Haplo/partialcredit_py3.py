@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -21,6 +20,7 @@ Module for partial credit variant comparison processing.
 Allows for preprocess, blocksplit and integration of partial credit comparisons.
 """
 
+import contextlib
 import itertools
 import logging
 import os
@@ -47,10 +47,7 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
     """
     starttime = time.time()
     filename, location_str = file_and_location
-    if args["bcf"]:
-        int_suffix = "bcf"
-    else:
-        int_suffix = "vcf.gz"
+    int_suffix = "bcf" if args["bcf"] else "vcf.gz"
 
     with tempfile.NamedTemporaryFile(
         delete=False, prefix=f"input.{location_str}", suffix=f".prep.{int_suffix}"
@@ -88,12 +85,12 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
         finally:
             if finished:
                 # Close files and read their contents for logging
-                with open(tfo.name, "r", encoding="utf-8") as f:
+                with open(tfo.name, encoding="utf-8") as f:
                     for l in f:
                         logging.info(l.rstrip())
                 os.unlink(tfo.name)
 
-                with open(tfe.name, "r", encoding="utf-8") as f:
+                with open(tfe.name, encoding="utf-8") as f:
                     for l in f:
                         logging.warning(l.rstrip())
                 os.unlink(tfe.name)
@@ -102,10 +99,10 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
                     f"Preprocess command {to_run} failed. "
                     f"Outputs are here {tfo.name} / {tfe.name}"
                 )
-                with open(tfo.name, "r", encoding="utf-8") as f:
+                with open(tfo.name, encoding="utf-8") as f:
                     for l in f:
                         logging.error(l.rstrip())
-                with open(tfe.name, "r", encoding="utf-8") as f:
+                with open(tfe.name, encoding="utf-8") as f:
                     for l in f:
                         logging.error(l.rstrip())
 
@@ -155,18 +152,18 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
                 subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
             finally:
                 # Close files and read their contents for logging
-                with open(tfo.name, "r", encoding="utf-8") as f:
+                with open(tfo.name, encoding="utf-8") as f:
                     for l in f:
                         logging.info(l.rstrip())
                 os.unlink(tfo.name)
 
-                with open(tfe.name, "r", encoding="utf-8") as f:
+                with open(tfe.name, encoding="utf-8") as f:
                     for l in f:
                         logging.warning(l.rstrip())
                 os.unlink(tfe.name)
 
         r = []
-        with open(tf.name, "r", encoding="utf-8") as f:
+        with open(tf.name, encoding="utf-8") as f:
             for l in f:
                 ll = l.strip().split("\t", 3)
                 if len(ll) < 3:
@@ -285,7 +282,5 @@ def partialCredit(
         # Clean up temporary files
         for r in res:
             for suffix in ["", ".tbi", ".csi"]:
-                try:
+                with contextlib.suppress(OSError):
                     os.unlink(r + suffix)
-                except OSError:
-                    pass

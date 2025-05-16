@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -31,10 +30,7 @@ def runSCmp(vcf1, vcf2, target, args):
     """
 
     try:
-        if args.engine == "scmp-distance":
-            cmode = "distance"
-        else:
-            cmode = "alleles"
+        cmode = "distance" if args.engine == "scmp-distance" else "alleles"
 
         tf = tempfile.NamedTemporaryFile(delete=False)
         tf.close()
@@ -85,7 +81,13 @@ def runSCmp(vcf1, vcf2, target, args):
             return [target, target + ".csi"]
     except Exception as e:
         # Handle case where error message might be bytes in Python 3
-        error_msg = e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        error_msg = (
+            e.decode("utf-8")
+            if isinstance(e, bytes)
+            else e.decode("utf-8")
+            if isinstance(e, bytes)
+            else str(e)
+        )
         logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))
@@ -93,7 +95,13 @@ def runSCmp(vcf1, vcf2, target, args):
         raise
     except BaseException as e:
         # Handle case where error message might be bytes in Python 3
-        error_msg = e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)
+        error_msg = (
+            e.decode("utf-8")
+            if isinstance(e, bytes)
+            else e.decode("utf-8")
+            if isinstance(e, bytes)
+            else str(e)
+        )
         logging.error("Exception when running scmp: %s" % error_msg)
         logging.error("-" * 60)
         traceback.print_exc(file=LoggingWriter(logging.ERROR))

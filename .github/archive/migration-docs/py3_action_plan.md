@@ -14,7 +14,7 @@
    ```bash
    # Run 2to3 to identify incompatibilities
    2to3 -p src/python > py3_conversion_report.txt
-   
+
    # Identify critical modules with most issues
    grep -E "RefactoringTool|@@" py3_conversion_report.txt | sort -k2 -r | head -20
    ```
@@ -31,10 +31,10 @@
    # Run existing tests with Python 2 to establish a baseline
    cd /tmp/happy-py2-baseline
    src/sh/run_tests.sh 2>&1 | tee py2_test_baseline.log
-   
+
    # Analyze test coverage
    grep -A 3 "PASS\|FAIL\|ERROR" py2_test_baseline.log > test_status_summary.txt
-   
+
    # Catalog test data being used
    find src/data -type f | sort > test_data_inventory.txt
    ```
@@ -61,7 +61,7 @@
    - Stage 1: Create Python 3 compatible branches without breaking Python 2
    - Stage 2: Fork main repository for Python 3-only development
    - Stage 3: Final transition with version number bump (e.g., 0.x → 1.0)
-   
+
 4. **Parallel Processing Review**
    - Audit multiprocessing code for Python 3 compatibility
    - Test process pool implementations with various worker counts
@@ -73,7 +73,7 @@
    ```bash
    # Run the update script on all Cython modules
    python update_cython_modules_py3.py --src-dir src/python
-   
+
    # Test updated modules
    python test_cython_module_py3.py --build-dir /tmp/happy-py3-test
    ```
@@ -112,7 +112,7 @@
    ```bash
    # Install type checking tools
    pip install mypy
-   
+
    # Add type hints to critical modules
    mypy --install-types src/python/Haplo/
    ```
@@ -135,7 +135,7 @@
    ```bash
    # Test on macOS
    ./test_py3_build.sh
-   
+
    # Test on Linux (in Docker)
    docker run -it --rm -v $(pwd):/src ubuntu:20.04 /src/test_py3_build.sh
    ```
@@ -158,10 +158,10 @@
    # Run the existing test suite with Python 3
    cd /tmp/happy-py3-build
    src/sh/run_tests.sh 2>&1 | tee py3_test_run.log
-   
+
    # Compare test results between Python 2 and 3
    python compare_test_results.py --py2-log /tmp/happy-py2-baseline/py2_test_baseline.log --py3-log py3_test_run.log
-   
+
    # Debug failing tests individually
    for test in $(grep -l "FAIL\|ERROR" /tmp/happy-py3-build/src/sh/*.log); do
      echo "Debugging test: $test"
@@ -174,10 +174,10 @@
    ```bash
    # Verify outputs with test data from src/data directory
    python validate_test_outputs.py --data-dir src/data --output-dir /tmp/happy-py3-build/test_outputs
-   
+
    # Test with specific benchmark datasets
    src/sh/run_benchmark_tests.sh src/data/chr21.1M.vcf.gz 2>&1 | tee benchmark_results.log
-   
+
    # Compare output formats and values
    python check_output_compatibility.py --py2-output /tmp/happy-py2-baseline/test_outputs --py3-output /tmp/happy-py3-build/test_outputs
    ```
@@ -193,7 +193,7 @@
    # Test with example data using both runtimes
    time /tmp/happy-py2-baseline/bin/hap.py src/data/test/truth.vcf.gz src/data/test/query.vcf.gz -o /tmp/py2_output
    time /tmp/happy-py3-build/bin/hap.py src/data/test/truth.vcf.gz src/data/test/query.vcf.gz -o /tmp/py3_output
-   
+
    # Compare outputs between Python 2 and 3 versions
    python compare_outputs.py --py2-out /tmp/py2_output --py3-out /tmp/py3_output --tolerance 1e-10
    ```
@@ -204,7 +204,7 @@
    ```bash
    # Update install.py with Python version detection and support
    python update_installer.py
-   
+
    # Test installation with Python 3
    python3 install.py /tmp/happy-py3-build
    ```
@@ -221,10 +221,10 @@
    # Run full test suite with the established test infrastructure
    cd /tmp/happy-py3-build
    src/sh/run_tests.sh
-   
+
    # Create test report
    src/sh/generate_test_report.sh > test_report.txt
-   
+
    # Test with real-world datasets from src/data
    find src/data -name "*.vcf.gz" -type f | sort | xargs -I{} \
      bash -c 'echo "Testing {}" && /tmp/happy-py3-build/bin/hap.py {} src/data/test/query.vcf.gz -o test_output_$(basename {})'
@@ -238,7 +238,7 @@
    ```bash
    # Check syntax compatibility of test scripts
    find src/sh -name "*.py" | xargs 2to3 -p > test_scripts_py3_compatibility.txt
-   
+
    # Ensure test data access is compatible
    python verify_test_data_access.py --data-dir src/data
    ```

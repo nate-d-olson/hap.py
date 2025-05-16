@@ -142,7 +142,7 @@ void Haplotype::addVar(int64_t start, int64_t end, std::string alt)
     }
 
     _impl->end = end;
-    
+
     RefVar rv;
     rv.start = start;
     rv.end = end;
@@ -177,13 +177,13 @@ int64_t Haplotype::end() const
 
 /**
  * Length difference compared to reference
- * 
+ *
  * min : minimum difference
- * max : maximum difference 
+ * max : maximum difference
  *  (if multiple insertions/deletions are present)
- *  
+ *
  * sum : net difference in length
- * 
+ *
  */
 void Haplotype::lengthDiffs(int64_t & min, int64_t & max, int64_t & sum) const
 {
@@ -199,7 +199,7 @@ void Haplotype::lengthDiffs(int64_t & min, int64_t & max, int64_t & sum) const
         shift -= reflen - altlen;
         min = std::min(min, shift);
         max = std::max(max, shift);
-    }    
+    }
     sum = shift;
 }
 
@@ -262,7 +262,7 @@ std::string Haplotype::seq(int64_t start, int64_t end) const
         shift += reflen - altlen;
     }
 
-    // these two cases are tricky because inside [istart -> iend], we don't actually have reference 
+    // these two cases are tricky because inside [istart -> iend], we don't actually have reference
     // coordinates anymore. long deletions can remove basically all of the sequence at start
     if(start > istart)
     {   // overlapping, but starting after
@@ -290,7 +290,7 @@ std::string Haplotype::seq(int64_t start, int64_t end) const
     {
         result += _impl->refsq->query(_impl->chr.c_str(), iend+1, end);
     }
-    
+
     if(start < istart)
     {   // overlapping but starting before
         result = _impl->refsq->query(_impl->chr.c_str(), start, istart-1) + result;

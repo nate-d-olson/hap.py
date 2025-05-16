@@ -8,6 +8,6 @@ These documentation files are available:
     -  [happy.md](happy.md)
 *  [normalisation.md](normalisation.md) -- documentation of our normalisation procedure
     -  [ls_example.md](ls_example.md)
-*  [refgraph.md](refgraph.md) -- introduction to reference graphs for variant 
+*  [refgraph.md](refgraph.md) -- introduction to reference graphs for variant
    comparison
 *  [microbench.md](microbench.md) -- Micro-benchmark with some ROC plots

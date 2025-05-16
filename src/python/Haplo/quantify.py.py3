@@ -28,14 +28,14 @@ from Tools.bcftools import runBcftools
 
 
 def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
-    """ Turn a list of locations into a bed file 
-    
+    """ Turn a list of locations into a bed file
+
     Args:
         locations: List of locations as strings or comma-separated string
-        
+
     Returns:
         Path to temporary BED file
-        
+
     Raises:
         Exception: For invalid location formats
     """
@@ -76,7 +76,7 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
 
 def run(args: Any) -> None:
     """Run comparison and create summary statistics
-    
+
     Args:
         args: Parsed command line arguments
     """
@@ -112,7 +112,7 @@ def run(args: Any) -> None:
                 is_male = False
             else:
                 is_male = args.gender.lower() == "male"
-                
+
             if args.engine == "xcmp":
                 # Use C++ haplotype comparison
                 outfiles[t] = u_happyc(args.truth, args.query, args.ref,
@@ -164,10 +164,10 @@ def run(args: Any) -> None:
 
 def _make_cmdline(args: List[str]) -> str:
     """Make a command line from arguments
-    
+
     Args:
         args: List of command line arguments
-        
+
     Returns:
         Formatted command line string
     """
@@ -182,7 +182,7 @@ def _make_cmdline(args: List[str]) -> str:
 
 def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
     """Merge VCFs
-    
+
     Args:
         vcfs: List of VCF files to merge
         outvcf: Output VCF file path
@@ -239,12 +239,12 @@ def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
         logging.warning(f"Failed to index {outvcf}")
 
 
-def _write_outfiles(outfiles: Dict[str, Dict[str, Any]], 
-                   outprefix: str, 
-                   typelist: List[str], 
+def _write_outfiles(outfiles: Dict[str, Dict[str, Any]],
+                   outprefix: str,
+                   typelist: List[str],
                    writeCounts: bool) -> None:
     """Write output files
-    
+
     Args:
         outfiles: Dictionary of output files by variant type
         outprefix: Output file prefix

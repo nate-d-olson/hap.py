@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import contextlib
 import logging
 import os
 import sys
@@ -119,7 +120,7 @@ def test_variant_handling(use_mock: bool = False) -> bool:
                 comparator.add_query_variant(query_var)
 
                 # Compare
-                result = comparator.compare()
+                comparator.compare()
                 logger.info("Successfully tested with mock implementation")
                 variant_test_success = True
             else:
@@ -182,10 +183,8 @@ def test_reference_handling(use_mock: bool = False) -> bool:
                 logger.error(f"Error in get_sequence: {e}")
 
             # Clean up temporary file
-            try:
+            with contextlib.suppress(Exception):
                 os.unlink(temp_fasta_path)
-            except:
-                pass
 
         except Exception as e:
             logger.error(f"Failed to test reference handling: {e}")

@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -10,17 +9,17 @@
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
 import abc
-import pandas
 
+import pandas
 from Tools.vcfextract import vcfExtract
 
-from .Strelka import extractStrelkaSNVFeatures, extractStrelkaIndelFeatures
-from .Mutect import extractMutectSNVFeatures, extractMutectIndelFeatures
-from .Varscan2 import extractVarscan2SNVFeatures, extractVarscan2IndelFeatures
-from .Pisces import extractPiscesSNVFeatures, extractPiscesIndelFeatures
+from .Mutect import extractMutectIndelFeatures, extractMutectSNVFeatures
+from .Pisces import extractPiscesIndelFeatures, extractPiscesSNVFeatures
+from .Strelka import extractStrelkaIndelFeatures, extractStrelkaSNVFeatures
+from .Varscan2 import extractVarscan2IndelFeatures, extractVarscan2SNVFeatures
 
 
-class FeatureSet(object, metaclass=abc.ABCMeta):
+class FeatureSet(metaclass=abc.ABCMeta):
     """VCF paired Feature set for somatic comparison"""
 
     def __init__(self):
@@ -79,9 +78,9 @@ class GenericFeatures(FeatureSet):
             records.append(rec)
 
         if records:
-            df = pandas.DataFrame(records, columns=features + ["tag"])
+            df = pandas.DataFrame(records, columns=[*features, "tag"])
         else:
-            df = pandas.DataFrame(columns=features + ["tag"])
+            df = pandas.DataFrame(columns=[*features, "tag"])
         return df
 
 

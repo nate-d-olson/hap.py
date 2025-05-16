@@ -21,12 +21,12 @@ from Tools.vcfextract import extract_header
 
 def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Dict[str, float]] = None) -> pd.DataFrame:
     """Return a data frame with features collected from the given VCF, tagged by given type
-    
+
     Args:
         vcf_name: name of the VCF file
         tag: type of variants
         avg_depth: average chromosome depths from BAM file
-    
+
     Returns:
         DataFrame with extracted features
     """
@@ -54,7 +54,7 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
 
     # Extract headers from the VCF file
     vcf_headers = extract_header(vcf_name, extract_columns=False)
-    
+
     # Process header information to find EVS features
     evs_featurenames = {}
     for header_line in vcf_headers.get("header_lines", []):
@@ -67,7 +67,7 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
                         evs_featurenames[i] = fn.strip()
             except Exception as e:
                 logging.warning(f"Failed to parse EVS features from header: {e}")
-    
+
     # Extract variant records
     vcf_data = []
     try:
@@ -75,10 +75,10 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
             for line in vcf_file:
                 if line.startswith('#'):
                     continue
-                
+
                 fields = line.strip().split('\t')
                 record = {}
-                
+
                 # Extract basic fields
                 if len(fields) >= 8:
                     record["CHROM"] = fields[0]
@@ -86,7 +86,7 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
                     record["REF"] = fields[3]
                     record["ALT"] = fields[4]
                     record["FILTER"] = fields[6]
-                    
+
                     # Extract INFO fields
                     info_dict = {}
                     for info_item in fields[7].split(';'):
@@ -95,41 +95,41 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
                             info_dict[key] = value
                         else:
                             info_dict[info_item] = True
-                    
+
                     # Add INFO fields with "I." prefix
                     for key, value in info_dict.items():
                         record[f"I.{key}"] = value
-                    
+
                     # Extract sample fields if available
                     if len(fields) > 9 and len(fields) >= 11:  # Normal and Tumor samples
                         format_keys = fields[8].split(':')
-                        
+
                         # Process normal sample (index 1)
                         normal_values = fields[9].split(':')
                         for i, key in enumerate(format_keys):
                             if i < len(normal_values):
                                 record[f"S.1.{key}"] = normal_values[i]
-                        
+
                         # Process tumor sample (index 2)
                         tumor_values = fields[10].split(':')
                         for i, key in enumerate(format_keys):
                             if i < len(tumor_values):
                                 record[f"S.2.{key}"] = tumor_values[i]
-                    
+
                     vcf_data.append(record)
-    
+
     except Exception as e:
         logging.error(f"Error reading VCF file {vcf_name}: {e}")
         return pd.DataFrame(columns=cols)
-    
+
     # Convert to DataFrame
     df = pd.DataFrame(vcf_data)
-    
+
     # Process and transform data
     result = []
     for idx, row in df.iterrows():
         entry = {}
-        
+
         # Basic variant information
         entry["CHROM"] = row.get("CHROM", "")
         entry["POS"] = row.get("POS", 0)
@@ -137,17 +137,17 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
         entry["ALT"] = row.get("ALT", "")
         entry["FILTER"] = row.get("FILTER", "")
         entry["tag"] = tag
-        
+
         # Extract INFO fields
         entry["NT"] = row.get("I.NT", "")
-        
+
         # Parse Somatic Genotype
         sgt = row.get("I.SGT", "")
         if sgt and "->" in sgt:
             sgt_parts = sgt.split("->")
             if len(sgt_parts) >= 1:
                 entry["NT_REF"] = sgt_parts[0]
-        
+
         # Extract numeric values, handling type conversion
         for numeric_field in ["I.QSS_NT", "I.VQSR", "I.EVS", "I.SomaticEVS", "I.MQ", "I.MQ0", "I.SNVSB", "I.ReadPosRankSum"]:
             short_name = numeric_field.split('.')[-1]
@@ -159,7 +159,7 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
                     entry[short_name] = float('nan')
             except (ValueError, TypeError):
                 entry[short_name] = float('nan')
-        
+
         # Process depth and allele fields
         normal_sdp = float(row.get("S.1.SDP", 0) or 0)
         tumor_sdp = float(row.get("S.2.SDP", 0) or 0)
@@ -167,10 +167,10 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
         tumor_fdp = float(row.get("S.2.FDP", 0) or 0)
         normal_dp = float(row.get("S.1.DP", 0) or 0)
         tumor_dp = float(row.get("S.2.DP", 0) or 0)
-        
+
         entry["N_DP"] = normal_dp
         entry["T_DP"] = tumor_dp
-        
+
         # Calculate rates
         if normal_dp > 0:
             entry["N_FDP_RATE"] = normal_fdp / normal_dp
@@ -178,30 +178,30 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
         else:
             entry["N_FDP_RATE"] = 0.0
             entry["N_SDP_RATE"] = 0.0
-        
+
         if tumor_dp > 0:
             entry["T_FDP_RATE"] = tumor_fdp / tumor_dp
             entry["T_SDP_RATE"] = tumor_sdp / tumor_dp
         else:
             entry["T_FDP_RATE"] = 0.0
             entry["T_SDP_RATE"] = 0.0
-        
+
         # Calculate depth rates if average depth information is available
         if avg_depth and entry["CHROM"] in avg_depth:
             chrom_depth = avg_depth[entry["CHROM"]]
             if chrom_depth > 0:
                 entry["N_DP_RATE"] = normal_dp / chrom_depth
                 entry["T_DP_RATE"] = tumor_dp / chrom_depth
-        
+
         # Calculate allele frequencies
         ref_base = entry["REF"]
         alt_base = entry["ALT"].split(',')[0] if entry["ALT"] else ""
-        
+
         normal_ref_count = 0
         tumor_ref_count = 0
         normal_alt_count = 0
         tumor_alt_count = 0
-        
+
         # Extract counts for reference allele
         if ref_base == 'A':
             normal_ref_count = float(row.get("S.1.AU", "0").split(',')[0] or 0)
@@ -215,7 +215,7 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
         elif ref_base == 'T':
             normal_ref_count = float(row.get("S.1.TU", "0").split(',')[0] or 0)
             tumor_ref_count = float(row.get("S.2.TU", "0").split(',')[0] or 0)
-        
+
         # Extract counts for alternate allele
         if alt_base == 'A':
             normal_alt_count = float(row.get("S.1.AU", "0").split(',')[0] or 0)
@@ -229,43 +229,43 @@ def extract_strelka_snv_features(vcf_name: str, tag: str, avg_depth: Optional[Di
         elif alt_base == 'T':
             normal_alt_count = float(row.get("S.1.TU", "0").split(',')[0] or 0)
             tumor_alt_count = float(row.get("S.2.TU", "0").split(',')[0] or 0)
-        
+
         # Calculate allele frequencies
         normal_total = normal_ref_count + normal_alt_count
         tumor_total = tumor_ref_count + tumor_alt_count
-        
+
         if normal_total > 0:
             entry["N_AF"] = normal_alt_count / normal_total
         else:
             entry["N_AF"] = 0.0
-        
+
         if tumor_total > 0:
             entry["T_AF"] = tumor_alt_count / tumor_total
         else:
             entry["T_AF"] = 0.0
-        
+
         result.append(entry)
-    
+
     # Create final DataFrame with properly ordered columns
     final_df = pd.DataFrame(result)
-    
+
     # Ensure all required columns exist (fill with NaN if missing)
     for col in cols:
         if col not in final_df.columns:
             final_df[col] = float('nan')
-    
+
     # Return DataFrame with columns in specified order
     return final_df[cols]
 
 
 def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[Dict[str, float]] = None) -> pd.DataFrame:
     """Return a data frame with indel features collected from the given Strelka VCF
-    
+
     Args:
         vcf_name: name of the VCF file
         tag: type of variants
         avg_depth: average chromosome depths from BAM file
-    
+
     Returns:
         DataFrame with extracted indel features
     """
@@ -293,10 +293,10 @@ def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[
             for line in vcf_file:
                 if line.startswith('#'):
                     continue
-                
+
                 fields = line.strip().split('\t')
                 record = {}
-                
+
                 # Extract basic fields
                 if len(fields) >= 8:
                     record["CHROM"] = fields[0]
@@ -304,7 +304,7 @@ def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[
                     record["REF"] = fields[3]
                     record["ALT"] = fields[4]
                     record["FILTER"] = fields[6]
-                    
+
                     # Extract INFO fields
                     info_dict = {}
                     for info_item in fields[7].split(';'):
@@ -313,41 +313,41 @@ def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[
                             info_dict[key] = value
                         else:
                             info_dict[info_item] = True
-                    
+
                     # Add INFO fields with "I." prefix
                     for key, value in info_dict.items():
                         record[f"I.{key}"] = value
-                    
+
                     # Extract sample fields if available
                     if len(fields) > 9 and len(fields) >= 11:  # Normal and Tumor samples
                         format_keys = fields[8].split(':')
-                        
+
                         # Process normal sample (index 1)
                         normal_values = fields[9].split(':')
                         for i, key in enumerate(format_keys):
                             if i < len(normal_values):
                                 record[f"S.1.{key}"] = normal_values[i]
-                        
+
                         # Process tumor sample (index 2)
                         tumor_values = fields[10].split(':')
                         for i, key in enumerate(format_keys):
                             if i < len(tumor_values):
                                 record[f"S.2.{key}"] = tumor_values[i]
-                    
+
                     vcf_data.append(record)
-    
+
     except Exception as e:
         logging.error(f"Error reading VCF file {vcf_name}: {e}")
         return pd.DataFrame(columns=cols)
-    
+
     # Convert to DataFrame
     df = pd.DataFrame(vcf_data)
-    
+
     # Process and transform data
     result = []
     for idx, row in df.iterrows():
         entry = {}
-        
+
         # Basic variant information
         entry["CHROM"] = row.get("CHROM", "")
         entry["POS"] = row.get("POS", 0)
@@ -355,17 +355,17 @@ def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[
         entry["ALT"] = row.get("ALT", "")
         entry["FILTER"] = row.get("FILTER", "")
         entry["tag"] = tag
-        
+
         # Extract INFO fields
         entry["NT"] = row.get("I.NT", "")
-        
+
         # Parse Somatic Genotype
         sgt = row.get("I.SGT", "")
         if sgt and "->" in sgt:
             sgt_parts = sgt.split("->")
             if len(sgt_parts) >= 1:
                 entry["NT_REF"] = sgt_parts[0]
-        
+
         # Extract numeric values, handling type conversion
         for numeric_field in ["I.QSI_NT", "I.VQSR", "I.MQ", "I.MQ0", "I.ReadPosRankSum"]:
             short_name = numeric_field.split('.')[-1]
@@ -377,63 +377,63 @@ def extract_strelka_indel_features(vcf_name: str, tag: str, avg_depth: Optional[
                     entry[short_name] = float('nan')
             except (ValueError, TypeError):
                 entry[short_name] = float('nan')
-        
+
         # Process depth fields
         normal_sdp = float(row.get("S.1.SDP", 0) or 0)
         tumor_sdp = float(row.get("S.2.SDP", 0) or 0)
         normal_dp = float(row.get("S.1.DP", 0) or 0)
         tumor_dp = float(row.get("S.2.DP", 0) or 0)
-        
+
         entry["N_DP"] = normal_dp
         entry["T_DP"] = tumor_dp
-        
+
         # Calculate rates
         if normal_dp > 0:
             entry["N_SDP_RATE"] = normal_sdp / normal_dp
         else:
             entry["N_SDP_RATE"] = 0.0
-        
+
         if tumor_dp > 0:
             entry["T_SDP_RATE"] = tumor_sdp / tumor_dp
         else:
             entry["T_SDP_RATE"] = 0.0
-        
+
         # Calculate depth rates if average depth information is available
         if avg_depth and entry["CHROM"] in avg_depth:
             chrom_depth = avg_depth[entry["CHROM"]]
             if chrom_depth > 0:
                 entry["N_DP_RATE"] = normal_dp / chrom_depth
                 entry["T_DP_RATE"] = tumor_dp / chrom_depth
-        
+
         # Calculate allele frequencies for indels
         normal_alt_count = float(row.get("S.1.TIR", "0").split(',')[0] or 0)
         normal_ref_count = float(row.get("S.1.TAR", "0").split(',')[0] or 0)
         tumor_alt_count = float(row.get("S.2.TIR", "0").split(',')[0] or 0)
         tumor_ref_count = float(row.get("S.2.TAR", "0").split(',')[0] or 0)
-        
+
         # Calculate allele frequencies
         normal_total = normal_ref_count + normal_alt_count
         tumor_total = tumor_ref_count + tumor_alt_count
-        
+
         if normal_total > 0:
             entry["N_AF"] = normal_alt_count / normal_total
         else:
             entry["N_AF"] = 0.0
-        
+
         if tumor_total > 0:
             entry["T_AF"] = tumor_alt_count / tumor_total
         else:
             entry["T_AF"] = 0.0
-        
+
         result.append(entry)
-    
+
     # Create final DataFrame
     final_df = pd.DataFrame(result)
-    
+
     # Ensure all required columns exist (fill with NaN if missing)
     for col in cols:
         if col not in final_df.columns:
             final_df[col] = float('nan')
-    
+
     # Return DataFrame with columns in specified order
     return final_df[cols]

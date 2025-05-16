@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(haplotypeBasic)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(haplotypeDel)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns)
 
     // >chrQ
     // AAACCC---AAACC-CAAACCCGGGTTTGGGTTTGGGTTT
-    //      |     
+    //      |
     // AAACCCGCTAAACCAC...
 
     BOOST_CHECK_EQUAL(h.seq(), "CGCTAAACCA");
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns2)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns2)
 
     // >chrQ
     // AAACCC---AAACC-CAAACCCGGGTTTGGGTTTGGGTTT
-    //      |     
+    //      |
     // AAACCCGCTAAACCAC...
 
     BOOST_CHECK_EQUAL(h.seq(5, 15), "CGCTAAACCACAAAC");
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns3)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrS", tp.string().c_str());
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(haplotypeIns3)
 
     // Ref ... GTGT                                                   TGTAG ...
     //             ATTGTCAGTCTGGTTAGAGCCACATGGCCTACCAGCTGACCAGTCCTTGCT
-    //        
+    //
     // Alt ... GTGTATTGTCAGTCTGGTTAGAGCCACATGGCCTACCAGCTGACCAGTCCTTGCTTGTAG ...
 
     h.addVar(51, 50, "ATTGTCAGTCTGGTTAGAGCCACATGGCCTACCAGCTGACCAGTCCTTGCT");
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(haplotypeRange)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(haplotypeRange)
     BOOST_CHECK_EQUAL(h.seq(6, 8), "GCT");
     // 8 is inside modified ref. We get everything from 8 in the modified region
     // 12 is outside, so we get everything up to the original 12
-    // 
+    //
     BOOST_CHECK_EQUAL(h.seq(8, 12), "TAAACCACA");
 
     int64_t min=-1, max=-1, sum=-1;
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(haplotypeRangeDel)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype h("chrQ", tp.string().c_str());

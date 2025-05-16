@@ -3,13 +3,13 @@ diff -ur boost_subset_1_58_0_original/boost/bind.hpp boost_subset_1_58_0/boost/b
 +++ boost_subset_1_58_0/boost/bind.hpp	2023-05-13 16:15:00
 @@ -30,7 +30,9 @@
  #include <boost/bind/bind.hpp>
- 
+
  #ifndef BOOST_BIND_NO_PLACEHOLDERS
 +#  ifndef BOOST_BIND_GLOBAL_PLACEHOLDERS
  using namespace boost::placeholders;
 +#  endif
  #endif
- 
+
  namespace boost
 diff -ur boost_subset_1_58_0_original/boost/config/compiler/gcc.hpp boost_subset_1_58_0/boost/config/compiler/gcc.hpp
 --- boost_subset_1_58_0_original/boost/config/compiler/gcc.hpp	2015-04-17 13:30:11

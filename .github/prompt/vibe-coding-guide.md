@@ -74,14 +74,14 @@ def process_variants(vcf_file):
 
 ### Debugging Test Failures
 ```
-@copilot I'm getting this error in the test suite: 
-"TypeError: 'dict_keys' object is not subscriptable" 
-in src/python/haplotype_matching.py line 234. 
+@copilot I'm getting this error in the test suite:
+"TypeError: 'dict_keys' object is not subscriptable"
+in src/python/haplotype_matching.py line 234.
 Help me fix this Python 3 compatibility issue.
 ```
 
 ### Performance Optimization
 ```
-@copilot This VCF parsing function is taking too long with large files. 
+@copilot This VCF parsing function is taking too long with large files.
 Can you help optimize it for better performance with large genomic datasets?
 ```

@@ -1,6 +1,6 @@
 // -*- mode: c++; indent-tabs-mode: nil; -*-
 //
-// 
+//
 // Copyright (c) 2010-2015 Illumina, Inc.
 // All rights reserved.
 
@@ -28,7 +28,7 @@
 
 /**
  * \brief Diploid partially phased haplotype comparison
- *  
+ *
  * \file DiploidCompare.hh
  * \author Peter Krusche
  * \email pkrusche@illumina.com
@@ -47,8 +47,8 @@ namespace haplotypes
 
 /**
  * @brief Diploid Haplotype comparison
- * @details Compare Variants assuming 
- * 
+ * @details Compare Variants assuming
+ *
  */
 struct DiploidCompareImpl;
 class DiploidCompare
@@ -80,7 +80,7 @@ public:
 
     /**
      * @brief Set the region to compare in and reset the enumeration.
-     * 
+     *
      * Read variants from list rather than the graph references
      */
     void setRegion(const char * chr, int64_t start, int64_t end,
@@ -97,4 +97,3 @@ private:
 
 
 } // namespace haplotypes
-

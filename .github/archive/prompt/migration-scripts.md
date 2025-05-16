@@ -37,7 +37,7 @@ This document provides an overview of the scripts available for the Python 3 mig
   ```bash
   # Test with real implementation
   python3 test_cython_module_py3.py --build-dir /path/to/build
-  
+
   # Test with mock implementation
   python3 test_cython_module_py3.py --build-dir /path/to/build --mock
   ```
@@ -46,7 +46,7 @@ This document provides an overview of the scripts available for the Python 3 mig
   ```bash
   # Test with real implementation
   python3 validate_cpp_integration_enhanced.py --build-dir /path/to/build
-  
+
   # Test with mock implementation
   python3 validate_cpp_integration_enhanced.py --build-dir /path/to/build --use-mock
   ```
@@ -68,7 +68,7 @@ This document provides an overview of the scripts available for the Python 3 mig
    # Create Python 3 virtual environment
    python3 -m venv /path/to/venv
    source /path/to/venv/bin/activate
-   
+
    # Install dependencies
    pip install -r happy.requirements.py3.txt
    ```
@@ -77,7 +77,7 @@ This document provides an overview of the scripts available for the Python 3 mig
    ```bash
    # Run the automated migration tool
    python3 automate_py3_updates.py --paths "src/python" --apply
-   
+
    # Check for remaining issues
    python3 check_py3_issues.py --paths "src/python" --generate-report
    ```
@@ -92,16 +92,16 @@ This document provides an overview of the scripts available for the Python 3 mig
    ```bash
    # Build with Python 3
    python3 install_py3.py /tmp/happy-py3-build
-   
+
    # Test Python modules
    python3 test_python3_compatibility_enhanced.py --build-dir /tmp/happy-py3-build
-   
+
    # Test Cython modules
    python3 test_cython_module_py3.py --build-dir /tmp/happy-py3-build
-   
+
    # Test C++ integration
    python3 validate_cpp_integration_enhanced.py --build-dir /tmp/happy-py3-build
-   
+
    # Test main functionality
    bash test_happy_py3.sh /tmp/happy-py3-build
    ```

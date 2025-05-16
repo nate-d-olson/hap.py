@@ -87,14 +87,14 @@ BOOST_AUTO_TEST_CASE(variantInfo)
 {
     // TODO re-add this test-case
 }
- 
+
 BOOST_AUTO_TEST_CASE(variantReading)
 {
     boost::filesystem::path p(__FILE__);
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("test.vcf.gz");
 
     std::cout << "Reading " << tp << std::endl;
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(variantReadingRegion)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("test.vcf.gz");
 
     VariantReader r;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(variantReading2s)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("hapblocks.vcf.gz");
 
     std::cout << "Reading " << tp << std::endl;
@@ -233,12 +233,12 @@ BOOST_AUTO_TEST_CASE(variantReadingRegions)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("test.vcf.gz");
     boost::filesystem::path tp2 = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("testr.bed");
 
     std::cout << "Reading " << tp << std::endl;
@@ -292,12 +292,12 @@ BOOST_AUTO_TEST_CASE(variantReadingTargets)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("test.vcf.gz");
     boost::filesystem::path tp2 = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("testr.bed");
 
     std::cout << "Reading " << tp << std::endl;
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(variantReadingTargets)
         "chr1:16216-16216 16216-16216:T 1|1 PASS",
         "chr1:16217-16217 16217-16217:T 1|1 PASS",
         // "chr1:826157-826160 0/0 PASS", not found by targets
-        // 
+        //
         "chr1:826160-826160 826160-826160:CTTTGAT 0/1 153 PASS",
         "chr1:826161-826167 0/0 PASS",
     };
@@ -372,4 +372,3 @@ BOOST_AUTO_TEST_CASE(variantReadingMultisample)
     }
     BOOST_CHECK(count == 6);
 }
-

@@ -35,11 +35,11 @@ ALT2  CTGTGTGTGAGTGTGTGTGTGAAAA
 T -> TGTGTGA at pos. 4
 ```
 
-This is problematic since in VCF notation, these two variants will result in two different 
-records. When using `bcftools merge`, instead of one insertion we suddenly have two -- all because 
+This is problematic since in VCF notation, these two variants will result in two different
+records. When using `bcftools merge`, instead of one insertion we suddenly have two -- all because
 of a single-base error.
 
-Moreover, when comparing VCF variants row by row between ALT1 and ALT2, 
+Moreover, when comparing VCF variants row by row between ALT1 and ALT2,
 we will not pick up that we actually have two mismatching variants rather than
-two independent insertions (we lose the information that ALT1 and ALT2 will be never 
-present together). 
+two independent insertions (we lose the information that ALT1 and ALT2 will be never
+present together).

@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -21,6 +20,7 @@ Module for running RTG's vcfeval for variant comparison.
 Provides functionality to compare VCF files using the vcfeval tool.
 """
 
+import contextlib
 import logging
 import os
 import shlex
@@ -183,16 +183,12 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
         shutil.copy(os.path.join(vtf.name, "output.vcf.gz.tbi"), target + ".tbi")
     finally:
         # remove temp paths
-        try:
+        with contextlib.suppress(OSError):
             shutil.rmtree(vtf.name)
-        except OSError:
-            pass
 
         if del_sdf:
-            try:
+            with contextlib.suppress(OSError):
                 shutil.rmtree(args.engine_vcfeval_template)
-            except OSError:
-                pass
 
     elapsed = time.time() - starttime
     logging.info(f"vcfeval for {vcf1} vs. {vcf2} -- time taken {elapsed:.2f}")

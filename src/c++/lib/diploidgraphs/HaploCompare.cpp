@@ -45,14 +45,14 @@ namespace haplotypes
 
 std::ostream & operator<<(std::ostream & o, HaplotypeDiff const & oc)
 {
-    o << oc.score << ":" 
-      // << oc.hap1 << ":" 
-      // << oc.hap2 << ":" 
-      // << oc.cigar << ":" 
-      << oc.softclipped << ":" 
-      << oc.matches << ":" 
-      << oc.mismatches << ":" 
-      << oc.ins << ":" 
+    o << oc.score << ":"
+      // << oc.hap1 << ":"
+      // << oc.hap2 << ":"
+      // << oc.cigar << ":"
+      << oc.softclipped << ":"
+      << oc.matches << ":"
+      << oc.mismatches << ":"
+      << oc.ins << ":"
       << oc.del;
 
     size_t count = 0;
@@ -106,10 +106,10 @@ HaploCompare::~HaploCompare()
 {
     delete _impl;
 }
-    
+
 /**
  * @brief Set to use a specific alignment object
- * 
+ *
  * The passed pointer will be deallocated when the HaploCompare object is destroyed.
  */
 void HaploCompare::setAlignment(std::unique_ptr<Alignment> && ap)
@@ -139,22 +139,22 @@ void HaploCompare::setAlt(const char * query)
 }
 
 /**
- * Output 
+ * Output
  */
 
 /**
  * Use a global alignment to fully transform ref to alt.
- * 
- * If a local alignment will is used (a'la read realignment), 
+ *
+ * If a local alignment will is used (a'la read realignment),
  * returned variants will only be within the window r0 -> r1 and a0 -> a1
- * 
+ *
  * getPositions will return the locations of the fragments matched in ref and alt
  * (in case of a global alignment, these will be 0 and ref/alt length -1).
- * 
+ *
  * The score gives the alignment score for the local alignment within the positions.
- * 
+ *
  * Changes from ref to alt within the positions can be returned as a RefVar list.
- * 
+ *
  */
 void HaploCompare::getVariants(std::list<RefVar> & target)
 {

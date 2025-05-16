@@ -29,7 +29,7 @@ except ImportError:
 
 def defaultReference() -> Optional[str]:
     """Return the default reference file path if one is found.
-    
+
     Returns:
         Path to the default reference file or None if not found.
     """
@@ -54,10 +54,10 @@ def defaultReference() -> Optional[str]:
 
 def which(program: str) -> Optional[str]:
     """Find an executable in PATH.
-    
+
     Args:
         program: Name of the program to find
-        
+
     Returns:
         Full path to the executable or None if not found
     """
@@ -131,7 +131,7 @@ class LoggingWriter:
 
 def writeVCFHeader(filelike: IO, extrainfo: Union[str, List[str]] = "", chrprefix: str = "chr") -> None:
     """ Write a VCF header
-    
+
     Args:
         filelike: File-like object to write to
         extrainfo: Additional INFO fields as string or list
@@ -180,8 +180,8 @@ def writeVCFHeader(filelike: IO, extrainfo: Union[str, List[str]] = "", chrprefi
 
 
 def mkdir_p(path: str) -> None:
-    """ mkdir -p path 
-    
+    """ mkdir -p path
+
     Args:
         path: The directory to create
     """
@@ -202,7 +202,7 @@ class BGZipFile:
 
     def __init__(self, filename: str, force: bool = False):
         """ Make a subprocess for bgzip
-        
+
         Args:
             filename: name of the output file
             force: true to overwrite if file exists

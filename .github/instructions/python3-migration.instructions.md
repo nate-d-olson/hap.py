@@ -20,6 +20,73 @@ applyTo: "**"
 
 ## Migration Workflow
 
+### Using Pre-commit Hooks During Migration
+
+Pre-commit hooks can significantly accelerate the Python 3 migration process:
+
+1. **Automatic Python 3 Syntax Upgrades**:
+   - The `pyupgrade` hook automatically upgrades Python 2 syntax to Python 3
+   - Helps with dict methods, string literals, exception handling
+   ```bash
+   pre-commit run pyupgrade --files src/python/path/to/file.py
+   ```
+
+2. **String/Bytes Detection**:
+   - The `ruff` linter automatically finds many string/bytes issues
+   - Detects encoding issues with file operations
+   ```bash
+   pre-commit run ruff --files src/python/path/to/file.py
+   ```
+
+3. **Code Style Consistency**:
+   - Black formatting ensures consistent style
+   - Particularly important after manual migration edits
+   ```bash
+   pre-commit run black --files src/python/path/to/file.py
+   ```
+
+4. **Migration Workflow Integration**:
+   1. Run 2to3 for initial conversion
+   2. Run pre-commit to catch and fix common issues: `pre-commit run --files src/python/path/to/file.py`
+   3. Handle any remaining issues manually
+   4. Run pre-commit again to ensure consistent style
+   5. Test the migrated file
+>
+
+> ### Using Pre-commit Hooks for Migration
+>
+> Pre-commit hooks have been added to the project to automate and standardize the Python 3 migration:
+>
+> 1. **Installation**:
+>    ```bash
+>    pip install pre-commit
+>    pre-commit install
+>    ```
+>
+> 2. **Recommended Migration Workflow**:
+>    ```bash
+>    # After initial 2to3 conversion or manual edits
+>    pre-commit run --files src/python/module/file.py
+>
+>    # For batch processing
+>    pre-commit run --files src/python/module/*.py
+>
+>    # After fixes, verify code quality
+>    pre-commit run --all-files
+>    ```
+>
+> 3. **Most Useful Hooks for Migration**:
+>    - `pyupgrade`: Automatically upgrades Python 2 syntax to Python 3
+>    - `ruff`: Detects and fixes compatibility issues
+>    - `black`: Ensures consistent code style
+>    - `isort`: Properly orders imports for Python 3
+>    - `mypy`: Optional type checking
+>
+> 4. **Specific Migration Tasks**:
+>    - Fix string/bytes issues: `ruff --select=B --fix src/python/path/to/file.py`
+>    - Format code: `black src/python/path/to/file.py`
+>    - Sort imports: `isort src/python/path/to/file.py`
+
 3. **Parallel Development Strategy**
    - While addressing C++ build issues:
      - Work on standalone Python modules that don't depend on C++ components
@@ -61,14 +128,14 @@ Create Python mock objects for C++ components during development:
 class MockVariantProcessor:
     def __init__(self):
         self.variants = []
-        
+
     def add_variant(self, variant):
         self.variants.append(variant)
-        
+
     def process(self):
         # Simple Python implementation of C++ algorithm for testing
         return [self._process_one(v) for v in self.variants]
-        
+
     def _process_one(self, variant):
         # Simplified processing logic
         return {"chrom": variant.chrom, "processed": True}
@@ -99,7 +166,7 @@ class MockVariantProcessor:
   # Python 2
   with open(filename) as f:
       header = f.readline()
-      
+
   # Python 3
   with open(filename, 'rt', encoding='utf-8') as f:
       header = f.readline()
@@ -110,7 +177,7 @@ class MockVariantProcessor:
   # Python 2
   with open(filename, 'rb') as f:
       magic = f.read(3)
-  
+
   # Python 3
   with open(filename, 'rb') as f:
       magic = f.read(3)  # Returns bytes in Python 3
@@ -126,17 +193,17 @@ class MockVariantProcessor:
   def reverse_complement(seq):
       comp_dict = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'N': 'N'}
       return ''.join([comp_dict[base] for base in reversed(seq)])
-  
+
   # Python 3
   def reverse_complement(seq):
       # Handle both string and bytes
       is_bytes = isinstance(seq, bytes)
       if is_bytes:
           seq = seq.decode('ascii')
-      
+
       comp_dict = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G', 'N': 'N'}
       result = ''.join([comp_dict[base] for base in reversed(seq)])
-      
+
       if is_bytes:
           return result.encode('ascii')
       return result
@@ -147,7 +214,7 @@ class MockVariantProcessor:
   ```python
   # Python 2
   chrom_list.sort(lambda a, b: cmp_chromosomes(a, b))
-  
+
   # Python 3
   from functools import cmp_to_key
   chrom_list.sort(key=cmp_to_key(cmp_chromosomes))
@@ -160,7 +227,7 @@ class MockVariantProcessor:
   import struct
   def pack_position(chrom_id, position):
       return struct.pack("iI", chrom_id, position)
-  
+
   # Python 3
   import struct
   def pack_position(chrom_id, position):
@@ -172,17 +239,17 @@ class MockVariantProcessor:
   ```python
   # Python 2
   variant_dict = {variant: count for variant, count in variants}
-  
+
   # Python 3
   # Ensure __hash__ and __eq__ methods are properly implemented
   class Variant:
       def __hash__(self):
           return hash((self.chrom, self.pos, self.ref, self.alt))
-      
+
       def __eq__(self, other):
           if not isinstance(other, Variant):
               return False
-          return (self.chrom == other.chrom and 
+          return (self.chrom == other.chrom and
                   self.pos == other.pos and
                   self.ref == other.ref and
                   self.alt == other.alt)
@@ -197,7 +264,7 @@ class MockVariantProcessor:
   for read in samfile.fetch():
       if read.is_proper_pair and not read.is_unmapped:
           tid = read.tid
-  
+
   # Python 3 with newer pysam
   for read in samfile.fetch():
       if read.is_proper_pair and not read.is_unmapped:
@@ -211,7 +278,7 @@ class MockVariantProcessor:
   for rec in bcf_in:
       sample = rec.samples[sample_name]
       gt = sample['GT']
-  
+
   # Python 3 with newer pysam
   bcf_in = pysam.VariantFile(filename)
   for rec in bcf_in:
@@ -229,7 +296,7 @@ class MockVariantProcessor:
       # process samfile
   finally:
       samfile.close()
-  
+
   # Python 3
   with pysam.AlignmentFile(filename, "rb") as samfile:
       # process samfile
@@ -244,7 +311,7 @@ class MockVariantProcessor:
   cdef char* c_string = <char*>malloc(length + 1)
   # ...use c_string...
   free(c_string)
-  
+
   # Python 3/Cython
   from libc.stdlib cimport malloc, free
   cdef char* c_string = <char*>malloc(length + 1)
@@ -260,7 +327,7 @@ class MockVariantProcessor:
   py_obj = get_python_object()
   c_obj = convert_to_c(py_obj)
   # py_obj might be garbage collected here, invalidating c_obj
-  
+
   # Python 3/Cython
   cdef object py_obj
   py_obj = get_python_object()
@@ -275,12 +342,12 @@ class MockVariantProcessor:
   ```cython
   # Python 2/Cython
   cdef char* c_str = python_str
-  
+
   # Python 3/Cython
   # For Python str -> C char*
   py_bytes = python_str.encode('utf8')
   cdef char* c_str = py_bytes
-  
+
   # For C char* -> Python str
   cdef char* c_str = get_c_string()
   py_str = c_str.decode('utf8')
@@ -299,7 +366,7 @@ class MockVariantProcessor:
           rec = vcf_it.next()  # .next() method
       except StopIteration:
           break
-  
+
   # Python 3
   vcf_records = list(vcf_file)  # Still works, but consider generator approach
   vcf_it = iter(vcf_file)
@@ -315,7 +382,7 @@ class MockVariantProcessor:
   ```python
   # Python 2
   vcf_meta = {str(k): str(v) for k, v in metadata.iteritems()}
-  
+
   # Python 3
   vcf_meta = {str(k): str(v) for k, v in metadata.items()}
   ```
@@ -325,7 +392,7 @@ class MockVariantProcessor:
   ```python
   # Python 2
   mid_point = (start + end) / 2  # Integer division
-  
+
   # Python 3
   mid_point = (start + end) // 2  # Explicit integer division
   ```

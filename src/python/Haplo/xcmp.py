@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -18,11 +17,11 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import os
 import logging
+import os
+import subprocess
 import tempfile
 import time
-import subprocess
 
 
 def xcmpWrapper(location_str, args):
@@ -83,6 +82,6 @@ def xcmpWrapper(location_str, args):
         os.unlink(tfe.name)
 
     elapsed = time.time() - starttime
-    logging.info("xcmp for chunk %s -- time taken %.2f" % (location_str, elapsed))
+    logging.info(f"xcmp for chunk {location_str} -- time taken {elapsed:.2f}")
 
     return tf.name

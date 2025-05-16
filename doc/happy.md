@@ -284,27 +284,27 @@ before running hap.py.
 ## Working with genome VCFs
 
 The presence of the <NON_REF> symbolic allele in genome VCFs can cause problems
-for hap.py, especially if it is part of a genotype. As a workaround, we 
+for hap.py, especially if it is part of a genotype. As a workaround, we
 provide several options. Since variants genotyped as <NON_REF> cannot be
 sensibly scored, the we provide the following option, which is safe to use
 on both genome VCFs and standard VCFs:
 
 ```
   --filter-nonref       Remove any variants genotyped as <NON_REF>.
-                        
+
 ```
 
 If hap.py still crashes when processing a genome VCF, we provide separate
 options to perform on-the-fly conversion of a genome VCF to a standard VCF
-by removing all <NON_REF> alleles and non-variant blocks. Note that this 
+by removing all <NON_REF> alleles and non-variant blocks. Note that this
 also removes some fields from the INFO column. These options should only
-be used on genome VCFs since attempting to convert a standard VCF will 
+be used on genome VCFs since attempting to convert a standard VCF will
 cause all biallelic variants to be filtered out (most of them).
 
 ```
   --convert-gvcf-truth Convert the truth genome VCF to a standard VCF.
   --convert-gvcf-query Convert the query genome VCF to a standard VCF.
-                        
+
 ```
 
 ## Additional outputs
@@ -488,7 +488,7 @@ a ROC curve based on the query GQX field:
 The `--roc` switch specifies the feature to filter on. Hap.py translates the
 truth and query GQ(X) fields into the INFO fields T_GQ and Q_GQ, it tries to
 use GQX first, if this is not present, it will use GQ. When run without
-internal preprocessing any other input INFO field can be used (e.g. 
+internal preprocessing any other input INFO field can be used (e.g.
 --roc INFO.VQSLOD for GATK).
 
 The `--roc-filter` switch may be used to specify the particular VCF filter

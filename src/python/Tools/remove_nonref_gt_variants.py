@@ -1,6 +1,6 @@
 #!/illumina/development/haplocompare/hc-virtualenv/bin/python
-import sys
 import re
+import sys
 
 GT_SPLITTER = re.compile(r"[\/\|]")  # split a genotype field by '/' or '|'
 

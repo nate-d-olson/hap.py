@@ -52,7 +52,7 @@
 
 using namespace variant;
 using namespace haplotypes;
- 
+
 BOOST_AUTO_TEST_CASE(haplocompareBasic)
 {
     HaploCompare hc;
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(haplocompareComplex)
 
     // platinum complex variant at chr1:17678525
     // ATGGGAGGAGAGGCGGCCAGGGAGGTGATGGGAGGAGAGGCAGTCAGGGAG
-    //                          TGATGGG                          
+    //                          TGATGGG
     //                          AGACAGGAGGCAGT
 
     hc.setRef("ATGGGAGGAGAGGCGGCCAGGGAGGTGATGGGAGGAGAGGCAGTCAGGGAG");
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(haplocompareComplex)
     BOOST_CHECK_EQUAL(cig, "35M7D16M");
 
     // ATGGGAGGAGAGGCGGCCAGGGAGGTGATGGGAGG-------AGAGGCAGTCAGGGAG
-    //                          *  **            
+    //                          *  **
     // ATGGGAGGAGAGGCGGCCAGGGAGGAGACAGGAGGCAGTAGGAGAGGCAGTCAGGGAG
 
     BOOST_CHECK_EQUAL(vlist.size(), (size_t)3);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(haplocompareComplex)
     boost::filesystem::path tp = p.parent_path()
                                    .parent_path()   // test
                                    .parent_path()   // c++
-                                    / boost::filesystem::path("data") 
+                                    / boost::filesystem::path("data")
                                     / boost::filesystem::path("chrQ.fa");
 
     Haplotype ht("chrR", tp.string().c_str());
@@ -199,14 +199,14 @@ BOOST_AUTO_TEST_CASE(haplocompareComplex)
 
 BOOST_AUTO_TEST_CASE(haplocompareRandom)
 {
-    const int R = 150, M = 50, 
+    const int R = 150, M = 50,
 #ifdef _DEBUG
     N = 50;
 #else
     N = 1000;
 #endif
 
-    for (int j = 0; j < N; ++j) 
+    for (int j = 0; j < N; ++j)
     {
         HaploCompare hc;
         // make a reference sequence
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(haplocompareRandom)
                     std::cerr << "DEBUG RV: " << rv << "\n";
                 }
                 break;
-            }            
+            }
         }
 
         std::list<RefVar> vlist_b;
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(haplocompareRandom)
                     std::cerr << "DEBUG <RV: " << rv << "\n";
                 }
                 break;
-            }            
+            }
         }
 
         // same with right-shifting afterwards
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(haplocompareRandom)
                     std::cerr << "DEBUG >RV: " << rv << "\n";
                 }
                 break;
-            }            
+            }
         }
 
         std::cerr << ".";

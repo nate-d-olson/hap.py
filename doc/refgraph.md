@@ -92,4 +92,3 @@ will write variants in their input representation. Using the `-V 1 -W 1 -L 1` co
 line options will have `vcfvalidate` output variants in the same representation that
 hap.py uses internally for "partial credit" comparisons (i.e it will perform left-shifting
 and allele realignment).
-

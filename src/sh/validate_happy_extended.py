@@ -2,11 +2,11 @@
 
 # Compare som.py stats.csv and hap.py extended.csv files
 
-import sys
 import argparse
 import csv
-import re
 import logging
+import re
+import sys
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
@@ -38,25 +38,21 @@ def parse_sompy_stats(path):
         subset = s["type"]
         if re.match("indels.", subset):
             # store results per af_bin
-            m = re.findall("indels.(\d+\.\d+)-(\d+\.\d+)", subset)[0]
+            m = re.findall("indels.(\\d+\\.\\d+)-(\\d+\\.\\d+)", subset)[0]
             af_low = m[0][:4]
             af_high = m[1][:4]
             af_bin = (
-                "[%s,%s]" % (af_low, af_high)
-                if af_low == "1.00"
-                else "[%s,%s)" % (af_low, af_high)
+                f"[{af_low},{af_high}]" if af_low == "1.00" else f"[{af_low},{af_high})"
             )
             result["INDEL." + af_bin] = s
 
         if re.match("SNVs.", subset):
             # store results per af_bin
-            m = re.findall("SNVs.(\d+\.\d+)-(\d+\.\d+)", subset)[0]
+            m = re.findall("SNVs.(\\d+\\.\\d+)-(\\d+\\.\\d+)", subset)[0]
             af_low = m[0][:4]
             af_high = m[1][:4]
             af_bin = (
-                "[%s,%s]" % (af_low, af_high)
-                if af_low == "1.00"
-                else "[%s,%s)" % (af_low, af_high)
+                f"[{af_low},{af_high}]" if af_low == "1.00" else f"[{af_low},{af_high})"
             )
             result["SNP." + af_bin] = s
 
@@ -86,42 +82,42 @@ if __name__ == "__main__":
 
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s TRUTH.TOTAL" % (k, h["Filter"]),
+                metric_name="{} {} TRUTH.TOTAL".format(k, h["Filter"]),
                 count_a=s["total.truth"],
                 count_b=h["TRUTH.TOTAL"],
             )
         )
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s TRUTH.TP" % (k, h["Filter"]),
+                metric_name="{} {} TRUTH.TP".format(k, h["Filter"]),
                 count_a=s["tp"],
                 count_b=h["TRUTH.TP"],
             )
         )
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s TRUTH.FN" % (k, h["Filter"]),
+                metric_name="{} {} TRUTH.FN".format(k, h["Filter"]),
                 count_a=s["fn"],
                 count_b=h["TRUTH.FN"],
             )
         )
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s QUERY.TOTAL" % (k, h["Filter"]),
+                metric_name="{} {} QUERY.TOTAL".format(k, h["Filter"]),
                 count_a=s["total.query"],
                 count_b=h["QUERY.TOTAL"],
             )
         )
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s QUERY.FP" % (k, h["Filter"]),
+                metric_name="{} {} QUERY.FP".format(k, h["Filter"]),
                 count_a=s["fp"],
                 count_b=h["QUERY.FP"],
             )
         )
         outcomes[h["Filter"]].add(
             eval_equal(
-                metric_name="%s %s QUERY.UNK" % (k, h["Filter"]),
+                metric_name="{} {} QUERY.UNK".format(k, h["Filter"]),
                 count_a=int(s["unk"]) + int(s["ambi"]),
                 count_b=h["QUERY.UNK"],
             )

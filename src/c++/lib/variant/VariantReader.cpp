@@ -928,4 +928,3 @@ void VariantReader::enqueue(Variants const & v, bool back)
 
 
 } // namespace variant
-

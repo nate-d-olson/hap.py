@@ -91,7 +91,7 @@ def test_module_imports(module_names: Optional[List[str]] = None) -> Dict[str, b
     for module_name in module_names:
         logger.info(f"Testing import of {module_name}")
         try:
-            module = importlib.import_module(module_name)
+            importlib.import_module(module_name)
             logger.info(f"Successfully imported {module_name}")
             results[module_name] = True
         except ImportError as e:
@@ -165,7 +165,6 @@ def test_mock_implementations() -> bool:
 
     try:
         # Try importing the module with the mock implementation
-        import Haplo.cython
         from Haplo.cython import USING_MOCK, mock__internal, mock_cpp_internal
 
         if not USING_MOCK:
@@ -218,10 +217,7 @@ def main():
             logger.error("Mock tests failed")
             sys.exit(1)
 
-    if args.module:
-        modules = [args.module]
-    else:
-        modules = None
+    modules = [args.module] if args.module else None
 
     import_results = test_module_imports(modules)
 

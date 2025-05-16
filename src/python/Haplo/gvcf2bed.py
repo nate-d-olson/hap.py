@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -13,10 +12,10 @@
 #
 # Run gvcf2bed
 
-import tempfile
-import subprocess
 import logging
 import pipes
+import subprocess
+import tempfile
 
 
 def gvcf2bed(vcf, ref, regions=None, scratch_prefix=None):
@@ -24,7 +23,7 @@ def gvcf2bed(vcf, ref, regions=None, scratch_prefix=None):
 
     tf = tempfile.NamedTemporaryFile(dir=scratch_prefix, suffix=".bed")
     tf.close()
-    cmdline = "gvcf2bed %s -r %s -o %s" % (pipes.quote(vcf), pipes.quote(ref), tf.name)
+    cmdline = f"gvcf2bed {pipes.quote(vcf)} -r {pipes.quote(ref)} -o {tf.name}"
     if regions:
         cmdline += " -T %s" % pipes.quote(regions)
     logging.info("Running gvcf2bed: '%s'" % cmdline)

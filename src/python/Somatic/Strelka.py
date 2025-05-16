@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -9,9 +8,11 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import pandas
+import contextlib
 import logging
-from Tools.vcfextract import vcfExtract, extractHeaders
+
+import pandas
+from Tools.vcfextract import extractHeaders, vcfExtract
 
 
 def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
@@ -114,7 +115,7 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
                 xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
-                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
+                logging.info(f"{xchr} depth from VCF header is {avg_depth[xchr]:f}")
 
     has_warned = {}
 
@@ -303,14 +304,12 @@ def extractStrelkaSNVFeatures(vcfname, tag, avg_depth=None):
         try:
             for i, v in enumerate(rec["I.EVSF"]):
                 if i in evs_featurenames:
-                    try:
+                    with contextlib.suppress(Exception):
                         qrec["E." + evs_featurenames[i]] = float(v)
-                    except Exception:
-                        # failure to parse
-                        pass
+
         except Exception:
             pass
-        for k, v in list(evs_featurenames.items()):
+        for _k, v in list(evs_featurenames.items()):
             if "E." + v not in qrec:
                 qrec["E." + v] = 0
 
@@ -428,7 +427,7 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
                 xl = str(l).split("=")
                 xchr = xl[0]
                 avg_depth[xchr] = float(xl[1])
-                logging.info("%s depth from VCF header is %f" % (xchr, avg_depth[xchr]))
+                logging.info(f"{xchr} depth from VCF header is {avg_depth[xchr]:f}")
 
     has_warned = {}
     for vr in vcfExtract(vcfname, features):
@@ -579,15 +578,13 @@ def extractStrelkaIndelFeatures(vcfname, tag, avg_depth=None):
         try:
             for i, v in enumerate(rec["I.EVSF"]):
                 if i in evs_featurenames:
-                    try:
+                    with contextlib.suppress(Exception):
                         qrec["E." + evs_featurenames[i]] = float(v)
-                    except Exception:
-                        # failure to parse
-                        pass
+
         except Exception:
             pass
 
-        for k, v in list(evs_featurenames.items()):
+        for _k, v in list(evs_featurenames.items()):
             if "E." + v not in qrec:
                 qrec["E." + v] = 0
 

@@ -71,4 +71,3 @@ else
     echo "FAILURE: pre.py didn't detect faulty variants."
 	exit 1
 fi
-

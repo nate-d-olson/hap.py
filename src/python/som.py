@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -631,7 +630,7 @@ def extended_from_featuretable(f, args):
 
         # include 1 in last interval
         end = start + current_binsize
-        r["Subset"] = "[%.2f,%.2f)" % (start, end)
+        r["Subset"] = f"[{start:.2f},{end:.2f})"
         if end >= 1:
             end = 1.00000001
             r["Subset"] = "[%.2f,1.00]" % start
@@ -752,7 +751,9 @@ def main():
             md = {}
 
             for x in bres.index:
-                logging.info("Mean coverage on %s is %f" % (x, bres.loc[x]["COVERAGE"]))
+                logging.info(
+                    "Mean coverage on {} is {:f}".format(x, bres.loc[x]["COVERAGE"])
+                )
                 md[x] = float(bres.loc[x]["COVERAGE"]) * 3.0
 
         logging.info("Normalizing/reading inputs")
@@ -891,11 +892,11 @@ def main():
 
                 classes_this_pos.add(reason)
                 try:
-                    ambiReasons["%s: rep. count %s" % (reason, o.value[1])] += 1
+                    ambiReasons[f"{reason}: rep. count {o.value[1]}"] += 1
                 except IndexError:
                     ambiReasons["%s: rep. count *" % reason] += 1
                 for x in o.value[3:]:
-                    ambiReasons["%s: %s" % (reason, x)] += 1
+                    ambiReasons[f"{reason}: {x}"] += 1
                 if reason == "FP":
                     is_fp = True
                 else:
@@ -975,11 +976,9 @@ def main():
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
                     print(
-                        (
-                            "FP/ambiguity classes with info (multiple classes can "
-                            + "overlap):\n"
-                            + ambie.to_string(index=False)
-                        )
+                        "FP/ambiguity classes with info (multiple classes can "
+                        + "overlap):\n"
+                        + ambie.to_string(index=False)
                     )
                 ambie.to_csv(args.output + ".ambiclasses.csv")
                 metrics_output["metrics"].append(
@@ -1010,16 +1009,14 @@ def main():
                 # in default mode, print(result summary to stdout)
                 if not args.quiet and not args.verbose:
                     print(
-                        (
-                            "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
-                            + ambie.to_string(
-                                formatters={
-                                    "reason": "{{:<{}s}}".format(
-                                        ambie["reason"].str.len().max()
-                                    ).format
-                                },
-                                index=False,
-                            )
+                        "Reasons for defining as ambiguous (multiple reasons can overlap):\n"
+                        + ambie.to_string(
+                            formatters={
+                                "reason": "{{:<{}s}}".format(
+                                    ambie["reason"].str.len().max()
+                                ).format
+                            },
+                            index=False,
                         )
                     )
                 ambie.to_csv(args.output + ".ambireasons.csv")
@@ -1070,8 +1067,7 @@ def main():
                     for a in ["CHROM", "POS"]:
                         if tps.loc[x][a] != tps2.loc[x][a]:
                             raise Exception(
-                                "Cannot merge TP features, inputs are out of order at %s / %s"
-                                % (str(tps[x : x + 1]), str(tps2[x : x + 1]))
+                                f"Cannot merge TP features, inputs are out of order at {str(tps[x : x + 1])} / {str(tps2[x : x + 1])}"
                             )
 
             logging.info("Merging...")
@@ -1160,30 +1156,38 @@ def main():
                 featuretable_this_type = featuretable
 
                 if args.count_filtered_fn:
-                    res.ix[res["type"] == vtype, "fp.filtered"] = (
-                        featuretable_this_type[
-                            (featuretable_this_type["tag"] == "FP")
-                            & (featuretable_this_type["FILTER"] != "")
-                        ].shape[0]
-                    )
-                    res.ix[res["type"] == vtype, "tp.filtered"] = (
-                        featuretable_this_type[
-                            (featuretable_this_type["tag"] == "TP")
-                            & (featuretable_this_type["FILTER"] != "")
-                        ].shape[0]
-                    )
-                    res.ix[res["type"] == vtype, "unk.filtered"] = (
-                        featuretable_this_type[
-                            (featuretable_this_type["tag"] == "UNK")
-                            & (featuretable_this_type["FILTER"] != "")
-                        ].shape[0]
-                    )
-                    res.ix[res["type"] == vtype, "ambi.filtered"] = (
-                        featuretable_this_type[
-                            (featuretable_this_type["tag"] == "AMBI")
-                            & (featuretable_this_type["FILTER"] != "")
-                        ].shape[0]
-                    )
+                    res.ix[
+                        res["type"] == vtype, "fp.filtered"
+                    ] = featuretable_this_type[
+                        (featuretable_this_type["tag"] == "FP")
+                        & (featuretable_this_type["FILTER"] != "")
+                    ].shape[
+                        0
+                    ]
+                    res.ix[
+                        res["type"] == vtype, "tp.filtered"
+                    ] = featuretable_this_type[
+                        (featuretable_this_type["tag"] == "TP")
+                        & (featuretable_this_type["FILTER"] != "")
+                    ].shape[
+                        0
+                    ]
+                    res.ix[
+                        res["type"] == vtype, "unk.filtered"
+                    ] = featuretable_this_type[
+                        (featuretable_this_type["tag"] == "UNK")
+                        & (featuretable_this_type["FILTER"] != "")
+                    ].shape[
+                        0
+                    ]
+                    res.ix[
+                        res["type"] == vtype, "ambi.filtered"
+                    ] = featuretable_this_type[
+                        (featuretable_this_type["tag"] == "AMBI")
+                        & (featuretable_this_type["FILTER"] != "")
+                    ].shape[
+                        0
+                    ]
 
                 if args.af_strat:
                     start = 0.0
@@ -1224,7 +1228,7 @@ def main():
                         ]
 
                         r = {
-                            "type": "%s.%f-%f" % (vtype, start, end),
+                            "type": f"{vtype}.{start:f}-{end:f}",
                             "total.truth": n_tp.shape[0] + n_fn.shape[0],
                             "total.query": n_tp.shape[0]
                             + n_fp.shape[0]
@@ -1252,7 +1256,7 @@ def main():
                             roc_table_strat = args.roc.from_table(
                                 pandas.concat([n_tp, n_fp, n_fn])
                             )
-                            rtname = "%s.%s.%f-%f.roc.csv" % (
+                            rtname = "{}.{}.{:f}-{:f}.roc.csv".format(
                                 args.output,
                                 vtype,
                                 start,
@@ -1354,7 +1358,7 @@ def main():
         logging.info("\n" + res.to_string())
         # in default mode, print(result summary to stdout)
         if not args.quiet and not args.verbose:
-            print(("\n" + res.to_string()))
+            print("\n" + res.to_string())
 
         res["sompyversion"] = vstring
 
@@ -1393,7 +1397,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
+        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))

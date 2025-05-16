@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -17,6 +16,7 @@ handling of variant classification data.
 """
 
 import abc
+import contextlib
 import logging
 import os
 import subprocess
@@ -60,14 +60,14 @@ def tableROC(
 
         tbl[fields].to_csv(tf2_name, sep="\t", index=False)
 
-        cmdline = "roc -t %s -v %s --verbose " % (label_column, feature_column)
+        cmdline = f"roc -t {label_column} -v {feature_column} --verbose "
         if filter_column:
             cmdline += " -f %s" % filter_column
         if filter_name:
             cmdline += " -n %s" % filter_name
         if roc_reversed:
             cmdline += " -R 1"
-        cmdline += " -o %s %s" % (tf1_name, tf2_name)
+        cmdline += f" -o {tf1_name} {tf2_name}"
 
         logging.info("Running %s" % cmdline)
 
@@ -78,14 +78,11 @@ def tableROC(
             raise Exception("Cannot parse ROC output.")
         return result
     finally:
-        try:
+        with contextlib.suppress(Exception):
             os.unlink(tf1_name)
-        except Exception:
-            pass
-        try:
+
+        with contextlib.suppress(Exception):
             os.unlink(tf2_name)
-        except Exception:
-            pass
 
 
 class ROC(metaclass=abc.ABCMeta):

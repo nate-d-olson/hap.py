@@ -1,5 +1,5 @@
 # This file was produced by bcftools stats (1.0-67-g326b4b4+htslib-1.0-11-g830ea73) and can be plotted using plot-vcfstats.
-# The command line was:	bcftools stats 
+# The command line was:	bcftools stats
 #
 # Definition of sets:
 # ID	[2]id	[3]tab-separated file names

@@ -6,7 +6,7 @@ Peter Krusche <pkrusche@illumina.com>
 This is a set of programs based on [htslib](https://github.com/samtools/htslib)
 to benchmark variant calls against gold standard truth datasets.
 
-> **Note:** This project is currently being migrated from Python 2 to Python 3. 
+> **Note:** This project is currently being migrated from Python 2 to Python 3.
 > Significant progress has been made on Cython/C++ integration. See the
 > [Python 3 migration status](PYTHON3_MIGRATION.md) document for details and current progress.
 
@@ -485,4 +485,3 @@ export BOOST_ROOT=$HOME/boost_1_55_0_install
 
 The complete list of dependencies / packages to install beforehand can be found
 in the [Dockerfile](Dockerfile).
-

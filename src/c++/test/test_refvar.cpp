@@ -829,4 +829,3 @@ BOOST_AUTO_TEST_CASE(testRefVarLeftShiftStartOfChr)
     BOOST_CHECK_EQUAL(r.end, 2);
     BOOST_CHECK_EQUAL(r.alt, "C");
 }
-

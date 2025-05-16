@@ -12,7 +12,7 @@ import sys
 def find_string_unicode_issues(file_path):
     """Find potential string/unicode issues in a file"""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
     except UnicodeDecodeError:
         print(f"Warning: Unable to read {file_path} as UTF-8. Skipping.")
@@ -126,7 +126,6 @@ def find_string_unicode_issues(file_path):
             or "subprocess" in context_before
             or "Exception" in var_name
         ):
-
             # Flag this as a potential issue
             issues.append(
                 {
@@ -285,7 +284,6 @@ def main():
     autofix_all = args.autofix_all
 
     files_with_issues = 0
-    issues_fixed = 0
 
     if os.path.isfile(path) and (path.endswith(".py") or path.endswith(".pyx")):
         if fix_string_unicode_issues(path, apply, verbose, autofix_all):
@@ -305,14 +303,14 @@ def main():
 
     print(f"\nSummary: Found {files_with_issues} files with string/unicode issues")
     if apply:
-        print(f"Applied automatic fixes where possible")
+        print("Applied automatic fixes where possible")
         if autofix_all:
             print(
-                f"Applied fixes to all detected issues, including those that normally require manual checks"
+                "Applied fixes to all detected issues, including those that normally require manual checks"
             )
     else:
-        print(f"Run with --apply to fix issues automatically")
-        print(f"Run with --autofix-all to automatically fix all issues")
+        print("Run with --apply to fix issues automatically")
+        print("Run with --autofix-all to automatically fix all issues")
 
     return 0
 

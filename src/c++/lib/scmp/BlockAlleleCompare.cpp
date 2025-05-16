@@ -423,5 +423,3 @@ namespace variant {
         bcf_hdr_sync(hdr);
     }
 }
-
-

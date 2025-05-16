@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,9 +22,10 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
+import os
+import sys
+
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -57,7 +57,7 @@ def main():
     pandas.set_option("display.max_colwidth", 2048)
     pandas.set_option("display.max_columns", 10000)
     pandas.set_option("display.max_rows", 1000000)
-    print((str(all_results)))
+    print(str(all_results))
     if args.output:
         all_results.to_csv(args.output)
 

@@ -51,7 +51,7 @@ def getInfo(istr: str) -> Dict[str, Any]:
     return res
 
 
-def extract_header(filename: str, extract_columns: bool = True, 
+def extract_header(filename: str, extract_columns: bool = True,
                   extract_info: bool = False, extract_formats: bool = False) -> Dict[str, Any]:
     """Extract header information from a VCF file
 
@@ -88,7 +88,7 @@ def extract_header(filename: str, extract_columns: bool = True,
                 # process INFO lines
                 if not extract_info:
                     continue
-                
+
                 m = re.match(r"##INFO=<ID=([^,>]+),Number=([^,>]+),Type=([^,>]+),Description=\"([^\"]+)\"", l)
                 if not m:
                     logging.error("Cannot parse INFO line: %s" % l)
@@ -127,13 +127,13 @@ def extract_header(filename: str, extract_columns: bool = True,
     return result
 
 
-def extract_variants(filename: str, 
-                    region: Optional[str] = None, 
-                    extract_samples: bool = True, 
+def extract_variants(filename: str,
+                    region: Optional[str] = None,
+                    extract_samples: bool = True,
                     sample_names: Optional[List[str]] = None,
                     tabix_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Extract variants from a vcf file in a specific region
-    
+
     Args:
         filename: Path to VCF file (bgzipped + tabix indexed)
         region: Region to extract from, e.g. chr1:1000-2000
@@ -159,7 +159,7 @@ def extract_variants(filename: str,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         universal_newlines=True)
-    
+
     header = extract_header(filename, extract_columns=True)
     columns = header.get("columns", [])
 
@@ -169,7 +169,7 @@ def extract_variants(filename: str,
             continue
 
         fields = l.split("\t")
-        
+
         if len(fields) < 8:
             logging.error("Invalid VCF record (less than 8 fields): %s" % l)
             continue
@@ -186,24 +186,24 @@ def extract_variants(filename: str,
         # Process sample data if requested
         if extract_samples and len(fields) > 9:
             record["samples"] = {}
-            
+
             # Get format string
             format_keys = fields[8].split(":")
-            
+
             # Extract sample data
             for i in range(9, min(len(fields), len(columns))):
                 sample_name = columns[i]
-                
+
                 # Skip if sample_names is specified and this sample isn't in it
                 if sample_names and sample_name not in sample_names:
                     continue
-                
+
                 sample_values = fields[i].split(":")
                 sample_data = {}
-                
+
                 for j in range(min(len(format_keys), len(sample_values))):
                     sample_data[format_keys[j]] = sample_values[j]
-                
+
                 record["samples"][sample_name] = sample_data
 
         result.append(record)
@@ -220,14 +220,14 @@ def extract_variants(filename: str,
     return result
 
 
-def get_variant_array(vcf_file: str, 
-                     region: Optional[str] = None, 
-                     variantkeys: Optional[List[str]] = None, 
+def get_variant_array(vcf_file: str,
+                     region: Optional[str] = None,
+                     variantkeys: Optional[List[str]] = None,
                      infokeys: Optional[List[str]] = None,
                      samplekeys: Optional[List[str]] = None,
                      tabix_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Get array of values from VCF
-    
+
     Args:
         vcf_file: Path to VCF file
         region: Optional region to extract from
@@ -240,43 +240,43 @@ def get_variant_array(vcf_file: str,
         List of variant dictionaries
     """
     variants = extract_variants(vcf_file, region, extract_samples=samplekeys is not None, tabix_path=tabix_path)
-    
+
     result = []
-    
+
     for v in variants:
         vres = {}
-        
+
         # Extract variant keys
         if variantkeys:
             for k in variantkeys:
                 kl = k.lower()
                 if kl in v:
                     vres[k] = v[kl]
-        
+
         # Extract INFO keys
         if infokeys and "info_dict" in v:
             for k in infokeys:
                 if k in v["info_dict"]:
                     vres[f"INFO_{k}"] = v["info_dict"][k]
-        
+
         # Extract sample keys
         if samplekeys and "samples" in v:
             for sample, data in v["samples"].items():
                 for k in samplekeys:
                     if k in data:
                         vres[f"{sample}_{k}"] = data[k]
-        
+
         result.append(vres)
-    
+
     return result
 
 
-def writeVariantsJSON(vcf_file: str, 
-                     outfile: str, 
+def writeVariantsJSON(vcf_file: str,
+                     outfile: str,
                      region: Optional[str] = None,
                      tabix_path: Optional[str] = None) -> None:
     """Extract variants and write to JSON file
-    
+
     Args:
         vcf_file: Path to VCF file
         outfile: Output JSON filename
@@ -284,6 +284,6 @@ def writeVariantsJSON(vcf_file: str,
         tabix_path: Path to tabix executable
     """
     variants = extract_variants(vcf_file, region, tabix_path=tabix_path)
-    
+
     with open(outfile, "w", encoding='utf-8') as f:
         json.dump(variants, f, indent=4)

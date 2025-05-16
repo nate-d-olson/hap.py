@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -9,10 +8,11 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
-import pysam
-import pandas
-import numpy as np
 import logging
+
+import numpy as np
+import pandas
+import pysam
 
 
 def bamStats(bamfile):

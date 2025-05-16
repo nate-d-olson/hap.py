@@ -68,4 +68,3 @@ namespace variant
         virtual size_t optimize(HapAssignment & assignment);
     };
 }
-

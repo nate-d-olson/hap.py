@@ -1,5 +1,4 @@
 #!/usr/bin/env python33
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -45,7 +44,7 @@ def extractVarscan2SNVFeatures(
             "No average depths available, normalized depth features cannot be calculated"
         )
 
-    hdrs = extractHeadersJSON(vcfname)
+    extractHeadersJSON(vcfname)
 
     # TODO could figure this out automatically
     nsn = "NORMAL"
@@ -151,10 +150,7 @@ def extractVarscan2SNVFeatures(
         n_allele_ref_count = rec[n_sample + "RD"]
         alleles_alt = rec["ALT"]
 
-        if alleles_alt == ["."]:
-            n_allele_alt_count = 0
-        else:
-            n_allele_alt_count = rec[n_sample + "AD"]
+        n_allele_alt_count = 0 if alleles_alt == ["."] else rec[n_sample + "AD"]
 
         if n_allele_alt_count + n_allele_ref_count == 0:
             n_allele_rate = 0.0
@@ -165,10 +161,7 @@ def extractVarscan2SNVFeatures(
 
         t_allele_ref_count = rec[t_sample + "RD"]
 
-        if alleles_alt == ["."]:
-            t_allele_alt_count = 0
-        else:
-            t_allele_alt_count = rec[t_sample + "AD"]
+        t_allele_alt_count = 0 if alleles_alt == ["."] else rec[t_sample + "AD"]
 
         if t_allele_alt_count + t_allele_ref_count == 0:
             t_allele_rate = 0.0

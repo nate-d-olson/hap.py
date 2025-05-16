@@ -37,7 +37,7 @@ applyTo: "**"
    add_cython_module(
        cython_module
        src/python/happy/cython_module.pyx
-       LIBRARIES 
+       LIBRARIES
            haplotypes
            ${HAPLOTYPES_ALL_LIBS}
        INCLUDES
@@ -79,7 +79,7 @@ applyTo: "**"
    cdef class VariantWrapper:
        cdef Variant* c_variant
        cdef object _owner  # Keeps reference to owner object
-       
+
        def __cinit__(self, owner):
            self._owner = owner
            self.c_variant = get_variant_from_owner(owner)
@@ -89,7 +89,7 @@ applyTo: "**"
    ```cython
    # Bad: temporary reference
    cdef Variant* var = convert_to_variant(some_function())
-   
+
    # Good: keep reference
    temp_obj = some_function()
    cdef Variant* var = convert_to_variant(temp_obj)
@@ -116,13 +116,13 @@ applyTo: "**"
    cdef class Buffer:
        cdef char* data
        cdef size_t size
-       
+
        def __cinit__(self, size_t size):
            self.size = size
            self.data = <char*>malloc(size)
            if self.data == NULL:
                raise MemoryError()
-       
+
        def __dealloc__(self):
            if self.data != NULL:
                free(self.data)
@@ -140,7 +140,7 @@ applyTo: "**"
        if isinstance(s, str):
            return s.encode('utf8')
        return s  # Assume already bytes
-   
+
    # C string to Python string
    cdef str c_to_py_string(const char* c_str):
        return c_str.decode('utf8') if c_str != NULL else ""
@@ -151,13 +151,13 @@ applyTo: "**"
    # Python 3 style path handling
    cdef class FileHandler:
        cdef FILE* c_file
-       
+
        def __cinit__(self, path):
            py_bytes = str(path).encode('utf8')
            self.c_file = fopen(py_bytes, "rb")
            if self.c_file == NULL:
                raise IOError(f"Could not open file {path}")
-       
+
        def __dealloc__(self):
            if self.c_file != NULL:
                fclose(self.c_file)
@@ -170,7 +170,7 @@ applyTo: "**"
    # Python 2
    py_str = 'string'
    py_unicode = u'unicode'
-   
+
    # Python 3
    py_str = 'string'  # Unicode by default
    py_bytes = b'bytes'
@@ -186,11 +186,11 @@ applyTo: "**"
    cdef int i = 0
    cdef double d = 0.0
    cdef bint flag = True
-   
+
    # Complex types
    from libcpp.vector cimport vector
    from libcpp.string cimport string
-   
+
    cdef vector[int] vec
    cdef string cpp_str
    ```
@@ -202,17 +202,17 @@ applyTo: "**"
    cimport numpy as np
 
    np.import_array()  # Initialize NumPy C API
-   
+
    def process_array(np.ndarray[np.float64_t, ndim=2] arr not None):
        cdef Py_ssize_t i, j
        cdef double value
        cdef np.ndarray[np.float64_t, ndim=2] result = np.zeros_like(arr)
-       
+
        for i in range(arr.shape[0]):
            for j in range(arr.shape[1]):
                value = arr[i, j]
                result[i, j] = process_value(value)
-               
+
        return result
    ```
 
@@ -224,7 +224,7 @@ applyTo: "**"
        # Check for proper type
        if not isinstance(variant, Variant):
            raise TypeError("Expected Variant object")
-       
+
        # Extract C++ pointer from Python object
        cdef Variant* c_var = get_c_variant(variant)
    ```
@@ -235,12 +235,12 @@ applyTo: "**"
    cdef class GenomicInterval:
        cdef public str chrom
        cdef public int start, end
-   
+
    # Python 3 style - same but with type annotations
    cdef class GenomicInterval:
        cdef public str chrom
        cdef public int start, end
-       
+
        def __init__(self, str chrom, int start, int end):
            self.chrom = chrom
            self.start = start
@@ -256,19 +256,19 @@ applyTo: "**"
    # Efficient variant processing
    cdef class VariantProcessor:
        cdef vector[Variant*] c_variants
-       
+
        def add_variant(self, variant):
            # Convert Python variant to C++ variant
            cdef Variant* c_variant = new Variant()
-           
+
            # Copy data from Python to C++
            py_bytes = variant.chrom.encode('utf8')
            c_variant.chrom = string(py_bytes)
            c_variant.position = variant.position
-           
+
            # Store in vector
            self.c_variants.push_back(c_variant)
-       
+
        def __dealloc__(self):
            # Clean up C++ objects
            for i in range(self.c_variants.size()):
@@ -284,10 +284,10 @@ applyTo: "**"
            size_t i, n = len(seq)
            char* c_seq = seq
            char* result = <char*>malloc(n + 1)
-       
+
        if result == NULL:
            raise MemoryError()
-       
+
        try:
            for i in range(n):
                if c_seq[i] == 'A':
@@ -300,7 +300,7 @@ applyTo: "**"
                    result[i] = 'G'
                else:
                    result[i] = c_seq[i]
-           
+
            result[n] = 0  # Null terminator
            return result[:n]  # Convert back to Python bytes
        finally:
@@ -317,10 +317,10 @@ applyTo: "**"
            size_t n_variants = len(variants)
            vector[Variant*] c_variants = prepare_variants(variants)
            vector[Result*] c_results
-       
+
        with nogil:  # Release GIL for true parallelism
            c_results = process_variants_parallel(c_variants, threads)
-       
+
        # Convert results back to Python objects
        return [create_py_result(c_results[i]) for i in range(c_results.size())]
    ```
@@ -333,16 +333,16 @@ applyTo: "**"
        cdef:
            Py_ssize_t i, j, rows, cols
            np.ndarray[np.float64_t, ndim=2] result
-       
+
        rows = data.shape[0]
        cols = data.shape[1]
        result = np.zeros((rows, cols), dtype=np.float64)
-       
+
        # Process in parallel with OpenMP
        for i in prange(rows, nogil=True, schedule='static'):
            for j in range(cols):
                result[i, j] = process_value_nogil(data[i, j])
-       
+
        return result
    ```
 
@@ -358,12 +358,12 @@ applyTo: "**"
            Variant("chr1", 100, "A", "T"),
            Variant("chr1", 200, "G", "C")
        ]
-       
+
        # Test Cython module
        processor = VariantProcessor()
        for v in variants:
            processor.add_variant(v)
-       
+
        results = processor.process_all()
        assert len(results) == 2
        assert results[0].chrom == "chr1"
@@ -376,24 +376,24 @@ applyTo: "**"
        import gc
        import psutil
        import os
-       
+
        process = psutil.Process(os.getpid())
-       
+
        # Get initial memory usage
        gc.collect()
        initial = process.memory_info().rss
-       
+
        # Run computation many times
        for _ in range(1000):
            large_data = create_large_dataset()
            result = cython_process_function(large_data)
            del large_data
            del result
-       
+
        # Check final memory usage
        gc.collect()
        final = process.memory_info().rss
-       
+
        # Assert memory growth is minimal
        assert (final - initial) < 1024 * 1024  # Less than 1MB growth
    ```
@@ -406,10 +406,10 @@ applyTo: "**"
        # Set up test data
        truth_vcf = "test_data/truth.vcf"
        query_vcf = "test_data/query.vcf"
-       
+
        # Run full pipeline
        result = run_comparison(truth_vcf, query_vcf)
-       
+
        # Validate outputs
        assert os.path.exists(result.summary_csv)
        assert result.precision > 0.9

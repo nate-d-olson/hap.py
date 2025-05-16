@@ -24,7 +24,7 @@ check_system_dep() {
     local cmd=$1
     local package=$2
     local install_cmd=$3
-    
+
     if ! command -v $cmd &> /dev/null; then
         echo "WARNING: $cmd not found. Please install $package using:"
         echo "  $install_cmd"
@@ -74,13 +74,13 @@ if [ -z "$BOOST_ROOT" ]; then
         rm -rf ${TLD}/boost_subset_1_58_0
         tar xjf ${DIR}/boost_subset_1_58_0.tar.bz2
         cd boost_subset_1_58_0
-        
+
         # Apply patches for modern compilers if needed
         if [ -f ${DIR}/patches/boost_modern_compiler.patch ]; then
             echo "Applying Boost patches for modern compilers..."
             patch -p1 < ${DIR}/patches/boost_modern_compiler.patch
         fi
-        
+
         ./bootstrap.sh
         ./b2 link=static -j${CPU_COUNT} --prefix=$ISD -sZLIB_SOURCE=$TLD
         ./b2 link=static -j${CPU_COUNT} --prefix=$ISD install -sZLIB_SOURCE=$TLD/zlib-1.2.8
@@ -144,7 +144,7 @@ if [ "${BUILD_VCFEVAL}" == "1" ]; then
     echo "=== Building rtg-tools ==="
     cd ${TLD}
     rm -rf rtg-tools rtg-tools-install
-    
+
     # TODO: Handle RTG build with better error reporting
     ant runalltests
     mkdir -p ${ISD}/libexec/rtg-tools-install

@@ -109,7 +109,7 @@ def main():
         print("ERROR -- Metric differences detected:", file=sys.stderr)
         print("-------------------------------------\n", file=sys.stderr)
         for m in different_metrics:
-            print("%s / %s: %s != %s difference: %f" % m, file=sys.stderr)
+            print("{} / {}: {} != {} difference: {:f}".format(*m), file=sys.stderr)
         print("-------------------------------------", file=sys.stderr)
         sys.exit(1)
 

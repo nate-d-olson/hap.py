@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -23,16 +22,17 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import sys
-import os
 import argparse
-import logging
-import traceback
-import multiprocessing
-import pandas
-import json
-import tempfile
 import gzip
+import json
+import logging
+import multiprocessing
+import os
+import sys
+import tempfile
+import traceback
+
+import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
@@ -43,13 +43,15 @@ else:
     fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
     sys.path.append(fallback_path)
 
+import contextlib
+
+import Haplo.gvcf2bed
+import Haplo.happyroc
+import Haplo.quantify
 import Tools
 import Tools.vcfextract
-from Tools.metric import makeMetricsObject, dataframeToMetricsTable
-import Haplo.quantify
-import Haplo.happyroc
-import Haplo.gvcf2bed
 from Tools import fastasize
+from Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 
 def quantify(args):
@@ -62,19 +64,12 @@ def quantify(args):
     logging.info("Counting variants...")
 
     truth_or_query_is_bcf = False
-    try:
+    with contextlib.suppress(Exception):
         truth_or_query_is_bcf = args.vcf1.endswith(".bcf") and args.vcf2.endswith(
             ".bcf"
         )
-    except Exception:
-        # args.vcf1 and args.vcf2 are only available when we're running
-        # inside hap.py.
-        pass
 
-    if args.bcf or truth_or_query_is_bcf:
-        internal_format_suffix = ".bcf"
-    else:
-        internal_format_suffix = ".vcf.gz"
+    internal_format_suffix = ".bcf" if args.bcf or truth_or_query_is_bcf else ".vcf.gz"
 
     output_vcf = args.reports_prefix + internal_format_suffix
     roc_table = args.reports_prefix + ".roc.tsv"
@@ -116,15 +111,12 @@ def quantify(args):
 
     if vcf_name == output_vcf or vcf_name == output_vcf + internal_format_suffix:
         raise Exception(
-            "Cannot overwrite input VCF: %s would overwritten with output name %s."
-            % (vcf_name, output_vcf)
+            f"Cannot overwrite input VCF: {vcf_name} would overwritten with output name {output_vcf}."
         )
 
     roc_header = args.roc
-    try:
+    with contextlib.suppress(Exception):
         roc_header = args.roc_header
-    except Exception:
-        pass
 
     Haplo.quantify.run_quantify(
         vcf_name,
@@ -236,21 +228,21 @@ def quantify(args):
     # in default mode, print(result summary to stdout)
     if not args.quiet and not args.verbose:
         print("Benchmarking Summary:")
-        print((essential_numbers.to_string(index=False)))
+        print(essential_numbers.to_string(index=False))
 
     # keep this for verbose output
     if not args.verbose:
-        try:
+        with contextlib.suppress(Exception):
             os.unlink(roc_table)
-        except Exception:
-            pass
 
     for t in list(res.keys()):
         metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
 
     # gzip JSON output
     if args.write_json:
-        with gzip.open(args.reports_prefix + ".metrics.json.gz", "w", encoding="utf-8") as fp:
+        with gzip.open(
+            args.reports_prefix + ".metrics.json.gz", "w", encoding="utf-8"
+        ) as fp:
             json.dump(metrics_output, fp)
 
 
@@ -516,7 +508,7 @@ def main():
         exit(0)
 
     if args.version:
-        print(("qfy.py %s" % Tools.version))
+        print("qfy.py %s" % Tools.version)
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:
@@ -536,6 +528,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.error(e.decode('utf-8') if isinstance(e, bytes) else str(e))
+        logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
         exit(1)

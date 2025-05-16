@@ -58,7 +58,7 @@ bash test_cython_integration_py3.sh /path/to/build/dir
 
 ## Using with Mock C++ Implementation
 
-During development or in environments where C++ compilation is not possible, 
+During development or in environments where C++ compilation is not possible,
 you can use the mock implementation:
 
 ```bash

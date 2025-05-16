@@ -4,16 +4,30 @@
 
 Based on current progress (Updated May 16, 2025):
 
-- **Overall Progress**: 71% of files fully migrated (35/49 files)
+- **Overall Progress**: 71.4% of files fully migrated (35/49 files)
 - **Remaining Issues**: 42 issues across 14 files
 - **Priority Areas**: Haplo module (16 issues), Tools module (12 issues), Somatic module (8 issues), Core files (hap.py, som.py, qfy.py) (6 issues)
 
+### Recently Migrated Modules
+
+The following modules have been successfully migrated to Python 3:
+
+- `Tools/ci.py` → `Tools/ci_py3.py`
+- `Tools/roc.py` → `Tools/roc_py3.py`
+- `Tools/sessioninfo.py` → `Tools/sessioninfo_py3.py`
+- `Haplo/partialcredit.py` → `Haplo/partialcredit_py3.py`
+- `Haplo/vcfeval.py` → `Haplo/vcfeval_py3.py`
+- `Somatic/Varscan2.py` → `Somatic/Varscan2_py3.py`
+- `Somatic/Pisces.py` → `Somatic/Pisces_py3.py`
+
 ### Issues by Type
+
 1. String/Unicode Issues (42 occurrences)
    - Unicode to str conversion
    - File I/O encoding specification
    - Bytes vs. Strings in Python 3
    - String formatting with potentially bytes objects
+   - Encoding/decoding operations
 
 2. Exception Syntax (0 occurrences)
    - All exception syntax issues have been resolved
@@ -40,6 +54,7 @@ Based on current progress (Updated May 16, 2025):
   - Added proper language level and encoding directives
   - Added fallback mechanism with mock implementations
   - Updated Cython-C++ string handling with explicit encoding/decoding
+  - Created `Haplo/cython/CMakeLists.txt` for Cython-specific build configuration
 
 - **Build System**:
   - Created Python 3 compatible `CMakeLists.txt.py3`
@@ -51,122 +66,172 @@ Based on current progress (Updated May 16, 2025):
   - Updated file handling in Tools/bcftools.py with proper encoding
   - Fixed string handling in Haplo/quantify.py
   - Updated exception handling to use `except Exception as e` syntax
-  - Fixed Python 3 f-strings usage in Haplo/cython/__init__.py
+  - Fixed Python 3 f-strings usage in Haplo/cython/**init**.py
   - Added proper encodings for text file operations
   - Fixed temporary file creation with explicit text mode
 
-## Next Steps
+## Structured Action Plan
 
-### 1. Resolve Remaining String/Unicode Issues
+### Phase 1: Complete String/Unicode Issues (1-2 Weeks)
 
-Focus on resolving the remaining string handling issues in the priority modules:
-
-```bash
-# Address string handling issues in Haplo module (16 issues)
-python3 check_py3_issues.py --paths "src/python/Haplo" --verbose
-
-# Address string handling issues in Tools module (12 issues)
-python3 check_py3_issues.py --paths "src/python/Tools" --verbose
-
-# Address string handling issues in Somatic module (8 issues)
-python3 check_py3_issues.py --paths "src/python/Somatic" --verbose
-```
-
-### 2. Verify Integration of Fixed Truncated Files
-
-Run integration tests to verify the fixed truncated files work correctly:
-
-```bash
-# Test truncated files integration
-python3 test_fixed_truncated_files.py
-```
-
-Fix the 21 remaining exception syntax issues across the codebase:
-
-```bash
-# Find and fix all remaining exception syntax issues
-grep -r "except \w\+," --include="*.py" src/python | cut -d ":" -f 1 | sort -u > exception_syntax_files.txt
-
-# Manually fix each file listed in exception_syntax_files.txt
-```
-
-### 3. Test Cython Integration
-
-```bash
-# Test with mock implementation
-HAPLO_USE_MOCK=1 python3 test_cython_module_py3.py
-
-# Test the fixed Cython modules with actual C++ integration
-python3 test_cython_module_py3.py
-
-# Run comprehensive C++ integration tests
-bash test_cpp_integration.sh
-```
-
-### 4. Build and Test
-
-```bash
-# Build with Python 3 installer
-python3 install_py3.py /tmp/happy-py3-build
-
-# Run the test suite
-cd /tmp/happy-py3-build
-src/sh/run_tests.sh
-
-# Capture output to analyze failures
-src/sh/run_tests.sh 2>&1 | tee test_results.log
-```
-
-### 5. Targeted Fixes
-
-Focus on priority modules in this order:
-
-1. Fix remaining Haplo module issues (16 issues)
+1. **Focus on Haplo Module (16 issues)**
    - Fix string formatting with potentially bytes objects in error handling
    - Update Cython integration points for proper string/bytes conversion
-   
-2. Fix remaining Tools module issues (12 issues)
+   - Address file I/O encoding issues
+
+   ```bash
+   # Address string handling issues in Haplo module
+   python3 check_py3_issues.py --paths "src/python/Haplo" --verbose
+   ```
+
+2. **Complete Tools Module (12 issues)**
    - Update file handling with proper encoding
-   - Fix string vs bytes handling
+   - Fix string vs bytes handling in command execution
+   - Update temporary file handling
 
-3. Address Somatic module issues (8 issues)
-   - Complete integration testing of fixed truncated files 
-   - Verify proper string handling
+   ```bash
+   # Address string handling issues in Tools module
+   python3 check_py3_issues.py --paths "src/python/Tools" --verbose
+   ```
 
-4. Update main scripts (hap.py, som.py, qfy.py) (6 issues)
+3. **Finish Somatic Module (8 issues)**
+   - Complete integration testing of fixed truncated files
+   - Verify proper string handling in variant parsing
+
+   ```bash
+   # Address string handling issues in Somatic module
+   python3 check_py3_issues.py --paths "src/python/Somatic" --verbose
+   ```
+
+4. **Update Core Files (6 issues)**
    - Ensure command line argument handling is Python 3 compatible
    - Verify proper encoding for all file I/O
 
-### 6. Modernization Goals
+### Phase 2: Testing and Integration (1 Week)
 
-- Add type hints and Google-style docstrings to all Python files
-- Implement CI/CD pipelines for automated testing
-- Create containerized deployment options (e.g., Docker)
-- Optimize memory usage for large genomic datasets
-- Improve parallelization for performance
+1. **Test Cython Integration**
 
-### 7. Update Documentation
+   ```bash
+   # Test with mock implementation
+   HAPLO_USE_MOCK=1 python3 test_cython_module_py3.py
 
-- Update `PYTHON3_MIGRATION.md` with progress
-- Document any module-specific considerations
-- Update test documentation for Python 3 compatibility
-- Update this document (`.github/prompt/continue-py3-migration.md`) for use with the next session.
+   # Test the fixed Cython modules with actual C++ integration
+   python3 test_cython_module_py3.py
 
-## Common Issues to Watch For
+   # Run comprehensive C++ integration tests
+   bash test_cpp_integration.sh
+   ```
 
-- String vs bytes handling, especially in file I/O
-- Unicode encoding/decoding in VCF parsing
-- Memory management in Cython modules
-- Path handling differences between Python 2 and 3
-- Iterator behavior changes
-- File truncation during automated conversion (now fixed, but watch for similar issues)
-- Incomplete module dependencies after restoration of truncated files
+2. **Full Build and Test**
 
-## Tools Added During Migration
+   ```bash
+   # Build with Python 3 installer
+   python3 install_py3.py /tmp/happy-py3-build
 
-- `check_file_truncation.py` - Detect files truncated during the migration process
-- `fix_truncated_files.py` - Restore truncated files with Python 3 compatibility fixes
-- `update_cython_for_py3.py` - Update Cython modules with language_level directive and string handling
+   # Run the test suite
+   cd /tmp/happy-py3-build
+   src/sh/run_tests.sh
+
+   # Capture output to analyze failures
+   src/sh/run_tests.sh 2>&1 | tee test_results.log
+   ```
+
+3. **Validate Output Consistency**
+   - Compare outputs between Python 2 and Python 3 versions
+   - Verify numerical results match within tolerance
+   - Test with real genomic datasets
+
+### Phase 3: Code Quality and Modernization (2-3 Weeks)
+
+1. **Add Type Hints and Documentation**
+   - Complete type annotations for all Python files
+   - Add Google-style docstrings to all functions
+   - Update module-level documentation
+
+2. **Implement Modern Python Practices**
+   - Use f-strings for string formatting
+   - Implement context managers for resource handling
+   - Use pathlib for file path operations
+   - Leverage modern Python features (dataclasses, etc.)
+
+3. **Code Structure Improvements**
+   - Implement proper package structure
+   - Create clean public APIs
+   - Separate concerns (I/O, processing, analysis)
+
+### Phase 4: Build System and Deployment (1-2 Weeks)
+
+1. **Modernize Build System**
+   - Update CMake configuration for modern practices
+   - Implement proper package installation
+   - Create reproducible builds
+
+2. **CI/CD Integration**
+   - Set up automated testing
+   - Implement test coverage reporting
+   - Create deployment pipelines
+
+3. **Documentation Updates**
+   - Update user documentation
+   - Create migration guides for users
+   - Document new features and APIs
+
+## Tools and Resources
+
+### Migration Tools
+
+- **Automated Migration Tools**:
+  - `automate_py3_updates.py`: Comprehensive tool for automating Python 2 to 3 updates
+  - `check_py3_issues.py`: Tool for identifying Python 2/3 compatibility issues
+  - `update_cython_modules_py3.py`: Tool for updating Cython modules for Python 3 compatibility
+  - `fix_exception_syntax.py`: Fix Python 2 style exception syntax
+  - `fix_string_unicode.py`: Fix string/unicode handling issues for Python 3
+  - `update_cython_for_py3.py`: Update Cython modules with language_level directive
+
+- **File Truncation Tools**:
+  - `check_file_truncation.py`: Detect files truncated during the migration process
+  - `fix_truncated_files.py`: Restore truncated files with Python 3 compatibility fixes
+
+- **Testing Tools**:
+  - `test_python3_compatibility_enhanced.py`: Comprehensive tool for testing Python 3 module compatibility
+  - `test_cython_module_py3.py`: Tool for testing Cython modules with Python 3
+  - `validate_cpp_integration_enhanced.py`: Tool for validating C++ integration with Python 3
+
+### Using Pre-commit Hooks for Migration
+
+Pre-commit hooks have been added to the project to automate and standardize the Python 3 migration:
+
+1. **Installation**:
+
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+2. **Recommended Migration Workflow**:
+
+   ```bash
+   # After initial 2to3 conversion or manual edits
+   pre-commit run --files src/python/module/file.py
+
+   # For batch processing
+   pre-commit run --files src/python/module/*.py
+
+   # After fixes, verify code quality
+   pre-commit run --all-files
+   ```
+
+3. **Most Useful Hooks for Migration**:
+   - `pyupgrade`: Automatically upgrades Python 2 syntax to Python 3
+   - `ruff`: Detects and fixes compatibility issues
+   - `black`: Ensures consistent code style
+   - `isort`: Properly orders imports for Python 3
+   - `mypy`: Optional type checking
+
+4. **Specific Migration Tasks**:
+   - Fix string/bytes issues: `ruff --select=B --fix src/python/path/to/file.py`
+   - Format code: `black src/python/path/to/file.py`
+   - Sort imports: `isort src/python/path/to/file.py`
 
 ## Troubleshooting Recommendations
 
@@ -175,34 +240,83 @@ Focus on priority modules in this order:
 If more truncated files are discovered:
 
 1. Use the `check_file_truncation.py` script to systematically compare line counts:
+
    ```bash
    python3 check_file_truncation.py --dir src/python --threshold 0.9
    ```
 
 2. Use `fix_truncated_files.py` to restore truncated files:
+
    ```bash
    python3 fix_truncated_files.py --files file1.py file2.py
    ```
 
 3. Manually verify the fixed files compile with Python 3:
+
    ```bash
    python3 -m py_compile file1.py file2.py
    ```
 
 4. Test functionality of restored files with appropriate test cases
 
-### Testing the Fixed Files
+### Code Pattern Updates
 
-The recently fixed truncated files are particularly important to test thoroughly:
+1. **String Handling**
 
-1. **Varscan2.py** - Test somatic variant calling functionality
-2. **Strelka.py** - Verify variant parsing and integration
-3. **bcftools.py** - Ensure VCF handling and manipulation works
-4. **roc.py** - Validate ROC curve calculation and plotting
-5. **happyroc.py** - Test ROC functionality specific to diploid calls
-6. **Pisces.py** - Verify somatic variant calling integration
+   ```python
+   # Add to the top of each file:
+   from __future__ import unicode_literals
 
-See [TRUNCATED_FILES_REPORT.md](TRUNCATED_FILES_REPORT.md) for detailed information about the recovery process.
+   # Update file operations:
+   with open(filename, 'rt', encoding='utf-8') as f:
+       content = f.read()
+
+   # Binary file handling:
+   with open(filename, 'rb') as f:
+       binary_data = f.read()  # Returns bytes in Python 3
+   ```
+
+2. **Cython Changes**
+
+   ```cython
+   # Add to all .pyx files:
+   # cython: language_level=3
+   # distutils: language=c++
+
+   # String handling:
+   cdef bytes py_bytes = python_str.encode('utf8')
+   cdef char* c_str = py_bytes
+
+   # C string to Python string:
+   py_str = c_str.decode('utf8') if c_str != NULL else ""
+   ```
+
+### Verification Steps
+
+1. Run automated checks:
+
+   ```bash
+   python3 check_py3_issues.py --paths src/python --generate-report
+   ```
+
+2. Build verification:
+
+   ```bash
+   python3 install_py3.py /tmp/happy-py3-build
+   ```
+
+3. Test execution:
+
+   ```bash
+   cd /tmp/happy-py3-build
+   src/sh/run_tests.sh 2>&1 | tee test_results.log
+   ```
+
+4. Compare with Python 2 version:
+
+   ```bash
+   python compare_outputs.py --py2-out /tmp/py2-output --py3-out /tmp/py3-output
+   ```
 
 ---
 

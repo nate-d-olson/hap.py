@@ -1,4 +1,3 @@
-# coding=utf-8
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -9,10 +8,10 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
+import math
 import os
 import sys
 import time
-import math
 
 import Tools
 
@@ -109,8 +108,9 @@ def makeMetricsObject(name):
                 "id": "haplotypes",
                 "version": version,
                 "module": "%s" % os.path.basename(sys.argv[0]),
-                "description": "%s generated this JSON file via command line %s"
-                % (sys.argv[0], " ".join(sys.argv)),
+                "description": "{} generated this JSON file via command line {}".format(
+                    sys.argv[0], " ".join(sys.argv)
+                ),
             }
         },
         "sampleInfo": [],

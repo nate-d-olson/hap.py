@@ -38,23 +38,23 @@ try:
     def get_version():
         """Get the hap.py version string"""
         return version_string().decode('utf-8')
-    
+
     def get_build_time():
         """Get the hap.py build timestamp"""
         return build_timestamp().decode('utf-8')
-        
+
 except Exception as e:
     logging.warning(f"Could not initialize C++ components: {e}")
-    
+
     # Define fallback versions of the functions
     def get_version():
         """Get the hap.py version string (fallback)"""
         return "0.0.0-fallback"
-    
+
     def get_build_time():
         """Get the hap.py build timestamp (fallback)"""
         return "unknown"
-    
+
     # Add placeholder functions for any other functionality needed
 
 # Create a test function to verify the module is working
