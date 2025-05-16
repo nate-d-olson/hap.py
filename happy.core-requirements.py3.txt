@@ -1,0 +1,6 @@
+# Core Python 3 requirements for hap.py with focus on vcfeval functionality
+Cython>=0.29.24
+numpy>=1.19.0
+pandas>=1.3.0
+pysam>=0.16.0
+scipy>=1.7.0

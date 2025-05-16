@@ -4,17 +4,36 @@
 
 include(CMakeParseArguments)
 
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+# Find Python 3 components
+find_package(Python3 COMPONENTS Interpreter Development)
+
+# Manually determine NumPy include directory as fallback
+if(NOT Python3_NumPy_FOUND)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+        OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_VARIABLE NUMPY_ERROR
+    )
+    if(NOT NUMPY_ERROR)
+        set(Python3_NumPy_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR})
+        set(Python3_NumPy_FOUND TRUE)
+        message(STATUS "Found NumPy include directory manually: ${NUMPY_INCLUDE_DIR}")
+    else()
+        message(FATAL_ERROR "NumPy not found. Please install numpy for Python 3.")
+    endif()
+endif()
 
 # Find Cython executable for Python 3
 execute_process(
     COMMAND ${Python3_EXECUTABLE} -c "import Cython.Build; print(Cython.Build.cython_executable)"
     OUTPUT_VARIABLE CYTHON_EXECUTABLE
     OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
+    ERROR_VARIABLE CYTHON_ERROR
 )
 
-if(NOT CYTHON_EXECUTABLE)
+# If the above fails, try to find cython through a direct command
+if(CYTHON_ERROR OR NOT CYTHON_EXECUTABLE)
     execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "import sys; sys.stdout.write(sys.exec_prefix)"
         OUTPUT_VARIABLE PYTHON_PREFIX
