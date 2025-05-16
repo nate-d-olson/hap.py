@@ -112,8 +112,8 @@ def create_python_environment(source_dir, args):
             if not os.path.exists(requirements_file):
                 # Use the default requirements file as last resort
                 requirements_file = os.path.join(source_dir, "happy.requirements.txt")
-        
-        with open(requirements_file, "r") as req_file:
+
+        with open(requirements_file) as req_file:
             for x in req_file:
                 if x.strip() and not x.strip().startswith(("#", "//")):
                     print(" ".join([*cmds, x]), file=sys.stderr)

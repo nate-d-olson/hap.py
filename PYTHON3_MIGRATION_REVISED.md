@@ -42,6 +42,12 @@ This revised strategy focuses on migrating the essential parts of hap.py to Pyth
    - Implement smarter chunking based on variant density
    - Use modern multiprocessing approaches
 
+5. **Build System and Cython Integration:**
+   - Update CMakeLists to remove NumPy from core `find_package(Python3 ...)`
+   - Enhance `CythonSupport.cmake` for manual NumPy detection and simple Cython lookup
+   - Exclude problematic dependencies (e.g., pybedtools) from build requirements
+   - Verify Cython modules build and load under Python 3
+
 ### Phase 2: Modernization and Testing (2-3 weeks)
 
 1. **API Modernization:**
@@ -59,6 +65,14 @@ This revised strategy focuses on migrating the essential parts of hap.py to Pyth
    - Implement pytest-based test suite
    - Create integration tests for core functionality
    - Add CI pipeline for automated testing
+  
+### Phase 0: Build Verification (ongoing)
+
+Before each migration phase:
+
+- Run `test_py3_build.sh` to validate CMake and Python dependencies
+- Fix build errors in Cython/C++ integration
+- Confirm core tests via `test_py3_core.sh` pass successfully
 
 ### Phase 3: Packaging and Documentation (1-2 weeks)
 
@@ -68,9 +82,10 @@ This revised strategy focuses on migrating the essential parts of hap.py to Pyth
    - Provide containerized distribution option
 
 2. **Documentation:**
-   - Update user documentation focused on core workflows
-   - Create clear error messages and troubleshooting guides
-   - Document API for programmatic usage
+
+    - Update user documentation focused on core workflows
+    - Create clear error messages and troubleshooting guides
+    - Document API for programmatic usage
 
 ## Implementation Details
 

@@ -24,7 +24,7 @@ include(configureFiles)
 include(CythonSupport)
 
 # Python version detection
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 message(STATUS "Found Python: ${Python3_EXECUTABLE} (version: ${Python3_VERSION})")
 if(Python3_VERSION VERSION_LESS 3.6)
   message(FATAL_ERROR "Python 3.6 or later is required")

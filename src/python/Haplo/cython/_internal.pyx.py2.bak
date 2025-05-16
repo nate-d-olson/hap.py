@@ -42,12 +42,12 @@ try:
     def get_version():
         """Get the hap.py version string"""
         cdef string v = version_string()
-        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8')
+        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8')
 
     def get_build_time():
         """Get the hap.py build timestamp"""
         cdef string t = build_timestamp()
-        return t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8')
+        return t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8') if isinstance(t, bytes) else t.decode('utf-8')
 
 except Exception as e:
     logging.warning("Could not initialize C++ components: {}".format(e.decode("utf-8") if isinstance(e, bytes) else e.decode("utf-8") if isinstance(e, bytes) else e.decode('utf-8') if isinstance(e, bytes) else str(e)))
@@ -66,9 +66,9 @@ def is_available():
     """Check if the C++ components are available"""
     try:
         v = get_version()
-        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v != "unknown (C++ module not loaded)"
+        return v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v.decode('utf-8') if isinstance(v, bytes) else v != "unknown (C++ module not loaded)"
     except:
-        return False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False
+        return False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False.decode('utf-8') if isinstance(False, bytes) else False
         """Get the hap.py version string (fallback)"""
         return "0.0.0-fallback"
 

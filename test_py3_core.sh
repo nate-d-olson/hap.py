@@ -47,10 +47,10 @@ build_test_installation() {
 
     # Create build directory if it doesn't exist
     mkdir -p "${BUILD_DIR}"
-    
+
     # Run the installer script with Python 3
     python3 "${SCRIPT_DIR}/install.py" "${BUILD_DIR}" --no-tests
-    
+
     if [ $? -ne 0 ]; then
         echo -e "${RED}Build failed!${NC}"
         exit 1
@@ -62,14 +62,14 @@ build_test_installation() {
 # Test the core functionality with example data
 test_core_functionality() {
     echo -e "${BLUE}Testing core functionality with vcfeval engine...${NC}"
-    
+
     # Set up paths
     HAPPY_PATH="${BUILD_DIR}/bin/hap.py"
     EXAMPLE_DIR="${SCRIPT_DIR}/example"
     OUTPUT_DIR="${BUILD_DIR}/test_output"
-    
+
     mkdir -p "${OUTPUT_DIR}"
-    
+
     # Run hap.py with vcfeval engine on example data
     echo -e "${YELLOW}Running hap.py with vcfeval engine...${NC}"
     ${HAPPY_PATH} \
@@ -83,7 +83,7 @@ test_core_functionality() {
         --no-decompose \
         --no-leftshift \
         > "${LOG_DIR}/hap.py.vcfeval.log" 2>&1
-    
+
     if [ $? -ne 0 ]; then
         echo -e "${RED}Core functionality test failed!${NC}"
         echo -e "${RED}Check the log file at ${LOG_DIR}/hap.py.vcfeval.log${NC}"
@@ -91,7 +91,7 @@ test_core_functionality() {
     else
         echo -e "${GREEN}Core functionality test succeeded!${NC}"
     fi
-    
+
     # Check if output files were created
     if [ ! -f "${OUTPUT_DIR}/test.vcfeval.summary.csv" ]; then
         echo -e "${RED}Output file not found: ${OUTPUT_DIR}/test.vcfeval.summary.csv${NC}"

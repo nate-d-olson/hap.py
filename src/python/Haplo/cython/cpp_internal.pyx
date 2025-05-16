@@ -28,21 +28,21 @@ def get_version():
     cdef string version
     with nogil:
         version = get_version_string()
-    return version.decode('utf-8')
+    return version.decode('utf-8') if isinstance(version, bytes) else version.decode('utf-8') if isinstance(version, bytes) else version.decode('utf-8') if isinstance(version, bytes) else version.decode('utf-8') if isinstance(version, bytes) else version.decode('utf-8')
 
 def get_git_hash():
     """Get the git hash of the current version"""
     cdef string hash_str
     with nogil:
         hash_str = get_version_git_hash()
-    return hash_str.decode('utf-8')
+    return hash_str.decode('utf-8') if isinstance(hash_str, bytes) else hash_str.decode('utf-8') if isinstance(hash_str, bytes) else hash_str.decode('utf-8') if isinstance(hash_str, bytes) else hash_str.decode('utf-8') if isinstance(hash_str, bytes) else hash_str.decode('utf-8')
 
 def get_build_time():
     """Get the build timestamp"""
     cdef string timestamp
     with nogil:
         timestamp = get_build_time()
-    return timestamp.decode('utf-8')
+    return timestamp.decode('utf-8') if isinstance(timestamp, bytes) else timestamp.decode('utf-8') if isinstance(timestamp, bytes) else timestamp.decode('utf-8') if isinstance(timestamp, bytes) else timestamp.decode('utf-8') if isinstance(timestamp, bytes) else timestamp.decode('utf-8')
 
 # Forward declarations for variant handling
 cdef extern from "Variant.hh" namespace "haplotypes":
@@ -82,30 +82,30 @@ cdef class PyVariant:
 
     @property
     def chrom(self) -> str:
-        return self._variant.chrom.decode('utf-8')
+        return self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self._variant.chrom.decode('utf-8')
 
     @property
     def pos(self) -> int:
-        return self._variant.pos
+        return self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self._variant.pos
 
     @property
     def ref(self) -> str:
-        return self._variant.ref.decode('utf-8')
+        return self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self._variant.ref.decode('utf-8')
 
     @property
     def alt(self) -> str:
-        return self._variant.alt.decode('utf-8')
+        return self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self._variant.alt.decode('utf-8')
 
     @property
     def qual(self) -> float:
-        return self._variant.qual
+        return self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self.decode('utf-8') if isinstance(self, bytes) else self._variant.qual
 
     @qual.setter
     def qual(self, double value):
         self._variant.qual = value
 
     def __str__(self) -> str:
-        return f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
+        return f.decode('utf-8') if isinstance(f, bytes) else f.decode('utf-8') if isinstance(f, bytes) else f.decode('utf-8') if isinstance(f, bytes) else f.decode('utf-8') if isinstance(f, bytes) else f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
 
 # Basic test function
 def test_module():

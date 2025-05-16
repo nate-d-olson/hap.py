@@ -24,16 +24,13 @@ include(configureFiles)
 include(CythonSupport)
 
 # Python version detection
-find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 message(STATUS "Found Python: ${Python3_EXECUTABLE} (version: ${Python3_VERSION})")
 if(Python3_VERSION VERSION_LESS 3.6)
   message(FATAL_ERROR "Python 3.6 or later is required")
 endif()
 
-# Find NumPy for Cython integration
-if(NOT Python3_NumPy_FOUND)
-  message(WARNING "NumPy not found - some Cython modules may not build correctly")
-endif()
+# NumPy detection is handled in CythonSupport.cmake for Cython modules
 
 # RTG tools / vcfeval configuration
 if(BUILD_VCFEVAL)

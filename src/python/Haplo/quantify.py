@@ -113,9 +113,8 @@ def run(args: Any) -> None:
                 logging.warning(
                     "Auto / none for gender selection are not supported. Using female."
                 )
-                is_male = False
             else:
-                is_male = args.gender.lower() == "male"
+                args.gender.lower() == "male"
 
             if args.engine == "vcfeval":
                 # Use RTG vcfeval
@@ -319,19 +318,19 @@ def _parse_vcfeval_stats(stats_file: str) -> Tuple[Dict[str, int], Dict[str, flo
         "QUERY.TP": 0,
         "QUERY.FP": 0,
     }
-    
+
     metrics = {
         "Recall": 0.0,
         "Precision": 0.0,
         "F1_Score": 0.0,
     }
-    
+
     try:
-        with open(stats_file, 'r') as f:
+        with open(stats_file) as f:
             for line in f:
-                if line.startswith('#'):
+                if line.startswith("#"):
                     continue
-                    
+
                 parts = line.strip().split()
                 if len(parts) >= 7:
                     # Format is typically: Type Count TP FP FN Precision Recall etc.
@@ -341,7 +340,7 @@ def _parse_vcfeval_stats(stats_file: str) -> Tuple[Dict[str, int], Dict[str, flo
                     counts["TRUTH.FN"] = int(parts[4])
                     counts["QUERY.TOTAL"] = counts["TRUTH.TP"] + counts["QUERY.FP"]
                     counts["QUERY.TP"] = counts["TRUTH.TP"]
-                    
+
                     # Parse metrics
                     if len(parts) >= 9:
                         metrics["Precision"] = float(parts[5])
@@ -349,7 +348,7 @@ def _parse_vcfeval_stats(stats_file: str) -> Tuple[Dict[str, int], Dict[str, flo
                         metrics["F1_Score"] = float(parts[7])
     except Exception as e:
         logging.warning(f"Failed to parse vcfeval stats file: {e}")
-        
+
     return counts, metrics
 
 
@@ -384,7 +383,7 @@ def u_unhappy(
         Dictionary with summary metrics
     """
     logging.warning("u_unhappy is a placeholder - please use vcfeval engine instead")
-    
+
     # Create a minimal result structure that's compatible with quantify requirements
     result = {
         "summary_header": "Type,Filter,TRUTH.TOTAL,TRUTH.TP,TRUTH.FN,QUERY.TOTAL,QUERY.TP,QUERY.FP,METRIC.Recall,METRIC.Precision,METRIC.F1_Score,TRUTH.TOTAL.TiTv_ratio,QUERY.TOTAL.TiTv_ratio,TRUTH.TOTAL.TiTv_ratio,QUERY.TOTAL.TiTv_ratio",
@@ -400,16 +399,12 @@ def u_unhappy(
                 "TRUTH.FN": 0,
                 "QUERY.TOTAL": 0,
                 "QUERY.TP": 0,
-                "QUERY.FP": 0
+                "QUERY.FP": 0,
             },
-            "metrics": {
-                "Recall": 0.0,
-                "Precision": 0.0,
-                "F1_Score": 0.0
-            }
-        }
+            "metrics": {"Recall": 0.0, "Precision": 0.0, "F1_Score": 0.0},
+        },
     }
-    
+
     return result
 
 
@@ -468,9 +463,9 @@ def v_vcfeval(
     """
     # This function should be reimplemented to actually process the vcfeval output files
     # and generate proper metrics. For now, we return placeholders.
-    
+
     logging.info(f"Processing vcfeval results for {variant_type}")
-    
+
     # Initialize with default values
     counts = {
         "TRUTH.TOTAL": 0,
@@ -478,25 +473,21 @@ def v_vcfeval(
         "TRUTH.FN": 0,
         "QUERY.TOTAL": 0,
         "QUERY.TP": 0,
-        "QUERY.FP": 0
+        "QUERY.FP": 0,
     }
-    
-    metrics = {
-        "Recall": 0.0,
-        "Precision": 0.0,
-        "F1_Score": 0.0
-    }
-    
+
+    metrics = {"Recall": 0.0, "Precision": 0.0, "F1_Score": 0.0}
+
     # We'd normally parse the vcfeval output files here
     # In a complete implementation, we should look for the statistics summary file
     # that vcfeval produces and parse it for the counts and metrics
-    
+
     # Create a simulated summary string
     summary_csv = f"{variant_type},ALL,{counts['TRUTH.TOTAL']},{counts['TRUTH.TP']},{counts['TRUTH.FN']},{counts['QUERY.TOTAL']},{counts['QUERY.TP']},{counts['QUERY.FP']},{metrics['Recall']},{metrics['Precision']},{metrics['F1_Score']},0,0,0,0"
-    
+
     # Extended data would include breakdowns by subtype
     extended_csv = f"{variant_type},*,ALL,{counts['TRUTH.TOTAL']},{counts['TRUTH.TP']},{counts['TRUTH.FN']},{counts['QUERY.TOTAL']},{counts['QUERY.TP']},{counts['QUERY.FP']},{metrics['Recall']},{metrics['Precision']},{metrics['F1_Score']},0,0"
-    
+
     # Return structured output
     result = {
         "summary_header": "Type,Filter,TRUTH.TOTAL,TRUTH.TP,TRUTH.FN,QUERY.TOTAL,QUERY.TP,QUERY.FP,METRIC.Recall,METRIC.Precision,METRIC.F1_Score,TRUTH.TOTAL.TiTv_ratio,QUERY.TOTAL.TiTv_ratio,TRUTH.TOTAL.TiTv_ratio,QUERY.TOTAL.TiTv_ratio",
@@ -507,10 +498,10 @@ def v_vcfeval(
             "type": variant_type,
             "filter": "ALL",
             "counts": counts,
-            "metrics": metrics
-        }
+            "metrics": metrics,
+        },
     }
-    
+
     return result
 
 
@@ -556,16 +547,16 @@ def run_quantify(
         strat_fixchr: Whether to fix chromosomes in stratification
     """
     logging.info(f"Processing {vcf_name} to extract metrics")
-    
+
     if not os.path.exists(vcf_name):
         raise Exception(f"Input VCF {vcf_name} does not exist")
-    
+
     # In a full implementation, this would:
     # 1. Process the VCF to extract variant counts
     # 2. Calculate performance metrics
     # 3. Generate ROC curves if requested
     # 4. Write outputs to the specified files
-    
+
     # For now, this is a placeholder that acknowledges the function should exist
     logging.info(f"Metrics will be written to {roc_table}")
     if output_vcf:

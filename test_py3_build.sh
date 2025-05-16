@@ -28,15 +28,19 @@ echo -e "${GREEN}Installing Python 3 dependencies...${NC}"
 pip install --upgrade pip
 pip install wheel numpy cython pandas scipy
 
-# Check for Python 3 requirements file
+# Install from Python 3 requirements, excluding pybedtools to avoid build failures
 if [ -f "happy.requirements.py3.txt" ]; then
-    echo -e "${GREEN}Installing from happy.requirements.py3.txt...${NC}"
-    pip install -r happy.requirements.py3.txt
+    echo -e "${GREEN}Installing from happy.requirements.py3.txt (excluding pybedtools)...${NC}"
+    # Exclude pybedtools which may not have a prebuilt wheel for this platform
+    grep -v '^pybedtools' happy.requirements.py3.txt > /tmp/requirements_no_pybedtools.txt
+    pip install -r /tmp/requirements_no_pybedtools.txt
+    rm /tmp/requirements_no_pybedtools.txt
 else
-    echo -e "${YELLOW}No Python 3 requirements file found. Using default requirements.${NC}"
+    echo -e "${YELLOW}No Python 3 requirements file found. Installing default requirements excluding pybedtools.${NC}"
     if [ -f "happy.requirements.txt" ]; then
-        echo -e "${YELLOW}Installing from happy.requirements.txt (might not be Python 3 compatible)...${NC}"
-        pip install -r happy.requirements.txt
+        grep -v '^pybedtools' happy.requirements.txt > /tmp/requirements_no_pybedtools.txt
+        pip install -r /tmp/requirements_no_pybedtools.txt
+        rm /tmp/requirements_no_pybedtools.txt
     fi
 fi
 
