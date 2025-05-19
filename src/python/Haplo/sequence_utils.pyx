@@ -1,7 +1,7 @@
 # cython: language_level=3
 # distutils: language=c++
 
-from __future__ import division, print_function
+# Removed __future__ imports; targeting Python 3 only
 
 from libc.stdlib cimport free, malloc
 from libc.string cimport memcpy

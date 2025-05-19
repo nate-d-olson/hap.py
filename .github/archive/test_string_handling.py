@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "python"))
 def test_fastasize():
     """Test string handling in fastasize.py"""
     try:
-
         print("Successfully imported fastaContigLengths from Tools.fastasize")
         return True
     except Exception as e:
@@ -25,7 +24,6 @@ def test_fastasize():
 def test_happyroc():
     """Test string handling in happyroc.py"""
     try:
-
         print("Successfully imported roc from Haplo.happyroc")
         return True
     except Exception as e:

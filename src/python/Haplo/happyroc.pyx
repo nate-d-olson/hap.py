@@ -6,7 +6,7 @@ This module provides optimized functions for Python 3 compatibility.
 """
 
 # Python 3 imports
-from __future__ import division, print_function
+# Removed __future__ imports; targeting Python 3 only
 
 # Standard library imports
 import math

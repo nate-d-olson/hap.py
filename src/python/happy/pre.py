@@ -23,6 +23,7 @@
 #
 
 import argparse
+import contextlib
 import logging
 import multiprocessing
 import os
@@ -32,22 +33,10 @@ import sys
 import tempfile
 import time
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-# Update path for Python 3
-lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
-if os.path.exists(lib_path):
-    sys.path.append(lib_path)
-else:
-    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
-    sys.path.append(fallback_path)
-
-import contextlib
-
-import Haplo.partialcredit
-import Tools
-from Tools import vcfextract
-from Tools.bcftools import preprocessVCF, runBcftools
-from Tools.fastasize import fastaContigLengths
+from happy.Haplo import partialcredit
+from happy.Tools.fastasize import fastaContigLengths
+from happy.Tools.sessioninfo import sessionInfo
+from happy.Tools.vcfextract import preprocessVCF, runBcftools
 
 
 def hasChrPrefix(chrlist):

@@ -31,27 +31,13 @@ import os
 import sys
 import tempfile
 import traceback
-
 import pandas
-
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-# Update path for Python 3
-lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
-if os.path.exists(lib_path):
-    sys.path.append(lib_path)
-else:
-    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
-    sys.path.append(fallback_path)
-
 import contextlib
 
-import Haplo.gvcf2bed
-import Haplo.happyroc
-import Haplo.quantify
-import Tools
-import Tools.vcfextract
-from Tools import fastasize
-from Tools.metric import dataframeToMetricsTable, makeMetricsObject
+from happy import Tools
+from happy.Haplo import gvcf2bed, happyroc, quantify
+from happy.Tools import fastasize, vcfextract
+from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 
 def quantify(args):

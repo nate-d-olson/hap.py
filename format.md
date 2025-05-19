@@ -1,6 +1,6 @@
 Reformat: Clean-up codebase to ensure if utilizes and follows modern python3 best-practices for coding and packaging. Should pass pre-commit hooks as defined in `.pre-commit-config.yaml`
 
-- Carefully review the codebase and check for coding and project structuring issues using the appropriate tools.
+- Carefully review the codebase and check for coding and project structuring issues using the appropriate tools. Some files and code are potentially artifacts of previous work migrating the code from python2 to python3, fixing build errors for cython components, and removal of unnecessary modules. Make sure to document potential artifacts and move to `.github/archive/`.
 - After reviewing the identified issues, develop a plan to address the issues breaking on the changes into small well defined tasks.
 - Iteratively work through the definted tasks addressing as many as possible. After completing a task review the task list reason through the plan to address the issues and revise as appropriate.
 - If you continue to run into errors on a specific task, document the error and move on to complete remaining tasks that are not dependent on the failing task.

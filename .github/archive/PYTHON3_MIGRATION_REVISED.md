@@ -65,7 +65,7 @@ This revised strategy focuses on migrating the essential parts of hap.py to Pyth
    - Implement pytest-based test suite
    - Create integration tests for core functionality
    - Add CI pipeline for automated testing
-  
+
 ### Phase 0: Build Verification (ongoing)
 
 Before each migration phase:

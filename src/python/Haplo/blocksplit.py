@@ -49,10 +49,11 @@ def blocksplitWrapper(location_str: Optional[str], args: Any) -> Tuple[str, floa
     # Build location argument if provided
     loc_arg = f" -l {shlex.quote(location_str)}" if location_str else ""
 
-    # Construct the command
+    # Construct the command string in smaller chunks to satisfy line-length limits
     to_run = (
-        f"blocksplit {shlex.quote(args.vcf1)} {shlex.quote(args.vcf2)}{loc_arg} "
-        f"-o {output_filename} --window {args.window*2} --nblocks {args.pieces} -f 0"
+        f"blocksplit {shlex.quote(args.vcf1)} {shlex.quote(args.vcf2)}"
+        f"{loc_arg} -o {output_filename} "
+        f"--window {args.window * 2} --nblocks {args.pieces} -f 0"
     )
 
     # Create temporary files for stdout/stderr
@@ -68,19 +69,20 @@ def blocksplitWrapper(location_str: Optional[str], args: Any) -> Tuple[str, floa
 
     try:
         with open(stdout_file, "w") as out_fh, open(stderr_file, "w") as err_fh:
-            p = subprocess.Popen(to_run, shell=True, stdout=out_fh, stderr=err_fh)
-            p.wait()
+            proc = subprocess.Popen(to_run, shell=True, stdout=out_fh, stderr=err_fh)
+            proc.wait()
 
-            # Check if the process failed
-            if p.returncode != 0:
-                with open(stderr_file) as err_fh:
-                    error_output = err_fh.read()
+            # Check if process failed
+            if proc.returncode != 0:
+                with open(stderr_file) as err_read:
+                    error_output = err_read.read()
                 logging.error(
-                    f"Command failed with return code {p.returncode}\nError output: {error_output}"
+                    f"Command failed with return code {proc.returncode}\n"
+                    f"Error output: {error_output}"
                 )
-                raise Exception(f"Command failed: {to_run}")
-    except Exception as e:
-        logging.error(f"Failed to run blocksplit: {e}")
+                raise RuntimeError(f"Command failed: {to_run}")
+    except Exception as exc:
+        logging.error(f"Failed to run blocksplit: {exc}")
         raise
     finally:
         # Clean up temporary files

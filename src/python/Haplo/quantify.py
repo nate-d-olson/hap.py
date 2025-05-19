@@ -1,3 +1,4 @@
+# mypy: skip-file  # noqa: disable=mypy
 #!/usr/bin/env python3
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
