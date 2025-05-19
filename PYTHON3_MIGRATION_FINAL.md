@@ -1,5 +1,36 @@
 # Python 3 Migration - Final Status Update
 
+## Latest - CICD setup
+
+A GitHub Actions workflow file python-ci.yml has been created in the workflows directory.
+
+This workflow currently includes the following steps:
+
+- Trigger on push and pull request to the main branch.
+- Run jobs on a matrix of operating systems (Ubuntu, macOS, Windows) and Python versions (3.7 through 3.11).
+- Check out the code.
+- Set up the specified Python version.
+- Install system dependencies (CMake, zlib, bzip2, xz, curl) for Linux and macOS.
+- Install Python build dependencies (setuptools, wheel, scikit-build, cmake, cython, numpy, toml).
+- Install the project along with its dev dependencies (pip install .[dev]).
+- Lint the code using Black, Ruff (as a replacement for Flake8), and isort.
+- A placeholder for type checking with MyPy.
+- Build the source distribution (sdist) and wheel.
+- A placeholder for running tests with Pytest.
+- A commented-out placeholder for publishing to PyPI on tagged releases.
+
+## Next Steps and Considerations
+
+- MyPy Configuration: The MyPy step is a placeholder. You'll need to configure MyPy (e.g., in pyproject.toml or mypy.ini) and specify the correct paths for type checking (e.g., mypy src/python).
+- Pytest Integration: The Pytest step is also a placeholder. You need to ensure your tests are structured in a way that Pytest can discover and run them. This might involve migrating existing tests from shell scripts to Pytest. The command pytest will run tests if they follow standard Pytest discovery rules.
+- Windows Dependencies: The workflow assumes standard compilers and CMake are available on windows-latest. If specific versions or tools are needed, you might have to add steps using Chocolatey or other Windows package managers.
+- Refining Dependency Installation: The step "Install Python build dependencies" currently installs build tools like setuptools, scikit-build, etc., explicitly. Then, pip install .[dev] installs the project. This is generally fine. The commented-out line pip install -r pyproject.toml is not standard; pip install . or pip install -e . (for editable installs) along with extras like .[dev] is the correct way to install from a pyproject.toml-based project.
+- C++ Integration Tests: The current workflow doesn't explicitly run the C++ integration tests (e.g., test_cpp_integration.sh). These will need to be either converted to Pytest or run as a separate step in the CI.
+- Publishing to PyPI: To enable publishing to PyPI, you'll need to:
+- Uncomment the "Publish to PyPI" step.
+- Create an API token on PyPI and add it as a secret (e.g., PYPI_API_TOKEN) to your GitHub repository settings.
+- Ensure your pyproject.toml has all the necessary metadata for a PyPI release.
+
 ## Summary (May 17, 2025)
 
 The Python 3 migration of hap.py has been completed with a focus on core functionality, testing, and build system improvements. This document provides a comprehensive overview of changes made, current status, and recommendations for future work.
@@ -87,6 +118,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 1. Unit Tests
 
 #### 1.1 Core Module Tests
+
 - **Test file:** `test_py3_core.sh`
 - **Purpose:** Verify basic functionality of core modules
 - **Test cases:**
@@ -94,6 +126,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Basic functionality
 
 #### 1.2 Cython Integration Tests
+
 - **Test file:** `test_cython_module_py3.py`
 - **Purpose:** Verify Cython modules load correctly
 - **Test cases:**
@@ -101,6 +134,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Mock implementations fallback
 
 #### 1.3 Comprehensive Integration Tests
+
 - **Test file:** `test_cython_integration_py3.sh`
 - **Purpose:** Verify Cython functionality
 - **Test cases:**
@@ -110,6 +144,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 2. Functional Tests
 
 #### 2.1 Variant Comparison
+
 - **Test file:** `run_happy_pg_test.sh`
 - **Purpose:** Verify accuracy of variant comparison
 - **Test cases:**
@@ -118,6 +153,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Complex variant handling
 
 #### 2.2 Region-based Stratification
+
 - **Test file:** `run_quantify_stratification_test.sh`
 - **Purpose:** Verify stratification by regions
 - **Test cases:**
@@ -125,6 +161,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Region-specific metrics
 
 #### 2.3 VCF Pre-processing
+
 - **Test file:** `run_decomp_test.sh`
 - **Purpose:** Verify variant normalization
 - **Test cases:**
@@ -134,6 +171,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 3. Compatibility Tests
 
 #### 3.1 Python 2 vs 3 Output Comparison
+
 - **Purpose:** Verify consistent results between versions
 - **Test approach:**
   - Run identical inputs through both versions
@@ -141,6 +179,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Allow for numeric tolerance in floating-point values
 
 #### 3.2 String/Bytes Handling
+
 - **Test file:** `test_string_handling.py`
 - **Purpose:** Verify correct handling of strings and bytes
 - **Test cases:**
@@ -149,6 +188,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - API interfaces
 
 #### 3.3 Exception Handling
+
 - **Test file:** `test_python3_compatibility_enhanced.py`
 - **Purpose:** Verify exception handling
 - **Test cases:**
@@ -159,6 +199,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 4. Edge Case Tests
 
 #### 4.1 Unicode File Paths and Content
+
 - **Purpose:** Verify handling of non-ASCII characters
 - **Test cases:**
   - Unicode in file paths
@@ -166,6 +207,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Unicode in reference genomes
 
 #### 4.2 Large Files
+
 - **Purpose:** Verify performance with large datasets
 - **Test cases:**
   - Whole-genome VCFs
@@ -173,6 +215,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - High-variant-density regions
 
 #### 4.3 Resource Handling
+
 - **Purpose:** Verify proper resource cleanup
 - **Test cases:**
   - File handle management
@@ -182,6 +225,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 5. Regression Tests
 
 #### 5.1 Known Bug Verification
+
 - **Purpose:** Verify fixed bugs stay fixed
 - **Test cases:**
   - Previously identified Python 3 issues
@@ -189,6 +233,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Subprocess interface issues
 
 #### 5.2 Command-line Interface
+
 - **Purpose:** Verify command-line interface behavior
 - **Test cases:**
   - Argument parsing
@@ -198,6 +243,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 6. Performance Tests
 
 #### 6.1 CPU Performance
+
 - **Purpose:** Compare Python 2 vs. 3 performance
 - **Test cases:**
   - Runtime on standard datasets
@@ -205,6 +251,7 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
   - Optimization opportunities
 
 #### 6.2 Memory Usage
+
 - **Purpose:** Compare memory efficiency
 - **Test cases:**
   - Peak memory usage
@@ -214,11 +261,13 @@ The Python 3 migration of hap.py has been completed with a focus on core functio
 ### 7. Test Execution
 
 #### 7.1 Test Environment
+
 - Python 3.7+ (recommendation: 3.9)
 - Required dependencies from `happy.requirements.py3.txt`
 - Clean build environment
 
 #### 7.2 Automated Testing
+
 ```bash
 # Run all tests
 ./run_all_py3_tests.sh
@@ -234,6 +283,7 @@ python3 -m pytest src/python/Haplo/tests/
 ```
 
 #### 7.3 Pass/Fail Criteria
+
 - All unit tests must pass
 - Performance within 10% of Python 2 version
 - Output metrics match Python 2 version within 1% tolerance

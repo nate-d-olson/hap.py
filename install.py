@@ -9,7 +9,7 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 #
-# hap.py installer:
+# hap.py installer (Python 3 compatible):
 #
 # * checks dependencies
 # * builds code
@@ -25,15 +25,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import urllib.error
-import urllib.parse
-import urllib.request
 
 
 def check_python_version():
     """Check if the python version is sufficient"""
-    if sys.version_info < (3, 6):
-        raise Exception("Python >= 3.6 is required for installation.")
 
 
 def create_python_environment(source_dir, args):
@@ -51,10 +46,9 @@ def create_python_environment(source_dir, args):
         pyver_output = pyver_output.decode("utf-8")
 
     pyver = tuple(map(int, pyver_output.split(",")))
-    pyver = tuple(map(int, pyver))
 
-    if pyver < (2, 7, 3):
-        raise Exception("Python >= 2.7.3 is required for installation.")
+    if pyver < (3, 6):
+        raise Exception("Python >= 3.6 is required for installation.")
 
     # system python -- just return interp
     if args.python == "system":
@@ -70,69 +64,45 @@ def create_python_environment(source_dir, args):
     if os.path.exists(args.python_venv_dir) and not args.python_venv_dir_update:
         raise Exception("The virtual environment directory already exists.")
 
-    virtualenv_tempdir = tempfile.mkdtemp(prefix="virtualenv", dir=args.scratch_path)
-    try:
-        ve_tgz = os.path.join(source_dir, "external", "virtualenv-12.0.7.tar.gz")
-        to_run = f"cd {virtualenv_tempdir} && tar xzf {ve_tgz}"
-        print(to_run, file=sys.stderr)
-        subprocess.check_call(to_run, shell=True)
-
-        ve_exec = os.path.join(virtualenv_tempdir, "virtualenv-12.0.7", "virtualenv.py")
-        to_run = f"{ve_exec} -p {interp} {args.python_venv_dir}"
-        print(to_run, file=sys.stderr)
-        subprocess.check_call(to_run, shell=True)
-    finally:
-        if not args.keep_scratch:
-            with contextlib.suppress(Exception):
-                shutil.rmtree(virtualenv_tempdir)
+    # Use venv module from Python 3 standard library instead of virtualenv
+    virtualenv_cmd = [interp, "-m", "venv", args.python_venv_dir]
+    print(f"Creating virtual environment: {' '.join(virtualenv_cmd)}", file=sys.stderr)
+    subprocess.check_call(virtualenv_cmd)
 
     # install requirements
-    ve_python = os.path.join(args.python_venv_dir, "bin", "python")
+    os.path.join(args.python_venv_dir, "bin", "python")
     ve_pip = os.path.join(args.python_venv_dir, "bin", "pip")
 
-    deleteme = None
-    try:
-        cmds = [ve_pip, "install", "--no-cache-dir"]
+    # Install pip-tools for better dependency management
+    cmds = [ve_pip, "install", "-U", "pip", "setuptools", "wheel"]
+    print(f"Updating pip: {' '.join(cmds)}", file=sys.stderr)
+    subprocess.check_call(cmds)
 
-        if args.fix_cert:
-            response = urllib.request.urlopen("http://curl.haxx.se/ca/cacert.pem")
-            certdata = response.read()
-            f = tempfile.NamedTemporaryFile(delete=False)
-            deleteme = f.name
-            f.write(certdata)
-            f.close()
-            cmds.insert(1, " --cert")
-            cmds.insert(2, deleteme)
+    # Install requirements from file
+    requirements_file = os.path.join(source_dir, "happy.requirements.py3.txt")
+    if not os.path.exists(requirements_file):
+        requirements_file = os.path.join(source_dir, "happy.requirements.txt")
+        print(
+            "Warning: Using Python 2 requirements file. Consider creating happy.requirements.py3.txt",
+            file=sys.stderr,
+        )
 
-        # First try to use the py3 core requirements file
-        requirements_file = os.path.join(source_dir, "happy.core-requirements.py3.txt")
-        if not os.path.exists(requirements_file):
-            # Fall back to regular py3 requirements file
-            requirements_file = os.path.join(source_dir, "happy.requirements.py3.txt")
-            if not os.path.exists(requirements_file):
-                # Use the default requirements file as last resort
-                requirements_file = os.path.join(source_dir, "happy.requirements.txt")
+    cmds = [ve_pip, "install", "--no-cache-dir", "-r", requirements_file]
+    print(f"Installing requirements: {' '.join(cmds)}", file=sys.stderr)
+    subprocess.check_call(cmds)
 
-        with open(requirements_file) as req_file:
-            for x in req_file:
-                if x.strip() and not x.strip().startswith(("#", "//")):
-                    print(" ".join([*cmds, x]), file=sys.stderr)
-                    subprocess.check_call(" ".join([*cmds, x]), shell=True)
-    finally:
-        if deleteme:
-            os.unlink(deleteme)
-
-    return "#!" + ve_python
+    # Return the shebang for Python scripts
+    return "#!" + os.path.join(args.python_venv_dir, "bin", "python")
 
 
 def replace_shebang(filename, shebang):
     """Replace shebang line / reheader script files"""
-    print("Fixing shebang line in " + filename, file=sys.stderr)
+    print(f"Fixing shebang line in {filename}", file=sys.stderr)
 
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         lines = f.readlines()
 
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         removed = False
         print(shebang, file=f)
         for i, l in enumerate(lines):
@@ -143,13 +113,12 @@ def replace_shebang(filename, shebang):
 
 
 def build_haplotypes(source_dir, build_dir, args):
-    boost_prefix = "BOOST_ROOT=%s " % args.boost if args.boost else ""
-    config_command = "{}/configure.sh {} {} {}".format(
-        source_dir,
-        args.configuration,
-        args.setup,
-        args.targetdir,
+    boost_prefix = f"BOOST_ROOT={args.boost} " if args.boost else ""
+
+    config_command = (
+        f"{source_dir}/configure.sh {args.configuration} {args.setup} {args.targetdir}"
     )
+
     if args.sge:
         config_command += " -DUSE_SGE=ON"
 
@@ -158,36 +127,29 @@ def build_haplotypes(source_dir, build_dir, args):
         if args.rtgtools_wrapper:
             if not os.path.exists(args.rtgtools_wrapper):
                 raise Exception(
-                    "RTG-tools wrapper %s doesn't exist." % args.rtgtools_wrapper
+                    f"RTG-tools wrapper {args.rtgtools_wrapper} doesn't exist."
                 )
-            config_command += "-DVCFEVAL_WRAPPER=%s" % os.path.abspath(
-                args.rtgtools_wrapper
-            ).replace(" ", "\\ ")
+            wrapper_path = os.path.abspath(args.rtgtools_wrapper).replace(" ", "\\ ")
+            config_command += f"-DVCFEVAL_WRAPPER={wrapper_path}"
 
-    to_run = boost_prefix + f"cd {build_dir} && {boost_prefix} {config_command}"
+    to_run = f"{boost_prefix}cd {build_dir} && {boost_prefix} {config_command}"
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
     setupscript = ""
     if args.setup != "auto":
-        setupscript = " . %s && " % os.path.join(
-            source_dir, "src", "sh", args.setup + "-setup.sh"
+        setupscript = (
+            f" . {os.path.join(source_dir, 'src', 'sh', args.setup + '-setup.sh')} && "
         )
 
     setupscript += boost_prefix
 
-    to_run = setupscript + "cd %s && %s make -j%i" % (
-        build_dir,
-        setupscript,
-        args.processes,
-    )
+    to_run = f"{setupscript}cd {build_dir} && {setupscript} make -j{args.processes}"
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
 
-    to_run = setupscript + "cd %s && %s make -j%i install" % (
-        build_dir,
-        setupscript,
-        args.processes,
+    to_run = (
+        f"{setupscript}cd {build_dir} && {setupscript} make -j{args.processes} install"
     )
     print(to_run, file=sys.stderr)
     subprocess.check_call(to_run, shell=True)
@@ -195,10 +157,7 @@ def build_haplotypes(source_dir, build_dir, args):
 
 def test_haplotypes(source_dir, python_shebang, args):
     """Run the unit + integration tests"""
-    to_run = "cd {} && {}".format(
-        args.targetdir,
-        os.path.join(source_dir, "src", "sh", "run_tests.sh"),
-    )
+    to_run = f"cd {args.targetdir} && {os.path.join(source_dir, 'src', 'sh', 'run_tests.sh')}"
     print(to_run, file=sys.stderr)
     os.environ["PYTHON"] = python_shebang[2:]
     subprocess.check_call(to_run, shell=True)
@@ -209,7 +168,7 @@ def main():
 
     source_dir = os.path.abspath(os.path.dirname(__file__))
 
-    parser = argparse.ArgumentParser("hap.py installer")
+    parser = argparse.ArgumentParser("hap.py installer (Python 3)")
     parser.add_argument("targetdir", help="Target installation directory")
 
     parser.add_argument(
@@ -261,15 +220,6 @@ def main():
         dest="python_venv_dir",
         default="",
         help="Directory to install the virtualenv in.",
-    )
-
-    parser.add_argument(
-        "--pip-fix-cert",
-        dest="fix_cert",
-        default=False,
-        action="store_true",
-        help="Download and use certificate file in case of Linux distributions"
-        " which have an outdated certificate file which makes pip fail.",
     )
 
     # C++ compile options
@@ -345,6 +295,14 @@ def main():
         help="Disable unit tests",
     )
 
+    parser.add_argument(
+        "--build-externals-only",
+        dest="build_externals_only",
+        default=False,
+        action="store_true",
+        help="Only build external dependencies",
+    )
+
     args = parser.parse_args()
 
     args.targetdir = os.path.abspath(args.targetdir)
@@ -372,18 +330,52 @@ def main():
     if args.boost and not os.path.exists(args.boost):
         raise Exception("Boost directory doesn't exist.")
 
+    # Check if external dependencies need to be built separately
+    if args.build_externals_only:
+        ext_script = os.path.join(source_dir, "external", "make_dependencies_py3.sh")
+        if not os.path.exists(ext_script):
+            ext_script = os.path.join(source_dir, "external", "make_dependencies.sh")
+            print(
+                "Warning: Using Python 2 external dependencies script. Consider creating make_dependencies_py3.sh",
+                file=sys.stderr,
+            )
+
+        ext_command = f"cd {source_dir} && {ext_script} {args.targetdir}"
+        print(f"Building external dependencies: {ext_command}", file=sys.stderr)
+        subprocess.check_call(ext_command, shell=True)
+        print("External dependencies built successfully", file=sys.stderr)
+        return
+
     # build hap.py
     build_dir = tempfile.mkdtemp(prefix="build", dir=args.scratch_path)
     try:
         build_haplotypes(source_dir, build_dir, args)
     finally:
         if not args.keep_scratch:
-            shutil.rmtree(build_dir)
+            try:
+                shutil.rmtree(build_dir)
+            except Exception as e:
+                print(
+                    f"Warning: Failed to remove build directory: {e}", file=sys.stderr
+                )
 
     # reheader Python files
     for root, _, filenames in os.walk(args.targetdir):
         for filename in fnmatch.filter(filenames, "*.py"):
             replace_shebang(os.path.join(root, filename), python_shebang)
+
+    # Create symlink to Python 3 version of scripts if needed
+    for py3_script in glob.glob(os.path.join(source_dir, "src", "python", "*.py.py3")):
+        base_script = os.path.basename(py3_script[:-4])  # Remove .py3
+        target_script = os.path.join(args.targetdir, "bin", base_script)
+        if os.path.exists(target_script):
+            print(
+                f"Creating symlink for Python 3 version of {base_script}",
+                file=sys.stderr,
+            )
+            os.rename(target_script, f"{target_script}.py2.bak")
+            shutil.copy2(py3_script, target_script)
+            replace_shebang(target_script, python_shebang)
 
     if args.run_tests:
         test_haplotypes(source_dir, python_shebang, args)

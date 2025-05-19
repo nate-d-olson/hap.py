@@ -94,7 +94,9 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
-add_subdirectory(src/c++)
+add_subdirectory(src/c++/lib) # Ensure correct path to library CMakeLists
+# Add the directory containing Cython modules
+add_subdirectory(src/python/Haplo/cython) # Ensure this path is correct
 
 # Status message at the end
 message(STATUS "Configuration completed successfully. Run 'make' to build.")

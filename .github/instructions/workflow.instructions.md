@@ -5,13 +5,11 @@ applyTo: "**"
 
 ## Getting Started
 
-1. Clone the repository
-2. Set up a Python virtual environment
-3. Run the installation script with a temporary build directory:
+1. Run the installation script with a temporary build directory:
    ```bash
    python install.py /tmp/happy-build
    ```
-4. Verify the installation with the test suite:
+2. Verify the installation with the test suite:
    ```bash
    cd /tmp/happy-build
    src/sh/run_tests.sh
@@ -61,7 +59,6 @@ brew install cmake zlib bzip2 xz curl
 
 3. Code quality workflow:
 
-  * Install pre-commit hooks: `pip install pre-commit && pre-commit install`
   * Use pre-commit for automated checks: `pre-commit run --files <changed_files>`
   * Fix any issues reported by pre-commit
   * Run specific hooks as needed:

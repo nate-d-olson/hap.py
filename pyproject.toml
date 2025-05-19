@@ -1,0 +1,101 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "scikit-build>=0.11.1",
+    "cmake>=3.10",
+    "Cython>=0.29.24",
+    "numpy>=1.19.0", # numpy is often a build-time dep for C extensions
+    "toml",
+]
+build-backend = "setuptools.build_meta"
+backend-path = ["."]
+
+[project]
+name = "hap.py"
+version = "0.3.15" # From CMakeLists.txt and install.py
+description = "A set of programs to benchmark variant calls against gold standard truth datasets."
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+requires-python = ">=3.7"
+authors = [
+    { name = "Peter Krusche", email = "pkrusche@illumina.com" },
+    { name = "The hap.py development team" } # Placeholder for current maintainer/team
+]
+maintainers = [
+    { name = "The hap.py development team" } # Placeholder
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "numpy>=1.19.0",
+    "pandas>=1.3.0",
+    "psutil>=5.8.0",
+    "pysam>=0.16.0",
+    "scipy>=1.7.0",
+    "pybedtools>=0.9.0",
+]
+
+[project.optional-dependencies]
+cpp = [
+    "Cython>=0.29.24", # For building C++/Cython extensions
+]
+dev = [
+    "pytest>=6.0",
+    "nose>=1.3.7", # For existing tests, will be migrated
+    "black",
+    "ruff",
+    "isort",
+    "mypy",
+    "pre-commit",
+    "tox", # For testing in different environments
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+]
+
+[project.urls]
+Homepage = "https://github.com/Illumina/hap.py" # Adjust if this is a fork
+"Bug Tracker" = "https://github.com/Illumina/hap.py/issues" # Adjust if this is a fork
+Documentation = "https://hap-py.readthedocs.io/en/latest/" # Placeholder for future docs
+
+# Placeholder for console scripts, assuming main() functions will be added to these files
+# [project.scripts]
+# happy = "happy:main"
+# sompy = "sompy:main"
+# hapcl = "hapcl:main"
+# preproc = "preproc:main"
+# quantify = "quantify:main"
+# xcmp = "xcmp:main"
+# vcfextract = "vcfextract:main"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+ignore = "E226,E302,E41,E402"
+max-line-length = 160
+max-complexity = 1000
+
+[tool.scikit-build]
+cmake.source-dir = "."
+cmake.args = [] # e.g. ["-DCMAKE_BUILD_TYPE=Release"]
+# cmake.build-type = "Release" # Alternative to cmake.args
+# cmake.minimum-version = "3.10" # Redundant if in build-system.requires, but can be assertive
+install.strip = false # Default is true, might be needed for debugging symbols

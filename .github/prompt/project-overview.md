@@ -6,13 +6,12 @@ hap.py is a bioinformatics tool for benchmarking small variant calls. It analyze
 
 We are modernizing this codebase by:
 
-1. Converting from Python 2 to Python 3
-2. Updating outdated dependencies
-3. Implementing modern Python packaging standards
-4. Improving installation process
-5. Adding type hints and better documentation
-6. Replacing ad-hoc testing with proper frameworks
-7. Optimizing performance for genomic datasets
+1. Updating outdated dependencies
+1. Implementing modern Python packaging standards
+1. Improving installation process
+1. Adding type hints and better documentation
+1. Replacing ad-hoc testing with proper frameworks
+1. Optimizing performance for genomic datasets
 
 ## Tech Stack
 
@@ -20,13 +19,9 @@ We are modernizing this codebase by:
 - C++ (core algorithms and performance-critical components)
 - CMake (build system)
 - Cython (Python/C++ interface)
-- Bcftools/htslib (for VCF/BAM handling)
-- Boost C++ libraries (subset)
-- Pandas, NumPy (data analysis)
 
 ## Key Considerations
 
-- Bioinformatics data tends to be large - consider memory usage
 - Maintain backward compatibility with existing workflows
 - Preserve core algorithms while modernizing the code around them
 - Focus on reliability and correctness - this is scientific software

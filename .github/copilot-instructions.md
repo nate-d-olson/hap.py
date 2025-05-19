@@ -25,22 +25,7 @@ After the install completes, the install script tests the install using a series
 
 ## Development Plan
 
-### Phase 1: Python 2 to 3 Migration
-- Convert codebase from Python 2 to Python 3 using 2to3 tool for automated conversion
-- Address syntax changes (print statements, exception handling, etc.)
-- Update imports for renamed or relocated modules
-- Fix string handling (unicode vs bytes)
-- Update dictionary and iterator methods
-- Fix integer division behavior
-
-### Phase 2: Testing and Debugging
-- Run the test suite and capture all errors
-- Prioritize fixes based on critical functionality
-- Debug Cython integration issues
-- Ensure compatibility with modern genomic file formats
-- Fix function signature changes in dependencies
-
-### Phase 3: Modernization
+### Phase: Modernization
 - Add type hints to improve code reliability
 - Update documentation with Google-style docstrings
 - Implement proper package structure with setup.py
@@ -48,7 +33,7 @@ After the install completes, the install script tests the install using a series
 - Update C++ code to use modern standards
 - Implement proper error handling and logging
 
-### Phase 4: Clean-up and Optimization
+### Phase: Clean-up and Optimization
 - Remove deprecated functionality and dead code
 - Optimize memory usage for large genomic datasets
 - Improve parallelization for performance
