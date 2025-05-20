@@ -31,3 +31,5 @@ Thumbs.db
 /cmake-build-debug
 /build
 /.vscode
+external/rtg**
+src/*egg-info

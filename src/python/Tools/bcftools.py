@@ -16,7 +16,7 @@ import os
 import pipes
 import subprocess
 import tempfile
-from typing import Dict, List, Optional, Tuple, Union, Any
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas
 
@@ -178,37 +178,38 @@ def concatenateParts(output: str, *args: str) -> None:
 
 # noinspection PyShadowingBuiltins
 def preprocessVCF(
-    input_filename,
-    output_filename,
-    location="",
-    pass_only=True,
-    chrprefix=True,
-    norm=False,
-    regions=None,
-    targets=None,
-    reference="fake_reference_path",
-    filters_only=None,
-    somatic_allele_conversion=False,
-    sample="SAMPLE",
-    filter_nonref=True,
-    convert_gvcf=False,
-    num_threads=4,
-):
+    input_filename: str,
+    output_filename: str,
+    location: str = "",
+    pass_only: bool = True,
+    chrprefix: bool = True,
+    norm: bool = False,
+    regions: Optional[str] = None,
+    targets: Optional[str] = None,
+    reference: str = "fake_reference_path",
+    filters_only: Optional[List[str]] = None,
+    somatic_allele_conversion: bool = False,
+    sample: str = "SAMPLE",
+    filter_nonref: bool = True,
+    convert_gvcf: bool = False,
+    num_threads: int = 4,
+) -> None:
     """Preprocess a VCF + create index
 
-    :param input_filename: the input VCF / BCF / ...
-    :param output_filename: the output VCF
-    :param location: optional location string -- comma separated
-    :param pass_only: only return passing variants
-    :param chrprefix: fix chromosome prefix
-    :param norm: run through bcftools norm to leftshift indels
-    :param regions: specify a subset of regions (traversed using tabix index, which must exist)
-    :param targets: specify a subset of target regions (streaming traversal)
-    :param reference: reference fasta file to use
-    :param filters_only: require a set of filters (overridden by pass_only)
-    :param somatic_allele_conversion: assume the input file is a somatic call file and squash
-                                      all columns into one, putting all FORMATs into INFO
-                                      This is used to treat Strelka somatic files
+    Args:
+        input_filename: The input VCF / BCF / ...
+        output_filename: The output VCF
+        location: Optional location string -- comma separated
+        pass_only: Only return passing variants
+        chrprefix: Fix chromosome prefix
+        norm: Run through bcftools norm to leftshift indels
+        regions: Specify a subset of regions (traversed using tabix index, which must exist)
+        targets: Specify a subset of target regions (streaming traversal)
+        reference: Reference fasta file to use
+        filters_only: Require a set of filters (overridden by pass_only)
+        somatic_allele_conversion: Assume the input file is a somatic call file and squash
+                                   all columns into one, putting all FORMATs into INFO.
+                                   This is used to treat Strelka somatic files
                                       Possible values for this parameter:
                                       True [="half"] / "hemi" / "het" / "hom" / "half"
                                       to assign one of the following genotypes to the
@@ -370,8 +371,15 @@ def preprocessVCF(
             os.unlink(tff.name + ".csi")
 
 
-def bedOverlapCheck(filename):
-    """Check for overlaps / out of order in a bed file"""
+def bedOverlapCheck(filename: str) -> int:
+    """Check for overlaps / out of order in a bed file
+
+    Args:
+        filename: Path to the BED file to check
+
+    Returns:
+        0 if no overlaps, 1 if overlaps found
+    """
     if filename.endswith(".gz"):
         f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
     else:
@@ -397,7 +405,11 @@ def bedOverlapCheck(filename):
     return 0
 
 
-def run_command(cmd_line, shell=True, fail_message=None):
+def run_command(
+    cmd_line: Union[str, List[str]],
+    shell: bool = True,
+    fail_message: Optional[str] = None,
+) -> Tuple[str, str]:
     """Unified command execution with better error handling
 
     Args:

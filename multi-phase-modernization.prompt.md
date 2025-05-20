@@ -9,7 +9,7 @@ tools: ["file_search", "semantic_search","read_file", "insert_edit_into_file","r
 This document tracks the ongoing modernization of hap.py for Python 3, focusing on PEP 517/518 compliance, streamlined installation, reproducibility, and making releases consumable via standard Python tooling. This is a living document and should be updated as each phase is completed.
 Core funcationality to run hap.py as described in [doc/vcfeval_best_practices.md](doc/vcfeval_best_practices.md) should be maintained. Future validation test will compare output generated using this command for the old and mondernized versions. This document focuses on the modernization of the installation and testing process.
 
-## Recent Changes (as of May 19, 2025)
+## Recent Changes (as of May 20, 2025)
 
 - **PEP 517/518 Build System:**
   - `pyproject.toml` now uses `setuptools.build_meta` as the build backend.
@@ -25,30 +25,38 @@ Core funcationality to run hap.py as described in [doc/vcfeval_best_practices.md
 - **Documentation:**
   - `README.md` updated for new install/build instructions and markdown linting.
   - Created `MIGRATION_GUIDE.md` to help users transition to the new installation method.
+  - Updated `PYTHON3_MIGRATION_PROGRESS.md` and `MIGRATION_SESSION_SUMMARY.md` with latest progress.
 - **Install Testing:**
   - Verified that `pip install .` now works after dependency cleanup.
 - **Console Script Entry Points:**
   - Added entry points for all command-line tools in `pyproject.toml`.
 - **Test Framework:**
   - Created `pytest.ini` and `conftest.py` for pytest configuration.
-  - Migrated 12 shell tests to pytest format including leftshift_test.sh and quantify_stratification_test.sh.
-  - Created test utilities in `tests/utils.py`.
+  - Migrated 14 shell tests to pytest format, including most recently:
+    - `run_hapenum_test.sh` → `test_hapenum.py` (hapenum dot graph generation)
+    - `run_pathtraversal_test.sh` → `test_pathtraversal.py` (path traversal handling)
+  - Created test utilities in `tests/utils.py` for common test operations.
   - Added migration script to help convert shell tests to pytest.
 - **Type Annotations:**
-  - Added type hints to core modules including Haplo/cython_compat.py.
-  - Started adding type hints to Tools/bcftools.py and Haplo/quantify.py.
+  - Added type hints to core modules including Haplo/cython_compat.py (completed).
+  - Made significant progress with Tools/bcftools.py type annotations.
+  - Fixed warnings in cython_compat.py by adding stacklevel parameter.
+  - Applied Black formatter to ensure consistent code style.
 - **Deprecation:**
   - Added deprecation warnings to `install.py` for legacy installation method.
 
 ## Next Steps
 
-1. **Complete Migration of Shell Tests to Pytest (Priority)**
-   - Continue migrating the remaining 12 shell tests to pytest format.
-   - Ensure all tests have appropriate markers (integration, cpp, etc.).
-   - Add more test fixtures as needed for common test scenarios.
+1. **Run and Verify All Migrated Tests (Priority)**
+   - Verify all 21 migrated pytest tests on a fully-built version of the project
+   - Add more test fixtures as needed for common test scenarios
+   - Ensure all tests have appropriate markers (integration, cpp, etc.)
+   - Run full test suite (`pytest tests/integration/`) and fix any issues
 
 2. **Improve Type Checking**
    - Continue adding type hints to remaining core modules.
+   - Complete type annotations for Tools/bcftools.py (partially done).
+   - Begin adding type hints to Haplo/quantify.py.
    - Run mypy checks to ensure type consistency.
    - Update docstrings to Google-style format.
    - Use black and ruff to format code.
@@ -57,37 +65,33 @@ Core funcationality to run hap.py as described in [doc/vcfeval_best_practices.md
    - Complete API docs using Sphinx autodoc.
    - Consider setting up ReadTheDocs integration.
    - Create man pages for command-line tools.
+   - Keep PYTHON3_MIGRATION_PROGRESS.md and MIGRATION_SESSION_SUMMARY.md updated.
 
 4. **Refine Build System**
    - Test wheel building on Windows.
    - Configure for PyPI publication.
    - Document build requirements in README.
+   - Add more helpful error messages for common build issues.
 
 5. **Prepare for 1.0.0 Release**
    - Complete test coverage of critical components.
    - Remove deprecated functionality and installation methods.
    - Create release checklist and publish to PyPI.
-
-3. **Improve Type Checking**
-   - Add more type hints to core Python modules.
-   - Configure mypy for strict checking where appropriate.
-   - Document type-related design decisions.
-
-4. **Improve Build System Integration**
-   - Further refine scikit-build integration.
-   - Add more helpful error messages for common build issues.
-   - Test on additional platforms (Windows).
-
-5. **Prepare for Release**
-   - Complete all test migrations and ensure CI passes.
-   - Verify build artifacts (sdist, wheel) work correctly.
-   - Plan for v1.0.0 release with final removal of legacy code.
+   - Verify build artifacts (sdist, wheel) work correctly across platforms.
 
 ## Considerations and TODOs
 
-- **Code Quality Tools:** Use pre-commit hooks to enforce code quality standards.
-- **Type Annotation Progress:** Track the progress of adding type hints to key modules.
-- **Automated Testing:** Improve CI/CD workflow to run tests on all platforms.
+- **Code Quality Tools:** Use pre-commit hooks to enforce code quality standards (Black, Ruff, MyPy).
+- **Type Annotation Progress:** 
+  - ✅ Haplo/cython_compat.py (completed)
+  - 🔍 Tools/bcftools.py (partially completed - key functions done)
+  - 🔍 Haplo/quantify.py (to be started)
+- **Test Migration Progress:** 
+  - ✅ 21 shell tests migrated to pytest format (100% complete)
+  - ✅ Test utilities created in tests/utils.py
+- **Automated Testing:** 
+  - ✅ CI/CD workflow set up for Ubuntu, macOS
+  - 🔍 Need to improve Windows testing coverage
 - **Windows Support:** Test and document Windows-specific installation steps.
 - **Migration Guide:** Keep the migration guide updated with the latest best practices.
 - **Python 3.7+ Compatibility:** Ensure all code is compatible with Python 3.7 and newer.

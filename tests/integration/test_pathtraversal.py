@@ -5,9 +5,9 @@ Migrated from src/sh/run_pathtraversal_test.sh
 
 import os
 import subprocess
-from pathlib import Path
 
 import pytest
+
 from tests.utils import (
     compare_summary_files,
     get_project_root,

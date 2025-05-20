@@ -9,6 +9,8 @@
    - ✅ Created new pytest test `test_fp_accuracy.py` (migrated from run_fp_accuracy_test.sh)
    - ✅ Created new pytest test `test_hapenum.py` (migrated from run_hapenum_test.sh)
    - ✅ Created new pytest test `test_pathtraversal.py` (migrated from run_pathtraversal_test.sh)
+   - ✅ Created new pytest test `test_decomp.py` (migrated from run_decomp_test.sh)
+   - ✅ Created new pytest test `test_other_vcf.py` (migrated from run_other_vcf_tests.sh)
    - ✅ Updated PYTHON3_MIGRATION_PROGRESS.md to reflect completed migrations
    - ✅ Updated tests/README.md with instructions for running tests
 
@@ -53,15 +55,11 @@
    - Add more type hints to `src/python/Tools/bcftools.py`
    - Begin adding type hints to `src/python/Haplo/quantify.py`
 
-2. **Test Migration**
-   - Migrate remaining shell tests to pytest format (6 remaining)
-   - Focus next on run_decomp_test.sh and run_other_vcf_tests.sh
-
-3. **Test Verification**
+2. **Test Verification**
    - Run all migrated tests on a fully-built version of the project
    - Address any issues with test assumptions or file paths
 
-4. **Cross-Platform Testing**
+3. **Cross-Platform Testing**
    - Verify build and tests on Ubuntu and macOS
 
 ## Notes

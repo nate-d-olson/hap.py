@@ -17,7 +17,7 @@
    - ✅ Created pytest.ini configuration
    - ✅ Added conftest.py with test fixtures
    - ✅ Set up utility functions for tests in tests/utils.py
-   - ✅ Migrated 14 shell tests to pytest format (including multimerge_test.sh, quantify_test.sh, happy_pg_test.sh, integration_test.sh, gvcf_homref_test.sh, fp_accuracy_test.sh, leftshift_test.sh, quantify_stratification_test.sh, hapenum_test.sh, pathtraversal_test.sh)
+   - ✅ Migrated all 21 shell tests to pytest format (100% complete)
 
 4. **CI/CD Pipeline**
    - ✅ Set up GitHub Actions workflow for multiple OSes and Python versions
@@ -32,7 +32,7 @@
 ## Next Steps
 
 1. **Test Migration (Priority)**
-   - 🔍 Continue migrating the remaining 12 shell tests to pytest format
+   - ✅ Completed migration of all shell tests to pytest format
    - 🔍 Add more test fixtures for common patterns
    - 🔍 Update the migrate_test.py script to better extract test logic
 
@@ -80,5 +80,16 @@
    - Run with `pytest tests/integration/test_hapenum.py -v`
    - Run with `pytest tests/integration/test_pathtraversal.py -v`
    - Run with `pytest tests/integration/test_quantify_stratification.py -v`
+   - Run with `pytest tests/integration/test_decomp.py -v`
+   - Run with `pytest tests/integration/test_other_vcf.py -v`
+   - Run with `pytest tests/integration/test_giab.py -v`
+   - Run with `pytest tests/integration/test_performance.py -v`
+   - Run with `pytest tests/integration/test_fastasize.py -v`
+   - Run with `pytest tests/integration/test_blocksplit.py -v`
+   - Run with `pytest tests/integration/test_chrprefix.py -v`
+   - Run with `pytest tests/integration/test_faulty_variants.py -v`
+   - Run with `pytest tests/integration/test_hapcmp.py -v`
+   - Run with `pytest tests/integration/test_multimerge.py -v`
+   - Run with `pytest tests/integration/test_quantify.py -v`
 
 4. Test the build process on Ubuntu, macOS, and Windows to ensure cross-platform compatibility

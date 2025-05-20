@@ -7,6 +7,7 @@ import filecmp
 import subprocess
 
 import pytest
+
 from tests.utils import get_bin_dir, get_project_root, run_command
 
 
