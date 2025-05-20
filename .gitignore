@@ -37,3 +37,6 @@ example**
 .venv/
 venv/
 venv_test_install/
+
+# Python egg-info directories
+*.egg-info/

@@ -309,3 +309,81 @@ def _postprocessRocData(roctable):
     )
 
     return roctable[RESULT_ALLCOLUMNS]
+
+
+# ROC curve support: pure-Python implementation (no C++ dependencies)
+class PythonRocCurve:
+    """Pure Python implementation of ROC curve generation."""
+
+    def __init__(self):
+        self.points = []
+
+    def add_point(self, fdr, tpr, score):
+        """Add a point to the ROC curve."""
+        self.points.append({"fdr": fdr, "tpr": tpr, "score": score})
+
+    def get_points(self):
+        """Get all points in the ROC curve."""
+        return sorted(self.points, key=lambda p: p["score"])
+
+    def interpolate(self, num_points):
+        """Interpolate the ROC curve to have a specific number of points."""
+        if len(self.points) <= 1:
+            return self.points
+
+        sorted_points = sorted(self.points, key=lambda p: p["score"])
+        min_score = sorted_points[0]["score"]
+        max_score = sorted_points[-1]["score"]
+
+        if min_score >= max_score:
+            return sorted_points
+
+        result = []
+        for i in range(num_points):
+            score = min_score + (max_score - min_score) * i / (num_points - 1)
+            lower_idx = 0
+            for j, p in enumerate(sorted_points):
+                if p["score"] <= score:
+                    lower_idx = j
+
+            upper_idx = min(lower_idx + 1, len(sorted_points) - 1)
+            if lower_idx == upper_idx:
+                result.append(sorted_points[lower_idx])
+            else:
+                lower = sorted_points[lower_idx]
+                upper = sorted_points[upper_idx]
+                diff = upper["score"] - lower["score"]
+                if diff <= 0:
+                    result.append(lower)
+                else:
+                    t = (score - lower["score"]) / diff
+                    fdr = lower["fdr"] + t * (upper["fdr"] - lower["fdr"])
+                    tpr = lower["tpr"] + t * (upper["tpr"] - lower["tpr"])
+                    result.append({"fdr": fdr, "tpr": tpr, "score": score})
+
+        return result
+
+    def auc(self):
+        """Calculate the area under the ROC curve."""
+        if len(self.points) <= 1:
+            return 0.0
+
+        sorted_points = sorted(self.points, key=lambda p: p["fdr"])
+        auc = 0.0
+        for i in range(1, len(sorted_points)):
+            prev = sorted_points[i - 1]
+            curr = sorted_points[i]
+            auc += (curr["fdr"] - prev["fdr"]) * (curr["tpr"] + prev["tpr"]) / 2
+        return auc
+
+
+# Factory function to create the ROC curve implementation
+def create_roc_curve():
+    """Create a ROC curve implementation (pure Python)."""
+    return PythonRocCurve()
+
+
+# Test function to verify module import
+def test_module():
+    """Test if the ROC module is loaded correctly."""
+    return {"status": "ROC curve module loaded successfully", "language_level": "3"}
