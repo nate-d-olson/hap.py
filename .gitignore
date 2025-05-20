@@ -44,3 +44,15 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+.claude/
+example/**/*.vcf.gz
+example/**/*.vcf.gz.tbi
+example/**/*.bcf
+example/callsonly/*.vcf.gz
+example/homref/*.vcf.gz
+example/*/test_*.png
+test_*_function.py
+test_*_migrated.py
+tmp_*.py
+system_prompt.md
+next_session_prompt.md
