@@ -31,16 +31,16 @@ import sys
 import tempfile
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Union, Set, cast
+from pathlib import Path
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
-lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
-if os.path.exists(lib_path):
-    sys.path.append(lib_path)
+lib_path = Path(scriptDir).parent / "lib" / "python3"
+if lib_path.exists():
+    sys.path.append(str(lib_path))
 else:
-    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
-    sys.path.append(fallback_path)
+    fallback_path = Path(scriptDir).parent / "lib"
+    sys.path.append(str(fallback_path))
 
 import contextlib
 
@@ -585,14 +585,17 @@ def main() -> None:
 
         if args.preserve_info and args.engine == "vcfeval":
             # if we use vcfeval we need to merge the INFO fields back in.
-            tf = tempfile.NamedTemporaryFile(suffix=".txt", delete=False)
-            tempfiles.append(tf)
-            print("TRUTH_IN", file=tf)
-            print("QUERY_IN", file=tf)
-            tf.close()
-            info_file = tempfile.NamedTemporaryFile(suffix=".vcf.gz", delete=False)
-            tempfiles.append(info_file.name)
-            info_file.close()
+            # Use context manager for better resource management
+            with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tf:
+                tempfiles.append(tf.name)
+                print("TRUTH_IN", file=tf)
+                print("QUERY_IN", file=tf)
+
+            # Use context manager for better resource management
+            with tempfile.NamedTemporaryFile(
+                suffix=".vcf.gz", delete=False
+            ) as info_file:
+                tempfiles.append(info_file.name)
 
             bcftools.runBcftools(
                 "merge",
@@ -616,11 +619,13 @@ def main() -> None:
             )
             bcftools.runBcftools("index", info_file.name)
 
-            merged_info_file = tempfile.NamedTemporaryFile(
+            # Use context manager for better resource management
+            merged_info_file_path = ""
+            with tempfile.NamedTemporaryFile(
                 suffix=".vcf.gz", delete=False
-            )
-            tempfiles.append(merged_info_file.name)
-            merged_info_file.close()
+            ) as merged_info_file:
+                merged_info_file_path = merged_info_file.name
+                tempfiles.append(merged_info_file_path)
 
             bcftools.runBcftools(
                 "merge",
@@ -636,11 +641,11 @@ def main() -> None:
                 "-X",
                 "-U",
                 "-o",
-                merged_info_file.name,
+                merged_info_file_path,
                 "-O",
                 "z",
             )
-            output_name = merged_info_file.name
+            output_name = merged_info_file_path
 
         args.in_vcf = [output_name]
         args.runner = "hap.py"

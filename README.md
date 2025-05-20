@@ -5,19 +5,18 @@ Peter Krusche <pkrusche@illumina.com>
 This is a set of programs based on [htslib](https://github.com/samtools/htslib)
 to benchmark variant calls against gold standard truth datasets.
 
-> **Note:** This project has been migrated from Python 2 to Python 3.
-> The core functionality (vcfeval engine and stratified metrics) has been successfully
-> migrated. See the [Python 3 migration tools](PYTHON3_MIGRATION_TOOLS.md)
-> and the [migration status](PYTHON3_MIGRATION_FINAL.md) for details.
+> **Note:** This project has been migrated to Python 3.
+> See the [Python 3 migration guide](doc/python3_migration.md)
+> for details about the migration and compatibility.
 
 To compare a VCF against a gold standard dataset, use the following commmand line
 to perform genotype-level haplotype comparison.
 
 ```bash
-# With Python 3 (recommended)
-python3 /path/to/bin/hap.py.py3 truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+# Python 3 version
+python3 /path/to/hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 
-# Legacy Python 2 version
+# Or if installed via pip
 hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 ```
 

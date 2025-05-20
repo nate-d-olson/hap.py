@@ -31,18 +31,18 @@ import os
 import sys
 import tempfile
 import traceback
-from typing import Any, Dict, List, Optional, Tuple, Union, Set, cast
+from pathlib import Path
 
 import pandas as pd
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
-lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
-if os.path.exists(lib_path):
-    sys.path.append(lib_path)
+lib_path = Path(scriptDir).parent / "lib" / "python3"
+if lib_path.exists():
+    sys.path.append(str(lib_path))
 else:
-    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
-    sys.path.append(fallback_path)
+    fallback_path = Path(scriptDir).parent / "lib"
+    sys.path.append(str(fallback_path))
 
 import contextlib
 
