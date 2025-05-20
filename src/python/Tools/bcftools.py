@@ -16,14 +16,25 @@ import os
 import pipes
 import subprocess
 import tempfile
-from typing import Dict, List, Optional, Tuple, Union
+from pathlib import Path
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
-import pandas
+import pandas as pd
+
+# Type aliases for better readability
+FilePath = Union[str, Path]
+CommandOutput = Tuple[str, str, int]  # stdout, stderr, return_code
 
 scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
-def runShellCommand(*args: str) -> Tuple[str, str, int]:
+def runShellCommand(*args: str) -> CommandOutput:
     """Run a shell command (e.g. bcf tools), and return output
 
     Args:
@@ -31,6 +42,9 @@ def runShellCommand(*args: str) -> Tuple[str, str, int]:
 
     Returns:
         Tuple of (stdout, stderr, return_code)
+
+    Raises:
+        Exception: If command execution fails with non-zero return code
     """
     qargs = []
     for a in args:
@@ -58,9 +72,7 @@ def runShellCommand(*args: str) -> Tuple[str, str, int]:
 
     if return_code != 0:
         raise Exception(
-            "Command line {} got return code {}.\nSTDOUT: {}\nSTDERR: {}".format(
-                cmd_line, return_code, stdout, stderr
-            )
+            f"Command line {cmd_line} got return code {return_code}.\nSTDOUT: {stdout}\nSTDERR: {stderr}"
         )
 
     return stdout, stderr, return_code
@@ -80,7 +92,7 @@ def runBcftools(*args: str) -> str:
     return stdout
 
 
-def parseStats(output: str, colname: str = "count") -> pandas.DataFrame:
+def parseStats(output: str, colname: str = "count") -> pd.DataFrame:
     """Parse BCFTOOLS Stats Output.
 
     Args:
@@ -98,7 +110,7 @@ def parseStats(output: str, colname: str = "count") -> pandas.DataFrame:
             count = int(vx[3])
             result[name] = count
 
-    result_df = pandas.DataFrame(list(result.items()), columns=["type", colname])
+    result_df = pd.DataFrame(list(result.items()), columns=["type", colname])
     return result_df
 
 
@@ -125,7 +137,7 @@ def countVCFRows(filename: str) -> int:
     return count
 
 
-def concatenateParts(output: str, *args: str) -> None:
+def concatenateParts(output: FilePath, *args: FilePath) -> None:
     """Concatenate BCF files.
 
     Trickier than it sounds because when there are many files we might run into
@@ -136,59 +148,120 @@ def concatenateParts(output: str, *args: str) -> None:
     Args:
         output: Output file path
         *args: Input file paths to concatenate
+
+    Raises:
+        Exception: If bcftools concat fails
     """
-    to_delete = []
+    to_delete: List[str] = []
+    output_str = str(output)  # Convert Path to string if needed
+
+    # Validate input files exist
+    for arg in args:
+        arg_str = str(arg)
+        if not os.path.exists(arg_str):
+            raise FileNotFoundError(f"Input file not found: {arg_str}")
+
     try:
-        if output.endswith(".bcf"):
+        if output_str.endswith(".bcf"):
             outputformat = "b"
             outputext = ".bcf"
         else:
             outputformat = "z"
             outputext = ".vcf.gz"
+
         if len(args) < 10:
+            # For a small number of files, concatenate directly
             for x in args:
-                if not os.path.exists(x + ".tbi") and not os.path.exists(x + ".csi"):
-                    to_delete.append(x + ".csi")
-                    runBcftools("index", "-f", x)
-            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output, *list(args)]
-            runBcftools(*cmdlist)
+                x_str = str(x)
+                if not os.path.exists(x_str + ".tbi") and not os.path.exists(
+                    x_str + ".csi"
+                ):
+                    idx_file = x_str + ".csi"
+                    to_delete.append(idx_file)
+                    try:
+                        logging.info(f"Indexing file {x_str}")
+                        runBcftools("index", "-f", x_str)
+                    except Exception as e:
+                        logging.error(f"Failed to index file {x_str}: {str(e)}")
+                        raise
+
+            cmdlist = ["concat", "-a", "-O", outputformat, "-o", output_str]
+            cmdlist.extend([str(arg) for arg in args])
+
+            try:
+                logging.info(f"Concatenating {len(args)} files into {output_str}")
+                runBcftools(*cmdlist)
+            except Exception as e:
+                logging.error(f"Failed to concatenate files: {str(e)}")
+                raise
         else:
-            # block in chunks (TODO: make parallel)
-            tf1 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
-            tf2 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
-            to_delete.append(tf1.name)
-            to_delete.append(tf2.name)
-            to_delete.append(tf1.name + ".csi")
-            to_delete.append(tf2.name + ".csi")
-            mid_point = (
-                len(args) // 2
-            )  # Use integer division for Python 3 compatibility
-            half1 = [tf1.name, *list(args[:mid_point])]
-            half2 = [tf2.name, *list(args[mid_point:])]
-            concatenateParts(*half1)
-            runBcftools("index", tf1.name)
-            concatenateParts(*half2)
-            runBcftools("index", tf2.name)
-            concatenateParts(output, tf1.name, tf2.name)
+            # For many files, use recursive divide-and-conquer approach
+            logging.info(
+                f"Concatenating {len(args)} files with divide-and-conquer strategy"
+            )
+
+            # Create temporary files for intermediate results
+            try:
+                tf1 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
+                tf2 = tempfile.NamedTemporaryFile(suffix=outputext, delete=False)
+                to_delete.extend(
+                    [tf1.name, tf2.name, tf1.name + ".csi", tf2.name + ".csi"]
+                )
+
+                # Split input files into two halves
+                mid_point = (
+                    len(args) // 2
+                )  # Integer division for Python 3 compatibility
+                half1 = [tf1.name] + [str(arg) for arg in args[:mid_point]]
+                half2 = [tf2.name] + [str(arg) for arg in args[mid_point:]]
+
+                # Process each half recursively
+                concatenateParts(*half1)
+                try:
+                    runBcftools("index", tf1.name)
+                except Exception as e:
+                    logging.error(f"Failed to index first half: {str(e)}")
+                    raise
+
+                concatenateParts(*half2)
+                try:
+                    runBcftools("index", tf2.name)
+                except Exception as e:
+                    logging.error(f"Failed to index second half: {str(e)}")
+                    raise
+
+                # Merge the two halves
+                concatenateParts(output_str, tf1.name, tf2.name)
+            except Exception as e:
+                logging.error(f"Error during recursive concatenation: {str(e)}")
+                raise
+    except Exception as e:
+        logging.error(f"Failed to concatenate VCF/BCF files: {str(e)}")
+        # Re-raise to propagate the exception
+        raise
     finally:
+        # Clean up temporary files
         for f in to_delete:
-            with contextlib.suppress(Exception):
-                os.unlink(f)
+            if os.path.exists(f):
+                try:
+                    os.unlink(f)
+                except Exception as e:
+                    logging.warning(f"Failed to delete temporary file {f}: {str(e)}")
 
 
 # noinspection PyShadowingBuiltins
 def preprocessVCF(
     input_filename: str,
     output_filename: str,
-    location: str = "",
+    location: Union[str, List[str]] = "",
     pass_only: bool = True,
-    chrprefix: bool = True,
+    chrprefix: Optional[bool] = True,
     norm: bool = False,
     regions: Optional[str] = None,
     targets: Optional[str] = None,
     reference: str = "fake_reference_path",
-    filters_only: Optional[List[str]] = None,
-    somatic_allele_conversion: bool = False,
+    filters_only: Optional[str] = None,
+    somatic_allele_conversion: Union[bool, str] = False,
     sample: str = "SAMPLE",
     filter_nonref: bool = True,
     convert_gvcf: bool = False,
@@ -388,19 +461,19 @@ def bedOverlapCheck(filename: str) -> int:
     lines = 1
     thischr = None
     for line in f:
-        l = line.split("\t")
-        if len(l) < 3:
+        parts = line.split("\t")
+        if len(parts) < 3:
             continue
-        if thischr is not None and thischr != l[0]:
+        if thischr is not None and thischr != parts[0]:
             last = -1
-        thischr = l[0]
-        if (last - 1) > int(l[1]):
-            logging.warn(
+        thischr = parts[0]
+        if (last - 1) > int(parts[1]):
+            logging.warning(
                 "%s has overlapping regions at %s:%i (line %i)"
-                % (filename, l[0], int(l[1]), lines)
+                % (filename, parts[0], int(parts[1]), lines)
             )
             return 1
-        last = int(l[2])
+        last = int(parts[2])
         lines += 1
     return 0
 
@@ -446,4 +519,4 @@ def run_command(
     except Exception as e:
         error_msg = fail_message or "Command execution failed"
         logging.error(f"{error_msg}: {str(e)}")
-        raise Exception(f"{error_msg}: {str(e)}")
+        raise Exception(f"{error_msg}: {str(e)}") from e

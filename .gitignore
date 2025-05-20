@@ -33,3 +33,14 @@ Thumbs.db
 /.vscode
 external/rtg**
 src/*egg-info
+happy_test_venv/**
+dist/**
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
