@@ -7,8 +7,14 @@
    - ✅ Created new pytest test `test_integration.py` (migrated from run_integration_test.sh)
    - ✅ Created new pytest test `test_gvcf_homref.py` (migrated from run_gvcf_homref_test.sh)
    - ✅ Created new pytest test `test_fp_accuracy.py` (migrated from run_fp_accuracy_test.sh)
+   - ✅ Created new pytest test `test_hapenum.py` (migrated from run_hapenum_test.sh)
+   - ✅ Created new pytest test `test_pathtraversal.py` (migrated from run_pathtraversal_test.sh)
    - ✅ Updated PYTHON3_MIGRATION_PROGRESS.md to reflect completed migrations
    - ✅ Updated tests/README.md with instructions for running tests
+
+2. **Type Hints**
+   - ✅ Added type hints to `src/python/Haplo/cython_compat.py`
+   - ✅ Added type hints to key functions in `src/python/Tools/bcftools.py`
 
 ## Key Features of Migrated Tests
 
@@ -31,19 +37,32 @@
    - Tests processing of FP regions
    - Compares VCF and summary outputs with expected results
 
+5. **test_hapenum.py**
+   - Tests hapenum's ability to enumerate haplotypes
+   - Generates and verifies dot graph output
+   - Handles SVG generation for visualization
+
+6. **test_pathtraversal.py**
+   - Tests hap.py's handling of path traversals
+   - Verifies summary outputs match expected results
+
 ## Next Steps
 
 1. **Type Hints**
-   - Start adding type hints to core Python modules
-   - Begin with `src/python/Haplo.py`
-   - Migrate to `src/python/Tools.py` and `src/python/quantify.py`
+   - Continue adding type hints to core Python modules
+   - Add more type hints to `src/python/Tools/bcftools.py`
+   - Begin adding type hints to `src/python/Haplo/quantify.py`
 
-2. **Test Verification**
+2. **Test Migration**
+   - Migrate remaining shell tests to pytest format (6 remaining)
+   - Focus next on run_decomp_test.sh and run_other_vcf_tests.sh
+
+3. **Test Verification**
    - Run all migrated tests on a fully-built version of the project
    - Address any issues with test assumptions or file paths
 
-3. **Cross-Platform Testing**
-   - Verify build and tests on Ubuntu and  macOS
+4. **Cross-Platform Testing**
+   - Verify build and tests on Ubuntu and macOS
 
 ## Notes
 

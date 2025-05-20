@@ -35,6 +35,7 @@ def import_with_fallback(
             f"Could not import {mock_attribute} from {cython_module}: {e}. "
             f"Using pure Python implementation from {mock_module}.",
             ImportWarning,
+            stacklevel=2,
         )
         module = __import__(mock_module, fromlist=["*"])
         obj = getattr(module, mock_attribute)

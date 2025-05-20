@@ -16,7 +16,7 @@ import os
 import pipes
 import subprocess
 import tempfile
-from typing import Tuple
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import pandas
 
@@ -80,10 +80,17 @@ def runBcftools(*args: str) -> str:
     return stdout
 
 
-def parseStats(output, colname="count"):
-    """Parse BCFTOOLS Stats Output"""
+def parseStats(output: str, colname: str = "count") -> pandas.DataFrame:
+    """Parse BCFTOOLS Stats Output.
 
-    result = {}
+    Args:
+        output: String output from bcftools stats
+        colname: Name for the count column
+
+    Returns:
+        DataFrame with parsed statistics
+    """
+    result: Dict[str, int] = {}
     for x in output.split("\n"):
         if x.startswith("SN"):
             vx = x.split("\t")
@@ -91,14 +98,18 @@ def parseStats(output, colname="count"):
             count = int(vx[3])
             result[name] = count
 
-    result = pandas.DataFrame(list(result.items()), columns=["type", colname])
-    return result
+    result_df = pandas.DataFrame(list(result.items()), columns=["type", colname])
+    return result_df
 
 
-def countVCFRows(filename):
-    """Count the number of rows in a VCF
-    :param filename: VCF file name
-    :return: number of rows
+def countVCFRows(filename: str) -> int:
+    """Count the number of rows in a VCF.
+
+    Args:
+        filename: VCF file name
+
+    Returns:
+        Number of rows in the VCF
     """
     if filename.endswith(".gz"):
         f = gzip.open(filename, "rt", encoding="utf-8")  # text mode in Python 3
@@ -114,14 +125,17 @@ def countVCFRows(filename):
     return count
 
 
-def concatenateParts(output, *args):
-    """Concatenate BCF files
-
+def concatenateParts(output: str, *args: str) -> None:
+    """Concatenate BCF files.
 
     Trickier than it sounds because when there are many files we might run into
     various limits like the number of open files, or the length of a command line.
 
     This function will bcftools concat in a tree-like fashion to avoid this.
+
+    Args:
+        output: Output file path
+        *args: Input file paths to concatenate
     """
     to_delete = []
     try:

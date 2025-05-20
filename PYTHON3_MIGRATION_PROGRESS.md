@@ -17,7 +17,7 @@
    - ✅ Created pytest.ini configuration
    - ✅ Added conftest.py with test fixtures
    - ✅ Set up utility functions for tests in tests/utils.py
-   - ✅ Migrated 12 shell tests to pytest format (including multimerge_test.sh, quantify_test.sh, happy_pg_test.sh, integration_test.sh, gvcf_homref_test.sh, fp_accuracy_test.sh, leftshift_test.sh, quantify_stratification_test.sh)
+   - ✅ Migrated 14 shell tests to pytest format (including multimerge_test.sh, quantify_test.sh, happy_pg_test.sh, integration_test.sh, gvcf_homref_test.sh, fp_accuracy_test.sh, leftshift_test.sh, quantify_stratification_test.sh, hapenum_test.sh, pathtraversal_test.sh)
 
 4. **CI/CD Pipeline**
    - ✅ Set up GitHub Actions workflow for multiple OSes and Python versions
@@ -32,14 +32,15 @@
 ## Next Steps
 
 1. **Test Migration (Priority)**
-   - 🔍 Continue migrating the remaining 14 shell tests to pytest format
+   - 🔍 Continue migrating the remaining 12 shell tests to pytest format
    - 🔍 Add more test fixtures for common patterns
    - 🔍 Update the migrate_test.py script to better extract test logic
 
 2. **Type Annotation**
    - 🔍 Add type hints to core Python modules
-   - 🔍 Start with high-level APIs and user-facing functions
-   - 🔍 Configure mypy to be stricter as type coverage improves
+   - ✅ Added type hints to Haplo/cython_compat.py
+   - ✅ Added type hints to Tools/bcftools.py (runShellCommand, runBcftools, parseStats, countVCFRows, concatenateParts)
+   - 🔍 Continue with Haplo/quantify.py and other modules
 
 3. **Documentation**
    - 🔍 Set up Sphinx for API documentation
@@ -59,8 +60,8 @@
 ## Next Immediate Actions
 
 1. Continue adding type hints to these core modules:
-   - ✅ src/python/Haplo/cython_compat.py (partially completed)
-   - src/python/Tools/bcftools.py (started)
+   - ✅ src/python/Haplo/cython_compat.py (completed)
+   - ✅ src/python/Tools/bcftools.py (partially completed - key functions done)
    - src/python/Haplo/quantify.py (partially completed)
 
 2. Run black on each module to fix formatting issues:
@@ -76,6 +77,8 @@
    - Run with `pytest tests/integration/test_gvcf_homref.py -v`
    - Run with `pytest tests/integration/test_fp_accuracy.py -v`
    - Run with `pytest tests/integration/test_leftshift.py -v`
+   - Run with `pytest tests/integration/test_hapenum.py -v`
+   - Run with `pytest tests/integration/test_pathtraversal.py -v`
    - Run with `pytest tests/integration/test_quantify_stratification.py -v`
 
-3. Test the build process on Ubuntu, macOS, and Windows to ensure cross-platform compatibility
+4. Test the build process on Ubuntu, macOS, and Windows to ensure cross-platform compatibility
