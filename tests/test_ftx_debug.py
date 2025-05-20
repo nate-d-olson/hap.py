@@ -2,8 +2,8 @@
 """Simple debug script for ftx.py."""
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 print("Starting ftx.py debug test...")
@@ -26,8 +26,7 @@ try:
     result = subprocess.run(
         cmd,
         env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
         check=False,
     )

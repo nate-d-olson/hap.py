@@ -6,11 +6,9 @@ This script tests each of the command-line tools to ensure they
 can be called directly and return appropriate exit codes.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
-import shutil
 
 
 def test_cli_script(script_path, args=None, expected_exit_code=0):
@@ -23,8 +21,7 @@ def test_cli_script(script_path, args=None, expected_exit_code=0):
     try:
         result = subprocess.run(
             [sys.executable, script_path] + args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             check=False,
         )

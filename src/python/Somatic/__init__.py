@@ -1,8 +1,9 @@
 """Mock Somatic module for testing."""
 
 import logging
-import pandas as pd
 from typing import Dict, Optional, Union
+
+import pandas as pd
 
 
 class FeatureSet:

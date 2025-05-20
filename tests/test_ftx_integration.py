@@ -10,8 +10,9 @@ import os
 import subprocess
 import sys
 import tempfile
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.mark.integration
@@ -64,8 +65,7 @@ def test_ftx_basic_cli():
             result = subprocess.run(
                 cmd,
                 env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 check=False,
             )

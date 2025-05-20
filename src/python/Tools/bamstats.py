@@ -2,6 +2,7 @@
 """Mock module to enable testing without external dependencies."""
 
 import logging
+
 import pandas
 
 

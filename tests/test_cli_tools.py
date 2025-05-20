@@ -6,10 +6,8 @@ This script tests each of the command-line tools to ensure they
 can be called properly and return appropriate exit codes.
 """
 
-import os
 import subprocess
 import sys
-from pathlib import Path
 
 
 def test_cli_tool(command, args=None, expected_exit_code=0):
@@ -20,8 +18,7 @@ def test_cli_tool(command, args=None, expected_exit_code=0):
     try:
         result = subprocess.run(
             [command] + args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             check=False,
         )
