@@ -21,6 +21,7 @@ import re
 
 import numpy as np
 import pandas
+
 from Tools import ci
 
 RESULT_ALLCOLUMNS = [

@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from tests.utils import get_project_root
 
 

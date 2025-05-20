@@ -4,9 +4,9 @@ Migrated from src/sh/run_fp_accuracy_test.sh
 """
 
 import gzip
-import pytest
 from pathlib import Path
 
+import pytest
 from tests.utils import (
     compare_files,
     compare_summary_files,

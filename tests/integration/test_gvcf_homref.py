@@ -3,15 +3,10 @@ Integration tests for GVCF homref functionality.
 Migrated from src/sh/run_gvcf_homref_test.sh
 """
 
-import pytest
 from pathlib import Path
 
-from tests.utils import (
-    compare_files,
-    get_bin_dir,
-    get_example_dir,
-    run_shell_command,
-)
+import pytest
+from tests.utils import compare_files, get_bin_dir, get_example_dir, run_shell_command
 
 
 def compress_and_index_vcf(vcf_path: Path) -> Path:

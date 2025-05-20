@@ -3,19 +3,17 @@ Integration tests for quantify_test functionality.
 Migrated from src/sh/run_quantify_test.sh
 """
 
-import json
 import gzip
-from pathlib import Path
+import json
 
 import pytest
-
 from tests.utils import (
-    get_project_root,
+    compare_summary_files,
     get_bin_dir,
     get_example_dir,
-    run_shell_command,
+    get_project_root,
     get_python_executable,
-    compare_summary_files,
+    run_shell_command,
 )
 
 
@@ -24,7 +22,7 @@ from tests.utils import (
 def test_quantify_test(tmp_path):
     """Test quantification and GA4GH intermediate file format compliance."""
     # Get paths to required files and tools
-    project_root = get_project_root()
+    get_project_root()
     bin_dir = get_bin_dir()
     example_dir = get_example_dir()
     python_exe = get_python_executable()
@@ -132,9 +130,9 @@ def test_quantify_test(tmp_path):
     ), "Re-quantified summary files differ from expected"
 
     # Compare filtered metrics from both runs
-    with open(hap_metrics_filtered, "r", encoding="utf-8") as f1:
+    with open(hap_metrics_filtered, encoding="utf-8") as f1:
         hap_data = json.load(f1)
-    with open(qfy_metrics_filtered, "r", encoding="utf-8") as f2:
+    with open(qfy_metrics_filtered, encoding="utf-8") as f2:
         qfy_data = json.load(f2)
 
     assert hap_data == qfy_data, "Re-quantified metrics are different from original run"
@@ -151,7 +149,7 @@ def test_quantify_test(tmp_path):
     python_exe = get_python_executable()
 
     # Get paths to the shell scripts directory
-    shell_scripts_dir = project_root / "src" / "sh"
+    project_root / "src" / "sh"
 
     # Prepare file paths
     reference_fa = example_dir / "chr21.fa"
@@ -256,7 +254,7 @@ def test_quantify_test(tmp_path):
     ), "Re-quantified summary files differ from expected"
 
     # Compare filtered metrics from both runs
-    with open(hap_metrics_filtered, "r") as f1, open(qfy_metrics_filtered, "r") as f2:
+    with open(hap_metrics_filtered) as f1, open(qfy_metrics_filtered) as f2:
         hap_data = json.load(f1)
         qfy_data = json.load(f2)
         assert (

@@ -17,7 +17,7 @@
    - ✅ Created pytest.ini configuration
    - ✅ Added conftest.py with test fixtures
    - ✅ Set up utility functions for tests in tests/utils.py
-   - ✅ Migrated 10 shell tests to pytest format (including multimerge_test.sh, quantify_test.sh, happy_pg_test.sh, integration_test.sh, gvcf_homref_test.sh, fp_accuracy_test.sh)
+   - ✅ Migrated 12 shell tests to pytest format (including multimerge_test.sh, quantify_test.sh, happy_pg_test.sh, integration_test.sh, gvcf_homref_test.sh, fp_accuracy_test.sh, leftshift_test.sh, quantify_stratification_test.sh)
 
 4. **CI/CD Pipeline**
    - ✅ Set up GitHub Actions workflow for multiple OSes and Python versions
@@ -58,15 +58,24 @@
 
 ## Next Immediate Actions
 
-1. Begin adding type hints to these core modules:
-   - src/python/Haplo.py
-   - src/python/Tools.py
-   - src/python/quantify.py
+1. Continue adding type hints to these core modules:
+   - ✅ src/python/Haplo/cython_compat.py (partially completed)
+   - src/python/Tools/bcftools.py (started)
+   - src/python/Haplo/quantify.py (partially completed)
 
-2. Test the newly migrated pytest tests to ensure they work as expected:
+2. Run black on each module to fix formatting issues:
+
+   ```bash
+   black src/python/Haplo/cython_compat.py
+   black src/python/Tools/bcftools.py
+   ```
+
+3. Test the newly migrated pytest tests to ensure they work as expected:
    - Run with `pytest tests/integration/test_happy_pg.py -v`
    - Run with `pytest tests/integration/test_integration.py -v`
    - Run with `pytest tests/integration/test_gvcf_homref.py -v`
    - Run with `pytest tests/integration/test_fp_accuracy.py -v`
+   - Run with `pytest tests/integration/test_leftshift.py -v`
+   - Run with `pytest tests/integration/test_quantify_stratification.py -v`
 
 3. Test the build process on Ubuntu, macOS, and Windows to ensure cross-platform compatibility

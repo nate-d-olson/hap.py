@@ -1,9 +1,15 @@
 # Python 3 compatible imports with graceful fallback
 import warnings
+from typing import Any, Dict, Optional, TypeVar, Union
+
+# Define type variables for generic return types
+T = TypeVar("T")
 
 
 # Define functions to import Cython modules with fallback
-def import_with_fallback(cython_module, mock_attribute, mock_module=None):
+def import_with_fallback(
+    cython_module: str, mock_attribute: str, mock_module: Optional[str] = None
+) -> Any:
     """
     Import a Cython function/class with fallback to a pure Python implementation.
 
@@ -55,8 +61,13 @@ sort_chromosomes = import_with_fallback("Haplo.happyroc", "sort_chromosomes")
 
 
 # Helper function to check if we're using Cython or pure Python
-def is_using_cython():
-    """Check if the imported modules are Cython or pure Python."""
+def is_using_cython() -> Dict[str, Dict[str, Union[str, bool]]]:
+    """
+    Check if the imported modules are Cython or pure Python.
+
+    Returns:
+        Dictionary with module information for each imported component
+    """
     module_origins = {}
 
     for name, obj in globals().items():

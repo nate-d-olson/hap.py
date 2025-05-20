@@ -16,14 +16,22 @@ import os
 import pipes
 import subprocess
 import tempfile
+from typing import Tuple
 
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
-def runShellCommand(*args):
-    """Run a shell command (e.g. bcf tools), and return output"""
+def runShellCommand(*args: str) -> Tuple[str, str, int]:
+    """Run a shell command (e.g. bcf tools), and return output
+
+    Args:
+        *args: Command arguments
+
+    Returns:
+        Tuple of (stdout, stderr, return_code)
+    """
     qargs = []
     for a in args:
         if a.strip() != "|":
@@ -58,12 +66,15 @@ def runShellCommand(*args):
     return stdout, stderr, return_code
 
 
-def runBcftools(*args):
+def runBcftools(*args: str) -> str:
     """
     Wraps runShellCommand for compatibility.
 
-    :param args: Arguments to pass to bcftools
-    :return: stdout from the command
+    Args:
+        *args: Arguments to pass to bcftools
+
+    Returns:
+        stdout from the command
     """
     stdout, stderr, return_code = runShellCommand("bcftools", *args)
     return stdout

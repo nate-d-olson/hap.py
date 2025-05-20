@@ -5,8 +5,6 @@ Unit tests for hap.py Tools module.
 import os
 import sys
 
-import pytest
-
 # Add src/python to path for imports during tests
 sys.path.insert(
     0,

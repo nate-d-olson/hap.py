@@ -179,12 +179,12 @@ def compare_summary_files(file1: Path, file2: Path, tolerance: float = 0.001) ->
         return False
 
     # Read the first file
-    with open(file1, "r") as f:
+    with open(file1) as f:
         reader = csv.DictReader(f)
         data1 = list(reader)
 
     # Read the second file
-    with open(file2, "r") as f:
+    with open(file2) as f:
         reader = csv.DictReader(f)
         data2 = list(reader)
 
@@ -227,8 +227,8 @@ def check_vcfeval_availability() -> bool:
         bool: True if vcfeval is available, False otherwise
     """
     try:
-        import sys
         import os
+        import sys
 
         project_root = get_project_root()
         sys.path.insert(0, os.path.join(project_root, "src", "python"))
@@ -244,7 +244,7 @@ def check_vcfeval_availability() -> bool:
                 project_root, "src", "python", "Haplo", "version.py"
             )
             if os.path.exists(version_py):
-                with open(version_py, "r") as f:
+                with open(version_py) as f:
                     for line in f:
                         if "has_vcfeval" in line:
                             return "1" in line

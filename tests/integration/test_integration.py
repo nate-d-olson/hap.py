@@ -3,15 +3,11 @@ Integration tests for hap.py with different VCF inputs.
 Migrated from src/sh/run_integration_test.sh
 """
 
-import os
-import shutil
 import gzip
-import pytest
 from pathlib import Path
 
+import pytest
 from tests.utils import (
-    check_vcfeval_availability,
-    compare_files,
     compare_summary_files,
     find_reference_file,
     get_bin_dir,
