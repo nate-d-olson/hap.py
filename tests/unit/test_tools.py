@@ -20,8 +20,8 @@ import Tools
 
 def test_which():
     """Test the Tools.which function."""
-    # Should be able to find 'python' in PATH
-    python_path = Tools.which("python")
+    # Should be able to find 'python3' in PATH
+    python_path = Tools.which("python3")
     assert python_path is not None
     assert os.path.exists(python_path)
 

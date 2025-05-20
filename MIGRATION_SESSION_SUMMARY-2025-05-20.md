@@ -20,7 +20,7 @@
 
 2. **Improved error handling:**
    - Updated exception handling in bcftools.py to use modern Python 3 patterns
-   - Added proper context chaining with `raise ... from e` 
+   - Added proper context chaining with `raise ... from e`
    - Improved file path handling with pathlib.Path
 
 3. **Added Python 3 requirements file:**
@@ -29,7 +29,7 @@
    - Ensured all imported packages have appropriate version constraints
 
 4. **Updated .gitignore with Python-specific patterns:**
-   - Added proper Python-specific ignore patterns (such as __pycache__, mypy cache, etc.)
+   - Added proper Python-specific ignore patterns (such as **pycache**, mypy cache, etc.)
    - Added test-related file patterns to exclude
    - Added exclusions for VCF/BCF binary files in example directories
    - Fixed NoneType + string error in Haplo.partialcredit.py
@@ -93,6 +93,7 @@
 | C++ binding | 🔄 | ❌ | Needs Cython compilation |
 
 Legend:
+
 - ✅ Complete
 - 🔄 In progress
 - ❌ Not working yet

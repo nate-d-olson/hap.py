@@ -31,8 +31,9 @@ import os
 import sys
 import tempfile
 import traceback
+from typing import Any, Dict, List, Optional, Tuple, Union, Set, cast
 
-import pandas
+import pandas as pd
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
@@ -54,12 +55,12 @@ from Tools import fastasize
 from Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 
-def quantify(args):
+def quantify(args: argparse.Namespace) -> None:
     """Run quantify and write tables"""
     vcf_name = args.in_vcf[0]
 
     if not vcf_name or not os.path.exists(vcf_name):
-        raise Exception("Cannot read input VCF.")
+        raise FileNotFoundError("Cannot read input VCF.")
 
     logging.info("Counting variants...")
 
@@ -78,8 +79,8 @@ def quantify(args):
 
     if args.fp_bedfile:
         if not os.path.exists(args.fp_bedfile):
-            raise Exception(
-                "FP / Confident region file not found at %s" % args.fp_bedfile
+            raise FileNotFoundError(
+                f"FP / Confident region file not found at {args.fp_bedfile}"
             )
         qfyregions["CONF"] = args.fp_bedfile
 
@@ -88,10 +89,10 @@ def quantify(args):
             for l in sf:
                 n, _, f = l.strip().partition("\t")
                 if n in qfyregions:
-                    raise Exception("Duplicate stratification region ID: %s" % n)
+                    raise ValueError(f"Duplicate stratification region ID: {n}")
                 if not f:
                     if n:
-                        raise Exception("No file for stratification region %s" % n)
+                        raise ValueError(f"No file for stratification region {n}")
                     else:
                         continue
                 if not os.path.exists(f):
@@ -99,19 +100,19 @@ def quantify(args):
                         os.path.abspath(os.path.dirname(args.strat_tsv)), f
                     )
                 if not os.path.exists(f):
-                    raise Exception("Quantification region file %s not found" % f)
+                    raise FileNotFoundError(f"Quantification region file {f} not found")
                 qfyregions[n] = f
 
     if args.strat_regions:
         for r in args.strat_regions:
             n, _, f = r.partition(":")
             if not os.path.exists(f):
-                raise Exception("Quantification region file %s not found" % f)
+                raise FileNotFoundError(f"Quantification region file {f} not found")
             qfyregions[n] = f
 
     if vcf_name == output_vcf or vcf_name == output_vcf + internal_format_suffix:
-        raise Exception(
-            f"Cannot overwrite input VCF: {vcf_name} would overwritten with output name {output_vcf}."
+        raise ValueError(
+            f"Cannot overwrite input VCF: {vcf_name} would be overwritten with output name {output_vcf}."
         )
 
     roc_header = args.roc
@@ -154,8 +155,7 @@ def quantify(args):
         contig_lengths = fastasize.fastaNonNContigLengths(args.ref)
         total_region_size = fastasize.calculateLength(contig_lengths, contigs_to_use)
         logging.info(
-            "Subset.Size for * is %i, based on these contigs: %s "
-            % (total_region_size, str(contigs_to_use))
+            f"Subset.Size for * is {total_region_size}, based on these contigs: {contigs_to_use}"
         )
     except Exception:
         pass
@@ -216,8 +216,8 @@ def quantify(args):
 
     essential_numbers = summary_df[summary_columns]
 
-    pandas.set_option("display.max_columns", 500)
-    pandas.set_option("display.width", 1000)
+    pd.set_option("display.max_columns", 500)
+    pd.set_option("display.width", 1000)
 
     essential_numbers = essential_numbers[
         essential_numbers["Type"].isin(["SNP", "INDEL"])
@@ -246,7 +246,7 @@ def quantify(args):
             json.dump(metrics_output, fp)
 
 
-def updateArgs(parser):
+def updateArgs(parser: argparse.ArgumentParser) -> None:
     """add common quantification args"""
     parser.add_argument(
         "-t",
@@ -388,7 +388,7 @@ def updateArgs(parser):
     )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser("Quantify annotated VCFs")
 
     parser.add_argument(
@@ -503,12 +503,12 @@ def main():
     unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
     if len(sys.argv) < 2 or len(unknown_args) > 0:
         if unknown_args:
-            logging.error("Unknown arguments specified : %s " % str(unknown_args))
+            logging.error(f"Unknown arguments specified: {unknown_args}")
         parser.print_help()
         exit(0)
 
     if args.version:
-        print("qfy.py %s" % Tools.version)
+        print(f"qfy.py {Tools.version}")
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:

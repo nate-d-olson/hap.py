@@ -5,12 +5,14 @@ Migrated from src/sh/run_leftshift_test.sh
 
 import filecmp
 import gzip
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
-from tests.utils import get_project_root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import get_project_root
 
 
 @pytest.mark.integration

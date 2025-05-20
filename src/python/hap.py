@@ -31,6 +31,7 @@ import sys
 import tempfile
 import time
 import traceback
+from typing import Any, Dict, List, Optional, Tuple, Union, Set, cast
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
@@ -58,7 +59,7 @@ from Tools.parallel import getPool, runParallel
 from Tools.sessioninfo import sessionInfo
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser("Haplotype Comparison")
 
     # input
@@ -267,11 +268,11 @@ def main():
     unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
     if len(sys.argv) < 2 or len(unknown_args) > 0:
         if unknown_args:
-            logging.error("Unknown arguments specified : %s " % str(unknown_args))
+            logging.error(f"Unknown arguments specified: {unknown_args}")
         parser.print_help()
         exit(1)
 
-    print("Hap.py %s" % Tools.version)
+    print(f"Hap.py {Tools.version}")
     if args.version:
         exit(0)
 
@@ -282,43 +283,45 @@ def main():
     if args.regions_bedfile:
         logging.info("Checking input regions.")
         if bedOverlapCheck(args.regions_bedfile):
-            raise Exception(
-                "The regions bed file (specified using -R) has overlaps, this will not work with xcmp."
-                " You can either use -T, or run the file through bedtools merge"
+            raise ValueError(
+                "The regions bed file (specified using -R) has overlaps, this will not work with xcmp. "
+                "You can either use -T, or run the file through bedtools merge"
             )
 
     if args.fp_bedfile and not os.path.exists(args.fp_bedfile):
-        raise Exception("FP/confident call region bed file does not exist.")
+        raise FileNotFoundError("FP/confident call region bed file does not exist.")
 
     if not args.force_interactive and "JOB_ID" not in os.environ:
         parser.print_help()
-        raise Exception("Please qsub me so I get approximately 1 GB of RAM per thread.")
+        raise RuntimeError(
+            "Please qsub me so I get approximately 1 GB of RAM per thread."
+        )
 
     if not args.ref:
         args.ref = Tools.defaultReference()
 
     if not args.ref or not os.path.exists(args.ref):
-        raise Exception("Please specify a valid reference path using -r.")
+        raise FileNotFoundError("Please specify a valid reference path using -r.")
 
     if not args.reports_prefix:
-        raise Exception("Please specify an output prefix using -o ")
+        raise ValueError("Please specify an output prefix using -o")
 
     if not os.path.exists(os.path.dirname(os.path.abspath(args.reports_prefix))):
-        raise Exception(
+        raise FileNotFoundError(
             "The output path does not exist. Please specify a valid output path and prefix using -o"
         )
 
     if os.path.basename(args.reports_prefix) == "" or os.path.isdir(
         args.reports_prefix
     ):
-        raise Exception(
+        raise ValueError(
             "The output path should specify a file name prefix. Please specify a valid output path "
             "and prefix using -o. For example, -o /tmp/test will create files named /tmp/test* ."
         )
 
     # noinspection PyProtectedMember
     if not args._vcfs or len(args._vcfs) != 2:
-        raise Exception("Please specify exactly two input VCFs.")
+        raise ValueError("Please specify exactly two input VCFs.")
 
     # noinspection PyProtectedMember
     args.vcf1 = args._vcfs[0]
@@ -326,9 +329,9 @@ def main():
     args.vcf2 = args._vcfs[1]
 
     if not os.path.exists(args.vcf1):
-        raise Exception("Input file %s does not exist." % args.vcf1)
+        raise FileNotFoundError(f"Input file {args.vcf1} does not exist.")
     if not os.path.exists(args.vcf2):
-        raise Exception("Input file %s does not exist." % args.vcf2)
+        raise FileNotFoundError(f"Input file {args.vcf2} does not exist.")
 
     tempfiles = []
 
@@ -428,7 +431,7 @@ def main():
                 args.vcf1, args.ref, args.fp_bedfile, args.scratch_prefix
             )
             tempfiles.append(conf_temp)
-            args.strat_regions.append("CONF_VARS:" + conf_temp)
+            args.strat_regions.append(f"CONF_VARS:{conf_temp}")
 
         h1 = vcfextract.extractHeadersJSON(args.vcf1)
 
@@ -443,7 +446,7 @@ def main():
             # default set of locations is the overlap between truth and reference
             args.locations = list(reference_contigs & set(h1["tabix"]["chromosomes"]))
             if not args.locations:
-                raise Exception("Truth and reference have no chromosomes in common!")
+                raise ValueError("Truth and reference have no chromosomes in common!")
         elif type(args.locations) is not list:
             args.locations = args.locations.split(",")
 
@@ -514,14 +517,14 @@ def main():
         logging.info(f"preprocess for {args.vcf2} -- time taken {elapsed:.2f}")
 
         if not h1["tabix"]:
-            raise Exception("Truth file is not indexed after preprocesing.")
+            raise RuntimeError("Truth file is not indexed after preprocesing.")
 
         if not h2["tabix"]:
-            raise Exception("Query file is not indexed after preprocessing.")
+            raise RuntimeError("Query file is not indexed after preprocessing.")
 
         for _xc in args.locations:
             if _xc not in h2["tabix"]["chromosomes"]:
-                logging.warn("No calls for location %s in query!" % _xc)
+                logging.warning(f"No calls for location {_xc} in query!")
 
         pool = getPool(args.threads)
         if args.threads > 1 and args.engine == "xcmp":
@@ -536,7 +539,7 @@ def main():
             )
 
             if None in res:
-                raise Exception("One of the blocksplit processes failed.")
+                raise RuntimeError("One of the blocksplit processes failed.")
 
             tempfiles += res
 
@@ -550,14 +553,14 @@ def main():
                         xchr = ll[0]
                         start = int(ll[1]) + 1
                         end = int(ll[2])
-                        args.locations.append("%s:%i-%i" % (xchr, start, end))
+                        args.locations.append(f"{xchr}:{start}-{end}")
 
         # count variants before normalisation
         if "samples" not in h1 or not h1["samples"]:
-            raise Exception("Cannot read sample names from truth VCF file")
+            raise ValueError("Cannot read sample names from truth VCF file")
 
         if "samples" not in h2 or not h2["samples"]:
-            raise Exception("Cannot read sample names from query VCF file")
+            raise ValueError("Cannot read sample names from query VCF file")
 
         tf = tempfile.NamedTemporaryFile(
             delete=False,
@@ -578,7 +581,7 @@ def main():
             # passed to quantify
             args.type = "ga4gh"
         else:
-            raise Exception("Unknown comparison engine: %s" % args.engine)
+            raise ValueError(f"Unknown comparison engine: {args.engine}")
 
         if args.preserve_info and args.engine == "vcfeval":
             # if we use vcfeval we need to merge the INFO fields back in.

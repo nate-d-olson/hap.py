@@ -211,3 +211,36 @@ def fastaSampleRegions(
                     active_regions.append(ar)
 
     return active_regions
+
+
+def calculateLength(fastacontiglengths: str, locations: str) -> int:
+    """Calculate the total length of specified locations in a genome.
+    
+    Args:
+        fastacontiglengths: Dictionary of contig lengths as a string representation
+        locations: String with chromosome locations (e.g. "chr1 chr2:1-100")
+        
+    Returns:
+        Total length of specified locations
+    """
+    import ast
+    
+    # Parse the contig lengths dictionary from string
+    contig_lengths = ast.literal_eval(fastacontiglengths)
+    
+    # Process locations
+    loc_parts = locations.split()
+    total_length = 0
+    
+    for loc in loc_parts:
+        if ":" in loc:
+            # Format: chrX:start-end
+            chrom, range_part = loc.split(":")
+            start, end = map(int, range_part.split("-"))
+            total_length += (end - start + 1)  # Include both endpoints in the range
+        else:
+            # Just a chromosome name
+            if loc in contig_lengths:
+                total_length += contig_lengths[loc]
+    
+    return total_length

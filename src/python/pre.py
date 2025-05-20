@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from typing import Any, Dict, List, Optional, Tuple, Union, Set, cast
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
@@ -50,7 +51,7 @@ from Tools.bcftools import preprocessVCF, runBcftools
 from Tools.fastasize import fastaContigLengths
 
 
-def hasChrPrefix(chrlist):
+def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
     """returns if list of chr names has a chr prefix or not"""
 
     noprefix = [*list(map(str, list(range(23)))), "X", "Y", "MT"]
@@ -67,25 +68,25 @@ def hasChrPrefix(chrlist):
 
 
 def preprocess(
-    vcf_input,
-    vcf_output,
-    reference,
-    locations=None,
-    filters=None,
-    fixchr=None,
-    regions=None,
-    targets=None,
-    leftshift=True,
-    decompose=True,
-    bcftools_norm=False,
-    windowsize=10000,
-    threads=1,
-    gender=None,
-    somatic_allele_conversion=False,
-    sample="SAMPLE",
-    filter_nonref=True,
-    convert_gvcf_to_vcf=False,
-):
+    vcf_input: str,
+    vcf_output: str,
+    reference: str,
+    locations: Optional[Union[str, List[str]]] = None,
+    filters: Optional[str] = None,
+    fixchr: Optional[bool] = None,
+    regions: Optional[str] = None,
+    targets: Optional[str] = None,
+    leftshift: bool = True,
+    decompose: bool = True,
+    bcftools_norm: bool = False,
+    windowsize: int = 10000,
+    threads: int = 1,
+    gender: Optional[str] = None,
+    somatic_allele_conversion: Union[bool, str] = False,
+    sample: str = "SAMPLE",
+    filter_nonref: bool = True,
+    convert_gvcf_to_vcf: bool = False,
+) -> Optional[str]:
     """Preprocess a single VCF file
 
     :param vcf_input: input file name
@@ -154,10 +155,8 @@ def preprocess(
                 if f["key"] == "FILTER":
                     allfilters.append(f["values"]["ID"])
             except Exception:
-                logging.warn(
-                    "ignoring header: %s" % f.decode("utf-8")
-                    if isinstance(f, bytes)
-                    else str(f)
+                logging.warning(
+                    f"ignoring header: {f.decode('utf-8') if isinstance(f, bytes) else str(f)}"
                 )
 
         required_filters = None
@@ -170,7 +169,7 @@ def preprocess(
         if fixchr is None:
             try:
                 if not h["tabix"]:
-                    logging.warn(
+                    logging.warning(
                         "input file is not tabix indexed, consider doing this in advance for performance reasons"
                     )
                     vtf = tempfile.NamedTemporaryFile(delete=False, suffix=int_suffix)
@@ -187,7 +186,7 @@ def preprocess(
                 if reference_has_chr_prefix and not vcf_has_chr_prefix:
                     fixchr = True
             except Exception:
-                logging.warn("Guessing the chr prefix in %s has failed." % vcf_input)
+                logging.warning(f"Guessing the chr prefix in {vcf_input} has failed.")
 
         if leftshift or decompose:  # all these require preprocessing
             vtf = tempfile.NamedTemporaryFile(delete=False, suffix=int_suffix)
@@ -235,11 +234,11 @@ def preprocess(
     return gender
 
 
-def preprocessWrapper(args):
+def preprocessWrapper(args: argparse.Namespace) -> None:
     """wrapper for running in parallel"""
 
     starttime = time.time()
-    logging.info("Preprocessing %s" % args.input)
+    logging.info(f"Preprocessing {args.input}")
 
     filtering = "*" if args.pass_only else args.filters_only
 
@@ -269,7 +268,7 @@ def preprocessWrapper(args):
     logging.info(f"preprocess for {args.input} -- time taken {elapsed:.2f}")
 
 
-def updateArgs(parser):
+def updateArgs(parser: argparse.ArgumentParser) -> None:
     """update command line parser with preprocessing args"""
 
     parser.add_argument(
@@ -432,7 +431,7 @@ def updateArgs(parser):
     )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser("VCF preprocessor")
 
     # input
@@ -533,12 +532,12 @@ def main():
     unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
     if len(sys.argv) < 2 or len(unknown_args) > 0:
         if unknown_args:
-            logging.error("Unknown arguments specified : %s " % str(unknown_args))
+            logging.error(f"Unknown arguments specified: {unknown_args}")
         parser.print_help()
         exit(0)
 
     if args.version:
-        print("pre.py %s" % Tools.version)
+        print(f"pre.py {Tools.version}")
         exit(0)
 
     args.input = args.input[0]

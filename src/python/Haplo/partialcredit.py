@@ -35,7 +35,7 @@ from Tools.parallel import getPool, runParallel
 from Tools.vcfextract import extractHeadersJSON
 
 
-def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) -> str:
+def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) -> Optional[str]:
     """Process a VCF file with the preprocess tool.
 
     Args:
@@ -43,101 +43,33 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
         args: Arguments for preprocessing
 
     Returns:
-        Path to the preprocessed output file
+        Path to the preprocessed output file or None if processing failed
     """
     starttime = time.time()
     filename, location_str = file_and_location
     int_suffix = "bcf" if args["bcf"] else "vcf.gz"
+    temp_file_path = None
 
-    with tempfile.NamedTemporaryFile(
-        delete=False, prefix=f"input.{location_str}", suffix=f".prep.{int_suffix}"
-    ) as tf:
-        pass  # Just creating the file
-
-    # Quote filenames for shell safety
-    quoted_filename = shlex.quote(filename)
-    quoted_location = shlex.quote(location_str) if location_str else ""
-    quoted_reference = shlex.quote(args["reference"])
-
-    location_param = f"-l {quoted_location} " if location_str else ""
-
-    to_run = (
-        f"preprocess {quoted_filename}:* {location_param}-o {tf.name} "
-        f"-V {args['decompose']} -L {args['leftshift']} -r {quoted_reference}"
-    )
-
-    if args["haploid_x"]:
-        to_run += " --haploid-x 1"
-
-    with (
-        tempfile.NamedTemporaryFile(
-            delete=False, prefix="stderr", suffix=".log"
-        ) as tfe,
-        tempfile.NamedTemporaryFile(
-            delete=False, prefix="stdout", suffix=".log"
-        ) as tfo,
-    ):
-        finished = False
-        try:
-            logging.info(f"Running '{to_run}'")
-            subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
-            finished = True
-        finally:
-            if finished:
-                # Close files and read their contents for logging
-                with open(tfo.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.info(l.rstrip())
-                os.unlink(tfo.name)
-
-                with open(tfe.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.warning(l.rstrip())
-                os.unlink(tfe.name)
-            else:
-                logging.error(
-                    f"Preprocess command {to_run} failed. "
-                    f"Outputs are here {tfo.name} / {tfe.name}"
-                )
-                with open(tfo.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.error(l.rstrip())
-                with open(tfe.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.error(l.rstrip())
-
-    elapsed = time.time() - starttime
-    logging.info(f"preprocess for {location_str} -- time taken {elapsed:.2f}")
-    runBcftools("index", tf.name)
-    return tf.name
-
-
-def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
-    """Blocksplit for partial credit preprocessing.
-
-    Args:
-        location_str: Location string in format chrom:start-end
-        bargs: Arguments for blocksplit
-
-    Returns:
-        List of location strings for chunks
-    """
-    starttime = time.time()
-    tf = tempfile.NamedTemporaryFile(
-        delete=False, prefix=f"result.{location_str}", suffix=".chunks.bed"
-    )
-    result = None
     try:
-        tf.close()
+        with tempfile.NamedTemporaryFile(
+            delete=False, prefix=f"input.{location_str}", suffix=f".prep.{int_suffix}"
+        ) as tf:
+            temp_file_path = tf.name  # Store the file path for later use or cleanup
 
-        # Quote strings for shell safety
-        quoted_vcf = shlex.quote(bargs["vcf"])
-        quoted_location = shlex.quote(location_str)
+        # Quote filenames for shell safety
+        quoted_filename = shlex.quote(filename)
+        quoted_location = shlex.quote(location_str) if location_str else ""
+        quoted_reference = shlex.quote(args["reference"])
+
+        location_param = f"-l {quoted_location} " if location_str else ""
 
         to_run = (
-            f"blocksplit {quoted_vcf} -l {quoted_location} -o {tf.name} "
-            f"--window {bargs['dist']} --nblocks {bargs['pieces']} -f 0"
+            f"preprocess {quoted_filename}:* {location_param}-o {temp_file_path} "
+            f"-V {args['decompose']} -L {args['leftshift']} -r {quoted_reference}"
         )
+
+        if args["haploid_x"]:
+            to_run += " --haploid-x 1"
 
         with (
             tempfile.NamedTemporaryFile(
@@ -147,39 +79,168 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
                 delete=False, prefix="stdout", suffix=".log"
             ) as tfo,
         ):
+            finished = False
             try:
                 logging.info(f"Running '{to_run}'")
                 subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
+                finished = True
+            finally:
+                if finished:
+                    # Close files and read their contents for logging
+                    with open(tfo.name, encoding="utf-8") as f:
+                        for l in f:
+                            logging.info(l.rstrip())
+                    os.unlink(tfo.name)
+
+                    with open(tfe.name, encoding="utf-8") as f:
+                        for l in f:
+                            logging.warning(l.rstrip())
+                    os.unlink(tfe.name)
+                else:
+                    logging.error(
+                        f"Preprocess command {to_run} failed. "
+                        f"Outputs are here {tfo.name} / {tfe.name}"
+                    )
+                    with open(tfo.name, encoding="utf-8") as f:
+                        for l in f:
+                            logging.error(l.rstrip())
+                    with open(tfe.name, encoding="utf-8") as f:
+                        for l in f:
+                            logging.error(l.rstrip())
+                    
+                    # Cleanup the temp file if command failed
+                    if temp_file_path and os.path.exists(temp_file_path):
+                        os.unlink(temp_file_path)
+                    return None  # Return None to indicate failure
+
+        elapsed = time.time() - starttime
+        logging.info(f"preprocess for {location_str} -- time taken {elapsed:.2f}")
+        
+        # Index the output file
+        try:
+            runBcftools("index", temp_file_path)
+        except Exception as e:
+            logging.error(f"Failed to index file {temp_file_path}: {str(e)}")
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+            return None
+            
+        return temp_file_path
+    except Exception as e:
+        # Catch any unexpected exceptions and log them
+        logging.error(f"Exception in preprocessWrapper for {location_str}: {str(e)}")
+        # Clean up the temporary file if it exists
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except OSError:
+                pass
+        return None
+
+
+def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List[str]]:
+    """Blocksplit for partial credit preprocessing.
+
+    Args:
+        location_str: Location string in format chrom:start-end
+        bargs: Arguments for blocksplit
+
+    Returns:
+        List of location strings for chunks or None if processing failed
+    """
+    starttime = time.time()
+    temp_file_path = None
+    try:
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(
+            delete=False, prefix=f"result.{location_str}", suffix=".chunks.bed"
+        ) as tf:
+            temp_file_path = tf.name
+
+        # Quote strings for shell safety
+        quoted_vcf = shlex.quote(bargs["vcf"])
+        quoted_location = shlex.quote(location_str)
+
+        to_run = (
+            f"blocksplit {quoted_vcf} -l {quoted_location} -o {temp_file_path} "
+            f"--window {bargs['dist']} --nblocks {bargs['pieces']} -f 0"
+        )
+
+        command_success = False
+        with (
+            tempfile.NamedTemporaryFile(
+                delete=False, prefix="stderr", suffix=".log"
+            ) as tfe,
+            tempfile.NamedTemporaryFile(
+                delete=False, prefix="stdout", suffix=".log"
+            ) as tfo,
+        ):
+            stdout_path = tfo.name
+            stderr_path = tfe.name
+            try:
+                logging.info(f"Running '{to_run}'")
+                subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
+                command_success = True
+            except Exception as e:
+                logging.error(f"Blocksplit command failed: {str(e)}")
+                command_success = False
             finally:
                 # Close files and read their contents for logging
-                with open(tfo.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.info(l.rstrip())
-                os.unlink(tfo.name)
+                try:
+                    with open(stdout_path, encoding="utf-8") as f:
+                        for l in f:
+                            logging.info(l.rstrip())
+                    os.unlink(stdout_path)
+                except Exception as e:
+                    logging.error(f"Error processing stdout log: {str(e)}")
 
-                with open(tfe.name, encoding="utf-8") as f:
-                    for l in f:
-                        logging.warning(l.rstrip())
-                os.unlink(tfe.name)
+                try:
+                    with open(stderr_path, encoding="utf-8") as f:
+                        for l in f:
+                            # Use error level if command failed, warning otherwise
+                            log_func = logging.error if not command_success else logging.warning
+                            log_func(l.rstrip())
+                    os.unlink(stderr_path)
+                except Exception as e:
+                    logging.error(f"Error processing stderr log: {str(e)}")
 
-        r = []
-        with open(tf.name, encoding="utf-8") as f:
-            for l in f:
-                ll = l.strip().split("\t", 3)
-                if len(ll) < 3:
-                    continue
-                xchr = ll[0]
-                start = int(ll[1]) + 1
-                end = int(ll[2])
-                r.append(f"{xchr}:{start}-{end}")
-        result = r
+        if not command_success:
+            # If the command failed, clean up and return None
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+            return None
 
-    finally:
+        # Parse the output file to get the locations
+        result = []
+        try:
+            with open(temp_file_path, encoding="utf-8") as f:
+                for l in f:
+                    ll = l.strip().split("\t", 3)
+                    if len(ll) < 3:
+                        continue
+                    xchr = ll[0]
+                    start = int(ll[1]) + 1
+                    end = int(ll[2])
+                    result.append(f"{xchr}:{start}-{end}")
+        except Exception as e:
+            logging.error(f"Error parsing blocksplit output: {str(e)}")
+            return None
+
         elapsed = time.time() - starttime
         logging.info(f"blocksplit for {location_str} -- time taken {elapsed:.2f}")
-        os.unlink(tf.name)
+        return result
 
-    return result
+    except Exception as e:
+        # Catch any unexpected exceptions
+        logging.error(f"Exception in blocksplitWrapper for {location_str}: {str(e)}")
+        return None
+    finally:
+        # Clean up the temporary file if it exists
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.unlink(temp_file_path)
+            except OSError as e:
+                logging.warning(f"Failed to delete temporary file {temp_file_path}: {str(e)}")
 
 
 def partialCredit(
@@ -234,11 +295,15 @@ def partialCredit(
             {"vcf": vcfname, "dist": window, "pieces": min(40, threads * 4)},
         )
 
-        if None in res:
+        # Filter out None values from blocksplit results
+        valid_blocksplit_results = [r for r in res if r is not None]
+        
+        if len(valid_blocksplit_results) != len(res):
+            logging.error(f"One or more blocksplit processes failed. Expected {len(res)} results, got {len(valid_blocksplit_results)} valid results.")
             raise Exception("One of the blocksplit processes failed.")
 
-        # Flatten list of lists
-        locations = [item for sublist in res if sublist for item in sublist]
+        # Flatten list of lists, ensuring we handle only valid results
+        locations = [item for sublist in valid_blocksplit_results if sublist for item in sublist]
         if not locations:
             logging.warning(
                 "Blocksplit returned no blocks. This can happen when "
@@ -266,12 +331,21 @@ def partialCredit(
             },
         )
 
-        if None in res:
+        # Filter out None values from results
+        valid_results = [r for r in res if r is not None]
+        
+        if len(valid_results) != len(res):
+            # Some preprocessing jobs failed
+            logging.error(f"One or more preprocess jobs failed. Expected {len(res)} results, got {len(valid_results)} valid results.")
             raise Exception("One of the preprocess jobs failed")
-        if not res:
+            
+        if not valid_results:
             raise Exception(
                 f"No blocks were processed. List of locations: {list(locations)}"
             )
+            
+        # Update res to contain only valid results
+        res = valid_results
 
         concatenateParts(outputname, *res)
         if outputname.endswith(".vcf.gz"):
@@ -281,6 +355,7 @@ def partialCredit(
     finally:
         # Clean up temporary files
         for r in res:
-            for suffix in ["", ".tbi", ".csi"]:
-                with contextlib.suppress(OSError):
-                    os.unlink(r + suffix)
+            if r is not None:  # Skip None values to prevent TypeError
+                for suffix in ["", ".tbi", ".csi"]:
+                    with contextlib.suppress(OSError):
+                        os.unlink(r + suffix)

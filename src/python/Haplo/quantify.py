@@ -51,12 +51,12 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
             raise Exception(f"Invalid chromosome name in {str(l)}")
         try:
             start = int(start)
-        except:
+        except ValueError:
             start = 0
 
         try:
             end = int(end)
-        except:
+        except ValueError:
             end = 2**31 - 1
 
         llocations.append([xchr, start, end])
@@ -266,7 +266,7 @@ def _write_outfiles(
                     header_lines.append("#" + outfiles[t]["summary_header"])
                     file_header = True
                 data[t] = outfiles[t]["summary_csv"]
-            except:
+            except KeyError:
                 pass  # might not have all outputs
 
     for h in header_lines:
@@ -289,16 +289,17 @@ def _write_outfiles(
                         of_extended.write(l + "\n")
 
             if of_metrics is None and writeCounts and "metrics" in outfiles[t]:
-                of_metrics = open(outprefix + ".metrics.json.gz", "wb")
+                metrics_file = open(outprefix + ".metrics.json.gz", "wb")
                 import gzip
 
-                of_metrics = gzip.GzipFile(fileobj=of_metrics)
+                of_metrics = gzip.GzipFile(fileobj=metrics_file)
 
             if of_metrics and "metrics" in outfiles[t]:
                 # Properly handle encoding in Python 3
                 of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode("utf-8"))
-        except:
-            pass  # might not have all outputs
+        except (KeyError, IOError) as e:
+            logging.warning(f"Error processing output for {t}: {str(e)}")
+            # might not have all outputs
 
 
 def _parse_vcfeval_stats(stats_file: str) -> Tuple[Dict[str, int], Dict[str, float]]:
@@ -356,8 +357,8 @@ def u_unhappy(
     truth: str,
     query: str,
     ref: str,
-    regions: str,
-    regions_file: str,
+    regions: Optional[str],
+    regions_file: Optional[str],
     outprefix: str,
     variant_type: str,
     usefiltered_truth: bool,
@@ -412,20 +413,20 @@ def v_vcfeval(
     truth: str,
     query: str,
     ref: str,
-    regions: str,
-    regions_file: str,
+    regions: Optional[str],
+    regions_file: Optional[str],
     outprefix: str,
     variant_type: str,
     preprocessing: bool,
     window: int,
-    fixchr_truth: bool,
-    fixchr_query: bool,
-    scratch_prefix: str,
+    fixchr_truth: Optional[bool],
+    fixchr_query: Optional[bool],
+    scratch_prefix: Optional[str],
     usefiltered_truth: bool,
     usefiltered_query: bool,
     threads: int,
-    vcfeval_path: str,
-    vcfeval_template: str,
+    vcfeval_path: Optional[str],
+    vcfeval_template: Optional[str],
     preserve_all_variants: bool,
     write_vcf: bool,
     output_vtc: bool,
@@ -516,10 +517,10 @@ def run_quantify(
     output_rocs: bool = True,
     qtype: str = "ga4gh",
     roc_val: str = "QUAL",
-    roc_header: str = None,
-    roc_filter: str = None,
+    roc_header: Optional[str] = None,
+    roc_filter: Optional[str] = None,
     roc_delta: float = 0.5,
-    roc_regions: List[str] = None,
+    roc_regions: Optional[List[str]] = None,
     clean_info: bool = True,
     strat_fixchr: bool = False,
 ) -> None:

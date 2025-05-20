@@ -52,6 +52,7 @@ def extract_header(
     extract_columns: bool = True,
     extract_info: bool = False,
     extract_formats: bool = False,
+    extract_filters: bool = False,
 ) -> Dict[str, Any]:
     """Extract header information from a VCF file
 
@@ -60,6 +61,7 @@ def extract_header(
         extract_columns: When true, extract column headers
         extract_info: When true, extract INFO fields
         extract_formats: When true, extract FORMAT fields
+        extract_filters: When true, extract FILTER fields
 
     Returns:
         Dictionary with header information
@@ -74,6 +76,12 @@ def extract_header(
 
     if extract_formats:
         result["formats"] = {}
+        
+    if extract_filters:
+        result["filters"] = {}
+        
+    # For compatibility with pre.py
+    result["fields"] = []
 
     fh = None
     try:
@@ -86,7 +94,7 @@ def extract_header(
             l = l.strip()
             if l.startswith("##INFO="):
                 # process INFO lines
-                if not extract_info:
+                if not extract_info and not "fields" in result:
                     continue
 
                 m = re.match(
@@ -96,15 +104,25 @@ def extract_header(
                 if not m:
                     logging.error("Cannot parse INFO line: %s" % l)
                 else:
-                    result["info"][m.group(1)] = {
+                    info_field = {
                         "id": m.group(1),
                         "number": m.group(2),
                         "type": m.group(3),
                         "description": m.group(4),
                     }
+                    
+                    if extract_info:
+                        result["info"][m.group(1)] = info_field
+                    
+                    # Add to fields list for compatibility
+                    result["fields"].append({
+                        "key": "INFO",
+                        "values": info_field
+                    })
+                    
             elif l.startswith("##FORMAT="):
                 # process FORMAT lines
-                if not extract_formats:
+                if not extract_formats and not "fields" in result:
                     continue
 
                 m = re.match(
@@ -114,12 +132,69 @@ def extract_header(
                 if not m:
                     logging.error("Cannot parse FORMAT line: %s" % l)
                 else:
-                    result["formats"][m.group(1)] = {
+                    format_field = {
                         "id": m.group(1),
                         "number": m.group(2),
                         "type": m.group(3),
                         "description": m.group(4),
                     }
+                    
+                    if extract_formats:
+                        result["formats"][m.group(1)] = format_field
+                    
+                    # Add to fields list for compatibility
+                    result["fields"].append({
+                        "key": "FORMAT",
+                        "values": format_field
+                    })
+                    
+            elif l.startswith("##FILTER="):
+                # process FILTER lines
+                if not extract_filters and not "fields" in result:
+                    continue
+
+                # Handle different FILTER line formats
+                filter_id = None
+                description = ""
+                
+                # Try standard format with Description
+                m = re.match(
+                    r"##FILTER=<ID=([^,>]+),Description=\"([^\"]+)\"",
+                    l,
+                )
+                if m:
+                    filter_id = m.group(1)
+                    description = m.group(2)
+                else:
+                    # Try simpler format without Description
+                    m = re.match(r"##FILTER=<ID=([^,>]+)>", l)
+                    if m:
+                        filter_id = m.group(1)
+                        description = "No description available"
+                    else:
+                        # Try basic format
+                        m = re.match(r"##FILTER=<ID=([^>]+)>", l)
+                        if m:
+                            filter_id = m.group(1)
+                            description = "No description available"
+                
+                if not filter_id:
+                    logging.error("Cannot parse FILTER line: %s" % l)
+                else:
+                    filter_field = {
+                        "ID": filter_id,
+                        "description": description,
+                    }
+                    
+                    if extract_filters:
+                        result["filters"][filter_id] = filter_field
+                    
+                    # Add to fields list for compatibility
+                    result["fields"].append({
+                        "key": "FILTER",
+                        "values": filter_field
+                    })
+                    
             elif l.startswith("#CHROM"):
                 if extract_columns:
                     cols = l[1:].split()
@@ -133,6 +208,15 @@ def extract_header(
     finally:
         if fh:
             fh.close()
+            
+    # Add tabix information if available
+    try:
+        import subprocess
+        tabix_output = subprocess.check_output(["tabix", "-l", filename], universal_newlines=True, stderr=subprocess.PIPE)
+        chromosomes = [line.strip() for line in tabix_output.split('\n') if line.strip()]
+        result["tabix"] = {"chromosomes": chromosomes}
+    except Exception:
+        result["tabix"] = None
 
     return result
 
@@ -304,3 +388,39 @@ def writeVariantsJSON(
 
     with open(outfile, "w", encoding="utf-8") as f:
         json.dump(variants, f, indent=4)
+
+
+def extractHeadersJSON(
+    vcf_file: str,
+    outfile: str = None,
+    extract_columns: bool = True,
+    extract_info: bool = True,
+    extract_formats: bool = True,
+    extract_filters: bool = True,
+) -> Dict[str, Any]:
+    """Extract VCF headers to JSON
+
+    Args:
+        vcf_file: Path to VCF file
+        outfile: Optional output JSON filename. If provided, headers will be written to this file.
+        extract_columns: When true, extract column headers
+        extract_info: When true, extract INFO fields
+        extract_formats: When true, extract FORMAT fields
+        extract_filters: When true, extract FILTER fields
+        
+    Returns:
+        Dictionary with header information
+    """
+    headers = extract_header(
+        vcf_file,
+        extract_columns=extract_columns,
+        extract_info=extract_info,
+        extract_formats=extract_formats,
+        extract_filters=extract_filters,
+    )
+
+    if outfile:
+        with open(outfile, "w", encoding="utf-8") as f:
+            json.dump(headers, f, indent=4)
+            
+    return headers
