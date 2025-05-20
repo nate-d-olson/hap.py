@@ -31,3 +31,9 @@ Thumbs.db
 /cmake-build-debug
 /build
 /.vscode
+example**
+
+# Virtual environment directories
+.venv/
+venv/
+venv_test_install/

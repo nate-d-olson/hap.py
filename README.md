@@ -421,37 +421,6 @@ $ python3 bin/hap.py.py3 --version
 Hap.py v0.3.7
 ```
 
-Note that hap.py will copy all Python source files to the build folder, so when making changes to
-any Python component, `make` must be run to make sure the scripts in the build folder are
-up-to-date.
-
-The source for hap.py contains a script [configure.sh](configure.sh) which shows some basic additional
-configuration flags, and an automated way to pre-package CMake setups. Here is a list of additional flags for CMake to change compile options help it find dependencies:
-
-* `-DCMAKE_BUILD_TYPE=Debug` -- set the build type, allowed values are `Debug` and `Release`
-* `-DCMAKE_C_COMPILER=/usr/bin/gcc` and `-DCMAKE_CXX_COMPILER=/usr/bin/g++` -- change the compiler path
-* `-DCMAKE_INSTALL_PREFIX=/usr/local` -- set an installation directory that will be used by make install.
-* `-DBOOST_ROOT=$HOME/boost_1_55_0_install` -- set the path to Boost. Run the following commands to compile and install boost:
-
-```bash
-cd ~
-wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
-tar xjf boost_1_55_0.tar.bz2
-cd boost_1_55_0
-./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options
-./b2 --prefix=$HOME/boost_1_55_0_install install
-```
-
-* `-DUSE_SGE` -- enable the `--force-interactive` switch in hap.py.
-* `-DBUILD_VCFEVAL=ON` -- Download and build rtgtools / vcfeval. This is a comparison engine that can be used
-   as an alternative to the built-in xcmp in hap.py. To successfully build and run vcfeval, you will need:
-  * A Java JRE, newer than 1.8.x
-  * ant > 1.9.2 (older versions of ant will not successfully build rtgtools)
-   See [src/sh/illumina-setup.sh]() for an example. If running Java requires any special setup
-   (or to configure any other environment variables), you can specify a wrapper script using
-   `-DVCFEVAL_WRAPPER={absolute_path_to_wrapper_script}`. See [src/sh/rtg-wrapper.sh]() for an
-   example.
-
 ## System requirements
 
 ### Hardware
@@ -557,3 +526,89 @@ python3 /path/to/install/dir/bin/hap.py.py3 truth.vcf query.vcf -r reference.fa 
 ```
 
 For more detailed information, see the [full documentation](PYTHON3_CORE.md).
+
+## Contributing
+
+We welcome contributions! To set up a complete development environment, follow these steps:
+
+```bash
+# (Optional) install system build prerequisites for C++ extensions
+# Debian/Ubuntu example:
+sudo apt-get update && \
+  sudo apt-get install -y build-essential cmake python3-dev libboost-all-dev
+
+# Create and activate a Python virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Upgrade packaging tools
+pip install --upgrade pip setuptools wheel
+
+# Install development dependencies and tools
+pip install -r requirements-dev.txt
+
+
+# Install the package in editable mode (builds Cython extensions)
+pip install -e .
+
+# Install git hooks for formatting, linting, etc.
+pre-commit install
+```
+
+You can now run the following `nox` sessions for linting, formatting, type checking, and tests:
+
+```bash
+nox -s lint
+nox -s format
+nox -s type_check
+nox -s tests
+```
+
+Thank you for your contributions!
+
+## Development Changelog
+
+### 2025-05-20: Establish Development Tooling
+- Added `requirements-dev.txt` with development dependencies (pre-commit, black, isort, ruff, pyupgrade, mypy, nox, pytest).
+- Updated `.pre-commit-config.yaml` to run ruff and mypy on both `Haplo` and `happy` packages.
+- Introduced `noxfile.py` for reproducible linting, formatting, type checking, and testing sessions.
+
+
+(See [.codex/plan_2025-05-19.md] for details on the modernization plan.)
+
+### 2025-05-22: Fix build dependency isolation
+
+- Added `[build-system]` section to `pyproject.toml` with numpy and Cython build requirements to allow `pip install .` in isolated build environments (e.g., Nox sessions) to succeed.
+
+### 2025-05-23: Fix Cython compilation for happyroc.pyx
+
+- Added missing `from libcpp.vector cimport vector` to `src/python/Haplo/happyroc.pyx` to resolve Cython build errors when compiling the C++ ROC extension.
+
+### 2025-05-24: Fix C++ header include path for ROC module
+
+- Added `helpers` subdirectory to `include_dirs` in `setup.py` so that `Roc.hh` can be found during Cython extension builds.
+
+### 2025-05-25: Correct Cython extern declarations for ROC and variant modules
+
+- Updated `src/python/Haplo/happyroc.pyx` to use `namespace "roc"` for C++ imports.
+- Updated `src/python/Haplo/variant_processor.pyx` to use `namespace "variant"` and correct header paths (`variant/*.hh`).
+
+### 2025-06-01: Migrate ROC to pure Python implementation
+
+- Removed Cython/C++ ROC extension (`src/python/Haplo/happyroc.pyx`, `src/python/Haplo/happyroc.cpp`, \
+  `src/c++/include/helpers/Roc.hh`, `src/c++/lib/tools/Roc.cpp`).
+- Added pure-Python `PythonRocCurve`, `create_roc_curve`, and `test_module` functions to `src/python/Haplo/happyroc.py`.
+- Updated `setup.py` to drop the `happy.Haplo.happyroc` extension.
+
+### 2025-06-XX: Migrate variant_processor to pure Python implementation
+
+- Removed Cython/C++ VariantProcessor extension (`src/python/Haplo/variant_processor.pyx`, \
+  `src/python/Haplo/variant_processor.cpp`).
+- Added pure-Python `VariantProcessor`, `create_standard_processor`, and `test_module` to `src/python/Haplo/variant_processor.py`.
+- Updated `setup.py` to drop the `happy.Haplo.variant_processor` extension.
+
+### 2025-06-XX: Migrate sequence_utils to pure Python implementation
+
+- Removed Cython/C++ sequence_utils extension (`src/python/Haplo/sequence_utils.pyx`, `src/python/Haplo/sequence_utils.cpp`).
+- Added pure-Python `complement_sequence`, `reverse_complement`, and `process_sequence` to `src/python/Haplo/sequence_utils.py`.
+- Updated `setup.py` to drop the `happy.Haplo.sequence_utils` extension.
