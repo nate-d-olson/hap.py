@@ -33,7 +33,13 @@ import traceback
 import pandas
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+# Update path for Python 3
+lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
+if os.path.exists(lib_path):
+    sys.path.append(lib_path)
+else:
+    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
+    sys.path.append(fallback_path)
 
 import Somatic
 import Tools
@@ -41,7 +47,13 @@ from Tools.bamstats import bamStats
 from Tools.bcftools import preprocessVCF, runBcftools
 
 
-def main():
+def main() -> int:
+    """
+    Extract features from a somatic VCF file.
+
+    Returns:
+        int: 0 on success, 1 on failure
+    """
     parser = argparse.ArgumentParser("Somatic VCF Feature Extraction")
 
     parser.add_argument("input", help="Input VCF file")
@@ -185,18 +197,22 @@ def main():
 
         if not args.output.endswith(".csv"):
             args.output += ".csv"
-        logging.info("Saving feature table %s..." % args.output)
+        logging.info(f"Saving feature table {args.output}...")
         featuretable.to_csv(args.output)
 
+        return 0
+    except Exception as e:
+        logging.error(f"Error during feature extraction: {str(e)}")
+        return 1
     finally:
-        logging.info("Deleting scratch folder %s " % scratch)
+        logging.info(f"Deleting scratch folder {scratch}")
         shutil.rmtree(scratch)
 
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+        sys.exit(1)

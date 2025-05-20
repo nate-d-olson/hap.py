@@ -59,7 +59,7 @@ from Tools.parallel import getPool, runParallel
 from Tools.sessioninfo import sessionInfo
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser("Haplotype Comparison")
 
     # input
@@ -650,6 +650,7 @@ def main() -> None:
         args.in_vcf = [output_name]
         args.runner = "hap.py"
         qfy.quantify(args)
+        return 0
 
     finally:
         if args.delete_scratch:
@@ -663,8 +664,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         logging.error(str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+        sys.exit(1)

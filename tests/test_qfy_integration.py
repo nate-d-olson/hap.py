@@ -56,9 +56,7 @@ chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
         output_prefix,
     ]
 
-    result = subprocess.run(
-        cmd, env=env, capture_output=True, text=True
-    )
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"qfy.py command failed: {result.stderr}"
@@ -123,9 +121,7 @@ chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
         "QQ",  # Use QQ field for ROC curve
     ]
 
-    result = subprocess.run(
-        cmd, env=env, capture_output=True, text=True
-    )
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"qfy.py command failed: {result.stderr}"

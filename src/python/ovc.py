@@ -23,18 +23,51 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
+import argparse
+import logging
 import sys
+import traceback
 
-f = open(sys.argv[1], encoding="utf-8")
 
-last = -1
+def main() -> int:
+    """
+    Check a BED file for overlapping intervals.
 
-lines = 1
-for line in f:
-    l = line.split("\t")
-    if len(l) > 3 and (last - 1) > int(l[1]):
-        print("Overlap at %s:%i (line %i)" % (l[0], int(l[1]), lines))
-        exit(1)
-    elif len(l) > 3:
-        last = int(l[2])
-    lines += 1
+    Returns:
+        int: 0 if no overlaps, 1 if overlaps found
+    """
+    parser = argparse.ArgumentParser("Overlap Checker")
+    parser.add_argument("bed_file", help="BED file to check for overlaps")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Show detailed error messages"
+    )
+
+    args = parser.parse_args()
+
+    logging_level = logging.INFO if args.verbose else logging.WARNING
+    logging.basicConfig(level=logging_level, format="%(levelname)s: %(message)s")
+
+    try:
+        with open(args.bed_file, encoding="utf-8") as f:
+            last = -1
+            lines = 1
+
+            for line in f:
+                l = line.split("\t")
+                if len(l) > 3 and (last - 1) > int(l[1]):
+                    print(f"Overlap at {l[0]}:{int(l[1])} (line {lines})")
+                    return 1
+                elif len(l) > 3:
+                    last = int(l[2])
+                lines += 1
+
+        return 0
+    except Exception as e:
+        logging.error(f"Error: {str(e)}")
+        if args.verbose:
+            traceback.print_exc()
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

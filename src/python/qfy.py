@@ -388,7 +388,13 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def main() -> None:
+def main() -> int:
+    """
+    Main entry point for qfy.py.
+
+    Returns:
+        int: 0 on success, non-zero on failure
+    """
     parser = argparse.ArgumentParser("Quantify annotated VCFs")
 
     parser.add_argument(
@@ -522,12 +528,13 @@ def main() -> None:
         args.preprocessing_truth_confregions = None
 
     quantify(args)
+    return 0
 
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         logging.error(str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+        sys.exit(1)

@@ -42,9 +42,7 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
         "vcfeval",
     ]
 
-    result = subprocess.run(
-        cmd, env=env, capture_output=True, text=True
-    )
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"hap.py command failed: {result.stderr}"
@@ -94,9 +92,7 @@ def test_happy_with_bed_file(
         "vcfeval",
     ]
 
-    result = subprocess.run(
-        cmd, env=env, capture_output=True, text=True
-    )
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"hap.py command failed: {result.stderr}"
@@ -139,9 +135,7 @@ def test_error_handling(sample_vcf_files, sample_reference, tmp_path):
         str(tmp_path / "error_output"),
     ]
 
-    result = subprocess.run(
-        cmd, env=env, capture_output=True, text=True
-    )
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
 
     # Check that command failed as expected
     assert (

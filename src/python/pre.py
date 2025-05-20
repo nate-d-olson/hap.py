@@ -431,7 +431,13 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def main() -> None:
+def main() -> int:
+    """
+    Main entry point for pre.py.
+
+    Returns:
+        int: 0 on success, non-zero on failure
+    """
     parser = argparse.ArgumentParser("VCF preprocessor")
 
     # input
@@ -544,7 +550,13 @@ def main() -> None:
     args.output = args.output[0]
 
     preprocessWrapper(args)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        sys.exit(main())
+    except Exception as e:
+        logging.error(str(e))
+        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        sys.exit(1)

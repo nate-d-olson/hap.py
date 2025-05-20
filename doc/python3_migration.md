@@ -25,9 +25,14 @@ The original hap.py toolkit was developed with Python 2, which reached end-of-li
 ### CLI Tools
 
 - Command-line interfaces have been modernized
+- Entry points properly defined in pyproject.toml
+- All entry point functions return appropriate exit codes
 - Improved error reporting and handling
 - Better logging and progress reporting
 - All scripts now use proper Python 3 shebangs
+- Type hints added to main functions
+- Consistent error handling pattern across all tools
+- See [CLI Updates](cli_updates.md) for detailed information
 
 ### Dependencies
 

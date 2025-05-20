@@ -30,14 +30,26 @@ import sys
 import traceback
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(scriptDir, "..", "lib", "python27")))
+# Update path for Python 3
+lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
+if os.path.exists(lib_path):
+    sys.path.append(lib_path)
+else:
+    fallback_path = os.path.abspath(os.path.join(scriptDir, "..", "lib"))
+    sys.path.append(fallback_path)
 
 import Tools
 from Tools.vcfcallerinfo import CallerInfo
 
 
 # noinspection PyBroadException
-def main():
+def main() -> int:
+    """
+    Extract caller and aligner information from VCF and BAM headers.
+
+    Returns:
+        int: 0 on success, 1 on failure
+    """
     parser = argparse.ArgumentParser("Extract caller / aligner info from headers")
 
     parser.add_argument("input", help="Input VCF file")
@@ -68,15 +80,17 @@ def main():
     if not args.output.endswith(".json"):
         args.output += ".json"
 
-    logging.info("Writing %s" % args.output)
+    logging.info(f"Writing {args.output}")
     with open(args.output, "w", encoding="utf-8") as fp:
         json.dump(ci.asDict(), fp, sort_keys=True, indent=4, separators=(",", ": "))
+
+    return 0
 
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except Exception as e:
         logging.error(e.decode("utf-8") if isinstance(e, bytes) else str(e))
         traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
-        exit(1)
+        sys.exit(1)
