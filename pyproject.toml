@@ -74,7 +74,6 @@ Documentation = "https://hap-py.readthedocs.io/en/latest/" # Placeholder for fut
 hap = "hap.py:main"
 qfy = "qfy:main"
 pre = "pre:main"
-ftx = "ftx:main"
 ovc = "ovc:main"
 cnx = "cnx:main"
 

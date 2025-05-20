@@ -58,7 +58,7 @@ def run_all_tests():
     script_dir = Path(__file__).resolve().parent.parent / "src" / "python"
 
     # List of scripts to test
-    script_names = ["hap.py", "qfy.py", "pre.py", "ftx.py", "ovc.py", "cnx.py"]
+    script_names = ["hap.py", "qfy.py", "pre.py", "ovc.py", "cnx.py"]
 
     print(f"Checking for scripts in {script_dir}...")
     scripts = []

@@ -48,8 +48,8 @@ chrQ  5    C    T    0/1       ./.
 
 We know from above that `SAMPLE1` has two possible haplotype pairs:
 
-1.  `ACCACCACC | ACCTTCACC` ... or
-2.  `ACCTCCACC | ACCATCACC`
+1. `ACCACCACC | ACCTTCACC` ... or
+2. `ACCTCCACC | ACCATCACC`
 
 In `SAMPLE2`, we have exactly one pair: `ACCACCACC | ACCTTCACC`, which matches
 pair 1. from above.
@@ -82,11 +82,6 @@ comparing/benchmarking somatic calls). See [sompy.md](sompy.md).
 This tool tries to identify variant callers and aligners by analysing the VCF
 and BAM headers. The output is a JSON file.
 
-### ftx.py
-
-This is a VCF feature extraction script that can extract feature tables from
-VCF files.
-
 Building blocks
 ---------------
 
@@ -105,10 +100,9 @@ Input: a VCF file, a (small) region in the genome.
 
 Outputs:
 
-*  all possible Haplotype sequences described by the VCF (e.g. exactly two
+* all possible Haplotype sequences described by the VCF (e.g. exactly two
    for phased diploid VCF files).
-*  a dot file showing the [reference graph](refgraph.md)
-
+* a dot file showing the [reference graph](refgraph.md)
 
 ### Enumerate haplotype pairs: `dipenum`
 
@@ -151,7 +145,7 @@ Input: two VCF files, optionally regions of the genome
 
 Outputs:
 
-*   An annotated VCF file showing match / mismatch information for each location
+* An annotated VCF file showing match / mismatch information for each location
 
 ### Count variants: `quantify`
 
@@ -162,9 +156,9 @@ Input: a multi-sample VCF file, optionally bed annotation regions for
 
 Outputs:
 
-*  a JSON file of stratified counts
-*  a tab-separated table with all ROC values
-*  a VCF file with annotated regions
+* a JSON file of stratified counts
+* a tab-separated table with all ROC values
+* a VCF file with annotated regions
 
 ### Make ROC tables: `roc`
 

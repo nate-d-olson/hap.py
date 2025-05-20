@@ -23,12 +23,9 @@ add_custom_command(TARGET python_src1
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PYTHON_SRC} ${PYTHON_DST}
 )
 
-SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Somatic")
-SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}/Somatic")
+SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Tools")
+SET(PYTHON_DST "${CMAKE_BINARY_DIR}/lib/python${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}/Tools")
 add_custom_target(python_src2 ALL COMMENT "Copying ${PYTHON_SRC} -> ${PYTHON_DST}")
-
-add_custom_command(TARGET python_src2
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${PYTHON_SRC} ${PYTHON_DST}
 )
 
 SET(PYTHON_SRC "${CMAKE_SOURCE_DIR}/src/python/Tools")

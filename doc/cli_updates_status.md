@@ -9,7 +9,6 @@ As part of the Python 3 migration, we have updated the command-line tools in the
 | hap.py | ✅ Working | Successfully returns proper exit codes |
 | qfy.py | ✅ Working | Successfully returns proper exit codes |
 | pre.py | ✅ Working | Successfully returns proper exit codes |
-| ftx.py | ✅ Working | Successfully returns proper exit codes with mock implementation |
 | ovc.py | ✅ Working | Successfully returns proper exit codes |
 | cnx.py | ✅ Working | Successfully returns proper exit codes |
 
@@ -34,16 +33,11 @@ As part of the Python 3 migration, we have updated the command-line tools in the
 
 ## Remaining Work
 
-1. **ftx.py Module Import Issue**:
-   - Create a complete mock implementation of the Somatic module
-   - Implement proper error handling to deal with missing modules
-   - Consider making ftx.py an optional component that's only installed with extra dependencies
-
-2. **Testing Entry Points**:
+1. **Testing Entry Points**:
    - Develop tests for installed entry points (not just source scripts)
    - Verify proper behavior when installed via pip
 
-3. **Documentation**:
+2. **Documentation**:
    - Update documentation to reflect new CLI usage patterns
    - Provide examples of common use cases
 
@@ -55,4 +49,4 @@ A simple test script (tests/test_cli_source.py) verifies that most CLI scripts c
 - Return proper exit codes for invalid options
 - Handle basic command-line interactions
 
-All scripts except ftx.py are passing these basic tests.
+All scripts are passing these basic tests.

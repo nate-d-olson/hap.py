@@ -9,9 +9,8 @@ The hap.py project includes several command-line utilities for variant calling e
 1. `hap.py` - Main tool for comparing variant calls
 2. `qfy.py` - Quantification of variant calling performance
 3. `pre.py` - VCF file preprocessing
-4. `ftx.py` - Somatic VCF feature extraction
-5. `ovc.py` - Overlap checking for BED files
-6. `cnx.py` - Caller/aligner version extraction
+4. `ovc.py` - Overlap checking for BED files
+5. `cnx.py` - Caller/aligner version extraction
 
 ## Key Updates
 
@@ -24,10 +23,11 @@ The entry points for the command-line tools are defined in `pyproject.toml`:
 hap = "hap.py:main"
 qfy = "qfy:main"
 pre = "pre:main"
-ftx = "ftx:main"
 ovc = "ovc:main"
 cnx = "cnx:main"
 ```
+
+Each script has been updated with:
 
 Each script has been updated with:
 
@@ -63,12 +63,6 @@ Each script has been updated with:
 - Added return type annotation to `main()` function
 - Added proper error handling with try/except
 - Updated exit code handling to follow Python standards
-
-#### ftx.py
-
-- Updated Python path handling for Python 3
-- Added proper error handling and return codes
-- Updated string formatting to use f-strings
 
 #### ovc.py
 
