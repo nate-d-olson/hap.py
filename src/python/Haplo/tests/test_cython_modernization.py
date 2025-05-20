@@ -5,6 +5,7 @@ Test script for Cython modernization and Python 3 compatibility.
 This script verifies that the Cython modules work correctly with Python 3
 and checks that the fallback implementations work as expected.
 """
+
 import argparse
 import os
 import sys
@@ -39,9 +40,9 @@ def test_sequence_functions():
         actual_comp = actual_comp.decode("ascii")
 
     print(f"  complement_sequence('{test_seq}') = '{actual_comp}'")
-    assert (
-        actual_comp == expected_comp
-    ), f"Expected '{expected_comp}', got '{actual_comp}'"
+    assert actual_comp == expected_comp, (
+        f"Expected '{expected_comp}', got '{actual_comp}'"
+    )
 
     # Test bytes input
     test_bytes = b"ACGTACGT"
@@ -51,9 +52,9 @@ def test_sequence_functions():
         actual_comp_bytes = actual_comp_bytes.encode("ascii")
 
     print(f"  complement_sequence({test_bytes}) = {actual_comp_bytes}")
-    assert (
-        actual_comp_bytes == b"TGCATGCA"
-    ), f"Expected b'TGCATGCA', got {actual_comp_bytes}"
+    assert actual_comp_bytes == b"TGCATGCA", (
+        f"Expected b'TGCATGCA', got {actual_comp_bytes}"
+    )
 
     # Test reverse_complement
     expected_revcomp = "ACGATGCA"
@@ -63,9 +64,9 @@ def test_sequence_functions():
         actual_revcomp = actual_revcomp.decode("ascii")
 
     print(f"  reverse_complement('TGCATCGT') = '{actual_revcomp}'")
-    assert (
-        actual_revcomp == expected_revcomp
-    ), f"Expected '{expected_revcomp}', got '{actual_revcomp}'"
+    assert actual_revcomp == expected_revcomp, (
+        f"Expected '{expected_revcomp}', got '{actual_revcomp}'"
+    )
 
     print("Sequence functions test: PASSED")
 
@@ -108,9 +109,9 @@ def test_variant_processor():
     # Check the first result
     if "chrom" in results[0]:
         print(f"  results[0]['chrom'] = '{results[0]['chrom']}'")
-        assert (
-            results[0]["chrom"] == "chr1"
-        ), f"Expected 'chr1', got '{results[0]['chrom']}'"
+        assert results[0]["chrom"] == "chr1", (
+            f"Expected 'chr1', got '{results[0]['chrom']}'"
+        )
 
     print("VariantProcessor test: PASSED")
 
@@ -137,12 +138,12 @@ def test_roc_functions():
     # But we can add explicit float() for clarity
     expected_recall = float(10) / 11
     expected_precision = float(10) / 15
-    assert (
-        abs(recalls[0] - expected_recall) < 1e-10
-    ), f"Expected recall[0] to be {expected_recall}, got {recalls[0]}"
-    assert (
-        abs(precisions[0] - expected_precision) < 1e-10
-    ), f"Expected precision[0] to be {expected_precision}, got {precisions[0]}"
+    assert abs(recalls[0] - expected_recall) < 1e-10, (
+        f"Expected recall[0] to be {expected_recall}, got {recalls[0]}"
+    )
+    assert abs(precisions[0] - expected_precision) < 1e-10, (
+        f"Expected precision[0] to be {expected_precision}, got {precisions[0]}"
+    )
 
     print("ROC functions test: PASSED")
 

@@ -53,9 +53,9 @@ def test_multimerge_basic(tmp_path):
     assert temp_vcf.exists(), f"Result file {temp_vcf} not created"
 
     # Compare result with expected output (ignoring comments)
-    assert filecmp.cmp(
-        temp_vcf, expected_merge_vcf, shallow=False
-    ), "Output does not match expected result"
+    assert filecmp.cmp(temp_vcf, expected_merge_vcf, shallow=False), (
+        "Output does not match expected result"
+    )
 
 
 @pytest.mark.integration
@@ -106,9 +106,9 @@ def test_multimerge_import(tmp_path):
     assert temp_vcf.exists(), f"Result file {temp_vcf} not created"
 
     # Compare result with expected output
-    assert filecmp.cmp(
-        temp_vcf, expected_import_vcf, shallow=False
-    ), "Output does not match expected result"
+    assert filecmp.cmp(temp_vcf, expected_import_vcf, shallow=False), (
+        "Output does not match expected result"
+    )
     # ${DIR}/../data/import_errors.vcf
     # ${DIR}/../data/import_errors.vcf
     # ${DIR}/../data/import_errors.vcf

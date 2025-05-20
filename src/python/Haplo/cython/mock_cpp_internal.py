@@ -9,7 +9,7 @@ import logging
 import warnings
 
 # Log warning about using mock implementation
-warnings.warn("Using mock implementation of cpp_internal")
+warnings.warn("Using mock implementation of cpp_internal", stacklevel=2)
 logging.warning("Using mock implementation of cpp_internal")
 
 

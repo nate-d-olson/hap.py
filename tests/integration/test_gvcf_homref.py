@@ -122,6 +122,6 @@ def test_gvcf_homref_with_variants(tmp_path):
 
     # Compare with expected output
     expected_vcf = callsonly_dir / "expected_callsonly.vcf"
-    assert compare_files(
-        output_vcf, expected_vcf
-    ), "Homref+variants output doesn't match expected"
+    assert compare_files(output_vcf, expected_vcf), (
+        "Homref+variants output doesn't match expected"
+    )

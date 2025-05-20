@@ -52,7 +52,7 @@ def blocksplitWrapper(location_str: Optional[str], args: Any) -> Tuple[str, floa
     # Construct the command
     to_run = (
         f"blocksplit {shlex.quote(args.vcf1)} {shlex.quote(args.vcf2)}{loc_arg} "
-        f"-o {output_filename} --window {args.window*2} --nblocks {args.pieces} -f 0"
+        f"-o {output_filename} --window {args.window * 2} --nblocks {args.pieces} -f 0"
     )
 
     # Create temporary files for stdout/stderr

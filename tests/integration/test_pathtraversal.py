@@ -7,7 +7,6 @@ import os
 import subprocess
 
 import pytest
-
 from tests.utils import (
     compare_summary_files,
     get_project_root,
@@ -41,9 +40,9 @@ def test_pathtraversal(tmp_path):
     assert test_vcf.exists(), f"Test VCF file {test_vcf} not found"
     assert test2_vcf.exists(), f"Test2 VCF file {test2_vcf} not found"
     assert reference_fa.exists(), f"Reference file {reference_fa} not found"
-    assert (
-        expected_summary.exists()
-    ), f"Expected summary file {expected_summary} not found"
+    assert expected_summary.exists(), (
+        f"Expected summary file {expected_summary} not found"
+    )
 
     # Run hap.py
     happy_cmd = [
@@ -77,9 +76,9 @@ def test_pathtraversal(tmp_path):
         pytest.fail(f"Summary comparison failed: {e.stderr}")
 
     # Alternative direct comparison approach
-    assert os.path.exists(
-        output_summary
-    ), f"Output summary file {output_summary} not found"
-    assert compare_summary_files(
-        output_summary, expected_summary
-    ), "Summary files differ"
+    assert os.path.exists(output_summary), (
+        f"Output summary file {output_summary} not found"
+    )
+    assert compare_summary_files(output_summary, expected_summary), (
+        "Summary files differ"
+    )

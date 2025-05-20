@@ -26,7 +26,7 @@ try:
     USING_MOCK = False
 
 except ImportError as e:
-    warnings.warn(f"Failed to import Cython modules: {e}. Using mock implementation.")
+    warnings.warn(f"Failed to import Cython modules: {e}. Using mock implementation.", stacklevel=2)
     logging.warning(f"Failed to import Cython modules: {e}. Using mock implementation.")
 
     # Fall back to mock implementation

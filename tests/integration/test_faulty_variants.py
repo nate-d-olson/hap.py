@@ -35,9 +35,9 @@ def test_faulty_variant_handling(temp_dir):
     # Check that required files exist
     assert test_vcf.exists(), f"Test VCF file {test_vcf} not found"
     assert test_q_vcf.exists(), f"Test query VCF file {test_q_vcf} not found"
-    assert (
-        test_q_failure_vcf.exists()
-    ), f"Test query failure VCF file {test_q_failure_vcf} not found"
+    assert test_q_failure_vcf.exists(), (
+        f"Test query failure VCF file {test_q_failure_vcf} not found"
+    )
     assert reference.exists(), f"Reference file {reference} not found"
     assert expected_vcf.exists(), f"Expected output file {expected_vcf} not found"
 
@@ -59,9 +59,9 @@ def test_faulty_variant_handling(temp_dir):
     ]
 
     result = subprocess.run(cmd, capture_output=True)
-    assert (
-        result.returncode == 0
-    ), f"hap.py failed with valid inputs: {result.stderr.decode()}"
+    assert result.returncode == 0, (
+        f"hap.py failed with valid inputs: {result.stderr.decode()}"
+    )
 
     # Decompress and compare output to expected
     with gzip.open(output_vcf_gz, "rt") as f_gz:

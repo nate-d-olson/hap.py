@@ -82,9 +82,9 @@ def test_blocksplit():
 
             # Compare to make sure all variants are included
             with open(tf_x1.name) as f1, open(tf_x2.name) as f2:
-                assert (
-                    f1.read() == f2.read()
-                ), "Not all VCF1 variants are covered by the blocks"
+                assert f1.read() == f2.read(), (
+                    "Not all VCF1 variants are covered by the blocks"
+                )
 
             # Same check for vcf2
             subprocess.run(
@@ -108,6 +108,6 @@ def test_blocksplit():
             )
 
             with open(tf_x1.name) as f1, open(tf_x2.name) as f2:
-                assert (
-                    f1.read() == f2.read()
-                ), "Not all VCF2 variants are covered by the blocks"
+                assert f1.read() == f2.read(), (
+                    "Not all VCF2 variants are covered by the blocks"
+                )

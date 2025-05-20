@@ -82,14 +82,14 @@ Core funcationality to run hap.py as described in [doc/vcfeval_best_practices.md
 ## Considerations and TODOs
 
 - **Code Quality Tools:** Use pre-commit hooks to enforce code quality standards (Black, Ruff, MyPy).
-- **Type Annotation Progress:** 
+- **Type Annotation Progress:**
   - ✅ Haplo/cython_compat.py (completed)
   - 🔍 Tools/bcftools.py (partially completed - key functions done)
   - 🔍 Haplo/quantify.py (to be started)
-- **Test Migration Progress:** 
+- **Test Migration Progress:**
   - ✅ 21 shell tests migrated to pytest format (100% complete)
   - ✅ Test utilities created in tests/utils.py
-- **Automated Testing:** 
+- **Automated Testing:**
   - ✅ CI/CD workflow set up for Ubuntu, macOS
   - 🔍 Need to improve Windows testing coverage
 - **Windows Support:** Test and document Windows-specific installation steps.

@@ -34,16 +34,16 @@ def test_quantify_stratification(tmp_path):
     assert truth_vcf.exists(), f"Truth VCF {truth_vcf} not found"
     assert query_vcf.exists(), f"Query VCF {query_vcf} not found"
     assert reference.exists(), f"Reference {reference} not found"
-    assert (
-        confident_regions.exists()
-    ), f"Confident regions file {confident_regions} not found"
-    assert (
-        stratification_file.exists()
-    ), f"Stratification file {stratification_file} not found"
+    assert confident_regions.exists(), (
+        f"Confident regions file {confident_regions} not found"
+    )
+    assert stratification_file.exists(), (
+        f"Stratification file {stratification_file} not found"
+    )
     assert expected_summary.exists(), f"Expected summary {expected_summary} not found"
-    assert (
-        expected_extended.exists()
-    ), f"Expected extended {expected_extended} not found"
+    assert expected_extended.exists(), (
+        f"Expected extended {expected_extended} not found"
+    )
 
     # Output file paths
     output_prefix = tmp_path / "stratified_test"

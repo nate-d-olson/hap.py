@@ -4,8 +4,9 @@ Migrated from src/sh/run_fastasize_test.py
 """
 
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 # Add the paths needed for importing the modules

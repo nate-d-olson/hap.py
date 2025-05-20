@@ -257,6 +257,6 @@ def test_quantify_test(tmp_path):
     with open(hap_metrics_filtered) as f1, open(qfy_metrics_filtered) as f2:
         hap_data = json.load(f1)
         qfy_data = json.load(f2)
-        assert (
-            hap_data == qfy_data
-        ), "Re-quantified metrics are different from original run"
+        assert hap_data == qfy_data, (
+            "Re-quantified metrics are different from original run"
+        )

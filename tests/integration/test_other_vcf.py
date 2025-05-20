@@ -9,16 +9,16 @@ This includes two tests:
 
 import os
 import subprocess
-import pytest
 from pathlib import Path
 
+import pytest
 from tests.utils import (
-    get_project_root,
+    compare_summary_files,
     get_bin_dir,
     get_example_dir,
-    run_command,
+    get_project_root,
     get_python_executable,
-    compare_summary_files,
+    run_command,
 )
 
 
@@ -65,18 +65,18 @@ def test_variant_filtering(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert (
-        result.returncode == 0
-    ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, (
+        f"hap.py failed with output: {result.stdout}\n{result.stderr}"
+    )
 
     # Check summary file
     output_summary = str(output_prefix) + ".summary.csv"
-    assert os.path.exists(
-        output_summary
-    ), f"Output summary not generated: {output_summary}"
-    assert compare_summary_files(
-        Path(output_summary), expected_summary
-    ), f"Summary files differ: {output_summary} vs {expected_summary}"
+    assert os.path.exists(output_summary), (
+        f"Output summary not generated: {output_summary}"
+    )
+    assert compare_summary_files(Path(output_summary), expected_summary), (
+        f"Summary files differ: {output_summary} vs {expected_summary}"
+    )
 
 
 @pytest.mark.integration
@@ -123,9 +123,9 @@ def test_haploid_variants(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert (
-        result.returncode == 0
-    ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, (
+        f"hap.py failed with output: {result.stdout}\n{result.stderr}"
+    )
 
     # Check VCF output - need to gunzip first
     output_vcf_gz = str(output_prefix) + ".vcf.gz"
@@ -139,11 +139,11 @@ def test_haploid_variants(tmp_path):
 
     # Compare VCF files ignoring header lines (lines starting with #)
     def compare_vcf_files(file1, file2):
-        with open(file1, "r") as f1, open(file2, "r") as f2:
+        with open(file1) as f1, open(file2) as f2:
             lines1 = [line for line in f1 if not line.startswith("#")]
             lines2 = [line for line in f2 if not line.startswith("#")]
             return lines1 == lines2
 
-    assert compare_vcf_files(
-        output_vcf, expected_vcf
-    ), f"VCF files differ: {output_vcf} vs {expected_vcf}"
+    assert compare_vcf_files(output_vcf, expected_vcf), (
+        f"VCF files differ: {output_vcf} vs {expected_vcf}"
+    )

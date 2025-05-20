@@ -117,10 +117,10 @@ def test_{test_info["name"]}(tmp_path):
 
     # TODO: Replace with actual paths based on the shell script
     # Example input files:
-    {chr(10).join([f'# {file}' for file in test_info["input_files"]])}
+    {chr(10).join([f"# {file}" for file in test_info["input_files"]])}
 
     # Example commands:
-    {chr(10).join([f'# {cmd}' for cmd in test_info["commands"]])}
+    {chr(10).join([f"# {cmd}" for cmd in test_info["commands"]])}
 
     # Implement the test based on the shell script logic
     assert True  # Replace with actual assertions
