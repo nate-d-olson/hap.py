@@ -5,6 +5,7 @@ This module provides pure Python implementations of the Cython modules
 for testing and development purposes. They can be used when the actual
 Cython modules are not available or during development.
 """
+
 from functools import cmp_to_key
 
 import numpy as np
