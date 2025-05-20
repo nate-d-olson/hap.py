@@ -39,15 +39,20 @@
 2. **Type Annotation**
    - 🔍 Add type hints to core Python modules
    - ✅ Added type hints to Haplo/cython_compat.py
-   - ✅ Added type hints to Tools/bcftools.py (runShellCommand, runBcftools, parseStats, countVCFRows, concatenateParts)
+   - ✅ Added type hints to Tools/bcftools.py
+   - ✅ Added Path handling for better file path management
    - 🔍 Continue with Haplo/quantify.py and other modules
 
-3. **Documentation**
+3. **Dependency Management**
+   - ✅ Created happy.requirements.py3.txt with Python 3 compatible dependencies
+   - 🔍 Update imports to follow modern Python conventions (e.g. import pandas as pd)
+
+4. **Documentation**
    - 🔍 Set up Sphinx for API documentation
    - 🔍 Create user guide with updated installation instructions
    - 🔍 Document CLI commands and entry points
 
-4. **Build System Refinement**
+5. **Build System Refinement**
    - 🔍 Test wheel building on Windows
    - 🔍 Configure for PyPI publication
    - 🔍 Add Windows-specific build instructions
