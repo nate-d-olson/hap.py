@@ -49,8 +49,8 @@ implementations or to rely on performant Python libraries (e.g., NumPy, pysam).
 - [x] Implement pure-Python `src/python/Haplo/variant_processor.py` using pysam and NumPy/Pandas.
 - [x] Update setup.py to remove `happy.Haplo.variant_processor` Cython extension.
 - [x] Delete `src/python/Haplo/variant_processor.pyx` and generated `variant_processor.cpp`.
-- [ ] Update tests to cover new VariantProcessor functionality.
-- [ ] Ensure tests for Cython modernization pass using the new implementation.
+- [x] Update tests to cover new VariantProcessor functionality.
+- [x] Ensure tests for Cython modernization pass using the new implementation.
 - [ ] Benchmark performance against Cython version and document results.
 
 ### Phase 3 Progress
@@ -59,5 +59,11 @@ implementations or to rely on performant Python libraries (e.g., NumPy, pysam).
 - [x] Implement pure-Python `src/python/Haplo/sequence_utils.py` using NumPy or pure Python.
 - [x] Update setup.py to remove `happy.Haplo.sequence_utils` Cython extension.
 - [x] Delete `src/python/Haplo/sequence_utils.pyx` and `src/python/Haplo/sequence_utils.cpp`.
-- [ ] Update tests to cover new sequence_utils functionality.
+- [x] Update tests to cover new sequence_utils functionality.
 - [ ] Benchmark performance of the Python implementation and document results.
+
+### Phase 4 Progress
+
+- [ ] Remove residual C++ helper headers and implementations no longer required by migrated modules.
+- [ ] Update setup.py and build configuration to drop any remaining Cython build machinery.
+- [ ] Update documentation and tests to remove references to Cython extensions and point to pure-Python implementations.
