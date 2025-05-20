@@ -33,9 +33,7 @@ import sys
 import tempfile
 import time
 
-from happy.Haplo import partialcredit
 from happy.Tools.fastasize import fastaContigLengths
-from happy.Tools.sessioninfo import sessionInfo
 from happy.Tools.vcfextract import preprocessVCF, runBcftools
 
 

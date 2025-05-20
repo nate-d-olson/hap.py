@@ -23,6 +23,7 @@
 #
 
 import argparse
+import contextlib
 import gzip
 import json
 import logging
@@ -31,12 +32,12 @@ import os
 import sys
 import tempfile
 import traceback
+
 import pandas
-import contextlib
 
 from happy import Tools
-from happy.Haplo import gvcf2bed, happyroc, quantify
-from happy.Tools import fastasize, vcfextract
+from happy.Haplo import quantify
+from happy.Tools import fastasize
 from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 

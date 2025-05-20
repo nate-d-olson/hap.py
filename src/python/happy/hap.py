@@ -4,18 +4,10 @@ hap: CLI entry point for hap.py benchmarking tool.
 """
 import argparse
 import logging
-import os
 import sys
-import tempfile
 import traceback
 
-from happy import pre, qfy
-from happy.Haplo import blocksplit, gvcf2bed, partialcredit, quantify, vcfeval
-from happy.Tools import bcftools, vcfextract
-from happy.Tools.bcftools import bedOverlapCheck
-from happy.Tools.fastasize import fastaContigLengths
-from happy.Tools.parallel import getPool, runParallel
-from happy.Tools.sessioninfo import sessionInfo
+from happy import qfy
 
 
 def main():
