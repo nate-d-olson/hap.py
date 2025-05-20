@@ -39,31 +39,32 @@ repos:
     rev: v1.3.0
     hooks:
     -   id: mypy
-        exclude: ^(docs/|example-plugin/)
+        exclude: ^(docs/|example/|tests/)
+        files: ^src/python/
         additional_dependencies: [
             'types-requests',
             'types-PyYAML',
         ]
-        args: [--ignore-missing-imports]
+        args: [--config-file=pyproject.toml]
 
 # Custom hook for checking VCF compatibility
--   repo: local
-    hooks:
-    -   id: vcf-compatibility
-        name: Check VCF compatibility
-        entry: python scripts/check_vcf_compatibility.py
-        language: system
-        files: \.py$
-        exclude: ^tests/
-        pass_filenames: true
+# Custom hooks (disabled until scripts are implemented)
+# -   repo: local
+#     hooks:
+#     -   id: vcf-compatibility
+#         name: Check VCF compatibility
+#         entry: python scripts/check_vcf_compatibility.py
+#         language: system
+#         files: \.py$
+#         exclude: ^tests/
+#         pass_filenames: true
 
-# Custom hook for C++ integration checks
--   repo: local
-    hooks:
-    -   id: cpp-integration
-        name: Check C++ integration
-        entry: python scripts/validate_cpp_integration.py
-        language: system
-        files: \.(pyx|pxd|cpp|h)$
-        exclude: ^external/
-        pass_filenames: true
+# -   repo: local
+#     hooks:
+#     -   id: cpp-integration
+#         name: Check C++ integration
+#         entry: python scripts/validate_cpp_integration.py
+#         language: system
+#         files: \.(pyx|pxd|cpp|h)$
+#         exclude: ^external/
+#         pass_filenames: true

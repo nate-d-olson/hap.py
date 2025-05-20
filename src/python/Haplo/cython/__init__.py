@@ -5,10 +5,9 @@ This package tries to import the Cython modules, but falls back to
 mock implementations if they are not available.
 """
 
-import os
-import sys
-import warnings
 import logging
+import os
+import warnings
 
 # Flag to control whether to use mock implementation
 USE_MOCK = os.environ.get("HAPLO_USE_MOCK", "0").lower() in ("1", "true", "yes")
@@ -23,7 +22,6 @@ try:
     from .cpp_internal import *
 
     # Add any other Cython modules here
-
     # Signal that we're using the real implementation
     USING_MOCK = False
 
@@ -33,8 +31,8 @@ except ImportError as e:
 
     # Fall back to mock implementation
     from .mock_internal import *
-    # Add other mock imports here
 
+    # Add other mock imports here
     # Signal that we're using the mock implementation
     USING_MOCK = True
 

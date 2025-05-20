@@ -6,6 +6,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(HAPLOTYPES VERSION 0.3.15 LANGUAGES CXX C)
 
+# Set scikit-build specific variables
+# This helps scikit-build find the Python package directory
+set(SKBUILD_MODULE_NAME Haplo)
+set(SKBUILD_PACKAGE_DIR src/python)
+
 # Set CMAKE policies
 if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)  # Use <PackageName>_ROOT variables
@@ -26,11 +31,15 @@ include(CythonSupport)
 # Python version detection
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 message(STATUS "Found Python: ${Python3_EXECUTABLE} (version: ${Python3_VERSION})")
-if(Python3_VERSION VERSION_LESS 3.6)
-  message(FATAL_ERROR "Python 3.6 or later is required")
+if(Python3_VERSION VERSION_LESS 3.7) # Updated to 3.7 as per pyproject.toml
+  message(FATAL_ERROR "Python 3.7 or later is required")
 endif()
 
-# NumPy detection is handled in CythonSupport.cmake for Cython modules
+# NumPy detection and inclusion for Cython
+# scikit-build handles this more seamlessly, but explicit find_package can be useful
+find_package(NumPy REQUIRED)
+include_directories(${NumPy_INCLUDE_DIRS})
+message(STATUS "Found NumPy: ${NumPy_VERSION} at ${NumPy_INCLUDE_DIRS}")
 
 # RTG tools / vcfeval configuration
 if(BUILD_VCFEVAL)
@@ -43,8 +52,10 @@ else()
 endif()
 
 # Build external dependencies
+# This step might need to be adapted or removed if scikit-build handles dependencies differently
+# For now, assume it's still needed for non-Python dependencies
 execute_process(
-    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies_py3.sh
+    COMMAND ${CMAKE_SOURCE_DIR}/external/make_dependencies.sh # Assuming this script is Python 3 compatible or updated
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     RESULT_VARIABLE EXTERNAL_SUCCESS)
 
@@ -77,7 +88,7 @@ endif()
 # Find Boost components
 find_package(Boost 1.55.0 COMPONENTS thread iostreams regex filesystem system program_options REQUIRED)
 if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Could not find Boost libraries. Please install or set BOOST_ROOT.")
+    message(FATAL_ERROR "Could not find Boost libraries. Please install or set BOOST_ROOT, or ensure it is built by external/make_dependencies.sh.") # Clarified error
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
@@ -94,9 +105,28 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
-add_subdirectory(src/c++/lib) # Ensure correct path to library CMakeLists
-# Add the directory containing Cython modules
-add_subdirectory(src/python/Haplo/cython) # Ensure this path is correct
+add_subdirectory(src/c++/lib)
+add_subdirectory(src/python/Haplo/cython)
 
-# Status message at the end
-message(STATUS "Configuration completed successfully. Run 'make' to build.")
+# Install rules for Python package files (IMPORTANT for scikit-build)
+# This tells CMake to install the Python parts of the package.
+# scikit-build uses these install rules to package your project correctly.
+
+# Example: Install Python modules
+# install(DIRECTORY ${SKBUILD_PACKAGE_DIR}/${SKBUILD_MODULE_NAME}/
+#         DESTINATION ${SKBUILD_MODULE_NAME}
+#         FILES_MATCHING PATTERN "*.py"
+# )
+
+# Example: Install package data (if any, e.g. non-code files within your package)
+# install(DIRECTORY ${SKBUILD_PACKAGE_DIR}/${SKBUILD_MODULE_NAME}/data/
+#         DESTINATION ${SKBUILD_MODULE_NAME}/data
+#         FILES_MATCHING PATTERN "*"
+# )
+
+# The Cython modules built via add_cython_target from CythonSupport.cmake
+# should be automatically handled by scikit-build if they are linked to a target
+# that scikit-build is aware of, or if their output location is standard.
+# Ensure your Cython modules are correctly defined as libraries and linked.
+
+message(STATUS "Configuration completed successfully. Use 'pip install .' to build and install.")

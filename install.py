@@ -25,6 +25,15 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import warnings
+
+# Deprecation warning - this will be removed in v1.0.0
+warnings.warn(
+    "The install.py script is deprecated and will be removed in a future version. "
+    "Please use standard pip installation instead (e.g., 'pip install .').",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 def check_python_version():
@@ -105,11 +114,11 @@ def replace_shebang(filename, shebang):
     with open(filename, "w", encoding="utf-8") as f:
         removed = False
         print(shebang, file=f)
-        for i, l in enumerate(lines):
-            if not removed and l.startswith("#!") and i < 10:
+        for i, line_content in enumerate(lines):
+            if not removed and line_content.startswith("#!") and i < 10:
                 removed = True
             else:
-                f.write(l)
+                f.write(line_content)
 
 
 def build_haplotypes(source_dir, build_dir, args):

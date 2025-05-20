@@ -1,5 +1,3 @@
-\
-# filepath: /Users/nolson/hap.py-update-take2/hap.py/.github/workflows/python-ci.yml
 name: Python CI
 
 on:
@@ -42,15 +40,11 @@ jobs:
     - name: Install Python build dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r pyproject.toml # This syntax is not standard, use pip install .[dev] or similar
-        # Correct command to install from pyproject.toml (core + dev dependencies)
-        # pip install .[dev]
-        # However, to just install build deps first:
-        pip install setuptools wheel scikit-build cmake cython numpy toml
+        pip install setuptools wheel scikit-build cmake "cython>=0.29.24" "numpy>=1.19.0" toml build
 
     - name: Install project with dependencies
       run: |
-        pip install .[dev] # Installs hap.py and its dependencies, including dev for linters/tests
+        pip install -e .[dev] # Installs hap.py in development mode with test dependencies
 
     - name: Lint with Black
       run: |
@@ -69,27 +63,26 @@ jobs:
 
     - name: Type check with MyPy
       run: |
-        pip install mypy
-        # mypy src/python # Adjust path as needed, configure mypy in pyproject.toml or mypy.ini
-        echo "Mypy check placeholder - configure paths and options"
-
+        pip install mypy types-requests types-PyYAML
+        mypy src/python
 
     - name: Build project (sdist and wheel)
       run: |
         pip install build
         python -m build --sdist --wheel .
 
-    - name: Test with Pytest (placeholder)
+    - name: Run unit tests with Pytest
       run: |
-        pip install pytest
-        # pytest # This will run if tests are discoverable by pytest
-        echo "Pytest execution placeholder - configure test discovery and execution"
+        pytest tests/unit -v
+
+    - name: Run integration tests with Pytest
+      run: |
+        pytest tests/integration -v
 
     # Future step for publishing to PyPI
     # - name: Publish to PyPI
-    #   if: startsWith(github.ref, \'refs/tags\')
+    #   if: startsWith(github.ref, 'refs/tags')
     #   uses: pypa/gh-action-pypi-publish@release/v1
     #   with:
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
-\

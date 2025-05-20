@@ -9,7 +9,6 @@ requires = [
     "toml",
 ]
 build-backend = "setuptools.build_meta"
-backend-path = ["."]
 
 [project]
 name = "hap.py"
@@ -45,7 +44,6 @@ dependencies = [
     "psutil>=5.8.0",
     "pysam>=0.16.0",
     "scipy>=1.7.0",
-    "pybedtools>=0.9.0",
 ]
 
 [project.optional-dependencies]
@@ -72,15 +70,13 @@ Homepage = "https://github.com/Illumina/hap.py" # Adjust if this is a fork
 "Bug Tracker" = "https://github.com/Illumina/hap.py/issues" # Adjust if this is a fork
 Documentation = "https://hap-py.readthedocs.io/en/latest/" # Placeholder for future docs
 
-# Placeholder for console scripts, assuming main() functions will be added to these files
-# [project.scripts]
-# happy = "happy:main"
-# sompy = "sompy:main"
-# hapcl = "hapcl:main"
-# preproc = "preproc:main"
-# quantify = "quantify:main"
-# xcmp = "xcmp:main"
-# vcfextract = "vcfextract:main"
+[project.scripts]
+hap = "hap.py:main"
+qfy = "qfy:main"
+pre = "pre:main"
+ftx = "ftx:main"
+ovc = "ovc:main"
+cnx = "cnx:main"
 
 [tool.black]
 line-length = 88
@@ -88,10 +84,27 @@ line-length = 88
 [tool.isort]
 profile = "black"
 
-[tool.flake8]
-ignore = "E226,E302,E41,E402"
-max-line-length = 160
-max-complexity = 1000
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = false          # Initially less strict
+warn_unused_configs = true
+disallow_untyped_defs = false    # Will enable later
+disallow_incomplete_defs = false # Will enable later
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+strict_optional = true
+ignore_missing_imports = true    # Temporarily ignore missing imports
+
+[[tool.mypy.overrides]]
+module = [
+    "Haplo.*",
+    "pandas.*",
+    "scipy.*",
+    "numpy.*",
+    "pysam.*"
+]
+ignore_missing_imports = true
 
 [tool.scikit-build]
 cmake.source-dir = "."
@@ -99,3 +112,15 @@ cmake.args = [] # e.g. ["-DCMAKE_BUILD_TYPE=Release"]
 # cmake.build-type = "Release" # Alternative to cmake.args
 # cmake.minimum-version = "3.10" # Redundant if in build-system.requires, but can be assertive
 install.strip = false # Default is true, might be needed for debugging symbols
+
+[tool.flake8]
+ignore = "E226,E302,E41,E402"
+max-line-length = 160
+max-complexity = 1000
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "B", "I"]
+ignore = ["E501"]  # Line length is handled by black
+target-version = "py37"
+src = ["src/python"]
