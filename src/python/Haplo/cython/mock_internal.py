@@ -9,7 +9,7 @@ This is especially useful during the Python 3 migration process.
 """
 
 import logging
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Optional, Union
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -57,8 +57,8 @@ class MockVariantRecord:
         self.ref = ref
         self.alt = alt
         self.qual = qual
-        self.info = {}
-        self.format = {}
+        self.info: Dict[str, Any] = {}
+        self.format: Dict[str, Any] = {}
 
     def __str__(self) -> str:
         return f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
@@ -67,19 +67,35 @@ class MockVariantRecord:
 class MockHaploCompare:
     """Mock implementation of the haplotype comparison functionality"""
 
-    def __init__(self, reference_file: str = None):
+    def __init__(self, reference_file: Optional[str] = None):
         self.reference_file = reference_file
-        self.truth_variants = []
-        self.query_variants = []
-        self.results = None
+        self.truth_variants: List[MockVariantRecord] = []
+        self.query_variants: List[MockVariantRecord] = []
+        self.results: Dict[str, Any] = {
+            "total_truth": 0,
+            "total_query": 0,
+            "true_positives": 0,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0,
+            "recall": 0.0,
+            "precision": 0.0,
+            "f1": 0.0,
+        }
 
-    def add_truth_variant(self, variant: Union[MockVariantRecord, Dict]) -> None:
+    def add_truth_variant(
+        self, variant: Union[MockVariantRecord, Dict[str, Any]]
+    ) -> None:
         """Add a truth variant"""
         if isinstance(variant, dict):
             variant = MockVariantRecord(**variant)
         self.truth_variants.append(variant)
 
-    def add_query_variant(self, variant: Union[MockVariantRecord, Dict]) -> None:
+    def add_query_variant(
+        self, variant: Union[MockVariantRecord, Dict[str, Any]]
+    ) -> None:
         """Add a query variant"""
         if isinstance(variant, dict):
             variant = MockVariantRecord(**variant)
@@ -98,7 +114,31 @@ class MockHaploCompare:
             "true_positives": tp,
             "false_positives": fp,
             "false_negatives": fn,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
         }
+
+        # Calculate metrics
+        if tp + fn > 0:
+            self.results["recall"] = tp / (tp + fn)
+        else:
+            self.results["recall"] = 0.0
+
+        if tp + fp > 0:
+            self.results["precision"] = tp / (tp + fp)
+        else:
+            self.results["precision"] = 0.0
+
+        if self.results["precision"] + self.results["recall"] > 0:
+            self.results["f1"] = (
+                2
+                * (self.results["precision"] * self.results["recall"])
+                / (self.results["precision"] + self.results["recall"])
+            )
+        else:
+            self.results["f1"] = 0.0
+
         return self.results
 
 
@@ -131,6 +171,10 @@ def reverse_complement(seq: str) -> str:
     Returns:
         Reverse complemented DNA sequence
     """
+    # Handle potential bytes input for Python 3 compatibility
+    if isinstance(seq, bytes):
+        seq = seq.decode("utf-8")
+
     return complement_sequence(seq)[::-1]
 
 
@@ -155,12 +199,14 @@ def read_fasta_index(fasta_file: str) -> Dict[str, Dict[str, int]]:
     }
 
 
-def get_reference_sequence(fasta_file: str, chrom: str, start: int, end: int) -> str:
+def get_reference_sequence(
+    fasta_file: str, chrom: str, start: int, end: int
+) -> str:
     """
     Mock implementation of fetching reference sequence from a FASTA file.
 
     Args:
-        fasta_file: Path to a FASTA file
+        fasta_file: Path to a FASTA file (not used in mock implementation)
         chrom: Chromosome name
         start: Start position (0-based)
         end: End position (exclusive)
@@ -168,7 +214,9 @@ def get_reference_sequence(fasta_file: str, chrom: str, start: int, end: int) ->
     Returns:
         Reference sequence string
     """
-    logger.warning("Using mock reference sequence for %s:%d-%d", chrom, start, end)
+    logger.warning(
+        "Using mock reference sequence for %s:%d-%d", chrom, start, end
+    )
     # Return a mock sequence of appropriate length
     length = end - start
     # Generate a mock sequence with balanced nucleotide content
@@ -195,7 +243,9 @@ def parse_vcf_file(vcf_file: str) -> Dict[str, Any]:
     }
 
 
-def write_vcf_file(vcf_data: Dict[str, Any], output_file: str) -> None:
+def write_vcf_file(
+    vcf_data: Dict[str, Any], output_file: str
+) -> None:
     """
     Mock implementation of writing a VCF file.
 
@@ -210,115 +260,6 @@ def write_vcf_file(vcf_data: Dict[str, Any], output_file: str) -> None:
     logger.info("Would write %d records to %s", record_count, output_file)
 
 
-from typing import Any, Dict, Union
-
-
-class MockVariantRecord:
-    """Mock implementation of a variant record"""
-
-    def __init__(self, chrom: str, pos: int, ref: str, alt: str, qual: float = 0):
-        self.chrom = chrom
-        self.pos = pos
-        self.ref = ref
-        self.alt = alt
-        self.qual = qual
-        self.info = {}
-        self.format = {}
-
-    def __str__(self) -> str:
-        return f"{self.chrom}:{self.pos} {self.ref}>{self.alt}"
-
-
-class MockHaploCompare:
-    """Mock implementation of the haplotype comparison functionality"""
-
-    def __init__(self, reference_file: str = None):
-        self.reference_file = reference_file
-        self.truth_variants = []
-        self.query_variants = []
-        self.results = None
-
-    def add_truth_variant(self, variant: Union[MockVariantRecord, Dict]) -> None:
-        """Add a truth variant"""
-        if isinstance(variant, dict):
-            variant = MockVariantRecord(**variant)
-        self.truth_variants.append(variant)
-
-    def add_query_variant(self, variant: Union[MockVariantRecord, Dict]) -> None:
-        """Add a query variant"""
-        if isinstance(variant, dict):
-            variant = MockVariantRecord(**variant)
-        self.query_variants.append(variant)
-
-    def compare(self) -> Dict[str, Any]:
-        """Perform the comparison"""
-        # Simple mock implementation
-        self.results = {
-            "total_truth": len(self.truth_variants),
-            "total_query": len(self.query_variants),
-            "tp": 0,
-            "fp": 0,
-            "fn": 0,
-        }
-
-        # Count exact matches as TP
-        for qvar in self.query_variants:
-            matched = False
-            for tvar in self.truth_variants:
-                if (
-                    qvar.chrom == tvar.chrom
-                    and qvar.pos == tvar.pos
-                    and qvar.ref == tvar.ref
-                    and qvar.alt == tvar.alt
-                ):
-                    matched = True
-                    self.results["tp"] += 1
-                    break
-            if not matched:
-                self.results["fp"] += 1
-
-        # Count unmatched truth variants as FN
-        for tvar in self.truth_variants:
-            matched = False
-            for qvar in self.query_variants:
-                if (
-                    qvar.chrom == tvar.chrom
-                    and qvar.pos == tvar.pos
-                    and qvar.ref == tvar.ref
-                    and qvar.alt == tvar.alt
-                ):
-                    matched = True
-                    break
-            if not matched:
-                self.results["fn"] += 1
-
-        # Calculate metrics
-        if self.results["tp"] + self.results["fn"] > 0:
-            self.results["recall"] = self.results["tp"] / (
-                self.results["tp"] + self.results["fn"]
-            )
-        else:
-            self.results["recall"] = 0
-
-        if self.results["tp"] + self.results["fp"] > 0:
-            self.results["precision"] = self.results["tp"] / (
-                self.results["tp"] + self.results["fp"]
-            )
-        else:
-            self.results["precision"] = 0
-
-        if self.results["precision"] + self.results["recall"] > 0:
-            self.results["f1"] = (
-                2
-                * (self.results["precision"] * self.results["recall"])
-                / (self.results["precision"] + self.results["recall"])
-            )
-        else:
-            self.results["f1"] = 0
-
-        return self.results
-
-
 # Mock version functions
 def get_version() -> str:
     """Get the hap.py version string (mock implementation)"""
@@ -328,27 +269,6 @@ def get_version() -> str:
 def get_build_time() -> str:
     """Get the hap.py build timestamp (mock implementation)"""
     return "2023-01-01 00:00:00"
-
-
-def complement_sequence(seq: str) -> str:
-    """Returns the complement of a DNA sequence (mock implementation)"""
-    # Handle potential bytes input for Python 3 compatibility
-    if isinstance(seq, bytes):
-        seq = seq.decode("utf-8")
-
-    # DNA complementation
-    trans = str.maketrans("ACGTRYMKWSBDHVN", "TGCAYRKMWSVHDBN")
-    return seq.upper().translate(trans)
-
-
-def reverse_complement(seq: str) -> str:
-    """Returns the reverse complement of a DNA sequence (mock implementation)"""
-    # Handle potential bytes input for Python 3 compatibility
-    if isinstance(seq, bytes):
-        seq = seq.decode("utf-8")
-
-    # Complement and reverse
-    return complement_sequence(seq)[::-1]
 
 
 def test_module() -> Dict[str, str]:
