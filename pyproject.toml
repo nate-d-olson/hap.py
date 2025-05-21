@@ -74,8 +74,6 @@ Documentation = "https://hap-py.readthedocs.io/en/latest/" # Placeholder for fut
 hap = "hap.py:main"
 qfy = "qfy:main"
 pre = "pre:main"
-ovc = "ovc:main"
-cnx = "cnx:main"
 
 [tool.black]
 line-length = 88

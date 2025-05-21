@@ -4,13 +4,22 @@
 
 ### CLI Tools Update (Completed)
 
-- Updated all main CLI scripts (`hap.py`, `qfy.py`, `pre.py`, `ftx.py`, `ovc.py`, `cnx.py`) to be Python 3 compatible
+- Updated main CLI scripts (`hap.py`, `qfy.py`, `pre.py`) to be Python 3 compatible
+- Removed auxiliary scripts (`ovc.py`, `cnx.py`) that weren't part of core functionality
 - Added proper error handling and return status codes
 - Created mock implementations for missing modules
 - Added comprehensive tests for CLI tools
 - Created documentation for CLI updates
 - Fixed sys.exit() usage to propagate status codes properly
 - Added proper type hints
+
+### Codebase Cleanup (Completed)
+
+- Removed unused C++ modules (scmp directory and XCmpQuantify files)
+- Removed unnecessary Tools module (bamstats.py)
+- Removed somatic and xcmp engine code from hap.py
+- Updated tests to work without removed components
+- Simplified engine selection to only support vcfeval
 
 ### Documentation Updates
 

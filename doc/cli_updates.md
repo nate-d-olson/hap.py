@@ -4,13 +4,13 @@ This document summarizes the updates made to the hap.py command-line tools durin
 
 ## Overview
 
-The hap.py project includes several command-line utilities for variant calling evaluation:
+The hap.py project includes these core command-line utilities for variant calling evaluation:
 
 1. `hap.py` - Main tool for comparing variant calls
 2. `qfy.py` - Quantification of variant calling performance
 3. `pre.py` - VCF file preprocessing
-4. `ovc.py` - Overlap checking for BED files
-5. `cnx.py` - Caller/aligner version extraction
+
+**Note**: The auxiliary scripts `ovc.py` and `cnx.py` have been removed as part of the Python 3 migration to focus on core functionality.
 
 ## Key Updates
 
@@ -23,8 +23,6 @@ The entry points for the command-line tools are defined in `pyproject.toml`:
 hap = "hap.py:main"
 qfy = "qfy:main"
 pre = "pre:main"
-ovc = "ovc:main"
-cnx = "cnx:main"
 ```
 
 Each script has been updated with:
@@ -51,6 +49,8 @@ Each script has been updated with:
 - Added return type annotation to `main()` function
 - Updated error handling to use `sys.exit()` with proper return codes
 - Ensured consistent path handling
+- Removed support for xcmp and somatic comparison engines
+- Simplified to only support vcfeval as the comparison engine
 
 #### qfy.py
 
@@ -63,18 +63,6 @@ Each script has been updated with:
 - Added return type annotation to `main()` function
 - Added proper error handling with try/except
 - Updated exit code handling to follow Python standards
-
-#### ovc.py
-
-- Completely refactored to use proper argparse CLI structure
-- Added proper error handling and return codes
-- Added type hints and docstrings
-
-#### cnx.py
-
-- Updated Python path handling for Python 3
-- Added type hints to `main()` function
-- Fixed error handling for better user experience
 
 ## Testing
 

@@ -55,9 +55,8 @@ import Tools
 from Tools import bcftools, vcfextract
 from Tools.bcftools import bedOverlapCheck
 from Tools.fastasize import fastaContigLengths
-from Tools.parallel import getPool, runParallel
+from Tools.parallel import getPool
 from Tools.sessioninfo import sessionInfo
-
 
 def main() -> int:
     parser = argparse.ArgumentParser("Haplotype Comparison")
@@ -185,7 +184,7 @@ def main() -> int:
         dest="engine",
         default="vcfeval",
         choices=["vcfeval"],
-        help="Comparison engine to use.",
+        help="Comparison engine to use. Only vcfeval is supported in Python 3.",
     )
 
     parser.add_argument(
@@ -284,7 +283,7 @@ def main() -> int:
         logging.info("Checking input regions.")
         if bedOverlapCheck(args.regions_bedfile):
             raise ValueError(
-                "The regions bed file (specified using -R) has overlaps, this will not work with xcmp. "
+                "The regions bed file (specified using -R) has overlaps. "
                 "You can either use -T, or run the file through bedtools merge"
             )
 
@@ -335,27 +334,8 @@ def main() -> int:
 
     tempfiles = []
 
-    # turn on allele conversion
-    if (
-        args.engine == "scmp-somatic" or args.engine == "scmp-distance"
-    ) and not args.somatic_allele_conversion:
-        args.somatic_allele_conversion = True
-        if args.engine == "scmp-distance":
-            args.somatic_allele_conversion = "first"
-
-    # somatic allele conversion should also switch off decomposition
-    if args.somatic_allele_conversion and (
-        "-D" not in sys.argv and "--decompose" not in sys.argv
-    ):
-        args.preprocessing_decompose = False
-
-    # xcmp/scmp support bcf; others don't
-    if args.engine in ["xcmp", "scmp-somatic", "scmp-distance"] and (
-        args.bcf or (args.vcf1.endswith(".bcf") and args.vcf2.endswith(".bcf"))
-    ):
-        internal_format_suffix = ".bcf"
-    else:
-        internal_format_suffix = ".vcf.gz"
+    # Define internal format suffix
+    internal_format_suffix = ".vcf.gz"
 
     # write session info and args file
     session = sessionInfo()
@@ -378,18 +358,6 @@ def main() -> int:
             suffix=internal_format_suffix,
         )
         ttf.close()
-
-        if (
-            args.engine.endswith("somatic")
-            and args.preprocessing_truth
-            and (
-                args.preprocessing_leftshift
-                or args.preprocessing_norm
-                or args.preprocessing_decompose
-            )
-        ):
-            args.preprocessing_truth = False
-            logging.info("Turning off pre.py preprocessing for somatic comparisons")
 
         if args.preprocessing_truth and args.filter_nonref:
             logging.info("Filtering out any variants genotyped as <NON_REF>")
@@ -418,7 +386,7 @@ def main() -> int:
             args.preprocess_window,
             args.threads,
             args.gender,
-            args.somatic_allele_conversion,
+            False,
             "TRUTH",
             filter_nonref=args.filter_nonref if args.preprocessing_truth else False,
             convert_gvcf_to_vcf=convert_gvcf_truth,
@@ -477,18 +445,6 @@ def main() -> int:
         tempfiles.append(qtf.name + ".csi")
         tempfiles.append(qtf.name + ".tbi")
 
-        if args.engine.endswith("somatic") and (
-            args.preprocessing_leftshift
-            or args.preprocessing_norm
-            or args.preprocessing_decompose
-        ):
-            args.preprocessing_leftshift = False
-            args.preprocessing_norm = False
-            args.preprocessing_decompose = False
-            logging.info(
-                "Turning off pre.py preprocessing (query) for somatic comparisons"
-            )
-
         pre.preprocess(
             args.vcf2,
             qtf.name,
@@ -504,7 +460,7 @@ def main() -> int:
             args.preprocess_window,
             args.threads,
             args.gender,  # same gender as truth above
-            args.somatic_allele_conversion,
+            False,
             "QUERY",
             filter_nonref=args.filter_nonref,
             convert_gvcf_to_vcf=convert_gvcf_query,
@@ -527,33 +483,6 @@ def main() -> int:
                 logging.warning(f"No calls for location {_xc} in query!")
 
         pool = getPool(args.threads)
-        if args.threads > 1 and args.engine == "xcmp":
-            logging.info("Running using %i parallel processes." % args.threads)
-
-            # find balanced pieces
-            # cap parallelism at 64 since otherwise bcftools concat below might run out
-            # of file handles
-            args.pieces = min(args.threads, 64)
-            res = runParallel(
-                pool, Haplo.blocksplit.blocksplitWrapper, args.locations, args
-            )
-
-            if None in res:
-                raise RuntimeError("One of the blocksplit processes failed.")
-
-            tempfiles += res
-
-            args.locations = []
-            for f in res:
-                with open(f, encoding="utf-8") as fp:
-                    for l in fp:
-                        ll = l.strip().split("\t", 3)
-                        if len(ll) < 3:
-                            continue
-                        xchr = ll[0]
-                        start = int(ll[1]) + 1
-                        end = int(ll[2])
-                        args.locations.append(f"{xchr}:{start}-{end}")
 
         # count variants before normalisation
         if "samples" not in h1 or not h1["samples"]:

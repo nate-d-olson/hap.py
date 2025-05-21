@@ -4,7 +4,6 @@ Migrated from src/sh/run_blocksplit_test.sh
 """
 
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
@@ -25,14 +24,12 @@ def test_blocksplit():
     bin_dir = project_root / "build" / "bin"
     blocksplit_bin = bin_dir / "blocksplit"
     bcftools_bin = bin_dir / "bcftools"
-    ovc_script = project_root / "src" / "python" / "ovc.py"
 
     # Check that required files exist
     assert vcf1_path.exists(), f"Test VCF1 {vcf1_path} not found"
     assert vcf2_path.exists(), f"Test VCF2 {vcf2_path} not found"
     assert blocksplit_bin.exists(), f"Blocksplit binary {blocksplit_bin} not found"
     assert bcftools_bin.exists(), f"Bcftools binary {bcftools_bin} not found"
-    assert ovc_script.exists(), f"OVC script {ovc_script} not found"
 
     # Create temporary files
     with tempfile.NamedTemporaryFile(suffix=".bed") as temp_result:
@@ -50,9 +47,24 @@ def test_blocksplit():
         ]
         subprocess.run(blocksplit_cmd, check=True)
 
-        # Check for overlaps using ovc.py
-        ovc_cmd = [sys.executable, str(ovc_script), temp_result.name]
-        subprocess.run(ovc_cmd, check=True)
+        # Check for overlaps by direct analysis
+        with open(temp_result.name) as f:
+            prev_chr = None
+            prev_end = -1
+            for line in f:
+                parts = line.strip().split("\t")
+                if len(parts) < 3:
+                    continue
+                chr_name = parts[0]
+                start = int(parts[1])
+                end = int(parts[2])
+
+                # Check for overlaps within the same chromosome
+                if chr_name == prev_chr and start < prev_end:
+                    pytest.fail(f"Found overlap at {chr_name}:{start}-{end}")
+
+                prev_chr = chr_name
+                prev_end = end
 
         # Check that vcf1 variants are all captured in the blocks
         with tempfile.NamedTemporaryFile(
@@ -82,9 +94,9 @@ def test_blocksplit():
 
             # Compare to make sure all variants are included
             with open(tf_x1.name) as f1, open(tf_x2.name) as f2:
-                assert f1.read() == f2.read(), (
-                    "Not all VCF1 variants are covered by the blocks"
-                )
+                assert (
+                    f1.read() == f2.read()
+                ), "Not all VCF1 variants are covered by the blocks"
 
             # Same check for vcf2
             subprocess.run(
@@ -108,6 +120,6 @@ def test_blocksplit():
             )
 
             with open(tf_x1.name) as f1, open(tf_x2.name) as f2:
-                assert f1.read() == f2.read(), (
-                    "Not all VCF2 variants are covered by the blocks"
-                )
+                assert (
+                    f1.read() == f2.read()
+                ), "Not all VCF2 variants are covered by the blocks"

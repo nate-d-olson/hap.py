@@ -9,13 +9,18 @@ As part of the Python 3 migration, we have updated the command-line tools in the
 | hap.py | ✅ Working | Successfully returns proper exit codes |
 | qfy.py | ✅ Working | Successfully returns proper exit codes |
 | pre.py | ✅ Working | Successfully returns proper exit codes |
-| ovc.py | ✅ Working | Successfully returns proper exit codes |
-| cnx.py | ✅ Working | Successfully returns proper exit codes |
+| ovc.py | ❌ Removed | Auxiliary script removed in code cleanup |
+| cnx.py | ❌ Removed | Auxiliary script removed in code cleanup |
 
 ## Updates Completed
 
-1. **Entry Point Updates**:
-   - Updated all scripts to use proper `main()` functions that return integer status codes
+1. **Core Functionality Focus**:
+   - Retained only core command-line tools (hap.py, qfy.py, pre.py)
+   - Removed auxiliary scripts that weren't essential to core functionality
+   - Streamlined entry points to focus on primary use cases
+
+2. **Entry Point Updates**:
+   - Updated core scripts to use proper `main()` functions that return integer status codes
    - Improved error handling with proper exit codes
    - Added type hints to function definitions
 

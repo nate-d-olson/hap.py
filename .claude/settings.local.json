@@ -30,7 +30,9 @@
       "Bash(black:*)",
       "Bash(PYTHONPATH=$PWD python -m pytest tests/unit/test_tools.py tests/unit/test_vcfextract.py -v)",
       "Bash(python -m pytest tests/unit/test_tools.py tests/unit/test_vcfextract.py tests/unit/test_pre.py -v)",
-      "Bash(python -m pytest tests/integration/test_integration.py -v)"
+      "Bash(python -m pytest tests/integration/test_integration.py -v)",
+      "Bash(git grep:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

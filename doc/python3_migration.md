@@ -14,6 +14,7 @@ The original hap.py toolkit was developed with Python 2, which reached end-of-li
 - String handling has been updated to handle Unicode correctly
 - File I/O operations now use proper encoding/decoding
 - Exception handling uses the modern Python 3 patterns
+- Codebase streamlined to focus on core functionality only
 
 ### Cython Integration
 
@@ -24,7 +25,9 @@ The original hap.py toolkit was developed with Python 2, which reached end-of-li
 
 ### CLI Tools
 
-- Command-line interfaces have been modernized
+- Command-line interfaces have been modernized and streamlined
+- Only core CLI tools (hap.py, pre.py, qfy.py) are maintained
+- Auxiliary tools (ovc.py, cnx.py) have been removed
 - Entry points properly defined in pyproject.toml
 - All entry point functions return appropriate exit codes
 - Improved error reporting and handling
@@ -303,7 +306,14 @@ with open(filename, 'w', encoding='utf-8') as f:
 
 ### Backward Compatibility
 
-Most command-line interfaces should work the same as in the Python 2 version, but with improved error handling and reporting.
+Most core command-line interfaces should work the same as in the Python 2 version, but with improved error handling and reporting. However, several non-core components have been removed:
+
+- **Removed CLI tools**: ovc.py, cnx.py
+- **Removed modules**: bamstats.py
+- **Removed C++ components**: scmp directory, XCmpQuantify
+- **Removed functionality**: Somatic variant calling, xcmp comparison engine
+
+The Python 3 version focuses exclusively on the vcfeval comparison engine, which is now the only supported engine option.
 
 ### VCF Files
 

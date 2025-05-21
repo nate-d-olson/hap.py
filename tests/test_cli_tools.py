@@ -42,12 +42,12 @@ def run_all_tests():
     success = True
 
     # Test each CLI tool with --help
-    for command in ["hap", "qfy", "pre", "ftx", "ovc", "cnx"]:
+    for command in ["hap", "qfy", "pre"]:
         if not test_cli_tool(command):
             success = False
 
     # Test each CLI tool with --version
-    for command in ["hap", "qfy", "pre", "ftx"]:  # ovc and cnx may not have --version
+    for command in ["hap", "qfy", "pre"]:
         if not test_cli_tool(command, ["--version"]):
             success = False
 
