@@ -3,7 +3,7 @@ import os
 
 def test_string_handling_module():
     """Test the string handling utilities."""
-    from Haplo.string_handling import ensure_bytes, ensure_str, ensure_text_io
+    from src.hap_py.haplo.string_handling import ensure_bytes, ensure_str, ensure_text_io
 
     # Test ensure_str
     assert ensure_str(b"test") == "test"
@@ -32,19 +32,19 @@ def test_cython_mock_import():
         os.environ["HAPLO_USE_MOCK"] = "1"
 
         # Import the Cython module package
-        import Haplo.cython
+        import src.hap_py.haplo.cython as haplo_cython
 
         # Verify we're using mocks
-        assert Haplo.cython.USING_MOCK is True
+        assert haplo_cython.USING_MOCK is True
 
         # Test complement_sequence function
         seq = "ACGTACGT"
-        comp_seq = Haplo.cython.complement_sequence(seq)
+        comp_seq = haplo_cython.complement_sequence(seq)
         assert comp_seq == "TGCATGCA"
 
         # Test with bytes input (Python 3 compatibility test)
         bytes_seq = b"ACGT"
-        str_result = Haplo.cython.complement_sequence(bytes_seq)
+        str_result = haplo_cython.complement_sequence(bytes_seq)
         assert isinstance(str_result, str)
         assert str_result == "TGCA"
 
@@ -66,10 +66,10 @@ def test_mock_variant_classes():
         os.environ["HAPLO_USE_MOCK"] = "1"
 
         # Import the Cython module package
-        import Haplo.cython
+        import src.hap_py.haplo.cython as haplo_cython
 
         # Test record class
-        record = Haplo.cython.MockVariantRecord(
+        record = haplo_cython.MockVariantRecord(
             chrom="chr1", pos=100, ref="A", alt="T", qual=30
         )
         assert record.chrom == "chr1"
@@ -79,7 +79,7 @@ def test_mock_variant_classes():
         assert str(record) == "chr1:100 A>T"
 
         # Test mock comparison
-        comparator = Haplo.cython.MockHaploCompare()
+        comparator = haplo_cython.MockHaploCompare()
         comparator.add_truth_variant(record)
         comparator.add_query_variant(record)
         results = comparator.compare()

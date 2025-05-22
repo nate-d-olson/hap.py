@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pysam
 import pytest
-from Haplo.python_preprocess import DecomposeLevel, PreprocessEngine
+from src.hap_py.haplo.python_preprocess import DecomposeLevel, PreprocessEngine
 
 
 @pytest.fixture
