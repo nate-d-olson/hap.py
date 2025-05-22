@@ -19,6 +19,7 @@ import abc
 import contextlib
 import logging
 import os
+import shlex
 import subprocess
 import tempfile
 from typing import ClassVar, Dict, Optional, Type
@@ -71,7 +72,7 @@ def tableROC(
 
         logging.info("Running %s" % cmdline)
 
-        subprocess.check_call(cmdline, shell=True)
+        subprocess.check_call(shlex.split(cmdline))
         try:
             result = pandas.read_csv(tf1_name, sep="\t")
         except Exception:

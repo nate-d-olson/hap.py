@@ -85,7 +85,7 @@ def preprocessWrapper(
             finished = False
             try:
                 logging.info(f"Running '{to_run}'")
-                subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
+                subprocess.check_call(shlex.split(to_run), stdout=tfo, stderr=tfe)
                 finished = True
             finally:
                 if finished:
@@ -141,115 +141,22 @@ def preprocessWrapper(
         return None
 
 
-def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List[str]]:
-    """Blocksplit for partial credit preprocessing.
-
+def directProcessWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
+    """Process VCF directly without splitting into blocks.
+    
+    Modernized replacement for blocksplit - eliminates the overhead and complexity
+    of splitting files into chunks and then merging them back together.
+    
     Args:
         location_str: Location string in format chrom:start-end
-        bargs: Arguments for blocksplit
-
+        bargs: Arguments (not used in direct processing, kept for compatibility)
+    
     Returns:
-        List of location strings for chunks or None if processing failed
+        List containing the original location string (no chunking)
     """
-    starttime = time.time()
-    temp_file_path = None
-    try:
-        # Create a temporary file
-        with tempfile.NamedTemporaryFile(
-            delete=False, prefix=f"result.{location_str}", suffix=".chunks.bed"
-        ) as tf:
-            temp_file_path = tf.name
-
-        # Quote strings for shell safety
-        quoted_vcf = shlex.quote(bargs["vcf"])
-        quoted_location = shlex.quote(location_str)
-
-        to_run = (
-            f"blocksplit {quoted_vcf} -l {quoted_location} -o {temp_file_path} "
-            f"--window {bargs['dist']} --nblocks {bargs['pieces']} -f 0"
-        )
-
-        command_success = False
-        with (
-            tempfile.NamedTemporaryFile(
-                delete=False, prefix="stderr", suffix=".log"
-            ) as tfe,
-            tempfile.NamedTemporaryFile(
-                delete=False, prefix="stdout", suffix=".log"
-            ) as tfo,
-        ):
-            stdout_path = tfo.name
-            stderr_path = tfe.name
-            try:
-                logging.info(f"Running '{to_run}'")
-                subprocess.check_call(to_run, shell=True, stdout=tfo, stderr=tfe)
-                command_success = True
-            except Exception as e:
-                logging.error(f"Blocksplit command failed: {str(e)}")
-                command_success = False
-            finally:
-                # Close files and read their contents for logging
-                try:
-                    with open(stdout_path, encoding="utf-8") as file:
-                        for line in file:
-                            logging.info(line.rstrip())
-                    os.unlink(stdout_path)
-                except Exception as e:
-                    logging.error(f"Error processing stdout log: {str(e)}")
-
-                try:
-                    with open(stderr_path, encoding="utf-8") as file:
-                        for line in file:
-                            # Use error level if command failed, warning otherwise
-                            log_func = (
-                                logging.error
-                                if not command_success
-                                else logging.warning
-                            )
-                            log_func(line.rstrip())
-                    os.unlink(stderr_path)
-                except Exception as e:
-                    logging.error(f"Error processing stderr log: {str(e)}")
-
-        if not command_success:
-            # If the command failed, clean up and return None
-            if temp_file_path and os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
-            return None
-
-        # Parse the output file to get the locations
-        result = []
-        try:
-            with open(temp_file_path, encoding="utf-8"):
-                for line in file:
-                    chunk = line.strip().split("\t", 3)
-                    if len(chunk) < 3:
-                        continue
-                    xchr = chunk[0]
-                    start = int(chunk[1]) + 1
-                    end = int(chunk[2])
-                    result.append(f"{xchr}:{start}-{end}")
-        except Exception as e:
-            logging.error(f"Error parsing blocksplit output: {str(e)}")
-            return None
-
-        elapsed = time.time() - starttime
-        logging.info(f"blocksplit for {location_str} -- time taken {elapsed:.2f}")
-        return result
-
-    except Exception as e:
-        # Catch any unexpected exceptions
-        logging.error(f"Exception in blocksplitWrapper for {location_str}: {str(e)}")
-        return None
-    finally:
-        # Clean up the temporary file if it exists
-        if temp_file_path and os.path.exists(temp_file_path):
-            try:
-                os.unlink(temp_file_path)
-            except OSError as e:
-                logging.warning(
-                    f"Failed to delete temporary file {temp_file_path}: {str(e)}"
-                )
+    # Direct processing - no splitting means we just return the original location
+    # This eliminates the error-prone blocksplit process as requested
+    return [location_str]
 
 
 def partialCredit(

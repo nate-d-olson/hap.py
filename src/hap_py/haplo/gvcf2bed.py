@@ -13,7 +13,7 @@
 # Run gvcf2bed
 
 import logging
-import pipes
+import shlex
 import subprocess
 import tempfile
 
@@ -23,9 +23,9 @@ def gvcf2bed(vcf, ref, regions=None, scratch_prefix=None):
 
     tf = tempfile.NamedTemporaryFile(dir=scratch_prefix, suffix=".bed")
     tf.close()
-    cmdline = f"gvcf2bed {pipes.quote(vcf)} -r {pipes.quote(ref)} -o {tf.name}"
+    cmdline = f"gvcf2bed {shlex.quote(vcf)} -r {shlex.quote(ref)} -o {tf.name}"
     if regions:
-        cmdline += " -T %s" % pipes.quote(regions)
+        cmdline += " -T %s" % shlex.quote(regions)
     logging.info("Running gvcf2bed: '%s'" % cmdline)
-    subprocess.check_call(cmdline, shell=True)
+    subprocess.check_call(shlex.split(cmdline))
     return tf.name
