@@ -17,7 +17,7 @@ import contextlib
 import json
 import logging
 import os
-import pipes
+import shlex
 import subprocess
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -167,7 +167,7 @@ def _make_cmdline(args: List[str]) -> str:
     qargs = []
     for a in args:
         if a.strip() != "|":
-            qargs.append(pipes.quote(a))
+            qargs.append(shlex.quote(a))
         else:
             qargs.append("|")
     return " ".join(qargs)

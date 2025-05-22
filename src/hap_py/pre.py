@@ -26,7 +26,7 @@ import argparse
 import logging
 import multiprocessing
 import os
-import pipes
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -147,9 +147,8 @@ def preprocess(
             int_format = "z"
 
         # HAP-317 always check for BCF errors since preprocessing tools now require valid headers
-        mf = subprocess.check_output(
-            "vcfcheck %s --check-bcf-errors 1" % pipes.quote(vcf_input), shell=True
-        )
+        cmd = ["vcfcheck", vcf_input, "--check-bcf-errors", "1"]
+        mf = subprocess.check_output(cmd)
 
         # Decode the output from bytes to string
         if isinstance(mf, bytes):

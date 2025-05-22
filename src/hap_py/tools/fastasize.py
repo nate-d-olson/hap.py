@@ -25,7 +25,7 @@
 import contextlib
 import logging
 import os
-import pipes
+import shlex
 import subprocess
 import tempfile
 from typing import Dict, List
@@ -75,8 +75,8 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
     os.close(fd)
     try:
         cmd_line = "cat {} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > {}".format(
-            pipes.quote(fastafile),
-            pipes.quote(temp_path),
+            shlex.quote(fastafile),
+            shlex.quote(temp_path),
         )
         logging.info(cmd_line)
 
@@ -104,7 +104,7 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
         # also figure contig-by-contig
         contigs = fastaContigLengths(fastafile)
         for contig in contigs:
-            cmd_line = f"samtools faidx {pipes.quote(fastafile)} {pipes.quote(contig)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
+            cmd_line = f"samtools faidx {shlex.quote(fastafile)} {shlex.quote(contig)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
             logging.debug(cmd_line)
 
             po = subprocess.Popen(

@@ -13,7 +13,7 @@ import contextlib
 import gzip
 import logging
 import os
-import pipes
+import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -43,7 +43,7 @@ def runShellCommand(*args: str) -> CommandOutput:
     qargs = []
     for a in args:
         if a.strip() != "|":
-            qargs.append(pipes.quote(a))
+            qargs.append(shlex.quote(a))
         else:
             qargs.append("|")
 
