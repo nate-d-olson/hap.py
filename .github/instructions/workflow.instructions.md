@@ -110,22 +110,3 @@ pre-commit run ruff --files src/python/path/to/file.py
 2. Keep the main README up-to-date
 3. Document any new features or significant changes
 4. Ensure installation instructions remain accurate
-
-> ### Making Code Changes
->
-> 3. Code quality workflow:
->
->    * Install pre-commit hooks: `pip install pre-commit && pre-commit install`
->    * Use pre-commit for automated checks: `pre-commit run --files <changed_files>`
->    * Fix any issues reported by pre-commit
->    * Run specific hooks as needed:
->      ```bash
->      # Format specific files with Black
->      pre-commit run black --files src/python/path/to/file.py
->
->      # Run specific Python 3 compatibility checks
->      pre-commit run pyupgrade --files src/python/path/to/file.py
->
->      # Run linting with auto-fixes
->      pre-commit run ruff --files src/python/path/to/file.py
->
