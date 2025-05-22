@@ -35,7 +35,7 @@ from pathlib import Path
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
-lib_path = Path(scriptDir).parent / "lib" / "python3"
+lib_path = Path(scriptDir).parent / "lib" / "python"
 if lib_path.exists():
     sys.path.append(str(lib_path))
 else:

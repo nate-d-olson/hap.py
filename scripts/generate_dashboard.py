@@ -2,7 +2,7 @@
 """
 Generate a visual dashboard for the hap.py modernization progress.
 
-This script creates an HTML dashboard showing the current status of 
+This script creates an HTML dashboard showing the current status of
 the modernization effort, including code quality metrics, C++ dependency
 reduction, and test coverage.
 """
@@ -18,17 +18,18 @@ try:
 except ImportError:
     # Fall back to assuming it's in the same directory
     import sys
+
     sys.path.append(str(Path(__file__).parent))
     from track_progress import ModernizationTracker
 
 
 class DashboardGenerator:
     """Generate a visual dashboard for modernization progress."""
-    
+
     def __init__(self, project_root: Path):
         """
         Initialize the dashboard generator.
-        
+
         Args:
             project_root: Root directory of the project
         """
@@ -36,44 +37,44 @@ class DashboardGenerator:
         self.tracker = ModernizationTracker()
         self.dashboard_dir = project_root / "dashboard"
         self.ensure_dashboard_dir()
-    
+
     def ensure_dashboard_dir(self):
         """Ensure the dashboard directory exists."""
         os.makedirs(self.dashboard_dir, exist_ok=True)
-    
+
     def generate_dashboard(self, output_path: str = None) -> str:
         """
         Generate the dashboard HTML.
-        
+
         Args:
             output_path: Path to save the HTML file
-            
+
         Returns:
             Path to the generated HTML file
         """
         # Update metrics
         self.tracker.update_metrics()
-        
+
         # Generate HTML
         html = self.generate_html()
-        
+
         # Save HTML
         if output_path is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = self.dashboard_dir / f"dashboard_{timestamp}.html"
         else:
             output_path = Path(output_path)
-        
+
         with open(output_path, "w") as f:
             f.write(html)
-        
+
         print(f"✅ Dashboard generated: {output_path}")
         return str(output_path)
-    
+
     def generate_html(self) -> str:
         """
         Generate the dashboard HTML.
-        
+
         Returns:
             HTML content
         """
@@ -81,16 +82,22 @@ class DashboardGenerator:
         quality = self.tracker.check_code_quality()
         cpp_deps = self.tracker.check_cpp_dependencies()
         packages = self.tracker.check_dependency_packages()
-        
+
         # Calculate overall progress
         total_cpp_components = len(cpp_deps)
-        migrated_components = sum(1 for comp in cpp_deps.values() if comp["has_python_replacement"])
-        migration_percentage = (migrated_components / total_cpp_components * 100) if total_cpp_components > 0 else 0
-        
+        migrated_components = sum(
+            1 for comp in cpp_deps.values() if comp["has_python_replacement"]
+        )
+        migration_percentage = (
+            (migrated_components / total_cpp_components * 100)
+            if total_cpp_components > 0
+            else 0
+        )
+
         # Get Python 2 artifacts
         artifacts = quality["python2_artifacts"]
         total_artifacts = sum(artifacts.values())
-        
+
         # Generate HTML
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -188,7 +195,7 @@ class DashboardGenerator:
     <div class="container">
         <h1>hap.py Modernization Dashboard</h1>
         <p>Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-        
+
         <div class="card">
             <h2>Overall Progress</h2>
             <div class="progress-bar">
@@ -196,30 +203,30 @@ class DashboardGenerator:
                 <div class="label">{migration_percentage:.1f}% ({migrated_components}/{total_cpp_components} components)</div>
             </div>
         </div>
-        
+
         <div class="dashboard">
             <!-- Left Column -->
             <div>
                 <div class="card">
                     <h2>Code Quality Status</h2>
                     <p>
-                        <strong>Pre-commit:</strong> 
+                        <strong>Pre-commit:</strong>
                         {('<span class="status success">✓ Configured</span>' if quality['pre_commit_installed'] else '<span class="status danger">✗ Not configured</span>')}
                     </p>
                     <p>
-                        <strong>Type Coverage:</strong> 
+                        <strong>Type Coverage:</strong>
                         <div class="progress-bar">
                             <div class="fill" style="width: {quality['type_coverage']}%;"></div>
                             <div class="label">{quality['type_coverage']}%</div>
                         </div>
                     </p>
                     <p>
-                        <strong>Python 2 Artifacts:</strong> 
+                        <strong>Python 2 Artifacts:</strong>
                         {('<span class="status success">✓ None found</span>' if total_artifacts == 0 else f'<span class="status danger">✗ {total_artifacts} issues found</span>')}
                     </p>
                     {self._generate_artifacts_table(artifacts) if total_artifacts > 0 else ''}
                 </div>
-                
+
                 <div class="card">
                     <h2>Modern Package Adoption</h2>
                     <table>
@@ -231,7 +238,7 @@ class DashboardGenerator:
                     </table>
                 </div>
             </div>
-            
+
             <!-- Right Column -->
             <div>
                 <div class="card">
@@ -245,14 +252,14 @@ class DashboardGenerator:
                         {self._generate_component_rows(cpp_deps)}
                     </table>
                 </div>
-                
+
                 <div class="card">
                     <h2>Testing Status</h2>
                     <p><strong>Pytest Files:</strong> {quality['test_files']['pytest_files']}</p>
                     <p><strong>Shell Test Files:</strong> {quality['test_files']['shell_test_files']}</p>
                     <p><strong>Total Test Files:</strong> {quality['test_files']['total_tests']}</p>
                 </div>
-                
+
                 <div class="card">
                     <h2>Next Priority Actions</h2>
                     <ol>
@@ -266,7 +273,7 @@ class DashboardGenerator:
 </html>
 """
         return html
-    
+
     def _generate_artifacts_table(self, artifacts):
         """Generate HTML table for Python 2 artifacts."""
         rows = ""
@@ -279,7 +286,7 @@ class DashboardGenerator:
                     <td><span class="status {status_class}">{count}</span></td>
                 </tr>
                 """
-        
+
         if rows:
             return f"""
             <table>
@@ -292,12 +299,16 @@ class DashboardGenerator:
             """
         else:
             return ""
-    
+
     def _generate_package_rows(self, packages):
         """Generate HTML table rows for package adoption."""
         rows = ""
         for package, adopted in packages.items():
-            status = '<span class="status success">✓ Adopted</span>' if adopted else '<span class="status danger">✗ Missing</span>'
+            status = (
+                '<span class="status success">✓ Adopted</span>'
+                if adopted
+                else '<span class="status danger">✗ Missing</span>'
+            )
             rows += f"""
             <tr>
                 <td>{package}</td>
@@ -305,7 +316,7 @@ class DashboardGenerator:
             </tr>
             """
         return rows
-    
+
     def _generate_component_rows(self, cpp_deps):
         """Generate HTML table rows for C++ components."""
         rows = ""
@@ -319,7 +330,7 @@ class DashboardGenerator:
             else:
                 status = '<span class="status warning">⟳ Needs migration</span>'
                 status_class = "warning"
-            
+
             rows += f"""
             <tr>
                 <td>{component}</td>
@@ -328,17 +339,21 @@ class DashboardGenerator:
             </tr>
             """
         return rows
-    
+
     def _generate_priority_actions(self, quality, cpp_deps, packages, total_artifacts):
         """Generate HTML list items for priority actions."""
         actions = []
-        
+
         if total_artifacts > 0:
-            actions.append('<li><strong>Fix Python 2 artifacts</strong> - Run <code>pre-commit run pyupgrade --all-files</code></li>')
-        
-        if not quality['pre_commit_installed']:
-            actions.append('<li><strong>Set up pre-commit</strong> - Run <code>pip install pre-commit && pre-commit install</code></li>')
-        
+            actions.append(
+                "<li><strong>Fix Python 2 artifacts</strong> - Run <code>pre-commit run pyupgrade --all-files</code></li>"
+            )
+
+        if not quality["pre_commit_installed"]:
+            actions.append(
+                "<li><strong>Set up pre-commit</strong> - Run <code>pip install pre-commit && pre-commit install</code></li>"
+            )
+
         # Find components that should be prioritized
         high_priority_components = []
         for component, details in cpp_deps.items():
@@ -346,22 +361,29 @@ class DashboardGenerator:
                 # Prioritize by component importance
                 if component in ["blocksplit", "quantify", "vcfcheck", "preprocess"]:
                     high_priority_components.append(component)
-        
+
         if high_priority_components:
             components_list = ", ".join(high_priority_components)
-            actions.append(f'<li><strong>Migrate high-priority components</strong> - Focus on: {components_list}</li>')
-        
+            actions.append(
+                f"<li><strong>Migrate high-priority components</strong> - Focus on: {components_list}</li>"
+            )
+
         # Check for important packages
         missing_packages = []
         for package in ["pysam", "biopython", "pytest"]:
             if not packages.get(package, False):
                 missing_packages.append(package)
-        
+
         if missing_packages:
             packages_list = ", ".join(missing_packages)
-            actions.append(f'<li><strong>Add missing dependencies</strong> - Install: {packages_list}</li>')
-        
-        return "\n".join(actions) or "<li>No immediate actions - keep up the good work!</li>"
+            actions.append(
+                f"<li><strong>Add missing dependencies</strong> - Install: {packages_list}</li>"
+            )
+
+        return (
+            "\n".join(actions)
+            or "<li>No immediate actions - keep up the good work!</li>"
+        )
 
 
 def main():
@@ -370,27 +392,30 @@ def main():
         description="Generate a visual dashboard for hap.py modernization progress"
     )
     parser.add_argument(
-        "-o", "--output", 
-        help="Path to save the HTML file (default: dashboard/dashboard_TIMESTAMP.html)"
+        "-o",
+        "--output",
+        help="Path to save the HTML file (default: dashboard/dashboard_TIMESTAMP.html)",
     )
     parser.add_argument(
-        "--open", action="store_true",
-        help="Open the dashboard in a web browser after generation"
+        "--open",
+        action="store_true",
+        help="Open the dashboard in a web browser after generation",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Get project root directory (parent of the script directory)
     project_root = Path(__file__).parent.parent
-    
+
     # Generate dashboard
     generator = DashboardGenerator(project_root)
     dashboard_path = generator.generate_dashboard(args.output)
-    
+
     # Open in browser if requested
     if args.open:
         try:
             import webbrowser
+
             webbrowser.open(f"file://{os.path.abspath(dashboard_path)}")
         except Exception as e:
             print(f"Could not open browser: {e}")

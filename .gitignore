@@ -56,3 +56,6 @@ test_*_migrated.py
 tmp_*.py
 system_prompt.md
 next_session_prompt.md
+.hapenv*
+build*
+bin*

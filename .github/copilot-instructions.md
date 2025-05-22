@@ -23,7 +23,7 @@ Currently in the process of converting the tool to use python3 and update depend
 
 ## Testing
 
-%%TODO%% 
+%%TODO%%
 
 ## Development Plan
 

@@ -13,21 +13,21 @@ from pathlib import Path
 def create_pyproject_toml(project_root: Path, overwrite: bool = False) -> bool:
     """
     Create a pyproject.toml file with modern Python packaging configuration.
-    
+
     Args:
         project_root: Root directory of the project
         overwrite: Whether to overwrite an existing file
-    
+
     Returns:
         True if the file was created or updated, False otherwise
     """
     pyproject_path = project_root / "pyproject.toml"
-    
+
     if pyproject_path.exists() and not overwrite:
         print(f"⚠️ {pyproject_path} already exists. Use --overwrite to replace it.")
         return False
-    
-    pyproject_content = """[build-system]
+
+    pyproject_content = r"""[build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
@@ -133,10 +133,10 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 python_functions = "test_*"
 """
-    
+
     with open(pyproject_path, "w") as f:
         f.write(pyproject_content)
-    
+
     print(f"✅ Created {pyproject_path}")
     return True
 
@@ -144,20 +144,20 @@ python_functions = "test_*"
 def create_pre_commit_config(project_root: Path, overwrite: bool = False) -> bool:
     """
     Create a pre-commit config file with hooks for code quality.
-    
+
     Args:
         project_root: Root directory of the project
         overwrite: Whether to overwrite an existing file
-    
+
     Returns:
         True if the file was created or updated, False otherwise
     """
     pre_commit_path = project_root / ".pre-commit-config.yaml"
-    
+
     if pre_commit_path.exists() and not overwrite:
         print(f"⚠️ {pre_commit_path} already exists. Use --overwrite to replace it.")
         return False
-    
+
     pre_commit_content = """repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -201,10 +201,10 @@ def create_pre_commit_config(project_root: Path, overwrite: bool = False) -> boo
         additional_dependencies: [types-requests]
         args: [--ignore-missing-imports]
 """
-    
+
     with open(pre_commit_path, "w") as f:
         f.write(pre_commit_content)
-    
+
     print(f"✅ Created {pre_commit_path}")
     return True
 
@@ -215,21 +215,20 @@ def main():
         description="Set up modern Python project configuration for hap.py"
     )
     parser.add_argument(
-        "--overwrite", action="store_true",
-        help="Overwrite existing files"
+        "--overwrite", action="store_true", help="Overwrite existing files"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Get project root directory (parent of the script)
     project_root = Path(__file__).parent.parent
-    
+
     # Create pyproject.toml
     created_pyproject = create_pyproject_toml(project_root, args.overwrite)
-    
+
     # Create pre-commit config
     created_pre_commit = create_pre_commit_config(project_root, args.overwrite)
-    
+
     # Final message
     if created_pyproject or created_pre_commit:
         print("\n✅ Project configuration set up successfully!")

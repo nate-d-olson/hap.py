@@ -36,7 +36,7 @@ from typing import List, Optional, Union
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
-lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python3"))
+lib_path = os.path.abspath(os.path.join(scriptDir, "..", "lib", "python"))
 if os.path.exists(lib_path):
     sys.path.append(lib_path)
 else:

@@ -80,39 +80,54 @@ def which(program: str) -> Optional[str]:
     return None
 
 
-def init() -> None:
-    """Initialize the environment with required paths and dependencies."""
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)-8s %(message)s", level=logging.INFO
-    )
+# GA4GH_TOOLS = ["bgzip", "tabix", "rtg", "blocksplit"] # This line should exist above the init function
 
-    base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-    paths = ["bin"]
+# check for external tools
+GA4GH_TOOLS = ["bgzip", "tabix", "rtg", "blocksplit"]
 
-    for p in paths:
-        pp = os.path.join(base, p)
-        if not os.path.exists(pp):
-            raise Exception(f"Dependency path {pp} not found")
-        os.environ["PATH"] = pp + os.pathsep + os.environ["PATH"]
 
-    executables = [
-        "blocksplit",
-        "hapenum",
-        "dipenum",
-        "hapcmp",
-        "xcmp",
-        "bcftools",
-        "samtools",
-    ]
+def init():
+    """
+    Checks for external tool dependencies.
+    Modifies GA4GH_TOOLS list by removing tools
+    if a Python alternative is found or if the tool is optional.
+    """
+    global GA4GH_TOOLS
 
-    for x in executables:
-        if not which(x):
+    tools_to_check = list(GA4GH_TOOLS)
+
+    for x in tools_to_check:
+        if not which(x):  # Use the 'which' function defined in this file
+            if x == "blocksplit":  # Specific handling for blocksplit
+                try:
+                    # Attempt to import the Python blocksplit module
+                    import Haplo.python_blocksplit  # noqa: F401
+                    # If import is successful, remove from GA4GH_TOOLS
+                    if x in GA4GH_TOOLS:
+                        GA4GH_TOOLS.remove(x)
+                    logging.info("Using Python version of %s (Haplo.python_blocksplit).", x)
+                    continue
+                except ImportError:
+                    logging.warning(
+                        "Could not import Haplo.python_blocksplit. "
+                        "Executable for %s also not found.", x
+                    )
+                    if x in GA4GH_TOOLS:
+                        GA4GH_TOOLS.remove(x)
+                    continue
+
+            elif x == "rtg":  # Specific handling for rtg
+                logging.warning(
+                    "Executable for %s not found. This is an optional dependency.", x
+                )
+                if x in GA4GH_TOOLS:
+                    GA4GH_TOOLS.remove(x)
+                continue
+
+            # For other tools (bgzip, tabix), if not found, raise an exception.
             raise Exception(f"Dependency {x} not found")
 
-    os.environ["DYLD_LIBRARY_PATH"] = os.path.join(base, "lib")
-    os.environ["LD_LIBRARY_PATH"] = os.path.join(base, "lib")
-
-
+# Call init on import
 init()
 
 # noinspection PyUnresolvedReferences

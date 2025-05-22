@@ -52,10 +52,10 @@ class BlockSplitter:
         """
         self.logger.info(f"Processing {vcf_path}")
         blocks = list(self._generate_blocks(vcf_path))
-        
+
         if output_bed:
             self._write_bed(blocks, output_bed)
-            
+
         return blocks
 
     def _generate_blocks(self, vcf_path: str) -> Iterator[Dict[str, any]]:
@@ -97,8 +97,10 @@ class BlockSplitter:
 
             # Check if we need to start a new block
             dist_to_previous = 0 if previous_pos < 0 else pos - previous_pos
-            if (len(current_block) >= self.block_size or 
-                    dist_to_previous > self.min_distance):
+            if (
+                len(current_block) >= self.block_size
+                or dist_to_previous > self.min_distance
+            ):
                 if current_block:
                     yield self._create_block_dict(current_chrom, current_block)
                     current_block = []
@@ -124,13 +126,13 @@ class BlockSplitter:
         # If no filters, it's not filtered
         if not record.filter:
             return False
-            
+
         # In pysam, PASS is represented as an empty filter
         # But sometimes a "PASS" string might be present
         for filter_name in record.filter:
             if filter_name != "PASS":
                 return True
-                
+
         return False
 
     def _create_block_dict(
@@ -148,7 +150,7 @@ class BlockSplitter:
         """
         start = records[0].pos
         end = records[-1].pos
-        
+
         return {
             "chrom": chrom,
             "start": start,
@@ -178,27 +180,30 @@ def main():
     parser = argparse.ArgumentParser(
         description="Split a VCF file into blocks of variants"
     )
+    parser.add_argument("input_file", help="Input VCF/BCF file to process")
+    parser.add_argument("-o", "--output-bed", help="Output BED file with block regions")
     parser.add_argument(
-        "input_file", help="Input VCF/BCF file to process"
+        "-b",
+        "--block-size",
+        type=int,
+        default=1000,
+        help="Maximum number of variants per block",
     )
     parser.add_argument(
-        "-o", "--output-bed", help="Output BED file with block regions"
+        "-d",
+        "--min-distance",
+        type=int,
+        default=1000,
+        help="Minimum distance between variants to start a new block",
     )
     parser.add_argument(
-        "-b", "--block-size", type=int, default=1000,
-        help="Maximum number of variants per block"
+        "-f",
+        "--apply-filters",
+        action="store_true",
+        help="Skip filtered variants (those with FILTER != PASS)",
     )
     parser.add_argument(
-        "-d", "--min-distance", type=int, default=1000,
-        help="Minimum distance between variants to start a new block"
-    )
-    parser.add_argument(
-        "-f", "--apply-filters", action="store_true",
-        help="Skip filtered variants (those with FILTER != PASS)"
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true",
-        help="Enable verbose logging"
+        "-v", "--verbose", action="store_true", help="Enable verbose logging"
     )
 
     args = parser.parse_args()
@@ -206,8 +211,7 @@ def main():
     # Setup logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Create and run the block splitter
@@ -216,7 +220,7 @@ def main():
         min_distance=args.min_distance,
         apply_filters=args.apply_filters,
     )
-    
+
     try:
         blocks = splitter.process_file(args.input_file, args.output_bed)
         logging.info(f"Created {len(blocks)} blocks")
