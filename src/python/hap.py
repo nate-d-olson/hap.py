@@ -58,6 +58,7 @@ from Tools.fastasize import fastaContigLengths
 from Tools.parallel import getPool
 from Tools.sessioninfo import sessionInfo
 
+
 def main() -> int:
     parser = argparse.ArgumentParser("Haplotype Comparison")
 

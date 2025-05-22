@@ -6,10 +6,10 @@ at the C++/Python boundary, which is a common source of issues in Python 3
 migrations of Cython code.
 """
 
-from typing import Optional, Union, TypeVar, overload
+from typing import Optional, TypeVar, Union, overload
 
 # Define a type variable for the return type of ensure_text_io
-T = TypeVar('T', str, bytes)
+T = TypeVar("T", str, bytes)
 
 
 def ensure_str(text: Union[str, bytes, None]) -> Optional[str]:
@@ -52,13 +52,11 @@ def ensure_bytes(text: Union[str, bytes, None]) -> Optional[bytes]:
 
 # Use overload to define the specific input/output type combinations
 @overload
-def ensure_text_io(text: str, file_mode: str) -> Union[str, bytes]:
-    ...
+def ensure_text_io(text: str, file_mode: str) -> Union[str, bytes]: ...
 
 
 @overload
-def ensure_text_io(text: bytes, file_mode: str) -> Union[str, bytes]:
-    ...
+def ensure_text_io(text: bytes, file_mode: str) -> Union[str, bytes]: ...
 
 
 def ensure_text_io(text: Union[str, bytes], file_mode: str) -> Union[str, bytes]:

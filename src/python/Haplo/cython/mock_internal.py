@@ -199,9 +199,7 @@ def read_fasta_index(fasta_file: str) -> Dict[str, Dict[str, int]]:
     }
 
 
-def get_reference_sequence(
-    fasta_file: str, chrom: str, start: int, end: int
-) -> str:
+def get_reference_sequence(fasta_file: str, chrom: str, start: int, end: int) -> str:
     """
     Mock implementation of fetching reference sequence from a FASTA file.
 
@@ -214,9 +212,7 @@ def get_reference_sequence(
     Returns:
         Reference sequence string
     """
-    logger.warning(
-        "Using mock reference sequence for %s:%d-%d", chrom, start, end
-    )
+    logger.warning("Using mock reference sequence for %s:%d-%d", chrom, start, end)
     # Return a mock sequence of appropriate length
     length = end - start
     # Generate a mock sequence with balanced nucleotide content
@@ -243,9 +239,7 @@ def parse_vcf_file(vcf_file: str) -> Dict[str, Any]:
     }
 
 
-def write_vcf_file(
-    vcf_data: Dict[str, Any], output_file: str
-) -> None:
+def write_vcf_file(vcf_data: Dict[str, Any], output_file: str) -> None:
     """
     Mock implementation of writing a VCF file.
 
