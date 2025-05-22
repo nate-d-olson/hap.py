@@ -38,6 +38,8 @@ __version__ = "0.4.0"
 # Check if we're using Cython or Python implementations
 _module_info = is_using_cython()
 
+# Initialize haplo submodule
+
 
 # Info about package
 def get_module_info():

@@ -37,6 +37,10 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+packages = [
+    { include = "hap_py", from = "src" },
+]
+
 dependencies = [
     "numpy>=1.19.0",
     "pandas>=1.0.5",
@@ -78,9 +82,9 @@ Homepage = "https://github.com/Illumina/hap.py"
 Documentation = "https://hap-py.readthedocs.io/en/latest/"
 
 [project.scripts]
-hap = "hap.py:main"
-qfy = "qantify:main"
-pre = "preprocess:main"
+hap = "hap_py.hap:main"
+qfy = "hap_py.qfy:main"
+pre = "hap_py.pre:main"
 
 [tool.black]
 line-length = 88

@@ -135,6 +135,8 @@ def init():
 # Call init on import
 init()
 
+# Initialize tools submodule
+
 # noinspection PyUnresolvedReferences
 import pandas  # noqa: F401
 
