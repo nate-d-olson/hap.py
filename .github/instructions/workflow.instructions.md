@@ -3,43 +3,9 @@ applyTo: "**"
 ---
 # Development Workflow Guidelines
 
-## Getting Started
+## %%TODO%% Install and Build Process
 
-1. Run the installation script with a temporary build directory:
-   ```bash
-   python install.py /tmp/happy-build
-   ```
-2. Verify the installation with the test suite:
-   ```bash
-   cd /tmp/happy-build
-   src/sh/run_tests.sh
-   ```
-## Handling Build failures
-If the build fails in the external C++ libraries:
-
-1. Diagnose the issue:
-```
-python install.py /tmp/happy-build VERBOSE=1 2>&1 | tee build_log.txt
-grep -A 10 "error:" build_log.txt
-```
-
-2. Incremental builds:
-   * Attempt to build external dependencies only:
-```
-python install.py --build-externals-only /tmp/happy-ext
-```
-
-   * Check system dependencies are installed:
-
-```
-# For Ubuntu/Debian
-sudo apt install build-essential cmake libz-dev libbz2-dev liblzma-dev libcurl4-openssl-dev
-
-# For macOS
-brew install cmake zlib bzip2 xz curl
-```
-
-3. Fix build issues following the guidance in build-system-fixes.instructions.md
+## %%TODO%% Debugging and Fixing Build Issues
 
 ## Development Workflow
 
