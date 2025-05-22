@@ -20,8 +20,7 @@ def test_numeric_chrs(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "numeric_chrs"
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    compare_script = project_root / "src" / "sh" / "compare_summaries.py"
+    # Using CLI commands instead of script paths
 
     # Input files
     truth_vcf = src_data_dir / "truth.vcf"
@@ -45,10 +44,9 @@ def test_numeric_chrs(tmp_path):
     output_vcf = output_prefix.with_suffix(".vcf")
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
-    # Run hap.py on numeric chromosome files
+    # Run hap.py on numeric chromosome files using CLI command
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -94,8 +92,7 @@ def test_chr_prefixed(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "numeric_chrs"
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    compare_script = project_root / "src" / "sh" / "compare_summaries.py"
+    # Using CLI commands instead of script paths
 
     # Input files
     truth_vcf = src_data_dir / "chrtruth.vcf"
@@ -119,10 +116,9 @@ def test_chr_prefixed(tmp_path):
     output_vcf = output_prefix.with_suffix(".vcf")
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
-    # Run hap.py on chr-prefixed files
+    # Run hap.py on chr-prefixed files using CLI command
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -168,8 +164,7 @@ def test_mixed_chr_prefix(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "numeric_chrs"
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    compare_script = project_root / "src" / "sh" / "compare_summaries.py"
+    # Using CLI commands instead of script paths
 
     # Input files - mixing chr in truth with numeric in query
     truth_vcf = src_data_dir / "chrtruth.vcf"
@@ -193,10 +188,9 @@ def test_mixed_chr_prefix(tmp_path):
     output_vcf = output_prefix.with_suffix(".vcf")
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
-    # Run hap.py with mixed chromosome naming
+    # Run hap.py with mixed chromosome naming using CLI command
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(truth_vcf),
         str(query_vcf),
         "-f",

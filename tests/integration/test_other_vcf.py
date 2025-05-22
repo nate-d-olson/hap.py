@@ -41,12 +41,6 @@ def test_variant_filtering(tmp_path):
     # Define output path
     output_prefix = tmp_path / "filtering_test_out"
 
-    # Determine the path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    if not hap_py_script.exists():
-        # Try alternative location
-        hap_py_script = bin_dir / "hap.py"
-
     assert per_sample_ft_lhs_vcf.exists(), f"LHS VCF not found: {per_sample_ft_lhs_vcf}"
     assert per_sample_ft_rhs_vcf.exists(), f"RHS VCF not found: {per_sample_ft_rhs_vcf}"
     assert reference.exists(), f"Reference file not found: {reference}"
@@ -54,8 +48,7 @@ def test_variant_filtering(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap",
         str(per_sample_ft_lhs_vcf),
         str(per_sample_ft_rhs_vcf),
         "-o",
@@ -99,12 +92,6 @@ def test_haploid_variants(tmp_path):
     # Define output path
     output_prefix = tmp_path / "haploid_test_out"
 
-    # Determine the path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    if not hap_py_script.exists():
-        # Try alternative location
-        hap_py_script = bin_dir / "hap.py"
-
     assert truth_vcf.exists(), f"Truth VCF not found: {truth_vcf}"
     assert query_vcf.exists(), f"Query VCF not found: {query_vcf}"
     assert reference.exists(), f"Reference file not found: {reference}"
@@ -112,8 +99,7 @@ def test_haploid_variants(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap",
         str(truth_vcf),
         str(query_vcf),
         "-o",

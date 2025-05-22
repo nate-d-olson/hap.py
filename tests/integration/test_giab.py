@@ -35,19 +35,12 @@ def test_small_giab_rtg(tmp_path):
     # Define output path
     output_prefix = tmp_path / "small_giab_test_out"
 
-    # Determine the path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    if not hap_py_script.exists():
-        # Try alternative location
-        hap_py_script = bin_dir / "hap.py"
-
     assert nist_vcf.exists(), f"NIST VCF not found: {nist_vcf}"
     assert rtg_vcf.exists(), f"RTG VCF not found: {rtg_vcf}"
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",
@@ -80,20 +73,13 @@ def test_large_giab_rtg_chr21(tmp_path):
     # Define output path
     output_prefix = tmp_path / "large_giab_chr21_test_out"
 
-    # Determine the path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    if not hap_py_script.exists():
-        # Try alternative location
-        hap_py_script = bin_dir / "hap.py"
-
     assert nist_vcf.exists(), f"NIST VCF not found: {nist_vcf}"
     assert rtg_vcf.exists(), f"RTG VCF not found: {rtg_vcf}"
     assert expected_summary.exists(), f"Expected summary not found: {expected_summary}"
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",
@@ -138,20 +124,13 @@ def test_large_giab_rtg_chr1(tmp_path):
     # Define output path
     output_prefix = tmp_path / "large_giab_chr1_test_out"
 
-    # Determine the path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
-    if not hap_py_script.exists():
-        # Try alternative location
-        hap_py_script = bin_dir / "hap.py"
-
     assert nist_vcf.exists(), f"NIST VCF not found: {nist_vcf}"
     assert rtg_vcf.exists(), f"RTG VCF not found: {rtg_vcf}"
     assert expected_summary.exists(), f"Expected summary not found: {expected_summary}"
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",

@@ -22,7 +22,6 @@ def test_leftshift(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "leftshifting_example"
-    hap_py_script = project_root / "src" / "python" / "hap.py"
     compare_script = project_root / "src" / "sh" / "compare_extended.py"
 
     # Input files
@@ -49,8 +48,7 @@ def test_leftshift(tmp_path):
 
     # Run hap.py with left-shifting
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(truth_vcf),
         str(query_vcf),
         "-o",

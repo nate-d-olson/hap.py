@@ -21,7 +21,7 @@ import sys
 import time
 from typing import Any, Dict
 
-from . import version
+from .version import version
 
 
 def sessionInfo() -> Dict[str, Any]:
@@ -33,12 +33,12 @@ def sessionInfo() -> Dict[str, Any]:
         Dict containing various session information and runtime details.
     """
 
-    version = f"{version.version}"
+    version_string = f"{version}"
 
     result: Dict[str, Any] = {
         "name": os.path.basename(sys.argv[0]),
         "timestamp": time.strftime("%a %b %d %X %Y"),
-        "version": version,
+        "version": version_string,
         "runInfo": [{"key": "commandline", "value": " ".join(sys.argv)}],
         "uname": " / ".join(platform.uname()),
         "python_implementation": platform.python_implementation(),
@@ -46,7 +46,7 @@ def sessionInfo() -> Dict[str, Any]:
         "metadata": {
             "required": {
                 "id": "haplotypes",
-                "version": version,
+                "version": version_string,
                 "module": f"{os.path.basename(sys.argv[0])}",
                 "description": f"{sys.argv[0]} generated this JSON file via command line {' '.join(sys.argv)}",
             }

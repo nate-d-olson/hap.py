@@ -24,8 +24,7 @@ def test_faulty_variant_handling(temp_dir):
     reference = src_data_dir / "test.fa"
     expected_vcf = src_data_dir / "expected.vcf"
 
-    # Define path to hap.py script
-    hap_py_script = project_root / "src" / "python" / "hap.py"
+    # Using CLI commands instead of script paths
 
     # Output file paths
     output_prefix = Path(temp_dir) / "result"
@@ -43,8 +42,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 1: hap.py with valid inputs
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(test_vcf),
         str(test_q_vcf),
         "-o",
@@ -74,8 +72,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 2: hap.py with faulty inputs - should fail
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         str(test_vcf),
         str(test_q_failure_vcf),
         "-o",
@@ -102,9 +99,6 @@ def test_faulty_variant_pre_py(temp_dir):
     faulty_vcf = src_data_dir / "faulty.vcf"
     reference = src_data_dir / "chrQ.fa"
 
-    # Define path to pre.py script
-    pre_py_script = project_root / "src" / "python" / "pre.py"
-
     # Output file path
     output_file = Path(temp_dir) / "result.vcf"
 
@@ -114,8 +108,7 @@ def test_faulty_variant_pre_py(temp_dir):
 
     # Run pre.py with faulty input - should fail
     cmd = [
-        sys.executable,
-        str(pre_py_script),
+        "pre",
         str(faulty_vcf),
         str(output_file),
         "--reference",

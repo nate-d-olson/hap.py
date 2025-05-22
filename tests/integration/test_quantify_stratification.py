@@ -18,7 +18,6 @@ def test_quantify_stratification(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     example_dir = project_root / "example" / "happy"
-    hap_py_script = project_root / "src" / "python" / "hap.py"
     compare_summaries_script = project_root / "src" / "sh" / "compare_summaries.py"
     compare_extended_script = project_root / "src" / "sh" / "compare_extended.py"
 
@@ -53,8 +52,7 @@ def test_quantify_stratification(tmp_path):
 
     # Run hap.py with stratification
     cmd = [
-        sys.executable,
-        str(hap_py_script),
+        "hap",
         "-l",
         "chr21",
         str(truth_vcf),
