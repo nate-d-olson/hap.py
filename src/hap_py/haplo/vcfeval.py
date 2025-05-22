@@ -34,7 +34,7 @@ from typing import Any, Dict, List, Optional, Union
 
 # Set up versioning
 try:
-    from Haplo import version
+    from ..tools import version
 
     has_vcfeval = getattr(version, "has_vcfeval", False)
 except ImportError:
