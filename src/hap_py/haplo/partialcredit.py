@@ -34,6 +34,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ..tools.bcftools import concatenateParts, runBcftools
 from ..tools.parallel import getPool, runParallel
 from ..tools.vcfextract import extractHeadersJSON
+from .python_preprocess import PreprocessEngine, DecomposeLevel
 
 
 def preprocessWrapper(
@@ -59,62 +60,40 @@ def preprocessWrapper(
         ) as tf:
             temp_file_path = tf.name  # Store the file path for later use or cleanup
 
-        # Quote filenames for shell safety
-        quoted_filename = shlex.quote(filename)
-        quoted_location = shlex.quote(location_str) if location_str else ""
-        quoted_reference = shlex.quote(args["reference"])
-
-        location_param = f"-l {quoted_location} " if location_str else ""
-
-        to_run = (
-            f"preprocess {quoted_filename}:* {location_param}-o {temp_file_path} "
-            f"-V {args['decompose']} -L {args['leftshift']} -r {quoted_reference}"
-        )
-
-        if args["haploid_x"]:
-            to_run += " --haploid-x 1"
-
-        with (
-            tempfile.NamedTemporaryFile(
-                delete=False, prefix="stderr", suffix=".log"
-            ) as tfe,
-            tempfile.NamedTemporaryFile(
-                delete=False, prefix="stdout", suffix=".log"
-            ) as tfo,
-        ):
-            finished = False
-            try:
-                logging.info(f"Running '{to_run}'")
-                subprocess.check_call(shlex.split(to_run), stdout=tfo, stderr=tfe)
-                finished = True
-            finally:
-                if finished:
-                    # Close files and read their contents for logging
-                    with open(tfo.name, encoding="utf-8") as file:
-                        for line in file:
-                            logging.info(line.rstrip())
-                    os.unlink(tfo.name)
-
-                    with open(tfe.name, encoding="utf-8") as file:
-                        for line in file:
-                            logging.warning(line.rstrip())
-                    os.unlink(tfe.name)
-                else:
-                    logging.error(
-                        f"Preprocess command {to_run} failed. "
-                        f"Outputs are here {tfo.name} / {tfe.name}"
-                    )
-                    with open(tfo.name, encoding="utf-8") as file:
-                        for line in file:
-                            logging.error(line.rstrip())
-                    with open(tfe.name, encoding="utf-8") as file:
-                        for line in file:
-                            logging.error(line.rstrip())
-
-                    # Cleanup the temp file if command failed
-                    if temp_file_path and os.path.exists(temp_file_path):
-                        os.unlink(temp_file_path)
-                    return None  # Return None to indicate failure
+        # Use Python preprocess implementation instead of external binary
+        try:
+            # Determine decompose level from bool
+            decompose_level = DecomposeLevel.CONSERVATIVE if args["decompose"] else DecomposeLevel.NONE
+            
+            # Create and run the preprocess engine
+            engine = PreprocessEngine(
+                input_vcf=filename,
+                reference_fasta=args["reference"],
+                output_vcf=temp_file_path,
+                decompose_level=decompose_level,
+                left_shift=args["leftshift"],
+                regions=location_str if location_str else None,
+                haploid_x=args["haploid_x"],
+                output_bcf=args["bcf"],
+                pass_only=False
+            )
+            
+            logging.info(f"Processing {filename}:{location_str if location_str else 'all'} with Python preprocess")
+            
+            # Process the file
+            output_file = engine.process()
+            
+            if output_file != temp_file_path:
+                # If the engine created a different output file, move it to our expected location
+                import shutil
+                shutil.move(output_file, temp_file_path)
+                
+        except Exception as e:
+            logging.error(f"Python preprocess failed for {filename}:{location_str}: {str(e)}")
+            # Cleanup the temp file if command failed
+            if temp_file_path and os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+            return None  # Return None to indicate failure
 
         elapsed = time.time() - starttime
         logging.info(f"preprocess for {location_str} -- time taken {elapsed:.2f}")

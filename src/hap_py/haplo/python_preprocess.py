@@ -114,6 +114,7 @@ class PreprocessEngine:
 
         # Open regions file if provided
         self.region_list = None
+        self.region_tabix = None  # Initialize to None
         if self.regions:
             if os.path.exists(self.regions):
                 try:
