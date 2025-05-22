@@ -35,24 +35,13 @@ from pathlib import Path
 
 import pandas as pd
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-# Update path for Python 3
-lib_path = Path(scriptDir).parent / "lib" / "python"
-if lib_path.exists():
-    sys.path.append(str(lib_path))
-else:
-    fallback_path = Path(scriptDir).parent / "lib"
-    sys.path.append(str(fallback_path))
-
 import contextlib
 
-import Haplo.gvcf2bed
-import Haplo.happyroc
-import Haplo.quantify
-import Tools
-import Tools.vcfextract
-from Tools import fastasize
-from Tools.metric import dataframeToMetricsTable, makeMetricsObject
+# Modern imports using the new package structure
+from .haplo import gvcf2bed, happyroc, quantify
+from .tools import vcfextract, fastasize
+from .tools.metric import dataframeToMetricsTable, makeMetricsObject
+from .tools import version
 
 
 def quantify(args: argparse.Namespace) -> None:
@@ -119,7 +108,7 @@ def quantify(args: argparse.Namespace) -> None:
     with contextlib.suppress(Exception):
         roc_header = args.roc_header
 
-    Haplo.quantify.run_quantify(
+    quantify.run_quantify(
         vcf_name,
         roc_table,
         output_vcf if args.write_vcf else False,
@@ -149,7 +138,7 @@ def quantify(args: argparse.Namespace) -> None:
         pass
 
     total_region_size = None
-    headers = Tools.vcfextract.extractHeadersJSON(vcf_name)
+    headers = vcfextract.extractHeadersJSON(vcf_name)
     try:
         contigs_to_use = ",".join(headers["tabix"]["chromosomes"])
         contig_lengths = fastasize.fastaNonNContigLengths(args.ref)
@@ -160,7 +149,7 @@ def quantify(args: argparse.Namespace) -> None:
     except Exception:
         pass
 
-    res = Haplo.happyroc.roc(
+    res = happyroc.roc(
         roc_table,
         args.reports_prefix + ".roc",
         filter_handling=filter_handling,
@@ -485,7 +474,7 @@ def main() -> int:
     args.runner = "qfy.py"
 
     if not args.ref:
-        args.ref = Tools.defaultReference()
+        args.ref = version.defaultReference()
 
     args.scratch_prefix = tempfile.gettempdir()
 
@@ -514,11 +503,11 @@ def main() -> int:
         exit(0)
 
     if args.version:
-        print(f"qfy.py {Tools.version}")
+        print(f"qfy.py {version.version}")
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:
-        conf_temp = Haplo.gvcf2bed.gvcf2bed(
+        conf_temp = gvcf2bed.gvcf2bed(
             args.preprocessing_truth_confregions,
             args.ref,
             args.fp_bedfile,
@@ -536,5 +525,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except Exception as e:
         logging.error(str(e))
-        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        traceback.print_exc()
         sys.exit(1)

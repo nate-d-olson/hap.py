@@ -21,7 +21,7 @@ import sys
 import time
 from typing import Any, Dict
 
-import Tools
+from . import version
 
 
 def sessionInfo() -> Dict[str, Any]:
@@ -33,7 +33,7 @@ def sessionInfo() -> Dict[str, Any]:
         Dict containing various session information and runtime details.
     """
 
-    version = f"{Tools.version}"
+    version = f"{version.version}"
 
     result: Dict[str, Any] = {
         "name": os.path.basename(sys.argv[0]),

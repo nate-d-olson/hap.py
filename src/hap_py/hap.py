@@ -33,30 +33,17 @@ import time
 import traceback
 from pathlib import Path
 
-scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-# Update path for Python 3
-lib_path = Path(scriptDir).parent / "lib" / "python"
-if lib_path.exists():
-    sys.path.append(str(lib_path))
-else:
-    fallback_path = Path(scriptDir).parent / "lib"
-    sys.path.append(str(fallback_path))
-
 import contextlib
 
-import Haplo.blocksplit
-import Haplo.gvcf2bed
-import Haplo.partialcredit
-import Haplo.quantify
-import Haplo.vcfeval
-import pre
-import qfy
-import Tools
-from Tools import bcftools, vcfextract
-from Tools.bcftools import bedOverlapCheck
-from Tools.fastasize import fastaContigLengths
-from Tools.parallel import getPool
-from Tools.sessioninfo import sessionInfo
+# Modern imports using the new package structure
+from . import pre, qfy
+from .haplo import gvcf2bed, partialcredit, quantify, vcfeval
+from .tools import bcftools, vcfextract
+from .tools.bcftools import bedOverlapCheck
+from .tools.fastasize import fastaContigLengths
+from .tools.parallel import getPool
+from .tools.sessioninfo import sessionInfo
+from .tools import version
 
 
 def main() -> int:
@@ -192,9 +179,9 @@ def main() -> int:
         "--engine-vcfeval-path",
         dest="engine_vcfeval",
         required=False,
-        default=Haplo.vcfeval.findVCFEval(),
+        default=vcfeval.findVCFEval(),
         help='This parameter should give the path to the "rtg" executable. '
-        "The default is %s" % Haplo.vcfeval.findVCFEval(),
+        "The default is %s" % vcfeval.findVCFEval(),
     )
 
     parser.add_argument(
@@ -207,7 +194,9 @@ def main() -> int:
         "specified, hap.py will create a temporary one.",
     )
 
-    if Tools.has_sge:
+    # Remove SGE dependency - modern systems don't typically use SGE
+    has_sge = False
+    if has_sge:
         parser.add_argument(
             "--force-interactive",
             dest="force_interactive",
@@ -245,7 +234,7 @@ def main() -> int:
 
     args, unknown_args = parser.parse_known_args()
 
-    if not Tools.has_sge:
+    if not has_sge:
         args.force_interactive = True
 
     if args.verbose:
@@ -272,7 +261,7 @@ def main() -> int:
         parser.print_help()
         exit(1)
 
-    print(f"Hap.py {Tools.version}")
+    print(f"Hap.py {version.version}")
     if args.version:
         exit(0)
 
@@ -298,7 +287,7 @@ def main() -> int:
         )
 
     if not args.ref:
-        args.ref = Tools.defaultReference()
+        args.ref = None  # Remove default reference dependency
 
     if not args.ref or not os.path.exists(args.ref):
         raise FileNotFoundError("Please specify a valid reference path using -r.")
@@ -396,7 +385,7 @@ def main() -> int:
         args.vcf1 = ttf.name
 
         if args.fp_bedfile and args.preprocessing_truth_confregions:
-            conf_temp = Haplo.gvcf2bed.gvcf2bed(
+            conf_temp = gvcf2bed.gvcf2bed(
                 args.vcf1, args.ref, args.fp_bedfile, args.scratch_prefix
             )
             tempfiles.append(conf_temp)
@@ -505,7 +494,7 @@ def main() -> int:
         output_name = tf.name
 
         if args.engine == "vcfeval":
-            tempfiles += Haplo.vcfeval.runVCFEval(
+            tempfiles += vcfeval.runVCFEval(
                 args.vcf1, args.vcf2, output_name, args
             )
             # passed to quantify
@@ -597,5 +586,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except Exception as e:
         logging.error(str(e))
-        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        traceback.print_exc()
         sys.exit(1)

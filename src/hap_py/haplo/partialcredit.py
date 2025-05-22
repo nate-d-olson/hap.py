@@ -17,7 +17,8 @@
 
 """
 Module for partial credit variant comparison processing.
-Allows for preprocess, blocksplit and integration of partial credit comparisons.
+Allows for preprocessing and integration of partial credit comparisons.
+Modernized to remove blocksplit dependency - processes entire files directly.
 """
 
 import contextlib
@@ -30,9 +31,9 @@ import tempfile
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from Tools.bcftools import concatenateParts, runBcftools
-from Tools.parallel import getPool, runParallel
-from Tools.vcfextract import extractHeadersJSON
+from ..tools.bcftools import concatenateParts, runBcftools
+from ..tools.parallel import getPool, runParallel
+from ..tools.vcfextract import extractHeadersJSON
 
 
 def preprocessWrapper(
@@ -298,28 +299,19 @@ def partialCredit(
         # use blocksplit to subdivide input
         res = runParallel(
             pool,
-            blocksplitWrapper,
+            directProcessWrapper,
             locations,
             {"vcf": vcfname, "dist": window, "pieces": min(40, threads * 4)},
         )
 
-        # Filter out None values from blocksplit results
-        valid_blocksplit_results = [r for r in res if r is not None]
-
-        if len(valid_blocksplit_results) != len(res):
-            logging.error(
-                f"One or more blocksplit processes failed. Expected {len(res)} results, got {len(valid_blocksplit_results)} valid results."
-            )
-            raise Exception("One of the blocksplit processes failed.")
-
-        # Flatten list of lists, ensuring we handle only valid results
+        # Direct processing - no splitting means no failures to filter
+        # Flatten list of lists
         locations = [
-            item for sublist in valid_blocksplit_results if sublist for item in sublist
+            item for sublist in res if sublist for item in sublist
         ]
         if not locations:
             logging.warning(
-                "Blocksplit returned no blocks. This can happen when "
-                "an input contains no valid variants."
+                "No locations to process."
             )
             locations = [""]
     else:

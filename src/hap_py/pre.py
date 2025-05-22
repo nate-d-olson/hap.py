@@ -45,11 +45,10 @@ else:
 
 import contextlib
 
-import Haplo.partialcredit
-import Tools
-from Tools import vcfextract
-from Tools.bcftools import preprocessVCF, runBcftools
-from Tools.fastasize import fastaContigLengths
+from .haplo import partialcredit
+from .tools import vcfextract
+from .tools.bcftools import preprocessVCF, runBcftools
+from .tools.fastasize import fastaContigLengths
 
 
 def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
@@ -216,7 +215,7 @@ def preprocess(
         )
 
         if leftshift or decompose or gender == "male":
-            Haplo.partialcredit.partialCredit(
+            partialcredit.partialCredit(
                 vtf,
                 vcf_output,
                 reference,
@@ -460,7 +459,7 @@ def main() -> int:
         "--reference",
         dest="ref",
         help="Specify a reference file.",
-        default=Tools.defaultReference(),
+        default=version.defaultReference(),
     )
 
     parser.add_argument(
@@ -480,7 +479,9 @@ def main() -> int:
         help="Number of threads to use.",
     )
 
-    if Tools.has_sge:
+    # Remove SGE dependency - modern systems don't typically use SGE
+    has_sge = False
+    if has_sge:
         parser.add_argument(
             "--force-interactive",
             dest="force_interactive",
@@ -516,7 +517,7 @@ def main() -> int:
 
     args, unknown_args = parser.parse_known_args()
 
-    if not Tools.has_sge:
+    if not has_sge:
         args.force_interactive = True
 
     if args.verbose:
@@ -544,7 +545,7 @@ def main() -> int:
         exit(0)
 
     if args.version:
-        print(f"pre.py {Tools.version}")
+        print(f"pre.py {version.version}")
         exit(0)
 
     args.input = args.input[0]
@@ -559,5 +560,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except Exception as e:
         logging.error(str(e))
-        traceback.print_exc(file=Tools.LoggingWriter(logging.ERROR))
+        traceback.print_exc()
         sys.exit(1)

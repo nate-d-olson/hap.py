@@ -21,7 +21,7 @@ import re
 
 import numpy as np
 import pandas
-from Tools import ci
+from ..tools import ci
 
 RESULT_ALLCOLUMNS = [
     "Type",

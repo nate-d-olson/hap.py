@@ -22,7 +22,7 @@ def import_with_fallback(
         The imported object or its mock implementation
     """
     if mock_module is None:
-        mock_module = "Haplo.cython_mock"
+        mock_module = "hap_py.haplo.cython_mock"
 
     try:
         # Try to import the Cython module
@@ -42,23 +42,23 @@ def import_with_fallback(
         return obj
 
 
-# Import sequence utilities
+# Import sequence utilities - modern package structure
 complement_sequence = import_with_fallback(
-    "Haplo.sequence_utils", "complement_sequence"
+    "hap_py.haplo.sequence_utils", "complement_sequence"
 )
 
-reverse_complement = import_with_fallback("Haplo.sequence_utils", "reverse_complement")
+reverse_complement = import_with_fallback("hap_py.haplo.sequence_utils", "reverse_complement")
 
 # Import variant processing utilities
-VariantProcessor = import_with_fallback("Haplo.variant_processor", "VariantProcessor")
+VariantProcessor = import_with_fallback("hap_py.haplo.variant_processor", "VariantProcessor")
 
 # Import ROC utilities
-compute_roc_points = import_with_fallback("Haplo.happyroc", "compute_roc_points")
+compute_roc_points = import_with_fallback("hap_py.haplo.happyroc", "compute_roc_points")
 
 # Import chromosome sorting utilities
-cmp_chromosomes = import_with_fallback("Haplo.happyroc", "cmp_chromosomes")
+cmp_chromosomes = import_with_fallback("hap_py.haplo.happyroc", "cmp_chromosomes")
 
-sort_chromosomes = import_with_fallback("Haplo.happyroc", "sort_chromosomes")
+sort_chromosomes = import_with_fallback("hap_py.haplo.happyroc", "sort_chromosomes")
 
 
 # Helper function to check if we're using Cython or pure Python

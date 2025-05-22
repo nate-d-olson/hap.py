@@ -15,16 +15,11 @@ import subprocess
 from datetime import date
 from typing import IO, List, Optional, Union
 
-# noinspection PyUnresolvedReferences
-try:
-    import Haplo.version as vs  # pylint: disable=E0401,E0611
+# Import version from our modern version module
+from .version import version
 
-    version = vs.__version__
-    has_sge = vs.has_sge
-except ImportError:
-    logging.warning("No version found. Please follow the installation instructions.")
-    version = "unknown"
-    has_sge = False
+# Modern systems don't typically use SGE
+has_sge = False
 
 
 def defaultReference() -> Optional[str]:
@@ -80,10 +75,8 @@ def which(program: str) -> Optional[str]:
     return None
 
 
-# GA4GH_TOOLS = ["bgzip", "tabix", "rtg", "blocksplit"] # This line should exist above the init function
-
-# check for external tools
-GA4GH_TOOLS = ["bgzip", "tabix", "rtg", "blocksplit"]
+# check for external tools (removed blocksplit as it's being replaced with Python)
+GA4GH_TOOLS = ["bgzip", "tabix", "rtg"]
 
 
 def init():
@@ -98,29 +91,7 @@ def init():
 
     for x in tools_to_check:
         if not which(x):  # Use the 'which' function defined in this file
-            if x == "blocksplit":  # Specific handling for blocksplit
-                try:
-                    # Attempt to import the Python blocksplit module
-                    import Haplo.python_blocksplit  # noqa: F401
-
-                    # If import is successful, remove from GA4GH_TOOLS
-                    if x in GA4GH_TOOLS:
-                        GA4GH_TOOLS.remove(x)
-                    logging.info(
-                        "Using Python version of %s (Haplo.python_blocksplit).", x
-                    )
-                    continue
-                except ImportError:
-                    logging.warning(
-                        "Could not import Haplo.python_blocksplit. "
-                        "Executable for %s also not found.",
-                        x,
-                    )
-                    if x in GA4GH_TOOLS:
-                        GA4GH_TOOLS.remove(x)
-                    continue
-
-            elif x == "rtg":  # Specific handling for rtg
+            if x == "rtg":  # Specific handling for rtg
                 logging.warning(
                     "Executable for %s not found. This is an optional dependency.", x
                 )

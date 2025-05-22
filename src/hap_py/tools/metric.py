@@ -13,7 +13,7 @@ import os
 import sys
 import time
 
-import Tools
+from . import version
 
 
 def dataframeToMetricsTable(table_id, df):
@@ -96,7 +96,7 @@ def makeMetricsObject(name):
      }
     """
 
-    version = "%s" % Tools.version
+    version = "%s" % version.version
 
     mdict = {
         "name": name,
