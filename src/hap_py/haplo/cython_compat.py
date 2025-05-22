@@ -22,7 +22,12 @@ def import_with_fallback(
         The imported object or its mock implementation
     """
     if mock_module is None:
-        mock_module = "hap_py.haplo.cython_mock"
+        # Use relative import for mock module when within package
+        try:
+            from . import cython_mock
+            mock_module = "cython_mock"
+        except ImportError:
+            mock_module = "hap_py.haplo.cython_mock"
 
     try:
         # Try to import the Cython module
@@ -37,17 +42,32 @@ def import_with_fallback(
             ImportWarning,
             stacklevel=2,
         )
-        module = __import__(mock_module, fromlist=["*"])
+        
+        # Try relative import first, then absolute
+        try:
+            if mock_module == "cython_mock":
+                from . import cython_mock as module
+            else:
+                module = __import__(mock_module, fromlist=["*"])
+        except ImportError:
+            # Fallback to local mock implementations
+            from .cython import mock_cpp_internal as module
+            
         obj = getattr(module, mock_attribute)
         return obj
 
 
-# Import sequence utilities - modern package structure
-complement_sequence = import_with_fallback(
-    "hap_py.haplo.sequence_utils", "complement_sequence"
-)
-
-reverse_complement = import_with_fallback("hap_py.haplo.sequence_utils", "reverse_complement")
+# Import sequence utilities - try relative imports first
+try:
+    # Try relative import for sequence utilities within package
+    complement_sequence = import_with_fallback("sequence_utils", "complement_sequence")
+    reverse_complement = import_with_fallback("sequence_utils", "reverse_complement")
+except ImportError:
+    # Fallback to absolute imports
+    complement_sequence = import_with_fallback(
+        "hap_py.haplo.sequence_utils", "complement_sequence"
+    )
+    reverse_complement = import_with_fallback("hap_py.haplo.sequence_utils", "reverse_complement")
 
 # Import variant processing utilities
 VariantProcessor = import_with_fallback("hap_py.haplo.variant_processor", "VariantProcessor")
