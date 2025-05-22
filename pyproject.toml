@@ -37,10 +37,6 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
-packages = [
-    { include = "hap_py", from = "src" },
-]
-
 dependencies = [
     "numpy>=1.19.0",
     "pandas>=1.0.5",
@@ -128,6 +124,10 @@ module = [
     "pysam.*"
 ]
 ignore_missing_imports = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["hap_py*"]
 
 [tool.scikit-build]
 cmake.source-dir = "."

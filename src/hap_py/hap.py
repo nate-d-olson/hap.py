@@ -36,14 +36,29 @@ from pathlib import Path
 import contextlib
 
 # Modern imports using the new package structure
-from . import pre, qfy
-from .haplo import gvcf2bed, partialcredit, quantify, vcfeval
-from .tools import bcftools, vcfextract
-from .tools.bcftools import bedOverlapCheck
-from .tools.fastasize import fastaContigLengths
-from .tools.parallel import getPool
-from .tools.sessioninfo import sessionInfo
-from .tools import version
+try:
+    # When run as module
+    from . import pre, qfy
+    from .haplo import gvcf2bed, partialcredit, quantify, vcfeval
+    from .tools import bcftools, vcfextract
+    from .tools.bcftools import bedOverlapCheck
+    from .tools.fastasize import fastaContigLengths
+    from .tools.parallel import getPool
+    from .tools.sessioninfo import sessionInfo
+    from .tools.version import version
+except ImportError:
+    # When run directly or as script
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    import pre, qfy
+    from haplo import gvcf2bed, partialcredit, quantify, vcfeval
+    from tools import bcftools, vcfextract
+    from tools.bcftools import bedOverlapCheck
+    from tools.fastasize import fastaContigLengths
+    from tools.parallel import getPool
+    from tools.sessioninfo import sessionInfo
+    from tools.version import version
 
 
 def main() -> int:
@@ -261,7 +276,7 @@ def main() -> int:
         parser.print_help()
         exit(1)
 
-    print(f"Hap.py {version.version}")
+    print(f"Hap.py {version}")
     if args.version:
         exit(0)
 

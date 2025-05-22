@@ -38,10 +38,21 @@ import pandas as pd
 import contextlib
 
 # Modern imports using the new package structure
-from .haplo import gvcf2bed, happyroc, quantify
-from .tools import vcfextract, fastasize
-from .tools.metric import dataframeToMetricsTable, makeMetricsObject
-from .tools import version
+try:
+    # When run as module
+    from .haplo import gvcf2bed, happyroc, quantify
+    from .tools import vcfextract, fastasize
+    from .tools.metric import dataframeToMetricsTable, makeMetricsObject
+    from .tools.version import version
+except ImportError:
+    # When run directly or as script
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from haplo import gvcf2bed, happyroc, quantify
+    from tools import vcfextract, fastasize
+    from tools.metric import dataframeToMetricsTable, makeMetricsObject
+    from tools.version import version
 
 
 def quantify(args: argparse.Namespace) -> None:
@@ -474,7 +485,7 @@ def main() -> int:
     args.runner = "qfy.py"
 
     if not args.ref:
-        args.ref = version.defaultReference()
+        args.ref = None
 
     args.scratch_prefix = tempfile.gettempdir()
 
@@ -503,7 +514,7 @@ def main() -> int:
         exit(0)
 
     if args.version:
-        print(f"qfy.py {version.version}")
+        print(f"qfy.py {version}")
         exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:

@@ -45,10 +45,24 @@ else:
 
 import contextlib
 
-from .haplo import partialcredit
-from .tools import vcfextract
-from .tools.bcftools import preprocessVCF, runBcftools
-from .tools.fastasize import fastaContigLengths
+# Modern imports using the new package structure
+try:
+    # When run as module
+    from .haplo import partialcredit
+    from .tools import vcfextract
+    from .tools.bcftools import preprocessVCF, runBcftools
+    from .tools.fastasize import fastaContigLengths
+    from .tools.version import version
+except ImportError:
+    # When run directly or as script
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).parent))
+    from haplo import partialcredit
+    from tools import vcfextract
+    from tools.bcftools import preprocessVCF, runBcftools
+    from tools.fastasize import fastaContigLengths
+    from tools.version import version
 
 
 def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
@@ -459,7 +473,7 @@ def main() -> int:
         "--reference",
         dest="ref",
         help="Specify a reference file.",
-        default=version.defaultReference(),
+        default=None,
     )
 
     parser.add_argument(
@@ -545,7 +559,7 @@ def main() -> int:
         exit(0)
 
     if args.version:
-        print(f"pre.py {version.version}")
+        print(f"pre.py {version}")
         exit(0)
 
     args.input = args.input[0]
