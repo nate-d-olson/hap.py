@@ -297,7 +297,7 @@ def _write_outfiles(
             if of_metrics and "metrics" in outfiles[t]:
                 # Properly handle encoding in Python 3
                 of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode("utf-8"))
-        except (KeyError, IOError) as e:
+        except (KeyError, OSError) as e:
             logging.warning(f"Error processing output for {t}: {str(e)}")
             # might not have all outputs
 

@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from tests.utils import get_project_root
 
 
@@ -62,9 +63,9 @@ def test_numeric_chrs(tmp_path):
     ]
 
     result = subprocess.run(cmd, capture_output=True)
-    assert result.returncode == 0, (
-        f"hap.py failed with numeric chromosomes: {result.stderr.decode()}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with numeric chromosomes: {result.stderr.decode()}"
 
     # Compare summary files
     compare_cmd = [
@@ -136,9 +137,9 @@ def test_chr_prefixed(tmp_path):
     ]
 
     result = subprocess.run(cmd, capture_output=True)
-    assert result.returncode == 0, (
-        f"hap.py failed with chr-prefixed chromosomes: {result.stderr.decode()}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with chr-prefixed chromosomes: {result.stderr.decode()}"
 
     # Compare summary files
     compare_cmd = [
@@ -210,9 +211,9 @@ def test_mixed_chr_prefix(tmp_path):
     ]
 
     result = subprocess.run(cmd, capture_output=True)
-    assert result.returncode == 0, (
-        f"hap.py failed with mixed chromosome naming: {result.stderr.decode()}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with mixed chromosome naming: {result.stderr.decode()}"
 
     # Compare summary files
     compare_cmd = [

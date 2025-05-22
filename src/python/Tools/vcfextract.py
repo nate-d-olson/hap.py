@@ -76,10 +76,10 @@ def extract_header(
 
     if extract_formats:
         result["formats"] = {}
-        
+
     if extract_filters:
         result["filters"] = {}
-        
+
     # For compatibility with pre.py
     result["fields"] = []
 
@@ -94,7 +94,7 @@ def extract_header(
             l = l.strip()
             if l.startswith("##INFO="):
                 # process INFO lines
-                if not extract_info and not "fields" in result:
+                if not extract_info and "fields" not in result:
                     continue
 
                 m = re.match(
@@ -110,19 +110,16 @@ def extract_header(
                         "type": m.group(3),
                         "description": m.group(4),
                     }
-                    
+
                     if extract_info:
                         result["info"][m.group(1)] = info_field
-                    
+
                     # Add to fields list for compatibility
-                    result["fields"].append({
-                        "key": "INFO",
-                        "values": info_field
-                    })
-                    
+                    result["fields"].append({"key": "INFO", "values": info_field})
+
             elif l.startswith("##FORMAT="):
                 # process FORMAT lines
-                if not extract_formats and not "fields" in result:
+                if not extract_formats and "fields" not in result:
                     continue
 
                 m = re.match(
@@ -138,25 +135,22 @@ def extract_header(
                         "type": m.group(3),
                         "description": m.group(4),
                     }
-                    
+
                     if extract_formats:
                         result["formats"][m.group(1)] = format_field
-                    
+
                     # Add to fields list for compatibility
-                    result["fields"].append({
-                        "key": "FORMAT",
-                        "values": format_field
-                    })
-                    
+                    result["fields"].append({"key": "FORMAT", "values": format_field})
+
             elif l.startswith("##FILTER="):
                 # process FILTER lines
-                if not extract_filters and not "fields" in result:
+                if not extract_filters and "fields" not in result:
                     continue
 
                 # Handle different FILTER line formats
                 filter_id = None
                 description = ""
-                
+
                 # Try standard format with Description
                 m = re.match(
                     r"##FILTER=<ID=([^,>]+),Description=\"([^\"]+)\"",
@@ -177,7 +171,7 @@ def extract_header(
                         if m:
                             filter_id = m.group(1)
                             description = "No description available"
-                
+
                 if not filter_id:
                     logging.error("Cannot parse FILTER line: %s" % l)
                 else:
@@ -185,16 +179,13 @@ def extract_header(
                         "ID": filter_id,
                         "description": description,
                     }
-                    
+
                     if extract_filters:
                         result["filters"][filter_id] = filter_field
-                    
+
                     # Add to fields list for compatibility
-                    result["fields"].append({
-                        "key": "FILTER",
-                        "values": filter_field
-                    })
-                    
+                    result["fields"].append({"key": "FILTER", "values": filter_field})
+
             elif l.startswith("#CHROM"):
                 if extract_columns:
                     cols = l[1:].split()
@@ -208,12 +199,17 @@ def extract_header(
     finally:
         if fh:
             fh.close()
-            
+
     # Add tabix information if available
     try:
         import subprocess
-        tabix_output = subprocess.check_output(["tabix", "-l", filename], universal_newlines=True, stderr=subprocess.PIPE)
-        chromosomes = [line.strip() for line in tabix_output.split('\n') if line.strip()]
+
+        tabix_output = subprocess.check_output(
+            ["tabix", "-l", filename], text=True, stderr=subprocess.PIPE
+        )
+        chromosomes = [
+            line.strip() for line in tabix_output.split("\n") if line.strip()
+        ]
         result["tabix"] = {"chromosomes": chromosomes}
     except Exception:
         result["tabix"] = None
@@ -407,7 +403,7 @@ def extractHeadersJSON(
         extract_info: When true, extract INFO fields
         extract_formats: When true, extract FORMAT fields
         extract_filters: When true, extract FILTER fields
-        
+
     Returns:
         Dictionary with header information
     """
@@ -422,5 +418,5 @@ def extractHeadersJSON(
     if outfile:
         with open(outfile, "w", encoding="utf-8") as f:
             json.dump(headers, f, indent=4)
-            
+
     return headers

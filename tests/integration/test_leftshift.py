@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import get_project_root
 
@@ -36,9 +37,9 @@ def test_leftshift(tmp_path):
     assert query_vcf.exists(), f"Query VCF {query_vcf} not found"
     assert reference.exists(), f"Reference {reference} not found"
     assert expected_vcf.exists(), f"Expected VCF {expected_vcf} not found"
-    assert expected_extended.exists(), (
-        f"Expected extended CSV {expected_extended} not found"
-    )
+    assert (
+        expected_extended.exists()
+    ), f"Expected extended CSV {expected_extended} not found"
 
     # Output file paths
     output_prefix = tmp_path / "leftshift_test"
@@ -76,9 +77,9 @@ def test_leftshift(tmp_path):
     ]
 
     compare_result = subprocess.run(compare_cmd, capture_output=True, text=True)
-    assert compare_result.returncode == 0, (
-        f"Extended CSV comparison failed: {compare_result.stderr}"
-    )
+    assert (
+        compare_result.returncode == 0
+    ), f"Extended CSV comparison failed: {compare_result.stderr}"
 
     # Compare VCF files - extract non-header lines from the gzipped VCF
     with gzip.open(output_vcf_gz, "rt") as f_gz:

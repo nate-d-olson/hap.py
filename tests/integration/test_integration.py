@@ -7,6 +7,7 @@ import gzip
 from pathlib import Path
 
 import pytest
+
 from tests.utils import (
     compare_summary_files,
     find_reference_file,
@@ -111,9 +112,9 @@ def test_integration(tmp_path):
 
     # Compare to expected merged file
     expected_merged_vcf = integration_dir / "integrationtest_merged.vcf"
-    assert compare_vcf_files(multimerge_output, expected_merged_vcf), (
-        "Merged VCF does not match expected output"
-    )
+    assert compare_vcf_files(
+        multimerge_output, expected_merged_vcf
+    ), "Merged VCF does not match expected output"
 
     # Test hap.py with empty truth file
     empty_truth_output = output_prefix.with_suffix(".e0")
@@ -238,21 +239,21 @@ def test_integration(tmp_path):
 
     # Compare standard output with expected
     expected_vcf = integration_dir / "integrationtest.vcf"
-    assert compare_vcf_files(standard_output_filtered, expected_vcf), (
-        "Standard output doesn't match expected"
-    )
+    assert compare_vcf_files(
+        standard_output_filtered, expected_vcf
+    ), "Standard output doesn't match expected"
 
     # Compare unhappy output with expected
     expected_unhappy_vcf = integration_dir / "integrationtest.unhappy.vcf"
-    assert compare_vcf_files(unhappy_output_filtered, expected_unhappy_vcf), (
-        "Unhappy output doesn't match expected"
-    )
+    assert compare_vcf_files(
+        unhappy_output_filtered, expected_unhappy_vcf
+    ), "Unhappy output doesn't match expected"
 
     # Compare pass-only output with expected
     expected_pass_vcf = integration_dir / "integrationtest.pass.vcf"
-    assert compare_vcf_files(pass_output_filtered, expected_pass_vcf), (
-        "Pass-only output doesn't match expected"
-    )
+    assert compare_vcf_files(
+        pass_output_filtered, expected_pass_vcf
+    ), "Pass-only output doesn't match expected"
 
     # Compare summary files
     expected_summary = integration_dir / "integrationtest.summary.csv"

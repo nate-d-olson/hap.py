@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from tests.utils import (
     compare_summary_files,
     get_bin_dir,
@@ -56,9 +57,9 @@ def test_small_giab_rtg(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"hap.py failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
 
 
 @pytest.mark.integration
@@ -105,18 +106,18 @@ def test_large_giab_rtg_chr21(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"hap.py failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
 
     # Check summary file
     output_summary = str(output_prefix) + ".summary.csv"
-    assert os.path.exists(output_summary), (
-        f"Output summary not generated: {output_summary}"
-    )
-    assert compare_summary_files(Path(output_summary), expected_summary), (
-        f"Summary files differ: {output_summary} vs {expected_summary}"
-    )
+    assert os.path.exists(
+        output_summary
+    ), f"Output summary not generated: {output_summary}"
+    assert compare_summary_files(
+        Path(output_summary), expected_summary
+    ), f"Summary files differ: {output_summary} vs {expected_summary}"
 
 
 @pytest.mark.integration
@@ -163,15 +164,15 @@ def test_large_giab_rtg_chr1(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"hap.py failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
 
     # Check summary file
     output_summary = str(output_prefix) + ".summary.csv"
-    assert os.path.exists(output_summary), (
-        f"Output summary not generated: {output_summary}"
-    )
-    assert compare_summary_files(Path(output_summary), expected_summary), (
-        f"Summary files differ: {output_summary} vs {expected_summary}"
-    )
+    assert os.path.exists(
+        output_summary
+    ), f"Output summary not generated: {output_summary}"
+    assert compare_summary_files(
+        Path(output_summary), expected_summary
+    ), f"Summary files differ: {output_summary} vs {expected_summary}"

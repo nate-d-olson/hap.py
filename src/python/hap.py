@@ -483,7 +483,7 @@ def main() -> int:
             if _xc not in h2["tabix"]["chromosomes"]:
                 logging.warning(f"No calls for location {_xc} in query!")
 
-        pool = getPool(args.threads)
+        getPool(args.threads)
 
         # count variants before normalisation
         if "samples" not in h1 or not h1["samples"]:

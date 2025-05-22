@@ -30,7 +30,6 @@ import subprocess
 import tempfile
 import time
 from argparse import Namespace
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 # Set up versioning
@@ -81,10 +80,7 @@ def findVCFEval() -> str:
 
 
 def runVCFEval(
-    vcf1: str, 
-    vcf2: str, 
-    target: str, 
-    args: Union[Namespace, Dict[str, Any]]
+    vcf1: str, vcf2: str, target: str, args: Union[Namespace, Dict[str, Any]]
 ) -> Optional[List[str]]:
     """Run VCFEval and convert its output to something quantify understands.
 
@@ -122,19 +118,19 @@ def runVCFEval(
             raise FileNotFoundError(f"Query VCF file not found: {vcf2}")
         if not os.path.exists(args.ref):
             raise FileNotFoundError(f"Reference file not found: {args.ref}")
-            
+
         # Ensure required attributes are present
-        if not hasattr(args, 'engine_vcfeval') or not args.engine_vcfeval:
+        if not hasattr(args, "engine_vcfeval") or not args.engine_vcfeval:
             logging.warning("engine_vcfeval not specified, using default findVCFEval()")
             args.engine_vcfeval = findVCFEval()
-            
-        if not hasattr(args, 'engine_vcfeval_template'):
+
+        if not hasattr(args, "engine_vcfeval_template"):
             args.engine_vcfeval_template = None
-            
+
         # Set default for scratch_prefix if not provided
-        if not hasattr(args, 'scratch_prefix') or not args.scratch_prefix:
+        if not hasattr(args, "scratch_prefix") or not args.scratch_prefix:
             args.scratch_prefix = tempfile.gettempdir()
-            
+
         # Create output directory if it doesn't exist
         output_dir = os.path.dirname(target)
         if output_dir and not os.path.exists(output_dir):
@@ -155,13 +151,13 @@ def runVCFEval(
             )
             del_sdf = True
             template_dir = None
-            
+
             try:
                 with tempfile.NamedTemporaryFile(
                     dir=args.scratch_prefix, prefix="vcfeval.sdf", suffix=".dir"
                 ) as stf:
                     template_dir = stf.name
-                
+
                 # Ensure template dir exists
                 if not os.path.exists(template_dir):
                     os.makedirs(template_dir, exist_ok=True)
@@ -203,13 +199,13 @@ def runVCFEval(
                 raise
 
         # Check for threads parameter
-        if not hasattr(args, 'threads') or not args.threads:
+        if not hasattr(args, "threads") or not args.threads:
             args.threads = 1
-            
+
         # Check for pass_only parameter
-        if not hasattr(args, 'pass_only'):
+        if not hasattr(args, "pass_only"):
             args.pass_only = False
-            
+
         # Quote paths for shell safety
         quoted_engine = shlex.quote(args.engine_vcfeval)
         quoted_vcf1 = shlex.quote(vcf1)
@@ -233,7 +229,7 @@ def runVCFEval(
             runme += f" --Xloose-match-distance={args.engine_scmp_distance}"
 
         logging.info(f"Running vcfeval with command: {runme}")
-        
+
         # Run vcfeval command
         try:
             process = subprocess.Popen(
@@ -263,15 +259,15 @@ def runVCFEval(
         # Copy output files to target location
         output_vcf = os.path.join(vtf.name, "output.vcf.gz")
         output_tbi = os.path.join(vtf.name, "output.vcf.gz.tbi")
-        
+
         if not os.path.exists(output_vcf):
             logging.error(f"vcfeval did not produce expected output file: {output_vcf}")
             return None
-            
+
         if not os.path.exists(output_tbi):
             logging.error(f"vcfeval did not produce expected index file: {output_tbi}")
             return None
-            
+
         try:
             # in GA4GH mode, this is what vcfeval should output
             shutil.copy(output_vcf, target)
@@ -286,22 +282,34 @@ def runVCFEval(
                 logging.debug(f"Cleaning up temporary directory: {vtf.name}")
                 shutil.rmtree(vtf.name)
         except OSError as e:
-            logging.warning(f"Failed to remove temporary directory {vtf.name}: {str(e)}")
+            logging.warning(
+                f"Failed to remove temporary directory {vtf.name}: {str(e)}"
+            )
 
-        if del_sdf and hasattr(args, 'engine_vcfeval_template') and args.engine_vcfeval_template:
+        if (
+            del_sdf
+            and hasattr(args, "engine_vcfeval_template")
+            and args.engine_vcfeval_template
+        ):
             try:
                 if os.path.exists(args.engine_vcfeval_template):
-                    logging.debug(f"Cleaning up SDF template directory: {args.engine_vcfeval_template}")
+                    logging.debug(
+                        f"Cleaning up SDF template directory: {args.engine_vcfeval_template}"
+                    )
                     shutil.rmtree(args.engine_vcfeval_template)
             except OSError as e:
-                logging.warning(f"Failed to remove SDF template directory {args.engine_vcfeval_template}: {str(e)}")
+                logging.warning(
+                    f"Failed to remove SDF template directory {args.engine_vcfeval_template}: {str(e)}"
+                )
 
     elapsed = time.time() - starttime
     logging.info(f"vcfeval for {vcf1} vs. {vcf2} -- time taken {elapsed:.2f}")
 
     # Final verification that output files exist
     if os.path.exists(target) and os.path.exists(target + ".tbi"):
-        logging.info(f"vcfeval completed successfully, output files: {target}, {target + '.tbi'}")
+        logging.info(
+            f"vcfeval completed successfully, output files: {target}, {target + '.tbi'}"
+        )
         return [target, target + ".tbi"]
     else:
         logging.error("vcfeval failed to produce expected output files")

@@ -109,7 +109,6 @@ def test_happy_with_bed_file(
 def test_error_handling(sample_vcf_files, sample_reference, tmp_path):
     """Test that hap.py handles errors gracefully."""
     truth_vcf, query_vcf = sample_vcf_files
-    ref_fasta = sample_reference
 
     # Create a non-existent reference file
     nonexistent_ref = str(tmp_path / "nonexistent.fa")

@@ -7,6 +7,7 @@ import filecmp
 import subprocess
 
 import pytest
+
 from tests.utils import get_bin_dir, get_project_root, run_command
 
 
@@ -65,6 +66,6 @@ def test_hapenum(tmp_path):
         pass
 
     # Compare the generated dot file with the expected one
-    assert filecmp.cmp(temp_dot, expected_dot), (
-        "Generated dot file differs from expected"
-    )
+    assert filecmp.cmp(
+        temp_dot, expected_dot
+    ), "Generated dot file differs from expected"

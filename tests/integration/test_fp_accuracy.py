@@ -7,6 +7,7 @@ import gzip
 from pathlib import Path
 
 import pytest
+
 from tests.utils import (
     compare_files,
     compare_summary_files,

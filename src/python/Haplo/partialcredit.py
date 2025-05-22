@@ -35,7 +35,9 @@ from Tools.parallel import getPool, runParallel
 from Tools.vcfextract import extractHeadersJSON
 
 
-def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) -> Optional[str]:
+def preprocessWrapper(
+    file_and_location: Tuple[str, str], args: Dict[str, Any]
+) -> Optional[str]:
     """Process a VCF file with the preprocess tool.
 
     Args:
@@ -107,7 +109,7 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
                     with open(tfe.name, encoding="utf-8") as f:
                         for l in f:
                             logging.error(l.rstrip())
-                    
+
                     # Cleanup the temp file if command failed
                     if temp_file_path and os.path.exists(temp_file_path):
                         os.unlink(temp_file_path)
@@ -115,7 +117,7 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
 
         elapsed = time.time() - starttime
         logging.info(f"preprocess for {location_str} -- time taken {elapsed:.2f}")
-        
+
         # Index the output file
         try:
             runBcftools("index", temp_file_path)
@@ -124,7 +126,7 @@ def preprocessWrapper(file_and_location: Tuple[str, str], args: Dict[str, Any]) 
             if temp_file_path and os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
             return None
-            
+
         return temp_file_path
     except Exception as e:
         # Catch any unexpected exceptions and log them
@@ -198,7 +200,11 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List
                     with open(stderr_path, encoding="utf-8") as f:
                         for l in f:
                             # Use error level if command failed, warning otherwise
-                            log_func = logging.error if not command_success else logging.warning
+                            log_func = (
+                                logging.error
+                                if not command_success
+                                else logging.warning
+                            )
                             log_func(l.rstrip())
                     os.unlink(stderr_path)
                 except Exception as e:
@@ -240,7 +246,9 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List
             try:
                 os.unlink(temp_file_path)
             except OSError as e:
-                logging.warning(f"Failed to delete temporary file {temp_file_path}: {str(e)}")
+                logging.warning(
+                    f"Failed to delete temporary file {temp_file_path}: {str(e)}"
+                )
 
 
 def partialCredit(
@@ -297,13 +305,17 @@ def partialCredit(
 
         # Filter out None values from blocksplit results
         valid_blocksplit_results = [r for r in res if r is not None]
-        
+
         if len(valid_blocksplit_results) != len(res):
-            logging.error(f"One or more blocksplit processes failed. Expected {len(res)} results, got {len(valid_blocksplit_results)} valid results.")
+            logging.error(
+                f"One or more blocksplit processes failed. Expected {len(res)} results, got {len(valid_blocksplit_results)} valid results."
+            )
             raise Exception("One of the blocksplit processes failed.")
 
         # Flatten list of lists, ensuring we handle only valid results
-        locations = [item for sublist in valid_blocksplit_results if sublist for item in sublist]
+        locations = [
+            item for sublist in valid_blocksplit_results if sublist for item in sublist
+        ]
         if not locations:
             logging.warning(
                 "Blocksplit returned no blocks. This can happen when "
@@ -333,17 +345,19 @@ def partialCredit(
 
         # Filter out None values from results
         valid_results = [r for r in res if r is not None]
-        
+
         if len(valid_results) != len(res):
             # Some preprocessing jobs failed
-            logging.error(f"One or more preprocess jobs failed. Expected {len(res)} results, got {len(valid_results)} valid results.")
+            logging.error(
+                f"One or more preprocess jobs failed. Expected {len(res)} results, got {len(valid_results)} valid results."
+            )
             raise Exception("One of the preprocess jobs failed")
-            
+
         if not valid_results:
             raise Exception(
                 f"No blocks were processed. List of locations: {list(locations)}"
             )
-            
+
         # Update res to contain only valid results
         res = valid_results
 

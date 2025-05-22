@@ -4,6 +4,7 @@ Migrated from src/sh/run_happy_pg_test.sh
 """
 
 import pytest
+
 from tests.utils import (
     check_vcfeval_availability,
     compare_summary_files,

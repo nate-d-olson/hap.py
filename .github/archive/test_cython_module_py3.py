@@ -415,9 +415,7 @@ def main():
                 status = (
                     "✓ PASS"
                     if result
-                    else "✗ FAIL"
-                    if result is False
-                    else "? INCONCLUSIVE"
+                    else "✗ FAIL" if result is False else "? INCONCLUSIVE"
                 )
                 logger.info(f"  {test_name}: {status}")
 

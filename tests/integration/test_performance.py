@@ -6,6 +6,7 @@ Migrated from src/sh/run_performance_test.sh
 import re
 
 import pytest
+
 from tests.utils import find_reference_file, get_bin_dir, get_example_dir, run_command
 
 
@@ -32,12 +33,12 @@ def test_performance_vcf(tmp_path):
 
     # Check that input files exist
     assert pg_vcf.exists(), f"PG_performance.vcf.gz not found at {pg_vcf}"
-    assert performance_vcf.exists(), (
-        f"performance.vcf.gz not found at {performance_vcf}"
-    )
-    assert reference, (
-        "Reference file not found. Set HGREF environment variable or use example reference."
-    )
+    assert (
+        performance_vcf.exists()
+    ), f"performance.vcf.gz not found at {performance_vcf}"
+    assert (
+        reference
+    ), "Reference file not found. Set HGREF environment variable or use example reference."
 
     # Run xcmp with the same parameters as in the shell script
     cmd = [
@@ -59,9 +60,9 @@ def test_performance_vcf(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"xcmp failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"xcmp failed with output: {result.stdout}\n{result.stderr}"
 
     # Check that output files were created
     assert output_bed.exists(), f"Output BED not generated: {output_bed}"
@@ -86,9 +87,9 @@ def test_performance_vcf(tmp_path):
     )
 
     # Check if there are no suspicious matches (which would be bad)
-    assert simple_match_hc_mis == 0, (
-        "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
-    )
+    assert (
+        simple_match_hc_mis == 0
+    ), "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
 
 
 @pytest.mark.integration
@@ -114,12 +115,12 @@ def test_performance_gvcf(tmp_path):
 
     # Check that input files exist
     assert pg_vcf.exists(), f"PG_performance.vcf.gz not found at {pg_vcf}"
-    assert performance_vcf.exists(), (
-        f"performance.vcf.gz not found at {performance_vcf}"
-    )
-    assert reference, (
-        "Reference file not found. Set HGREF environment variable or use example reference."
-    )
+    assert (
+        performance_vcf.exists()
+    ), f"performance.vcf.gz not found at {performance_vcf}"
+    assert (
+        reference
+    ), "Reference file not found. Set HGREF environment variable or use example reference."
 
     # Run xcmp with the same parameters as in the shell script (GVCF test)
     cmd = [
@@ -141,9 +142,9 @@ def test_performance_gvcf(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"xcmp failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"xcmp failed with output: {result.stdout}\n{result.stderr}"
 
     # Check that output files were created
     assert output_bed.exists(), f"Output BED not generated: {output_bed}"
@@ -168,9 +169,9 @@ def test_performance_gvcf(tmp_path):
     )
 
     # Check if there are no suspicious matches (which would be bad)
-    assert simple_match_hc_mis == 0, (
-        "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
-    )
+    assert (
+        simple_match_hc_mis == 0
+    ), "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
 
 
 @pytest.mark.integration
@@ -196,12 +197,12 @@ def test_performance_gvcf_comparison(tmp_path):
 
     # Check that input files exist
     assert pg_vcf.exists(), f"PG_performance.vcf.gz not found at {pg_vcf}"
-    assert performance_vcf.exists(), (
-        f"performance.vcf.gz not found at {performance_vcf}"
-    )
-    assert reference, (
-        "Reference file not found. Set HGREF environment variable or use example reference."
-    )
+    assert (
+        performance_vcf.exists()
+    ), f"performance.vcf.gz not found at {performance_vcf}"
+    assert (
+        reference
+    ), "Reference file not found. Set HGREF environment variable or use example reference."
 
     # Run xcmp with the same parameters as in the shell script (GVCF test)
     cmd = [
@@ -223,9 +224,9 @@ def test_performance_gvcf_comparison(tmp_path):
     ]
 
     result = run_command(cmd)
-    assert result.returncode == 0, (
-        f"xcmp failed with output: {result.stdout}\n{result.stderr}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"xcmp failed with output: {result.stdout}\n{result.stderr}"
 
     # Check that output files were created
     assert output_bed.exists(), f"Output BED not generated: {output_bed}"
@@ -250,6 +251,6 @@ def test_performance_gvcf_comparison(tmp_path):
     )
 
     # Check if there are no suspicious matches (which would be bad)
-    assert simple_match_hc_mis == 0, (
-        "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
-    )
+    assert (
+        simple_match_hc_mis == 0
+    ), "Consistency check failed: there are blocks for which simplecmp reports a match, but hapcmp reports a mismatch."
