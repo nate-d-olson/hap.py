@@ -53,12 +53,12 @@ def main() -> int:
             lines = 1
 
             for line in f:
-                l = line.split("\t")
-                if len(l) > 3 and (last - 1) > int(l[1]):
-                    print(f"Overlap at {l[0]}:{int(l[1])} (line {lines})")
+                chunk = line.split("\t")
+                if len(chunk) > 3 and (last - 1) > int(chunk[1]):
+                    print(f"Overlap at {chunk[0]}:{int(chunk[1])} (line {lines})")
                     return 1
-                elif len(l) > 3:
-                    last = int(l[2])
+                elif len(chunk) > 3:
+                    last = int(chunk[2])
                 lines += 1
 
         return 0

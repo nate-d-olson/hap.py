@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 from typing import List, Optional, Union
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))

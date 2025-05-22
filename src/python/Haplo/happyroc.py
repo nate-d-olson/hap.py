@@ -96,14 +96,14 @@ def roc(
     """
     result = {}
     header = None
-    with open(roc_table, encoding="utf-8") as rt:
-        for l in rt:
-            l = l.strip()
+    with open(roc_table, encoding="utf-8") as roc_table:
+        for line in roc_table:
+            line = line.strip()
             if not header:
-                header = l.split("\t")
+                header = line.split("\t")
             else:
                 rec = {}
-                for k, v in zip(header, l.split("\t")):
+                for k, v in zip(header, line.split("\t")):
                     rec[k] = v
 
                 if filter_handling:

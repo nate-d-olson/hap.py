@@ -83,66 +83,66 @@ def extract_header(
     # For compatibility with pre.py
     result["fields"] = []
 
-    fh = None
+    file_handle = None
     try:
         if filename.endswith(".gz"):
-            fh = gzip.open(filename, "rt", encoding="utf-8")
+            file_handle = gzip.open(filename, "rt", encoding="utf-8")
         else:
-            fh = open(filename, encoding="utf-8")
+            file_handle = open(filename, encoding="utf-8")
 
-        for l in fh:
-            l = l.strip()
-            if l.startswith("##INFO="):
+        for line in file_handle:
+            line = line.strip()
+            if line.startswith("##INFO="):
                 # process INFO lines
                 if not extract_info and "fields" not in result:
                     continue
 
-                m = re.match(
+                info_match = re.match(
                     r"##INFO=<ID=([^,>]+),Number=([^,>]+),Type=([^,>]+),Description=\"([^\"]+)\"",
-                    l,
+                    line,
                 )
-                if not m:
-                    logging.error("Cannot parse INFO line: %s" % l)
+                if not info_match:
+                    logging.error("Cannot parse INFO line: %s" % line)
                 else:
                     info_field = {
-                        "id": m.group(1),
-                        "number": m.group(2),
-                        "type": m.group(3),
-                        "description": m.group(4),
+                        "id": info_match.group(1),
+                        "number": info_match.group(2),
+                        "type": info_match.group(3),
+                        "description": info_match.group(4),
                     }
 
                     if extract_info:
-                        result["info"][m.group(1)] = info_field
+                        result["info"][info_match.group(1)] = info_field
 
                     # Add to fields list for compatibility
                     result["fields"].append({"key": "INFO", "values": info_field})
 
-            elif l.startswith("##FORMAT="):
+            elif line.startswith("##FORMAT="):
                 # process FORMAT lines
                 if not extract_formats and "fields" not in result:
                     continue
 
-                m = re.match(
+                format_match = re.match(
                     r"##FORMAT=<ID=([^,>]+),Number=([^,>]+),Type=([^,>]+),Description=\"([^\"]+)\"",
-                    l,
+                    line,
                 )
-                if not m:
-                    logging.error("Cannot parse FORMAT line: %s" % l)
+                if not format_match:
+                    logging.error("Cannot parse FORMAT line: %s" % line)
                 else:
                     format_field = {
-                        "id": m.group(1),
-                        "number": m.group(2),
-                        "type": m.group(3),
-                        "description": m.group(4),
+                        "id": format_match.group(1),
+                        "number": format_match.group(2),
+                        "type": format_match.group(3),
+                        "description": format_match.group(4),
                     }
 
                     if extract_formats:
-                        result["formats"][m.group(1)] = format_field
+                        result["formats"][format_match.group(1)] = format_field
 
                     # Add to fields list for compatibility
                     result["fields"].append({"key": "FORMAT", "values": format_field})
 
-            elif l.startswith("##FILTER="):
+            elif line.startswith("##FILTER="):
                 # process FILTER lines
                 if not extract_filters and "fields" not in result:
                     continue
@@ -152,28 +152,28 @@ def extract_header(
                 description = ""
 
                 # Try standard format with Description
-                m = re.match(
+                filter_match = re.match(
                     r"##FILTER=<ID=([^,>]+),Description=\"([^\"]+)\"",
-                    l,
+                    line,
                 )
-                if m:
-                    filter_id = m.group(1)
-                    description = m.group(2)
+                if filter_match:
+                    filter_id = filter_match.group(1)
+                    description = filter_match.group(2)
                 else:
                     # Try simpler format without Description
-                    m = re.match(r"##FILTER=<ID=([^,>]+)>", l)
-                    if m:
-                        filter_id = m.group(1)
+                    filter_match = re.match(r"##FILTER=<ID=([^,>]+)>", line)
+                    if filter_match:
+                        filter_id = filter_match.group(1)
                         description = "No description available"
                     else:
                         # Try basic format
-                        m = re.match(r"##FILTER=<ID=([^>]+)>", l)
-                        if m:
-                            filter_id = m.group(1)
+                        filter_match = re.match(r"##FILTER=<ID=([^>]+)>", line)
+                        if filter_match:
+                            filter_id = filter_match.group(1)
                             description = "No description available"
 
                 if not filter_id:
-                    logging.error("Cannot parse FILTER line: %s" % l)
+                    logging.error("Cannot parse FILTER line: %s" % line)
                 else:
                     filter_field = {
                         "ID": filter_id,
@@ -186,9 +186,9 @@ def extract_header(
                     # Add to fields list for compatibility
                     result["fields"].append({"key": "FILTER", "values": filter_field})
 
-            elif l.startswith("#CHROM"):
+            elif line.startswith("#CHROM"):
                 if extract_columns:
-                    cols = l[1:].split()
+                    cols = line[1:].split()
                     result["columns"] = cols
                 break
 
@@ -197,8 +197,8 @@ def extract_header(
         raise
 
     finally:
-        if fh:
-            fh.close()
+        if file_handle:
+            file_handle.close()
 
     # Add tabix information if available
     try:
@@ -254,15 +254,15 @@ def extract_variants(
     header = extract_header(filename, extract_columns=True)
     columns = header.get("columns", [])
 
-    for l in p.stdout:
-        l = l.strip()
-        if not l or l.startswith("#"):
+    for line in p.stdout:
+        line = line.strip()
+        if not line or line.startswith("#"):
             continue
 
-        fields = l.split("\t")
+        fields = line.split("\t")
 
         if len(fields) < 8:
-            logging.error("Invalid VCF record (less than 8 fields): %s" % l)
+            logging.error("Invalid VCF record (less than 8 fields): %s" % line)
             continue
 
         record = {}

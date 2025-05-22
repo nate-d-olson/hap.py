@@ -44,11 +44,11 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
 
     llocations = []
 
-    for l in locations:
-        xchr, _, _pos = l.partition(":")
-        start, _, end = _pos.partition("-")
+    for location in locations:
+        xchr, _, pos = location.partition(":")
+        start, _, end = pos.partition("-")
         if not xchr:
-            raise Exception(f"Invalid chromosome name in {str(l)}")
+            raise Exception(f"Invalid chromosome name in {str(location)}")
         try:
             start = int(start)
         except ValueError:
@@ -66,8 +66,8 @@ def _locations_tmp_bed_file(locations: Union[str, List[str]]) -> str:
     os.close(fd)
 
     with open(tpath, "w", encoding="utf-8") as f:
-        for l in llocations:
-            f.write("%s\t%i\t%i\n" % tuple(l))
+        for llocation in llocations:
+            f.write("%s\t%i\t%i\n" % tuple(llocation))
 
     return tpath
 
@@ -94,17 +94,17 @@ def run(args: Any) -> None:
     logging.info("Variant types to process: %s" % str(typelist))
 
     outvcfs = []
-    for t in typelist:
-        t_outprefix = outprefix + "." + t
+    for variant_type in typelist:
+        t_outprefix = outprefix + "." + variant_type
         if args.unhappy:
-            outfiles[t] = u_unhappy(
+            outfiles[variant_type] = u_unhappy(
                 args.truth,
                 args.query,
                 args.ref,
                 args.regions,
                 args.regions_file,
                 t_outprefix,
-                t.lower(),
+                variant_type.lower(),
                 args.usefiltered_truth,
                 args.usefiltered_query,
             )
@@ -118,14 +118,14 @@ def run(args: Any) -> None:
 
             if args.engine == "vcfeval":
                 # Use RTG vcfeval
-                outfiles[t] = v_vcfeval(
+                outfiles[variant_type] = v_vcfeval(
                     args.truth,
                     args.query,
                     args.ref,
                     args.regions,
                     args.regions_file,
                     outprefix,
-                    t,
+                    variant_type,
                     args.preprocessing,
                     args.window,
                     args.fixchr_truth,
@@ -273,32 +273,42 @@ def _write_outfiles(
         of_summary.write(h + "\n")
 
     for t in sorted(data.keys()):
-        for l in data[t].splitlines():
-            if not l.startswith("Type"):
-                of_summary.write(l + "\n")
+        for line in data[t].splitlines():
+            if not line.startswith("Type"):
+                of_summary.write(line + "\n")
 
-    for t in typelist:
+    for variant_type in typelist:
         try:
-            if of_extended is None and writeCounts and "extended_csv" in outfiles[t]:
+            if (
+                of_extended is None
+                and writeCounts
+                and "extended_csv" in outfiles[variant_type]
+            ):
                 of_extended = open(outprefix + ".extended.csv", "w", encoding="utf-8")
-                of_extended.write(outfiles[t]["extended_header"] + "\n")
+                of_extended.write(outfiles[variant_type]["extended_header"] + "\n")
 
-            if of_extended and "extended_csv" in outfiles[t]:
-                for l in outfiles[t]["extended_csv"].splitlines():
-                    if not l.startswith("#"):
-                        of_extended.write(l + "\n")
+            if of_extended and "extended_csv" in outfiles[variant_type]:
+                for line in outfiles[variant_type]["extended_csv"].splitlines():
+                    if not line.startswith("#"):
+                        of_extended.write(line + "\n")
 
-            if of_metrics is None and writeCounts and "metrics" in outfiles[t]:
+            if (
+                of_metrics is None
+                and writeCounts
+                and "metrics" in outfiles[variant_type]
+            ):
                 metrics_file = open(outprefix + ".metrics.json.gz", "wb")
                 import gzip
 
                 of_metrics = gzip.GzipFile(fileobj=metrics_file)
 
-            if of_metrics and "metrics" in outfiles[t]:
+            if of_metrics and "metrics" in outfiles[variant_type]:
                 # Properly handle encoding in Python 3
-                of_metrics.write(json.dumps(outfiles[t]["metrics"]).encode("utf-8"))
-        except (KeyError, OSError) as e:
-            logging.warning(f"Error processing output for {t}: {str(e)}")
+                of_metrics.write(
+                    json.dumps(outfiles[variant_type]["metrics"]).encode("utf-8")
+                )
+        except (KeyError, OSError) as exc:
+            logging.warning(f"Error processing output for {variant_type}: {str(exc)}")
             # might not have all outputs
 
 

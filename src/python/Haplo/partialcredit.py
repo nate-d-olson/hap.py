@@ -89,26 +89,26 @@ def preprocessWrapper(
             finally:
                 if finished:
                     # Close files and read their contents for logging
-                    with open(tfo.name, encoding="utf-8") as f:
-                        for l in f:
-                            logging.info(l.rstrip())
+                    with open(tfo.name, encoding="utf-8") as file:
+                        for line in file:
+                            logging.info(line.rstrip())
                     os.unlink(tfo.name)
 
-                    with open(tfe.name, encoding="utf-8") as f:
-                        for l in f:
-                            logging.warning(l.rstrip())
+                    with open(tfe.name, encoding="utf-8") as file:
+                        for line in file:
+                            logging.warning(line.rstrip())
                     os.unlink(tfe.name)
                 else:
                     logging.error(
                         f"Preprocess command {to_run} failed. "
                         f"Outputs are here {tfo.name} / {tfe.name}"
                     )
-                    with open(tfo.name, encoding="utf-8") as f:
-                        for l in f:
-                            logging.error(l.rstrip())
-                    with open(tfe.name, encoding="utf-8") as f:
-                        for l in f:
-                            logging.error(l.rstrip())
+                    with open(tfo.name, encoding="utf-8") as file:
+                        for line in file:
+                            logging.error(line.rstrip())
+                    with open(tfe.name, encoding="utf-8") as file:
+                        for line in file:
+                            logging.error(line.rstrip())
 
                     # Cleanup the temp file if command failed
                     if temp_file_path and os.path.exists(temp_file_path):
@@ -189,23 +189,23 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List
             finally:
                 # Close files and read their contents for logging
                 try:
-                    with open(stdout_path, encoding="utf-8") as f:
-                        for l in f:
-                            logging.info(l.rstrip())
+                    with open(stdout_path, encoding="utf-8") as file:
+                        for line in file:
+                            logging.info(line.rstrip())
                     os.unlink(stdout_path)
                 except Exception as e:
                     logging.error(f"Error processing stdout log: {str(e)}")
 
                 try:
-                    with open(stderr_path, encoding="utf-8") as f:
-                        for l in f:
+                    with open(stderr_path, encoding="utf-8") as file:
+                        for line in file:
                             # Use error level if command failed, warning otherwise
                             log_func = (
                                 logging.error
                                 if not command_success
                                 else logging.warning
                             )
-                            log_func(l.rstrip())
+                            log_func(line.rstrip())
                     os.unlink(stderr_path)
                 except Exception as e:
                     logging.error(f"Error processing stderr log: {str(e)}")
@@ -219,14 +219,14 @@ def blocksplitWrapper(location_str: str, bargs: Dict[str, Any]) -> Optional[List
         # Parse the output file to get the locations
         result = []
         try:
-            with open(temp_file_path, encoding="utf-8") as f:
-                for l in f:
-                    ll = l.strip().split("\t", 3)
-                    if len(ll) < 3:
+            with open(temp_file_path, encoding="utf-8"):
+                for line in file:
+                    chunk = line.strip().split("\t", 3)
+                    if len(chunk) < 3:
                         continue
-                    xchr = ll[0]
-                    start = int(ll[1]) + 1
-                    end = int(ll[2])
+                    xchr = chunk[0]
+                    start = int(chunk[1]) + 1
+                    end = int(chunk[2])
                     result.append(f"{xchr}:{start}-{end}")
         except Exception as e:
             logging.error(f"Error parsing blocksplit output: {str(e)}")

@@ -85,9 +85,9 @@ def quantify(args: argparse.Namespace) -> None:
         qfyregions["CONF"] = args.fp_bedfile
 
     if args.strat_tsv:
-        with open(args.strat_tsv, encoding="utf-8") as sf:
-            for l in sf:
-                n, _, f = l.strip().partition("\t")
+        with open(args.strat_tsv, encoding="utf-8") as strat_file_list:
+            for strat_file in strat_file_list:
+                n, _, f = strat_file.strip().partition("\t")
                 if n in qfyregions:
                     raise ValueError(f"Duplicate stratification region ID: {n}")
                 if not f:

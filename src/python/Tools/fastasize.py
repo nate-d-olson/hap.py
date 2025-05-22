@@ -49,8 +49,8 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
     fastacontiglengths = {}
 
     with open(fastafile + ".fai", encoding="utf-8") as fai:
-        for l in fai:
-            row = l.strip().split("\t")
+        for line in fai:
+            row = line.strip().split("\t")
             fastacontiglengths[row[0]] = int(row[1])
 
     return fastacontiglengths
@@ -71,12 +71,12 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
     #
     # NOTE: This code uses a subprocess call to 'grep' which counts the number of
     # non-N characters in the FASTA file for each contig.
-    fd, t = tempfile.mkstemp(prefix="fasta_tmp")
+    fd, temp_path = tempfile.mkstemp(prefix="fasta_tmp")
     os.close(fd)
     try:
         cmd_line = "cat {} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > {}".format(
             pipes.quote(fastafile),
-            pipes.quote(t),
+            pipes.quote(temp_path),
         )
         logging.info(cmd_line)
 
@@ -98,13 +98,13 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
             logging.error("cat | grep | tr | wc error: %s" % stderr)
             raise Exception("Failed to count non-N bases in %s" % fastafile)
 
-        v = int(open(t, encoding="utf-8").read().strip())
-        result = {"all": v}
+        value = int(open(temp_path, encoding="utf-8").read().strip())
+        result = {"all": value}
 
         # also figure contig-by-contig
-        cts = fastaContigLengths(fastafile)
-        for c in cts:
-            cmd_line = f"samtools faidx {pipes.quote(fastafile)} {pipes.quote(c)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
+        contigs = fastaContigLengths(fastafile)
+        for contig in contigs:
+            cmd_line = f"samtools faidx {pipes.quote(fastafile)} {pipes.quote(contig)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
             logging.debug(cmd_line)
 
             po = subprocess.Popen(
@@ -123,12 +123,12 @@ def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
 
             if return_code != 0:
                 logging.error("samtools faidx | grep | tr | wc error: %s" % stderr)
-                raise Exception(f"Failed to count non-N bases in {fastafile}:{c}")
+                raise Exception(f"Failed to count non-N bases in {fastafile}:{contig}")
 
-            result[c] = int(stdout.strip())
+            result[contig] = int(stdout.strip())
     finally:
         with contextlib.suppress(Exception):
-            os.unlink(t)
+            os.unlink(temp_path)
 
     return result
 
@@ -154,10 +154,10 @@ def fastaSampleRegions(
     if n_regions == 0:
         return result
     elif n_regions == 1:
-        l = list(cts.keys())
-        c = l[random.randint(0, len(l) - 1)]
-        start = random.randint(0, max(0, cts[c] - region_length))
-        result = ["%s:%i-%i" % (c, start, start + region_length)]
+        contig_names = list(cts.keys())
+        contig = contig_names[random.randint(0, len(contig_names) - 1)]
+        start = random.randint(0, max(0, cts[contig] - region_length))
+        result = ["%s:%i-%i" % (contig, start, start + region_length)]
         return result
 
     total = 0

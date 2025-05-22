@@ -106,10 +106,11 @@ allow_redefinition = true
 [tool.ruff]
 line-length = 88
 target-version = "py38"
+exclude = ['src/sh', '.github/']
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-ignore = ["E501"]
+ignore = ["E501", "E402"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]

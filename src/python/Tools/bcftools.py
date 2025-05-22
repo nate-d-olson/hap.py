@@ -17,13 +17,7 @@ import pipes
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
