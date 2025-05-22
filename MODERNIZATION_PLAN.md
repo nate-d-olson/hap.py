@@ -25,6 +25,7 @@ This document outlines a systematic plan to continue the Python 3 modernization 
   - [x] sequence utilities → Python implementation using BioPython
   - [x] quantify → Python implementation using pandas + pysam
   - [x] preprocess → Python implementation using pysam
+  - [x] hapcmp → Python implementation using pysam (initial version complete)
 - [x] Progress tracking and reporting infrastructure
 - [ ] Shell script to pytest migration
 - [ ] Complete type hint coverage
@@ -32,8 +33,8 @@ This document outlines a systematic plan to continue the Python 3 modernization 
 
 ### ❌ Not Started
 
-- [ ] Systematic C++ component evaluation
-- [ ] Performance benchmarking of Python vs C++ components
+- [ ] Systematic C++ component evaluation (for xcmp, scmp, multimerge)
+- [ ] Performance benchmarking of Python vs C++ components (for hapcmp, xcmp, scmp, multimerge)
 - [ ] CI/CD pipeline optimization
 - [ ] Package distribution setup
 
@@ -62,6 +63,11 @@ The following components have been migrated from C++ to Python:
    - Created `python_quantify.py` using pandas and pysam
    - Added tests in `test_quantify.py`
    - Supports variant comparison and stratification metrics
+
+5. **hapcmp**
+   - Created `python_hapcmp.py` using pysam
+   - Added initial unit tests in `tests/unit/test_python_hapcmp.py`
+   - Basic haplotype comparison functionality implemented.
 
 ### Progress Tracking Infrastructure
 
@@ -94,11 +100,12 @@ The following tools have been developed to track modernization progress:
 
 ### Next Steps
 
-- Implement Python version of `preprocess`
+- Implement Python versions of `xcmp` and `scmp`
 - Migrate remaining shell script tests to pytest
 - Complete type hint coverage for all Python code
 - Update documentation for Python 3 compatibility
 - Create CI/CD pipeline for automated testing
+- Refine and complete unit tests for `python_hapcmp.py`
 
 ## Phase 1: Code Quality and Standards (Weeks 1-2)
 
@@ -169,6 +176,9 @@ pyupgrade --py38-plus src/python/**/*.py
 - `quantify` → Python implementation using pandas + pysam
 - `vcfcheck` → Python implementation using pysam validation
 - `preprocess` → Python implementation using pysam + preprocessing logic
+- `hapcmp` → Python implementation using pysam (initial version complete)
+- `xcmp` → Python implementation (planned)
+- `scmp` → Python implementation (planned)
 
 **Implementation Strategy**:
 
@@ -253,17 +263,17 @@ import os
 
 class TestModernization:
     """Test suite for modernization components."""
-    
+
     def test_python_vs_cpp_blocksplit(self):
         """Compare Python and C++ blocksplit outputs."""
         # Implementation here
         pass
-    
+
     def test_pysam_integration(self):
         """Test pysam integration works correctly."""
         # Implementation here
         pass
-    
+
     def test_performance_regression(self):
         """Ensure performance is acceptable."""
         # Implementation here
@@ -320,46 +330,46 @@ from typing import Dict, List
 
 class ModernizationTracker:
     """Track progress of modernization efforts."""
-    
+
     def __init__(self, config_file: str = "modernization_progress.json"):
         self.config_file = Path(config_file)
         self.load_progress()
-    
+
     def check_code_quality(self) -> Dict[str, bool]:
         """Check code quality metrics."""
         results = {}
-        
+
         # Check pre-commit status
         try:
-            subprocess.run(["pre-commit", "run", "--all-files"], 
+            subprocess.run(["pre-commit", "run", "--all-files"],
                          check=True, capture_output=True)
             results["pre_commit"] = True
         except subprocess.CalledProcessError:
             results["pre_commit"] = False
-        
+
         # Check type coverage
         results["type_coverage"] = self.check_type_coverage()
-        
+
         # Check test coverage
         results["test_coverage"] = self.check_test_coverage()
-        
+
         return results
-    
+
     def check_c_plus_plus_dependencies(self) -> Dict[str, int]:
         """Count remaining C++ dependencies."""
         cpp_files = list(Path("src/c++").rglob("*.cpp"))
         cpp_usage = {}
-        
+
         for component in ["blocksplit", "quantify", "vcfcheck", "preprocess"]:
             cpp_usage[component] = len([f for f in cpp_files if component in f.name])
-        
+
         return cpp_usage
-    
+
     def generate_report(self) -> str:
         """Generate modernization progress report."""
         quality = self.check_code_quality()
         cpp_deps = self.check_c_plus_plus_dependencies()
-        
+
         report = f"""
 # Modernization Progress Report
 
@@ -373,7 +383,7 @@ class ModernizationTracker:
         for component, count in cpp_deps.items():
             status = "✅ Migrated" if count == 0 else f"🔄 {count} files remaining"
             report += f"- {component}: {status}\n"
-        
+
         return report
 ```
 
@@ -396,26 +406,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
         python-version: '3.8'
-    
+
     - name: Install dependencies
       run: |
         pip install -e .[dev]
         pip install pre-commit
-    
+
     - name: Generate progress report
       run: |
         python scripts/track_progress.py > PROGRESS_REPORT.md
-    
+
     - name: Update progress badge
       run: |
         # Update README badge with current progress
         python scripts/update_progress_badge.py
-    
+
     - name: Comment PR with progress
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
