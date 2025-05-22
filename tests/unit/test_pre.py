@@ -4,11 +4,11 @@ import tempfile
 
 # Add the src directory to the path
 sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src/python"))
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
 )
 
-import pre
-from Tools.vcfextract import extractHeadersJSON
+import hap_py.pre as pre
+from hap_py.tools.vcfextract import extractHeadersJSON
 
 
 def test_hasChrPrefix():

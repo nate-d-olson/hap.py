@@ -6,7 +6,7 @@ import os
 import shutil
 import subprocess
 
-# Add src/python to path for imports during tests
+# Add src to path for imports during tests
 import sys
 import tempfile
 import unittest
@@ -17,11 +17,10 @@ sys.path.insert(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
         "src",
-        "python",
     ),
 )
 
-from Haplo import vcfeval
+from hap_py.haplo import vcfeval
 
 
 class TestVCFEval(unittest.TestCase):
@@ -64,12 +63,12 @@ class TestVCFEval(unittest.TestCase):
     def test_findVCFEval(self):
         """Test the findVCFEval function."""
         # Test when has_vcfeval is False
-        with patch("Haplo.vcfeval.has_vcfeval", False):
+        with patch("hap_py.haplo.vcfeval.has_vcfeval", False):
             result = vcfeval.findVCFEval()
             self.assertEqual(result, "rtg")
 
         # Test when has_vcfeval is True but files don't exist
-        with patch("Haplo.vcfeval.has_vcfeval", True), patch(
+        with patch("hap_py.haplo.vcfeval.has_vcfeval", True), patch(
             "os.path.isfile", return_value=False
         ):
             result = vcfeval.findVCFEval()

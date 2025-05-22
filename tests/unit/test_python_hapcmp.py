@@ -9,15 +9,15 @@ it correctly performs haplotype comparison.
 import sys  # Moved to top
 from pathlib import Path  # Moved to top
 
-# Add project root to sys.path to allow importing Haplo
+# Add src to sys.path to allow importing hap_py
 project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path))
+sys.path.insert(0, str(project_root_path / "src"))
 
 import os
 import tempfile
 
 import pytest
-from Haplo.python_hapcmp import (
+from hap_py.haplo.python_hapcmp import (
     HaploComparator,
     HaplotypeBlock,
 )

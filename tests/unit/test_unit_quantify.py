@@ -8,12 +8,18 @@ it correctly quantifies variant calls in VCF files.
 
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
 
 import pandas as pd
 import pytest
-from Haplo.python_quantify import QuantifyEngine
+
+# Add src to sys.path to allow importing hap_py
+project_root_path = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(project_root_path / "src"))
+
+from hap_py.haplo.python_quantify import QuantifyEngine
 
 
 class TestQuantifyEngine:
