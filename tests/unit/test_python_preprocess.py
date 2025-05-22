@@ -19,13 +19,15 @@ def reference_path():
     path = repo_root / "example" / "example.fa"
     assert path.exists(), f"Reference FASTA not found at {path}"
     # Ensure the .fai index exists or can be created by pysam
-    if not (path.with_suffix(path.suffix + '.fai')).exists():
+    if not (path.with_suffix(path.suffix + ".fai")).exists():
         try:
             pysam.faidx(str(path))
         except pysam.SamtoolsError as e:
             # If indexing fails, it might indicate a problem with the FASTA file itself
             # or permissions. For now, we'll raise an error to make it visible.
-            raise FileNotFoundError(f"Failed to find or create FASTA index for {path}: {e}")
+            raise FileNotFoundError(
+                f"Failed to find or create FASTA index for {path}: {e}"
+            )
     return str(path)
 
 
@@ -36,11 +38,13 @@ def example_vcf_path():
     path = repo_root / "example" / "example.vcf.gz"
     assert path.exists(), f"Example VCF not found at {path}"
     # Ensure the .tbi index exists or can be created by pysam
-    if not (path.with_suffix(path.suffix + '.tbi')).exists():
+    if not (path.with_suffix(path.suffix + ".tbi")).exists():
         try:
             pysam.tabix_index(str(path), preset="vcf")
         except pysam.SamtoolsError as e:
-             raise FileNotFoundError(f"Failed to find or create VCF index for {path}: {e}")
+            raise FileNotFoundError(
+                f"Failed to find or create VCF index for {path}: {e}"
+            )
     return str(path)
 
 
@@ -62,7 +66,7 @@ def test_preprocess_initialization(reference_path, example_vcf_path):
     # Ensure reference_path and example_vcf_path are valid before initializing
     assert os.path.exists(reference_path), f"Reference FASTA missing: {reference_path}"
     assert os.path.exists(example_vcf_path), f"Example VCF missing: {example_vcf_path}"
-    
+
     engine = PreprocessEngine(
         input_vcf=example_vcf_path, reference_fasta=reference_path
     )
@@ -77,17 +81,20 @@ def test_preprocess_initialization(reference_path, example_vcf_path):
 def test_normalize_variant():
     """Test variant normalization."""
     # Create dummy VCF and FASTA files for initialization
-    with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as dummy_vcf_file, \
-         tempfile.NamedTemporaryFile(suffix=".fa", delete=False) as dummy_fa_file:
+    with tempfile.NamedTemporaryFile(
+        suffix=".vcf", delete=False
+    ) as dummy_vcf_file, tempfile.NamedTemporaryFile(
+        suffix=".fa", delete=False
+    ) as dummy_fa_file:
         dummy_vcf_path = dummy_vcf_file.name
         dummy_fa_path = dummy_fa_file.name
         # Write minimal valid content to FASTA to avoid pysam errors
         # and ensure it's indexable by pysam.faidx
         dummy_fa_file.write(b">chr1\n")
-        dummy_fa_file.write(b"A" * 60 + b"\n") # Standard FASTA line length
+        dummy_fa_file.write(b"A" * 60 + b"\n")  # Standard FASTA line length
         dummy_fa_file.write(b"C" * 60 + b"\n")
-        dummy_fa_file.flush() 
-        pysam.faidx(dummy_fa_path) # Create .fai index
+        dummy_fa_file.flush()
+        pysam.faidx(dummy_fa_path)  # Create .fai index
 
     engine = PreprocessEngine(input_vcf=dummy_vcf_path, reference_fasta=dummy_fa_path)
 
@@ -118,7 +125,7 @@ def test_normalize_variant():
     # Clean up dummy files
     os.remove(dummy_vcf_path)
     os.remove(dummy_fa_path)
-    if os.path.exists(dummy_fa_path + ".fai"): 
+    if os.path.exists(dummy_fa_path + ".fai"):
         os.remove(dummy_fa_path + ".fai")
 
 
@@ -175,7 +182,9 @@ def test_decompose_variants(reference_path, example_vcf_path, temp_output_path):
         assert engine.stats["decomposed_variants"] > 0
 
 
-def test_left_shift_variants(reference_path): # reference_path fixture will be used by PreprocessEngine
+def test_left_shift_variants(
+    reference_path,
+):  # reference_path fixture will be used by PreprocessEngine
     """Test left-shifting of variants."""
     # Create a simple VCF with variants that need left-shifting
     with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as f:
@@ -194,15 +203,15 @@ chr1\t300\t.\tATCG\tAG\t.\tPASS\t.\tGT\t0/1
     # Create a simple reference
     with tempfile.NamedTemporaryFile(suffix=".fa", delete=False) as f:
         f.write(
-            b">chr1\n" +
-            b"AGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n" +
-            b"TCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n" +
-            b"TCGTCGTCGTCGTCGCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTATCG\n" +
-            b"ATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG\n"
+            b">chr1\n"
+            + b"AGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n"
+            + b"TCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n"
+            + b"TCGTCGTCGTCGTCGCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTATCG\n"
+            + b"ATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG\n"
         )
         f.flush()
         test_reference = f.name
-        pysam.faidx(test_reference) # Ensure .fai index is created
+        pysam.faidx(test_reference)  # Ensure .fai index is created
 
     # Process with left-shifting
     with tempfile.NamedTemporaryFile(suffix=".vcf.gz", delete=False) as f:
@@ -232,7 +241,7 @@ chr1\t300\t.\tATCG\tAG\t.\tPASS\t.\tGT\t0/1
         os.remove(output_vcf + ".tbi")
 
 
-def test_haploid_x_handling(reference_path): # reference_path fixture will be used
+def test_haploid_x_handling(reference_path):  # reference_path fixture will be used
     """Test handling of haploid X chromosome."""
     # Create a simple VCF with X chromosome variants
     with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as f:
@@ -319,7 +328,7 @@ def test_region_filtering(reference_path, example_vcf_path, temp_output_path):
     os.remove(regions_file)
 
 
-def test_pass_only_filtering(reference_path): # reference_path fixture will be used
+def test_pass_only_filtering(reference_path):  # reference_path fixture will be used
     """Test filtering for PASS variants only."""
     # Create a simple VCF with a mix of PASS and non-PASS variants
     with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as f:

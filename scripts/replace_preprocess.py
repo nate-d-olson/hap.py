@@ -23,7 +23,7 @@ def update_partialcredit_py(path):
         print(f"Error: {path} does not exist")
         return False
 
-    with open(path, 'r') as f:
+    with open(path) as f:
         content = f.read()
 
     # Replace the preprocessWrapper function
@@ -92,7 +92,7 @@ def preprocessWrapper(
     new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
 
     # Write back
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         f.write(new_content)
 
     print(f"Updated {path}")
@@ -111,17 +111,17 @@ def update_scripts(scripts_dir):
     # Add preprocess to scripts/generate_report.py
     report_path = os.path.join(scripts_dir, "generate_report.py")
     if os.path.exists(report_path):
-        with open(report_path, 'r') as f:
+        with open(report_path) as f:
             content = f.read()
 
         # Update component status
         if '"preprocess": {"status": "not-started"' in content:
             content = content.replace(
                 '"preprocess": {"status": "not-started"',
-                '"preprocess": {"status": "completed"'
+                '"preprocess": {"status": "completed"',
             )
 
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             f.write(content)
 
         print(f"Updated {report_path}")
@@ -138,8 +138,10 @@ def main():
         description="Replace C++ preprocess with Python implementation"
     )
     parser.add_argument(
-        "--project-root", type=str, default=None,
-        help="Path to hap.py project root (default: auto-detect)"
+        "--project-root",
+        type=str,
+        default=None,
+        help="Path to hap.py project root (default: auto-detect)",
     )
 
     args = parser.parse_args()

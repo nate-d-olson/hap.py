@@ -83,9 +83,7 @@ def test_haplotype_block_initialization():
 @pytest.mark.parametrize("max_haplotypes", [1, 10, 100, 4096])
 def test_set_max_haplotypes(reference_path, max_haplotypes):
     """Test setting maximum haplotypes via constructor."""
-    haplo_comparator = HaploComparator(
-        reference_path, max_haplotypes=max_haplotypes
-    )
+    haplo_comparator = HaploComparator(reference_path, max_haplotypes=max_haplotypes)
     assert haplo_comparator.max_haplotypes == max_haplotypes
 
 
@@ -101,9 +99,7 @@ def test_set_do_alignments(reference_path):
 
 
 @pytest.mark.integration
-def test_basic_comparison(
-    reference_path, example_vcf_paths, temp_output_path
-):
+def test_basic_comparison(reference_path, example_vcf_paths, temp_output_path):
     """Basic integration test for haplotype comparison."""
     vcf1, vcf2 = example_vcf_paths
 
@@ -135,12 +131,10 @@ def test_basic_comparison(
         assert stats["blocks_total"] == 1
         assert stats["blocks_processed"] == 1
         assert (
-            stats["blocks_match"]
-            + stats["blocks_mismatch"]
-            + stats["blocks_error"]
+            stats["blocks_match"] + stats["blocks_mismatch"] + stats["blocks_error"]
         ) == 1
 
-        with open(temp_output_path, "r", encoding="utf-8") as f_out:
+        with open(temp_output_path, encoding="utf-8") as f_out:
             lines = f_out.readlines()
             assert len(lines) == 2  # Header + 1 data line
             assert lines[0].strip() == "#CHROM\\tSTART\\tEND\\tSTATUS"

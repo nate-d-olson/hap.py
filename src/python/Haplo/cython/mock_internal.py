@@ -67,7 +67,7 @@ class MockVariantRecord:
 class MockHaploCompare:
     """
     Mock implementation of the C++ HaploCompare functionality.
-    
+
     This mock implementation provides compatibility with code that
     was written to use the C++ HaploCompare class, but is now running
     in a Python-only environment. For full functionality, use the
@@ -117,65 +117,67 @@ class MockHaploCompare:
         if isinstance(variant, dict):
             variant = MockVariantRecord(**variant)
         self.query_variants.append(variant)
-        
+
     def add_region(self, chrom: str, start: int, end: int) -> None:
         """Add a region to compare"""
-        self.regions.append({
-            "chrom": chrom,
-            "start": start,
-            "end": end
-        })
+        self.regions.append({"chrom": chrom, "start": start, "end": end})
 
     def compare(self) -> Dict[str, Any]:
         """
         Perform the comparison between truth and query variants.
-        
-        This is a simplified mock implementation that doesn't do 
+
+        This is a simplified mock implementation that doesn't do
         actual haplotype comparison. For full functionality, use
         the HaploComparator class in python_hapcmp.py.
-        
+
         Returns:
             Dictionary with comparison results
         """
         # If we have regions, use a region-based comparison
         if self.regions:
             return self._compare_regions()
-            
+
         # Otherwise do a simple variant-based comparison
         return self._compare_variants()
-        
+
     def _compare_regions(self) -> Dict[str, Any]:
         """Compare variants by region"""
         self.results["blocks_total"] = len(self.regions)
         self.results["blocks_processed"] = len(self.regions)
-        
+
         # Simple mock implementation - just count regions
         # In a real implementation, we would compare haplotypes
         match_count = 0
         mismatch_count = 0
-        
+
         for region in self.regions:
             # Count truth and query variants in this region
-            truth_in_region = [v for v in self.truth_variants 
-                             if v.chrom == region["chrom"] and 
-                             region["start"] <= v.pos < region["end"]]
-                             
-            query_in_region = [v for v in self.query_variants 
-                             if v.chrom == region["chrom"] and 
-                             region["start"] <= v.pos < region["end"]]
-                             
+            truth_in_region = [
+                v
+                for v in self.truth_variants
+                if v.chrom == region["chrom"]
+                and region["start"] <= v.pos < region["end"]
+            ]
+
+            query_in_region = [
+                v
+                for v in self.query_variants
+                if v.chrom == region["chrom"]
+                and region["start"] <= v.pos < region["end"]
+            ]
+
             # Simple matching heuristic
             if len(truth_in_region) == len(query_in_region):
                 match_count += 1
             else:
                 mismatch_count += 1
-                
+
         self.results["blocks_match"] = match_count
         self.results["blocks_mismatch"] = mismatch_count
         self.results["blocks_error"] = 0
-        
+
         return self.results
-        
+
     def _compare_variants(self) -> Dict[str, Any]:
         """Compare variants directly without regions"""
         # Simple mock implementation - just compare counts
@@ -183,16 +185,18 @@ class MockHaploCompare:
         fp = max(0, len(self.query_variants) - len(self.truth_variants))
         fn = max(0, len(self.truth_variants) - len(self.query_variants))
 
-        self.results.update({
-            "total_truth": len(self.truth_variants),
-            "total_query": len(self.query_variants),
-            "true_positives": tp,
-            "false_positives": fp,
-            "false_negatives": fn,
-            "tp": tp,
-            "fp": fp,
-            "fn": fn,
-        })
+        self.results.update(
+            {
+                "total_truth": len(self.truth_variants),
+                "total_query": len(self.query_variants),
+                "true_positives": tp,
+                "false_positives": fp,
+                "false_negatives": fn,
+                "tp": tp,
+                "fp": fp,
+                "fn": fn,
+            }
+        )
 
         # Calculate metrics
         if tp + fn > 0:

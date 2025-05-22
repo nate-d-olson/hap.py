@@ -102,15 +102,19 @@ def init():
                 try:
                     # Attempt to import the Python blocksplit module
                     import Haplo.python_blocksplit  # noqa: F401
+
                     # If import is successful, remove from GA4GH_TOOLS
                     if x in GA4GH_TOOLS:
                         GA4GH_TOOLS.remove(x)
-                    logging.info("Using Python version of %s (Haplo.python_blocksplit).", x)
+                    logging.info(
+                        "Using Python version of %s (Haplo.python_blocksplit).", x
+                    )
                     continue
                 except ImportError:
                     logging.warning(
                         "Could not import Haplo.python_blocksplit. "
-                        "Executable for %s also not found.", x
+                        "Executable for %s also not found.",
+                        x,
                     )
                     if x in GA4GH_TOOLS:
                         GA4GH_TOOLS.remove(x)
@@ -126,6 +130,7 @@ def init():
 
             # For other tools (bgzip, tabix), if not found, raise an exception.
             raise Exception(f"Dependency {x} not found")
+
 
 # Call init on import
 init()
