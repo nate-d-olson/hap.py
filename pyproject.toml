@@ -44,6 +44,7 @@ dependencies = [
     "pysam>=0.16.0",
     "scipy>=1.5.0",
     "bx-python>=0.8.9",
+    "biopython>=1.78",
     "setuptools>=50.3.2",
     "wheel>=0.35.1",
 ]
