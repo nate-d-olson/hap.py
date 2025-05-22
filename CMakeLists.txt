@@ -8,8 +8,8 @@ project(HAPLOTYPES VERSION 0.3.15 LANGUAGES CXX C)
 
 # Set scikit-build specific variables
 # This helps scikit-build find the Python package directory
-set(SKBUILD_MODULE_NAME Haplo)
-set(SKBUILD_PACKAGE_DIR src/python)
+set(SKBUILD_MODULE_NAME hap_py) # Changed from Haplo
+set(SKBUILD_PACKAGE_DIR src)    # Changed from src/python, as pyproject.toml now specifies package_dir = {"": "src"} essentially via packages = [{include = "hap_py", from = "src"}]
 
 # Set CMAKE policies
 if(POLICY CMP0074)
@@ -106,7 +106,7 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
 add_subdirectory(src/c++/lib)
-add_subdirectory(src/python/Haplo/cython)
+add_subdirectory(src/hap_py/haplo/cython) # Updated path
 
 # Install rules for Python package files (IMPORTANT for scikit-build)
 # This tells CMake to install the Python parts of the package.
