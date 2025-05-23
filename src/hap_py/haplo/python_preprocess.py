@@ -433,13 +433,27 @@ class PreprocessEngine:
                         new_record.info[key] = value
                     except Exception as e:
                         logger.warning(f"Failed to set INFO field {key}={value} (type: {type(value)}): {e}")
-                        # Try to convert problematic values
-                        if isinstance(value, (list, tuple)) and len(value) == 1:
-                            new_record.info[key] = value[0]
-                        elif isinstance(value, (list, tuple)):
-                            # Convert to comma-separated string for multi-value fields
-                            new_record.info[key] = ",".join(str(v) for v in value)
+                        # Get the field definition to understand expected format
+                        field_info = new_record.header.info.get(key)
+                        if field_info and isinstance(value, (list, tuple)):
+                            # Handle based on the field's Number and Type
+                            if field_info.number == 1 and len(value) == 1:
+                                # Single value field - extract the value
+                                new_record.info[key] = value[0]
+                            elif field_info.type in ('Integer', 'Float') and len(value) == 1:
+                                # Numeric field with single value
+                                new_record.info[key] = value[0]
+                            elif field_info.type == 'String' and field_info.number in ('.', 'A', 'R', 'G'):
+                                # Multi-value string field - join with commas
+                                new_record.info[key] = ",".join(str(v) for v in value)
+                            elif len(value) == 1:
+                                # Default: single value
+                                new_record.info[key] = value[0]
+                            else:
+                                # Multiple values - convert to tuple for pysam
+                                new_record.info[key] = tuple(value)
                         else:
+                            # Fallback conversion
                             new_record.info[key] = str(value)
 
             # Add decomposition INFO
