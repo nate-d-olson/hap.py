@@ -80,8 +80,9 @@ def extract_header(
     if extract_filters:
         result["filters"] = {}
 
-    # For compatibility with pre.py
+    # For compatibility with pre.py and hap.py
     result["fields"] = []
+    result["samples"] = []  # Always initialize samples field
 
     file_handle = None
     try:
@@ -187,9 +188,15 @@ def extract_header(
                     result["fields"].append({"key": "FILTER", "values": filter_field})
 
             elif line.startswith("#CHROM"):
+                cols = line[1:].split()
                 if extract_columns:
-                    cols = line[1:].split()
                     result["columns"] = cols
+                # Always extract sample names (everything after FORMAT column)
+                # Standard VCF columns: CHROM POS ID REF ALT QUAL FILTER INFO FORMAT [SAMPLE1] [SAMPLE2] ...
+                if len(cols) > 9:  # Has samples
+                    result["samples"] = cols[9:]  # Sample names start at index 9
+                else:
+                    result["samples"] = []
                 break
 
     except Exception as e:

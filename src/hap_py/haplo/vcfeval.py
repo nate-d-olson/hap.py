@@ -48,33 +48,35 @@ def findVCFEval() -> str:
     Returns:
         Path to rtg executable or 'rtg' if not found
     """
-    if has_vcfeval:
-        script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-        base = os.path.abspath(
-            os.path.join(
-                script_dir,  # Haplo
-                "..",  # python
-                "..",  # src
-                "..",  # hap.py-base
-                "libexec",
-                "rtg-tools-install",
-            )
+    # Always check for our included RTG tools first, regardless of has_vcfeval flag
+    script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+    base = os.path.abspath(
+        os.path.join(
+            script_dir,  # Haplo
+            "..",  # python
+            "..",  # src
+            "..",  # hap.py-base
+            "libexec",
+            "rtg-tools-install",
         )
-        # prefer wrapper when it's there
-        bfile = os.path.join(base, "rtg-wrapper.sh")
-        bfile2 = os.path.join(base, "rtg")
-        if os.path.isfile(bfile) and os.access(bfile, os.X_OK):
-            return bfile
-        elif os.path.isfile(bfile2) and os.access(bfile2, os.X_OK):
-            return bfile2
-        else:
+    )
+    # prefer wrapper when it's there
+    bfile = os.path.join(base, "rtg-wrapper.sh")
+    bfile2 = os.path.join(base, "rtg")
+    if os.path.isfile(bfile) and os.access(bfile, os.X_OK):
+        logging.info(f"Using included RTG tools wrapper: {bfile}")
+        return bfile
+    elif os.path.isfile(bfile2) and os.access(bfile2, os.X_OK):
+        logging.info(f"Using included RTG tools binary: {bfile2}")
+        return bfile2
+    else:
+        # Fallback to checking if has_vcfeval is set
+        if has_vcfeval:
             logging.warning(
                 f"Could not find our included version of rtg-tools at {base}. "
                 "To use vcfeval for comparison, you might have to specify "
                 "its location on the command line."
             )
-            return "rtg"
-    else:
         # default: return
         return "rtg"
 
