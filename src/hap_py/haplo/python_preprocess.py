@@ -429,12 +429,27 @@ class PreprocessEngine:
             # Copy all INFO fields
             for key, value in record.info.items():
                 if key in new_record.header.info:
-                    new_record.info[key] = value
+                    try:
+                        new_record.info[key] = value
+                    except Exception as e:
+                        logger.warning(f"Failed to set INFO field {key}={value} (type: {type(value)}): {e}")
+                        # Try to convert problematic values
+                        if isinstance(value, (list, tuple)) and len(value) == 1:
+                            new_record.info[key] = value[0]
+                        elif isinstance(value, (list, tuple)):
+                            # Convert to comma-separated string for multi-value fields
+                            new_record.info[key] = ",".join(str(v) for v in value)
+                        else:
+                            new_record.info[key] = str(value)
 
             # Add decomposition INFO
             new_record.info["DECOMPOSED"] = True
             new_record.info["ORIGINAL_POS"] = original_pos
-            new_record.info["ORIGINAL_ALLELES"] = original_alleles
+            # Convert alleles tuple to comma-separated string for INFO field
+            if isinstance(original_alleles, (list, tuple)):
+                new_record.info["ORIGINAL_ALLELES"] = ",".join(str(a) for a in original_alleles)
+            else:
+                new_record.info["ORIGINAL_ALLELES"] = str(original_alleles)
 
             # Copy format fields and sample data
             for sample in record.samples:
