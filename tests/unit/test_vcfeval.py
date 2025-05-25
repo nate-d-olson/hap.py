@@ -6,11 +6,14 @@ import os
 import shutil
 import subprocess
 
-# Add src to path for imports during tests
-import sys
 import tempfile
 import unittest
 from unittest.mock import MagicMock, PropertyMock, patch
+from pathlib import Path
+import pytest
+from test_utils import get_project_root, get_example_data_dir
+import argparse
+import sys
 
 sys.path.insert(
     0,
@@ -155,29 +158,37 @@ class TestVCFEval(unittest.TestCase):
         args.pass_only = False
         args.roc = None
 
-        # Create property mocks for temp file
+        # Create a temporary directory for test output
+        temp_dir = Path(tempfile.mkdtemp())
+        
+        # Create mock file with proper name
         vtf_mock = MagicMock()
-        name_property = PropertyMock(return_value=mock_out_dir)
-        type(vtf_mock).name = name_property
-
+        vtf_mock.name = str(temp_dir / "vcfeval.result")
+        
         # Mock the tempfile.NamedTemporaryFile context manager
-        with patch("tempfile.NamedTemporaryFile", return_value=vtf_mock):
+        with patch("tempfile.NamedTemporaryFile", return_value=vtf_mock) as mock_ntf:
+            # Get the actual mock file object
+            mock_file = mock_ntf.return_value
+            mock_file.name = vtf_mock.name
+            
             # Should use defaults for missing parameters
             result = vcfeval.runVCFEval(
                 self.test_vcf1, self.test_vcf2, self.test_output, args
             )
 
-            # Verify result is correct
-            self.assertEqual(result, [self.test_output, self.test_output + ".tbi"])
+        shutil.rmtree(temp_dir)
 
-            # Verify engine was set to default
-            self.assertEqual(args.engine_vcfeval, vcfeval.findVCFEval())
-
-            # Verify threads was set to default
-            self.assertEqual(args.threads, 1)
-
-            # Verify scratch_prefix was set to default
-            self.assertIsNotNone(args.scratch_prefix)
+        # Verify result is correct
+        self.assertEqual(result, [self.test_output, self.test_output + ".tbi"])
+        
+        # Verify engine was set to default
+        self.assertEqual(args.engine_vcfeval, vcfeval.findVCFEval())
+        
+        # Verify threads was set to default
+        self.assertEqual(args.threads, 1)
+        
+        # Verify scratch_prefix was set to default
+        self.assertIsNotNone(args.scratch_prefix)
 
     @patch("subprocess.Popen")
     @patch("shutil.copy")

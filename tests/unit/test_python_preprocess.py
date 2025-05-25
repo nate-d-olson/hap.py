@@ -4,16 +4,11 @@ Unit tests for the Python preprocess implementation.
 """
 
 import os
-import sys
 import tempfile
 from pathlib import Path
 
-import pysam
 import pytest
-
-# Add src to sys.path to allow importing hap_py
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
+import pysam
 
 from hap_py.haplo.python_preprocess import DecomposeLevel, PreprocessEngine
 
