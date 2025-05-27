@@ -34,10 +34,10 @@ def test_import(mock_mode=False):
 
     # Test imports
     try:
-        import Haplo
-        from Haplo.cython import USING_MOCK
+        import haplo
+        from haplo.cython import USING_MOCK
 
-        logger.info(f"Successfully imported Haplo version: {Haplo.__version__}")
+        logger.info(f"Successfully imported Haplo version: {haplo.__version__}")
         logger.info(f"Using mock implementation: {USING_MOCK}")
 
         # Try basic operations
@@ -45,8 +45,8 @@ def test_import(mock_mode=False):
             # Try string handling - this is important for Python 3 compatibility
             # as it tests bytes vs unicode string handling
             test_str = "ACGT"
-            comp = Haplo.complement_sequence(test_str)
-            rev_comp = Haplo.reverse_complement(test_str)
+            comp = haplo.complement_sequence(test_str)
+            rev_comp = haplo.reverse_complement(test_str)
 
             logger.info(f"Complement of {test_str}: {comp}")
             logger.info(f"Reverse complement of {test_str}: {rev_comp}")
@@ -95,15 +95,18 @@ def main():
     if args.test_both:
         # Test both implementations
         logger.info("=== Testing MOCK implementation ===")
-        mock_success, mock_result = test_import(mock_mode=True)
+        mock_success, _ = test_import(mock_mode=True)
 
         logger.info("\n=== Testing REAL C++ implementation ===")
-        real_success, real_result = test_import(mock_mode=False)
+        real_success, _ = test_import(mock_mode=False)
 
         # Summary
         logger.info("\n=== SUMMARY ===")
-        logger.info(f"Mock implementation: {'SUCCESS' if mock_success else 'FAILED'}")
-        logger.info(f"C++ implementation:  {'SUCCESS' if real_success else 'FAILED'}")
+        logger.info(
+            "Mock implementation: %s",
+            "SUCCESS" if mock_success else "FAILED",
+        )
+        logger.info("C++ implementation:  %s", "SUCCESS" if real_success else "FAILED")
 
         if not mock_success and not real_success:
             logger.error("Both implementations failed to load!")
@@ -112,17 +115,17 @@ def main():
         return 0
     else:
         # Test only one implementation as specified
-        success, result = test_import(mock_mode=args.mock)
+        success, _ = test_import(mock_mode=args.mock)
 
         if success:
             logger.info("=== Additional Tests ===")
 
             # Import main module again to test more functionality
-            import Haplo
+            import haplo
 
             # Test Haplo version info
-            if hasattr(Haplo, "get_module_info"):
-                module_info = Haplo.get_module_info()
+            if hasattr(haplo, "get_module_info"):
+                module_info = haplo.get_module_info()
                 logger.info(f"Module info: {module_info}")
 
             return 0

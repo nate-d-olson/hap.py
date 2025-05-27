@@ -36,7 +36,7 @@ class TestSequenceUtils:
         assert SequenceUtils.complement_sequence("") == ""
 
         # Test with non-standard bases
-        assert SequenceUtils.complement_sequence("ACGTRYMKWSBDHVN") == "TGCAYRKMWSVHDB"
+        assert SequenceUtils.complement_sequence("ACGTRYMKWSBDHVN") == "TGCAYRKMWSVHDBN"
 
     def test_reverse_complement(self):
         """Test reverse complementing DNA sequences."""

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 
-def test_qfy_basic(sample_vcf_files, tmp_path):
+def test_qfy_basic(tmp_path):
     """Test basic qfy.py functionality with a GA4GH VCF file."""
     # Create a mock GA4GH VCF with expected fields
     ga4gh_vcf = tmp_path / "ga4gh.vcf"
@@ -39,7 +39,7 @@ chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
 
     # Get the path to the qfy.py script
     script_dir = Path(__file__).resolve().parent.parent
-    qfy_script = script_dir / "src" / "python" / "qfy.py"
+    qfy_script = script_dir / "src" / "hap_py" / "qfy.py"
 
     # Run qfy.py with mock environment
     env = os.environ.copy()
@@ -72,7 +72,7 @@ chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
         ), f"Expected output file {expected_file} not found"
 
 
-def test_qfy_roc(sample_vcf_files, tmp_path):
+def test_qfy_roc(tmp_path):
     """Test qfy.py ROC functionality."""
     # Create a mock GA4GH VCF with QQ scores for ROC
     ga4gh_vcf = tmp_path / "ga4gh_roc.vcf"
@@ -102,7 +102,7 @@ chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
 
     # Get the path to the qfy.py script
     script_dir = Path(__file__).resolve().parent.parent
-    qfy_script = script_dir / "src" / "python" / "qfy.py"
+    qfy_script = script_dir / "src" / "hap_py" / "qfy.py"
 
     # Run qfy.py with mock environment
     env = os.environ.copy()
@@ -121,7 +121,7 @@ chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
         "QQ",  # Use QQ field for ROC curve
     ]
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"qfy.py command failed: {result.stderr}"

@@ -55,7 +55,7 @@ def run_all_tests():
     success = True
 
     # Base path for scripts
-    script_dir = Path(__file__).resolve().parent.parent / "src" / "python"
+    script_dir = Path(__file__).resolve().parent.parent / "src" / "hap_py"
 
     # List of scripts to test
     script_names = ["hap.py", "qfy.py", "pre.py"]

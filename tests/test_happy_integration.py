@@ -21,9 +21,9 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
 
     # Get the path to the hap.py script
     script_dir = Path(__file__).resolve().parent.parent
-    happy_script = script_dir / "src" / "python" / "hap.py"
+    happy_script = script_dir / "src" / "hap_py" / "hap.py"
 
-    # Run hap.py with mock environment to avoid requirement for actual C++ components
+    # Run hap.py with mock environment to avoid requirement C++ components
     env = os.environ.copy()
     env["HAPLO_USE_MOCK"] = "1"
 
@@ -42,13 +42,16 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
         "vcfeval",
     ]
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"hap.py command failed: {result.stderr}"
 
     # Check if expected output files were created
-    expected_files = [f"{output_prefix}.runinfo.json", f"{output_prefix}.summary.csv"]
+    expected_files = [
+        f"{output_prefix}.runinfo.json",
+        f"{output_prefix}.summary.csv",
+    ]
 
     for expected_file in expected_files:
         assert os.path.exists(
@@ -92,13 +95,16 @@ def test_happy_with_bed_file(
         "vcfeval",
     ]
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
 
     # Check if command executed successfully
     assert result.returncode == 0, f"hap.py command failed: {result.stderr}"
 
     # Check if expected output files were created
-    expected_files = [f"{output_prefix}.runinfo.json", f"{output_prefix}.summary.csv"]
+    expected_files = [
+        f"{output_prefix}.runinfo.json",
+        f"{output_prefix}.summary.csv",
+    ]
 
     for expected_file in expected_files:
         assert os.path.exists(
@@ -106,7 +112,7 @@ def test_happy_with_bed_file(
         ), f"Expected output file {expected_file} not found"
 
 
-def test_error_handling(sample_vcf_files, sample_reference, tmp_path):
+def test_error_handling(sample_vcf_files, tmp_path):
     """Test that hap.py handles errors gracefully."""
     truth_vcf, query_vcf = sample_vcf_files
 
@@ -115,7 +121,7 @@ def test_error_handling(sample_vcf_files, sample_reference, tmp_path):
 
     # Get the path to the hap.py script
     script_dir = Path(__file__).resolve().parent.parent
-    happy_script = script_dir / "src" / "python" / "hap.py"
+    happy_script = script_dir / "src" / "hap_py" / "hap.py"
 
     # Run hap.py with mock environment
     env = os.environ.copy()
@@ -134,7 +140,7 @@ def test_error_handling(sample_vcf_files, sample_reference, tmp_path):
         str(tmp_path / "error_output"),
     ]
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
 
     # Check that command failed as expected
     assert (

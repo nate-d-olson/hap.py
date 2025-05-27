@@ -6,7 +6,6 @@ Migrated from src/sh/run_chrprefix_test.sh
 import filecmp
 import gzip
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -46,7 +45,7 @@ def test_numeric_chrs(tmp_path):
 
     # Run hap.py on numeric chromosome files using CLI command
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -58,29 +57,32 @@ def test_numeric_chrs(tmp_path):
         str(reference),
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        (
+            "/Users/nolson/hap.py-modern-claude4/hap.py/"
+            "external/rtg-tools-3.12.1/rtg"
+        ),  # Explicitly pass rtg path
     ]
 
-    result = subprocess.run(cmd, capture_output=True)
+    result = subprocess.run(cmd, capture_output=True, check=True)
     assert (
         result.returncode == 0
     ), f"hap.py failed with numeric chromosomes: {result.stderr.decode()}"
 
-    # Compare summary files
-    compare_cmd = [
-        sys.executable,
-        str(compare_script),
-        str(output_summary),
-        str(expected_summary),
-    ]
+    # Compare summary files using a simple diff approach
+    # Instead of calling a separate compare script, we'll compare directly
+    with open(output_summary, encoding="utf-8") as f_out:
+        output_lines = f_out.readlines()
+    with open(expected_summary, encoding="utf-8") as f_exp:
+        expected_lines = f_exp.readlines()
 
-    compare_result = subprocess.run(compare_cmd, capture_output=True)
-    assert compare_result.returncode == 0, "Summary comparison failed"
+    assert output_lines == expected_lines, "Summary output differs from expected"
 
     # Compare VCF files
     with gzip.open(output_vcf_gz, "rt") as f_gz:
         vcf_content = [line for line in f_gz if not line.startswith("#")]
 
-    with open(output_vcf, "w") as f_out:
+    with open(output_vcf, "w", encoding="utf-8") as f_out:
         f_out.writelines(vcf_content)
 
     assert filecmp.cmp(output_vcf, expected_vcf), "VCF output differs from expected"
@@ -118,7 +120,7 @@ def test_chr_prefixed(tmp_path):
 
     # Run hap.py on chr-prefixed files using CLI command
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -130,29 +132,32 @@ def test_chr_prefixed(tmp_path):
         str(reference),
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        (
+            "/Users/nolson/hap.py-modern-claude4/hap.py/"
+            "external/rtg-tools-3.12.1/rtg"
+        ),  # Explicitly pass rtg path
     ]
 
-    result = subprocess.run(cmd, capture_output=True)
+    result = subprocess.run(cmd, capture_output=True, check=True)
     assert (
         result.returncode == 0
     ), f"hap.py failed with chr-prefixed chromosomes: {result.stderr.decode()}"
 
-    # Compare summary files
-    compare_cmd = [
-        sys.executable,
-        str(compare_script),
-        str(output_summary),
-        str(expected_summary),
-    ]
+    # Compare summary files using a simple diff approach
+    # Instead of calling a separate compare script, we'll compare directly
+    with open(output_summary, encoding="utf-8") as f_out:
+        output_lines = f_out.readlines()
+    with open(expected_summary, encoding="utf-8") as f_exp:
+        expected_lines = f_exp.readlines()
 
-    compare_result = subprocess.run(compare_cmd, capture_output=True)
-    assert compare_result.returncode == 0, "Summary comparison failed"
+    assert output_lines == expected_lines, "Summary output differs from expected"
 
     # Compare VCF files
     with gzip.open(output_vcf_gz, "rt") as f_gz:
         vcf_content = [line for line in f_gz if not line.startswith("#")]
 
-    with open(output_vcf, "w") as f_out:
+    with open(output_vcf, "w", encoding="utf-8") as f_out:
         f_out.writelines(vcf_content)
 
     assert filecmp.cmp(output_vcf, expected_vcf), "VCF output differs from expected"
@@ -160,7 +165,8 @@ def test_chr_prefixed(tmp_path):
 
 @pytest.mark.integration
 def test_mixed_chr_prefix(tmp_path):
-    """Test chr prefix detection with mixed chromosome naming (chr in truth, numeric in query)."""
+    """Test chr prefix detection with mixed chromosome naming \\
+    (chr in truth, numeric in query)."""
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "numeric_chrs"
@@ -190,7 +196,7 @@ def test_mixed_chr_prefix(tmp_path):
 
     # Run hap.py with mixed chromosome naming using CLI command
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -202,29 +208,32 @@ def test_mixed_chr_prefix(tmp_path):
         str(reference),
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        (
+            "/Users/nolson/hap.py-modern-claude4/hap.py/"
+            "external/rtg-tools-3.12.1/rtg"
+        ),  # Explicitly pass rtg path
     ]
 
-    result = subprocess.run(cmd, capture_output=True)
+    result = subprocess.run(cmd, capture_output=True, check=True)
     assert (
         result.returncode == 0
     ), f"hap.py failed with mixed chromosome naming: {result.stderr.decode()}"
 
-    # Compare summary files
-    compare_cmd = [
-        sys.executable,
-        str(compare_script),
-        str(output_summary),
-        str(expected_summary),
-    ]
+    # Compare summary files using a simple diff approach
+    # Instead of calling a separate compare script, we'll compare directly
+    with open(output_summary, encoding="utf-8") as f_out:
+        output_lines = f_out.readlines()
+    with open(expected_summary, encoding="utf-8") as f_exp:
+        expected_lines = f_exp.readlines()
 
-    compare_result = subprocess.run(compare_cmd, capture_output=True)
-    assert compare_result.returncode == 0, "Summary comparison failed"
+    assert output_lines == expected_lines, "Summary output differs from expected"
 
     # Compare VCF files
     with gzip.open(output_vcf_gz, "rt") as f_gz:
         vcf_content = [line for line in f_gz if not line.startswith("#")]
 
-    with open(output_vcf, "w") as f_out:
+    with open(output_vcf, "w", encoding="utf-8") as f_out:
         f_out.writelines(vcf_content)
 
     assert filecmp.cmp(output_vcf, expected_vcf), "VCF output differs from expected"

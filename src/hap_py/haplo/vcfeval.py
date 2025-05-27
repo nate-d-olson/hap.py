@@ -50,6 +50,24 @@ def findVCFEval() -> str:
     """
     # Always check for our included RTG tools first, regardless of has_vcfeval flag
     script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+
+    # For modernized version, look in external/rtg-tools-3.12.1/
+    project_root = os.path.abspath(
+        os.path.join(
+            script_dir,  # haplo
+            "..",  # hap_py
+            "..",  # src
+            "..",  # project root
+        )
+    )
+
+    # Check for RTG tools in external directory (modernized version)
+    external_rtg = os.path.join(project_root, "external", "rtg-tools-3.12.1", "rtg")
+    if os.path.isfile(external_rtg) and os.access(external_rtg, os.X_OK):
+        logging.info(f"Using RTG tools from external directory: {external_rtg}")
+        return external_rtg
+
+    # Fallback to legacy paths
     base = os.path.abspath(
         os.path.join(
             script_dir,  # Haplo
@@ -73,7 +91,7 @@ def findVCFEval() -> str:
         # Fallback to checking if has_vcfeval is set
         if has_vcfeval:
             logging.warning(
-                f"Could not find our included version of rtg-tools at {base}. "
+                f"Could not find our included version of rtg-tools at {base} or {external_rtg}. "
                 "To use vcfeval for comparison, you might have to specify "
                 "its location on the command line."
             )
@@ -125,6 +143,16 @@ def runVCFEval(
         if not hasattr(args, "engine_vcfeval") or not args.engine_vcfeval:
             logging.warning("engine_vcfeval not specified, using default findVCFEval()")
             args.engine_vcfeval = findVCFEval()
+        elif not (
+            os.path.isfile(args.engine_vcfeval)
+            and os.access(args.engine_vcfeval, os.X_OK)
+        ):
+            error_msg = (
+                f"Provided engine_vcfeval path {args.engine_vcfeval} does not exist or is not executable. "
+                "Please provide a valid path to the RTG executable with --engine-vcfeval-path."
+            )
+            logging.error(error_msg)
+            raise FileNotFoundError(error_msg)
 
         if not hasattr(args, "engine_vcfeval_template"):
             args.engine_vcfeval_template = None
@@ -155,15 +183,10 @@ def runVCFEval(
             template_dir = None
 
             try:
-                with tempfile.NamedTemporaryFile(
-                    dir=args.scratch_prefix, prefix="vcfeval.sdf", suffix=".dir"
-                ) as stf:
-                    template_dir = stf.name
-
-                # Ensure template dir exists
-                if not os.path.exists(template_dir):
-                    os.makedirs(template_dir, exist_ok=True)
-
+                # Use mkdtemp to create a unique directory for the SDF template
+                template_dir = tempfile.mkdtemp(
+                    dir=args.scratch_prefix, prefix="vcfeval.sdf."
+                )
                 args.engine_vcfeval_template = template_dir
 
                 # Quote paths for shell safety
@@ -192,9 +215,9 @@ def runVCFEval(
                     logging.error(error_msg)
                     raise subprocess.SubprocessError(error_msg)
                 elif stdout.strip() or stderr.strip():
-                    logging.info(f"RTG output: \n{stdout}\n / \n{stderr}\n")
+                    logging.info("RTG output: \n%s\n / \n%s\n", stdout, stderr)
             except Exception as e:
-                logging.error(f"Failed to create SDF template: {str(e)}")
+                logging.error("Failed to create SDF template: %s", str(e))
                 if template_dir and os.path.exists(template_dir):
                     with contextlib.suppress(OSError):
                         shutil.rmtree(template_dir)

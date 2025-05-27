@@ -96,17 +96,17 @@ def makeMetricsObject(name):
      }
     """
 
-    version = "%s" % version.version
+    version_string = "%s" % version.version
 
     mdict = {
         "name": name,
         "timestamp": time.strftime("%a %b %d %X %Y"),
-        "version": version,
+        "version": version_string,
         "runInfo": [{"key": "commandline", "value": " ".join(sys.argv)}],
         "metadata": {
             "required": {
                 "id": "haplotypes",
-                "version": version,
+                "version": version_string,
                 "module": "%s" % os.path.basename(sys.argv[0]),
                 "description": "{} generated this JSON file via command line {}".format(
                     sys.argv[0], " ".join(sys.argv)

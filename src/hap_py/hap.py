@@ -23,6 +23,7 @@
 #
 
 import argparse
+import contextlib
 import json
 import logging
 import multiprocessing
@@ -33,13 +34,11 @@ import time
 import traceback
 from pathlib import Path
 
-import contextlib
-
 # Modern imports using the new package structure
 try:
     # When run as module
     from . import pre, qfy
-    from .haplo import gvcf2bed, partialcredit, quantify, vcfeval
+    from .haplo import gvcf2bed, vcfeval
     from .tools import bcftools, vcfextract
     from .tools.bcftools import bedOverlapCheck
     from .tools.fastasize import fastaContigLengths
@@ -50,9 +49,11 @@ except ImportError:
     # When run directly or as script
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent))
-    import pre, qfy
-    from haplo import gvcf2bed, partialcredit, quantify, vcfeval
+    import pre
+    import qfy
+    from haplo import gvcf2bed, vcfeval
     from tools import bcftools, vcfextract
     from tools.bcftools import bedOverlapCheck
     from tools.fastasize import fastaContigLengths
@@ -74,7 +75,11 @@ def main() -> int:
     )
 
     parser.add_argument(
-        "-r", "--reference", dest="ref", default=None, help="Specify a reference file."
+        "-r",
+        "--reference",
+        dest="ref",
+        default=None,
+        help="Specify a reference file.",
     )
 
     # output
@@ -132,6 +137,7 @@ def main() -> int:
         default=False,
         help="Use filtered variant calls in truth file (by default, only PASS calls in the truth file are used)",
     )
+    ## %%TODO: Remove preprocess windowing as it causes unnecessary overhead and seems error prone.
     parser.add_argument(
         "--preprocessing-window-size",
         dest="preprocess_window",
@@ -194,9 +200,11 @@ def main() -> int:
         "--engine-vcfeval-path",
         dest="engine_vcfeval",
         required=False,
-        default=vcfeval.findVCFEval(),
-        help='This parameter should give the path to the "rtg" executable. '
-        "The default is %s" % vcfeval.findVCFEval(),
+        default=vcfeval.findVCFEval(),  # Use the function to find rtg
+        help=(
+            'This parameter should give the path to the "rtg" executable. '
+            f"The default is {vcfeval.findVCFEval()}"
+        ),
     )
 
     parser.add_argument(
@@ -208,17 +216,6 @@ def main() -> int:
         "to save time when running hap.py with vcfeval. If no SDF folder is "
         "specified, hap.py will create a temporary one.",
     )
-
-    # Remove SGE dependency - modern systems don't typically use SGE
-    has_sge = False
-    if has_sge:
-        parser.add_argument(
-            "--force-interactive",
-            dest="force_interactive",
-            default=False,
-            action="store_true",
-            help="Force running interactively (i.e. when JOB_ID is not in the environment)",
-        )
 
     parser.add_argument("_vcfs", help="Two VCF files.", default=[], nargs="*")
 
@@ -249,9 +246,6 @@ def main() -> int:
 
     args, unknown_args = parser.parse_known_args()
 
-    if not has_sge:
-        args.force_interactive = True
-
     if args.verbose:
         loglevel = logging.INFO
     elif args.quiet:
@@ -267,14 +261,6 @@ def main() -> int:
         format="%(asctime)s %(levelname)-8s %(message)s",
         level=loglevel,
     )
-
-    # remove some safe unknown args
-    unknown_args = [x for x in unknown_args if x not in ["--force-interactive"]]
-    if len(sys.argv) < 2 or len(unknown_args) > 0:
-        if unknown_args:
-            logging.error(f"Unknown arguments specified: {unknown_args}")
-        parser.print_help()
-        exit(1)
 
     print(f"Hap.py {version}")
     if args.version:
@@ -294,12 +280,6 @@ def main() -> int:
 
     if args.fp_bedfile and not os.path.exists(args.fp_bedfile):
         raise FileNotFoundError("FP/confident call region bed file does not exist.")
-
-    if not args.force_interactive and "JOB_ID" not in os.environ:
-        parser.print_help()
-        raise RuntimeError(
-            "Please qsub me so I get approximately 1 GB of RAM per thread."
-        )
 
     if not args.ref:
         args.ref = None  # Remove default reference dependency
@@ -509,9 +489,7 @@ def main() -> int:
         output_name = tf.name
 
         if args.engine == "vcfeval":
-            tempfiles += vcfeval.runVCFEval(
-                args.vcf1, args.vcf2, output_name, args
-            )
+            tempfiles += vcfeval.runVCFEval(args.vcf1, args.vcf2, output_name, args)
             # passed to quantify
             args.type = "ga4gh"
         else:

@@ -24,7 +24,8 @@ def import_with_fallback(
     if mock_module is None:
         # Use relative import for mock module when within package
         try:
-            from . import cython_mock
+            from . import cython_mock  # noqa: F401
+
             mock_module = "cython_mock"
         except ImportError:
             mock_module = "hap_py.haplo.cython_mock"
@@ -42,7 +43,7 @@ def import_with_fallback(
             ImportWarning,
             stacklevel=2,
         )
-        
+
         # Try relative import first, then absolute
         try:
             if mock_module == "cython_mock":
@@ -52,7 +53,7 @@ def import_with_fallback(
         except ImportError:
             # Fallback to local mock implementations
             from .cython import mock_cpp_internal as module
-            
+
         obj = getattr(module, mock_attribute)
         return obj
 
@@ -67,10 +68,14 @@ except ImportError:
     complement_sequence = import_with_fallback(
         "hap_py.haplo.sequence_utils", "complement_sequence"
     )
-    reverse_complement = import_with_fallback("hap_py.haplo.sequence_utils", "reverse_complement")
+    reverse_complement = import_with_fallback(
+        "hap_py.haplo.sequence_utils", "reverse_complement"
+    )
 
 # Import variant processing utilities
-VariantProcessor = import_with_fallback("hap_py.haplo.variant_processor", "VariantProcessor")
+VariantProcessor = import_with_fallback(
+    "hap_py.haplo.variant_processor", "VariantProcessor"
+)
 
 # Import ROC utilities
 compute_roc_points = import_with_fallback("hap_py.haplo.happyroc", "compute_roc_points")

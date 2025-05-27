@@ -21,7 +21,8 @@ import re
 
 import numpy as np
 import pandas
-from ..tools import ci
+
+from hap_py.tools import ci
 
 RESULT_ALLCOLUMNS = [
     "Type",
@@ -81,7 +82,11 @@ for count_type in [
 
 
 def roc(
-    roc_table, output_path, filter_handling=None, ci_alpha=0.05, total_region_size=None
+    roc_table,
+    output_path,
+    filter_handling=None,
+    ci_alpha=0.05,
+    total_region_size=None,
 ):
     """Calculate SNP and indel ROC.
 
@@ -237,7 +242,9 @@ def roc(
 
             logging.info("Computing Frac_NA CIs for %s" % k)
             fna, fna_min, fna_max = ci.binomialCI(
-                result[k]["QUERY.UNK"].values, result[k]["QUERY.TOTAL"].values, ci_alpha
+                result[k]["QUERY.UNK"].values,
+                result[k]["QUERY.TOTAL"].values,
+                ci_alpha,
             )
             result[k]["METRIC.Frac_NA.Lower"] = fna_min
             result[k]["METRIC.Frac_NA.Upper"] = fna_max
@@ -249,7 +256,9 @@ def roc(
         vt = re.sub("[^A-Za-z0-9\\.\\-_]", "_", k, flags=re.IGNORECASE)
         if output_path:
             result[k].to_csv(
-                output_path + "." + vt + ".csv.gz", index=False, compression="gzip"
+                output_path + "." + vt + ".csv.gz",
+                index=False,
+                compression="gzip",
             )
 
     return result

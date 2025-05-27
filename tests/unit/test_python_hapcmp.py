@@ -17,7 +17,8 @@ import os
 import tempfile
 
 import pytest
-from hap_py.haplo.python_hapcmp import (
+
+from src.hap_py.haplo.python_hapcmp import (
     HaploComparator,
     HaplotypeBlock,
 )
@@ -106,15 +107,15 @@ def test_basic_comparison(reference_path, example_vcf_paths, temp_output_path):
     haplo_comparator = HaploComparator(reference_path, max_haplotypes=512)
 
     region_chrom = "chr21"
-    region_start = 10000000
-    region_end = 10001000
+    region_start = 20000000
+    region_end = 20010000
 
     temp_region_bed_path = ""
     # pylint: disable=consider-using-with
     tmp_bed_file = tempfile.NamedTemporaryFile(
         mode="w", suffix=".bed", delete=False, encoding="utf-8"
     )
-    tmp_bed_file.write(f"{region_chrom}\\t{region_start}\\t{region_end}\\n")
+    tmp_bed_file.write(f"{region_chrom}\t{region_start}\t{region_end}\n")
     temp_region_bed_path = tmp_bed_file.name
     tmp_bed_file.close()
 
@@ -137,8 +138,8 @@ def test_basic_comparison(reference_path, example_vcf_paths, temp_output_path):
         with open(temp_output_path, encoding="utf-8") as f_out:
             lines = f_out.readlines()
             assert len(lines) == 2  # Header + 1 data line
-            assert lines[0].strip() == "#CHROM\\tSTART\\tEND\\tSTATUS"
-            parts = lines[1].strip().split("\\t")
+            assert lines[0].strip() == "#CHROM\tSTART\tEND\tSTATUS"
+            parts = lines[1].strip().split("\t")
             assert parts[0] == region_chrom
             assert int(parts[1]) == region_start
             assert int(parts[2]) == region_end

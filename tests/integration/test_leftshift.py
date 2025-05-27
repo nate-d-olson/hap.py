@@ -48,7 +48,7 @@ def test_leftshift(tmp_path):
 
     # Run hap.py with left-shifting
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-o",

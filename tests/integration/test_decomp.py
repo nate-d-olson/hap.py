@@ -11,10 +11,7 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
-    get_project_root,
-    get_python_executable,
     run_command,
 )
 
@@ -23,10 +20,7 @@ from tests.utils import (
 def test_decomp(tmp_path):
     """Test variant decomposition functionality"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     decomp_dir = example_dir / "decomp"
@@ -45,7 +39,7 @@ def test_decomp(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -56,6 +50,8 @@ def test_decomp(tmp_path):
         "-X",
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
     ]
 
     result = run_command(cmd)

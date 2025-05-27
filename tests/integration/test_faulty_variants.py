@@ -6,7 +6,6 @@ Migrated from src/sh/run_faulty_variant_test.sh
 import filecmp
 import gzip
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -42,7 +41,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 1: hap.py with valid inputs
     cmd = [
-        "hap",
+        "hap.py",
         str(test_vcf),
         str(test_q_vcf),
         "-o",
@@ -54,6 +53,8 @@ def test_faulty_variant_handling(temp_dir):
         "chrQ",
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
     ]
 
     result = subprocess.run(cmd, capture_output=True)
@@ -72,7 +73,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 2: hap.py with faulty inputs - should fail
     cmd = [
-        "hap",
+        "hap.py",
         str(test_vcf),
         str(test_q_failure_vcf),
         "-o",
@@ -84,6 +85,8 @@ def test_faulty_variant_handling(temp_dir):
         "chrQ",
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
     ]
 
     result = subprocess.run(cmd, capture_output=True)
@@ -108,7 +111,7 @@ def test_faulty_variant_pre_py(temp_dir):
 
     # Run pre.py with faulty input - should fail
     cmd = [
-        "pre",
+        "preprocess",
         str(faulty_vcf),
         str(output_file),
         "--reference",

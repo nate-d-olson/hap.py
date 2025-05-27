@@ -15,10 +15,8 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
     get_project_root,
-    get_python_executable,
     run_command,
 )
 
@@ -28,8 +26,6 @@ def test_variant_filtering(tmp_path):
     """Test reading and detecting problematic records"""
     # Get paths to required files and tools
     project_root = get_project_root()
-    bin_dir = get_bin_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     data_dir = project_root / "src" / "data"
@@ -48,7 +44,7 @@ def test_variant_filtering(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(per_sample_ft_lhs_vcf),
         str(per_sample_ft_rhs_vcf),
         "-o",
@@ -77,10 +73,7 @@ def test_variant_filtering(tmp_path):
 def test_haploid_variants(tmp_path):
     """Test handling of haploid records"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     haploid_dir = example_dir / "haploid"
@@ -99,7 +92,7 @@ def test_haploid_variants(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-o",
@@ -121,12 +114,12 @@ def test_haploid_variants(tmp_path):
     # Gunzip and compare with expected
     output_vcf = str(output_prefix) + ".vcf"
     gunzip_cmd = ["gunzip", "-c", output_vcf_gz]
-    with open(output_vcf, "w") as f:
+    with open(output_vcf, "w", encoding="utf-8") as f:
         result = subprocess.run(gunzip_cmd, stdout=f, check=True)
 
     # Compare VCF files ignoring header lines (lines starting with #)
     def compare_vcf_files(file1, file2):
-        with open(file1) as f1, open(file2) as f2:
+        with open(file1, encoding="utf-8") as f1, open(file2, encoding="utf-8") as f2:
             lines1 = [line for line in f1 if not line.startswith("#")]
             lines2 = [line for line in f2 if not line.startswith("#")]
             return lines1 == lines2

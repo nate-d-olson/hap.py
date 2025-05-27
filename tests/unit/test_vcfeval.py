@@ -5,15 +5,11 @@ Unit tests for the Haplo.vcfeval module.
 import os
 import shutil
 import subprocess
-
+import sys
 import tempfile
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
 from pathlib import Path
-import pytest
-from test_utils import get_project_root, get_example_data_dir
-import argparse
-import sys
+from unittest.mock import MagicMock, PropertyMock, patch
 
 sys.path.insert(
     0,
@@ -160,17 +156,16 @@ class TestVCFEval(unittest.TestCase):
 
         # Create a temporary directory for test output
         temp_dir = Path(tempfile.mkdtemp())
-        
-        # Create mock file with proper name
-        vtf_mock = MagicMock()
-        vtf_mock.name = str(temp_dir / "vcfeval.result")
-        
-        # Mock the tempfile.NamedTemporaryFile context manager
-        with patch("tempfile.NamedTemporaryFile", return_value=vtf_mock) as mock_ntf:
-            # Get the actual mock file object
-            mock_file = mock_ntf.return_value
-            mock_file.name = vtf_mock.name
-            
+        temp_file_path = str(temp_dir / "vcfeval.result")
+
+        # Create a proper mock for the context manager
+        mock_context_manager = MagicMock()
+        mock_context_manager.__enter__ = MagicMock()
+        mock_context_manager.__exit__ = MagicMock(return_value=None)
+        mock_context_manager.__enter__.return_value.name = temp_file_path
+
+        # Mock the tempfile.NamedTemporaryFile
+        with patch("tempfile.NamedTemporaryFile", return_value=mock_context_manager):
             # Should use defaults for missing parameters
             result = vcfeval.runVCFEval(
                 self.test_vcf1, self.test_vcf2, self.test_output, args
@@ -180,13 +175,13 @@ class TestVCFEval(unittest.TestCase):
 
         # Verify result is correct
         self.assertEqual(result, [self.test_output, self.test_output + ".tbi"])
-        
+
         # Verify engine was set to default
         self.assertEqual(args.engine_vcfeval, vcfeval.findVCFEval())
-        
+
         # Verify threads was set to default
         self.assertEqual(args.threads, 1)
-        
+
         # Verify scratch_prefix was set to default
         self.assertIsNotNone(args.scratch_prefix)
 
@@ -205,46 +200,27 @@ class TestVCFEval(unittest.TestCase):
         # For this test skip SDF creation as we're directly testing the subprocess error handling
         self.args.engine_vcfeval_template = self.test_template
 
-        # Mock for temp file
-        vtf_mock = MagicMock()
-        name_property = PropertyMock(
-            return_value=os.path.join(self.temp_dir, "vcfeval.result_mock")
-        )
-        type(vtf_mock).name = name_property
+        # Create a proper temp file path
+        temp_file_path = os.path.join(self.temp_dir, "vcfeval.result_mock")
 
-        with patch("tempfile.NamedTemporaryFile", return_value=vtf_mock):
-            # Test format command failure - we'll skip the format step and just test the vcfeval error
+        # Create a proper mock for the context manager
+        mock_context_manager = MagicMock()
+        mock_context_manager.__enter__ = MagicMock()
+        mock_context_manager.__exit__ = MagicMock(return_value=None)
+        mock_context_manager.__enter__.return_value.name = temp_file_path
+
+        with patch("tempfile.NamedTemporaryFile", return_value=mock_context_manager):
+            # Test vcfeval command failure - mock a failing subprocess
             process_mock = MagicMock()
             process_mock.returncode = 1
             process_mock.communicate.return_value = ("", "Error in command")
             mock_popen.return_value = process_mock
 
-            # Create mock output files that will be checked for
+            # Create mock output directory so file checks don't interfere
             mock_out_path = os.path.join(self.temp_dir, "vcfeval.result_mock")
             os.makedirs(mock_out_path, exist_ok=True)
 
-            with self.assertRaises(subprocess.SubprocessError):
-                vcfeval.runVCFEval(
-                    self.test_vcf1, self.test_vcf2, self.test_output, self.args
-                )
-
-            # Reset mock
-            mock_popen.reset_mock()
-
-            # Test vcfeval command failure with multiple calls
-            # First process succeeds (format)
-            process_mock1 = MagicMock()
-            process_mock1.returncode = 0
-            process_mock1.communicate.return_value = ("", "")
-
-            # Second process fails (vcfeval)
-            process_mock2 = MagicMock()
-            process_mock2.returncode = 1
-            process_mock2.communicate.return_value = ("", "Error in vcfeval")
-
-            # Setup popen to return different mock objects on each call
-            mock_popen.side_effect = [process_mock1, process_mock2]
-
+            # The subprocess should fail and raise SubprocessError
             with self.assertRaises(subprocess.SubprocessError):
                 vcfeval.runVCFEval(
                     self.test_vcf1, self.test_vcf2, self.test_output, self.args

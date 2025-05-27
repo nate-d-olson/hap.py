@@ -7,7 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import compare_files, get_bin_dir, get_example_dir, run_shell_command
+from tests.utils import (
+    compare_files,
+    get_bin_dir,
+    get_example_dir,
+    run_shell_command,
+)
 
 
 def compress_and_index_vcf(vcf_path: Path) -> Path:

@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
-Wrapper script for hap.py that calls the module directly.
+Wrapper script for hap.py main module.
+This script provides compatibility with the build/bin/hap.py path expected by tests.
 """
-import os
+
 import sys
+from pathlib import Path
 
-# Add the project root to the Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.insert(0, project_root)
+# Add the src directory to Python path
+project_root = Path(__file__).parent.parent.parent
+src_dir = project_root / "src"
+sys.path.insert(0, str(src_dir))
 
-# Import and run the main module
-from src.hap_py.hap import main
+# Import and run the main hap.py module
+from hap_py.hap import main
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

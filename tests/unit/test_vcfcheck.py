@@ -166,13 +166,24 @@ class TestVCFChecker:
 
         # This requires mocking a VCF header
         class MockHeader:
-            def __init__(self, fields=None, samples=None, formats=None):
-                self.fields = fields or {}
-                self.samples = samples or []
-                self.formats = formats or {}
+            def __init__(
+                self,
+                has_filters=True,
+                has_formats=True,
+                samples=None,
+                formats=None,
+            ):
+                # Simulate pysam VariantHeader attributes
+                if has_filters:
+                    self.filters = {"PASS": None}  # Mock filters dict
+                if has_formats:
+                    self.formats = formats or {}
+                else:
+                    self.formats = {}
 
-            def __contains__(self, item):
-                return item in self.fields
+                self.samples = samples or []
+                # Add info attribute (optional but good to have)
+                self.info = {}
 
         class MockFormat:
             def __init__(self, name):
@@ -182,26 +193,40 @@ class TestVCFChecker:
 
         # Valid header
         valid_header = MockHeader(
-            fields={"FILTER": True, "FORMAT": True, "INFO": True},
+            has_filters=True,
+            has_formats=True,
             samples=["Sample1"],
             formats={"GT": MockFormat("GT")},
         )
         issues = checker._check_header(valid_header)
         assert len(issues) == 0
 
-        # Missing required fields
-        missing_fields = MockHeader(
-            fields={"FORMAT": True},
+        # Missing FILTER field
+        missing_filter = MockHeader(
+            has_filters=False,  # This will not create the filters attribute
+            has_formats=True,
             samples=["Sample1"],
             formats={"GT": MockFormat("GT")},
         )
-        issues = checker._check_header(missing_fields)
+        issues = checker._check_header(missing_filter)
         assert len(issues) > 0
-        assert any("Missing required header field" in issue for issue in issues)
+        assert any("Missing required header field: FILTER" in issue for issue in issues)
+
+        # Missing FORMAT field
+        missing_format = MockHeader(
+            has_filters=True,
+            has_formats=False,  # This will create empty formats dict
+            samples=["Sample1"],
+            formats={},
+        )
+        issues = checker._check_header(missing_format)
+        assert len(issues) > 0
+        assert any("Missing required header field: FORMAT" in issue for issue in issues)
 
         # No samples
         no_samples = MockHeader(
-            fields={"FILTER": True, "FORMAT": True, "INFO": True},
+            has_filters=True,
+            has_formats=True,
             samples=[],
             formats={"GT": MockFormat("GT")},
         )
@@ -211,9 +236,10 @@ class TestVCFChecker:
 
         # Missing GT format
         no_gt = MockHeader(
-            fields={"FILTER": True, "FORMAT": True, "INFO": True},
+            has_filters=True,
+            has_formats=True,
             samples=["Sample1"],
-            formats={"DP": MockFormat("DP")},
+            formats={"DP": MockFormat("DP")},  # Has formats but no GT
         )
         issues = checker._check_header(no_gt)
         assert len(issues) > 0

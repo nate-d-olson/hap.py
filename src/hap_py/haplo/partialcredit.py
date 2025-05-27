@@ -25,8 +25,6 @@ import contextlib
 import itertools
 import logging
 import os
-import shlex
-import subprocess
 import tempfile
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -34,7 +32,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from ..tools.bcftools import concatenateParts, runBcftools
 from ..tools.parallel import getPool, runParallel
 from ..tools.vcfextract import extractHeadersJSON
-from .python_preprocess import PreprocessEngine, DecomposeLevel
+from .python_preprocess import DecomposeLevel, PreprocessEngine
 
 
 def preprocessWrapper(
@@ -63,8 +61,12 @@ def preprocessWrapper(
         # Use Python preprocess implementation instead of external binary
         try:
             # Determine decompose level from bool
-            decompose_level = DecomposeLevel.CONSERVATIVE if args["decompose"] else DecomposeLevel.NONE
-            
+            decompose_level = (
+                DecomposeLevel.CONSERVATIVE
+                if args["decompose"]
+                else DecomposeLevel.NONE
+            )
+
             # Create and run the preprocess engine
             engine = PreprocessEngine(
                 input_vcf=filename,
@@ -75,21 +77,26 @@ def preprocessWrapper(
                 regions=location_str if location_str else None,
                 haploid_x=args["haploid_x"],
                 output_bcf=args["bcf"],
-                pass_only=False
+                pass_only=False,
             )
-            
-            logging.info(f"Processing {filename}:{location_str if location_str else 'all'} with Python preprocess")
-            
+
+            logging.info(
+                f"Processing {filename}:{location_str if location_str else 'all'} with Python preprocess"
+            )
+
             # Process the file
             output_file = engine.process()
-            
+
             if output_file != temp_file_path:
                 # If the engine created a different output file, move it to our expected location
                 import shutil
+
                 shutil.move(output_file, temp_file_path)
-                
+
         except Exception as e:
-            logging.error(f"Python preprocess failed for {filename}:{location_str}: {str(e)}")
+            logging.error(
+                f"Python preprocess failed for {filename}:{location_str}: {str(e)}"
+            )
             # Cleanup the temp file if command failed
             if temp_file_path and os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
@@ -122,14 +129,14 @@ def preprocessWrapper(
 
 def directProcessWrapper(location_str: str, bargs: Dict[str, Any]) -> List[str]:
     """Process VCF directly without splitting into blocks.
-    
+
     Modernized replacement for blocksplit - eliminates the overhead and complexity
     of splitting files into chunks and then merging them back together.
-    
+
     Args:
         location_str: Location string in format chrom:start-end
         bargs: Arguments (not used in direct processing, kept for compatibility)
-    
+
     Returns:
         List containing the original location string (no chunking)
     """
@@ -192,13 +199,9 @@ def partialCredit(
 
         # Direct processing - no splitting means no failures to filter
         # Flatten list of lists
-        locations = [
-            item for sublist in res if sublist for item in sublist
-        ]
+        locations = [item for sublist in res if sublist for item in sublist]
         if not locations:
-            logging.warning(
-                "No locations to process."
-            )
+            logging.warning("No locations to process.")
             locations = [""]
     else:
         locations = [""]

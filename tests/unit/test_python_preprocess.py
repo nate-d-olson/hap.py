@@ -7,8 +7,8 @@ import os
 import tempfile
 from pathlib import Path
 
-import pytest
 import pysam
+import pytest
 
 from hap_py.haplo.python_preprocess import DecomposeLevel, PreprocessEngine
 
@@ -28,7 +28,7 @@ def reference_path():
             # or permissions. For now, we'll raise an error to make it visible.
             raise FileNotFoundError(
                 f"Failed to find or create FASTA index for {path}: {e}"
-            )
+            ) from e
     return str(path)
 
 
@@ -45,7 +45,7 @@ def example_vcf_path():
         except pysam.SamtoolsError as e:
             raise FileNotFoundError(
                 f"Failed to find or create VCF index for {path}: {e}"
-            )
+            ) from e
     return str(path)
 
 
@@ -83,17 +83,31 @@ def test_normalize_variant():
     """Test variant normalization."""
     # Create dummy VCF and FASTA files for initialization
     with tempfile.NamedTemporaryFile(
-        suffix=".vcf", delete=False
+        mode="w", suffix=".vcf", delete=False
     ) as dummy_vcf_file, tempfile.NamedTemporaryFile(
-        suffix=".fa", delete=False
+        mode="w", suffix=".fa", delete=False
     ) as dummy_fa_file:
         dummy_vcf_path = dummy_vcf_file.name
         dummy_fa_path = dummy_fa_file.name
+
+        # Write valid VCF content
+        dummy_vcf_file.write(
+            """##fileformat=VCFv4.2
+##reference=file://test.fa
+##contig=<ID=chr1,length=200>
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample1
+chr1\t100\t.\tA\tG\t.\tPASS\t.\tGT\t0/1
+"""
+        )
+        dummy_vcf_file.flush()
+
         # Write minimal valid content to FASTA to avoid pysam errors
         # and ensure it's indexable by pysam.faidx
-        dummy_fa_file.write(b">chr1\n")
-        dummy_fa_file.write(b"A" * 60 + b"\n")  # Standard FASTA line length
-        dummy_fa_file.write(b"C" * 60 + b"\n")
+        dummy_fa_file.write(">chr1\n")
+        dummy_fa_file.write("A" * 60 + "\n")  # Standard FASTA line length
+        dummy_fa_file.write("C" * 60 + "\n")
         dummy_fa_file.flush()
         pysam.faidx(dummy_fa_path)  # Create .fai index
 
@@ -201,15 +215,15 @@ chr1\t300\t.\tATCG\tAG\t.\tPASS\t.\tGT\t0/1
         )
         input_vcf = f.name
 
-    # Create a simple reference
-    with tempfile.NamedTemporaryFile(suffix=".fa", delete=False) as f:
-        f.write(
-            b">chr1\n"
-            + b"AGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n"
-            + b"TCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG\n"
-            + b"TCGTCGTCGTCGTCGCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTCTATCG\n"
-            + b"ATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCG\n"
-        )
+    # Create a simple reference with consistent line lengths
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".fa", delete=False) as f:
+        f.write(">chr1\n")
+        # Write consistent 60-character lines
+        sequence = "AGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCGTCG"
+        f.write(sequence + "\n")
+        f.write(sequence + "\n")
+        f.write(sequence + "\n")
+        f.write(sequence + "\n")
         f.flush()
         test_reference = f.name
         pysam.faidx(test_reference)  # Ensure .fai index is created
@@ -242,14 +256,18 @@ chr1\t300\t.\tATCG\tAG\t.\tPASS\t.\tGT\t0/1
         os.remove(output_vcf + ".tbi")
 
 
-def test_haploid_x_handling(reference_path):  # reference_path fixture will be used
+def test_haploid_x_handling(
+    reference_path,
+):  # reference_path fixture will be used
     """Test handling of haploid X chromosome."""
     # Create a simple VCF with X chromosome variants
-    with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vcf", delete=False) as f:
         f.write(
-            b"""##fileformat=VCFv4.2
+            """##fileformat=VCFv4.2
 ##reference=file://test.fa
 ##contig=<ID=chrX,length=1000000>
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSample1
 chrX\t100\t.\tA\tG\t.\tPASS\t.\tGT\t0/1
 chrX\t200\t.\tC\tT\t.\tPASS\t.\tGT\t0/1
@@ -329,7 +347,9 @@ def test_region_filtering(reference_path, example_vcf_path, temp_output_path):
     os.remove(regions_file)
 
 
-def test_pass_only_filtering(reference_path):  # reference_path fixture will be used
+def test_pass_only_filtering(
+    reference_path,
+):  # reference_path fixture will be used
     """Test filtering for PASS variants only."""
     # Create a simple VCF with a mix of PASS and non-PASS variants
     with tempfile.NamedTemporaryFile(suffix=".vcf", delete=False) as f:

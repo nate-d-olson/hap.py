@@ -9,8 +9,8 @@ import tempfile
 
 import pytest
 
-# Add src/python to path for imports during tests
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "python"))
+# Add src/hap_py to path for imports during tests
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "hap_py"))
 
 
 @pytest.fixture(scope="session")

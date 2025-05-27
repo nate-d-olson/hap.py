@@ -3,7 +3,11 @@ import os
 
 def test_string_handling_module():
     """Test the string handling utilities."""
-    from src.hap_py.haplo.string_handling import ensure_bytes, ensure_str, ensure_text_io
+    from src.hap_py.haplo.string_handling import (
+        ensure_bytes,
+        ensure_str,
+        ensure_text_io,
+    )
 
     # Test ensure_str
     assert ensure_str(b"test") == "test"

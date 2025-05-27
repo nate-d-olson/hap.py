@@ -5,8 +5,9 @@ Migrated from src/sh/run_hapcmp_test.sh
 
 import subprocess
 from pathlib import Path
+
 import pytest
-from test_utils import get_project_root, get_example_data_dir, get_build_dir
+from test_utils import get_build_dir, get_example_data_dir, get_project_root
 
 
 @pytest.mark.integration
@@ -25,13 +26,13 @@ def test_hapcmp(example_data_dir, temp_dir):
 
     # Define path to hapcmp binary
     hapcmp_bin = get_build_dir() / "bin" / "hapcmp"
-    
+
     # Check that all required paths exist
     if not reference.exists():
         pytest.skip(f"Reference file not found: {reference}")
     if not hapcmp_bin.exists():
         pytest.skip(f"Hapcmp binary not found: {hapcmp_bin}")
-    
+
     # Check for RTG tools dependency
     rtg_path = project_root / "libexec" / "rtg-tools-install"
     if not rtg_path.exists():

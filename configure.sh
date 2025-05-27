@@ -31,7 +31,6 @@
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MYDIR=$DIR
 
 unset SPECIALCONFIG
 
@@ -49,25 +48,6 @@ elif [[ "$UNAMESTR" == 'FreeBSD' ]]; then
    PLATFORM='freebsd'
 fi
 
-if [[ -z $CONFIGTYPE ]]; then
-    if [[ "$PLATFORM" == "linux" ]] && [[ -d /illumina ]]; then
-        if [[ "$(hostname)" == *.illumina.com ]] || \
-           [[ "$(hostname)" == ukch-* ]] || \
-           [[ "$(hostname)" == ussd-prd-lndt* ]]; then
-            echo "using Illumina configuration."
-            SPECIALCONFIG="${DIR}/src/sh/illumina-setup.sh"
-            . ${DIR}/src/sh/illumina-setup.sh
-        fi
-    fi
-else
-    echo "using $CONFIGTYPE configuration."
-    SPECIALCONFIG="${DIR}/src/sh/$CONFIGTYPE-setup.sh"
-    . ${DIR}/src/sh/$CONFIGTYPE-setup.sh
-fi
-
-# DIR gets overwritten above
-DIR=$MYDIR
-
 if [[ -z $1 ]]; then
     BT=Debug
 else
@@ -80,15 +60,6 @@ if [[ -z $1 ]]; then
     echo "Configuration detected automatically"
 else
     shift 1
-fi
-
-if [[ "$(echo ${BT} | awk '{print tolower($0)}')" == "install" ]]; then
-    BV=$(cd ${DIR} ; git describe)
-    BT=Release
-    PREFIX=/illumina/development/haplocompare/haplocompare-${BV}
-else
-    TARGET=$(echo ${BT} | awk '{print tolower($0)}')
-    PREFIX=/illumina/development/haplocompare/haplocompare-master-${TARGET}
 fi
 
 if [[ ! -z $1 ]]; then

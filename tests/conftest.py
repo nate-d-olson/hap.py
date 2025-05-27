@@ -5,6 +5,7 @@ These fixtures provide test resources for integration tests of the hap.py toolki
 """
 
 import os
+
 import pytest
 from pytest import mark
 
@@ -23,7 +24,6 @@ SKIP_TESTS = [
     "test_pathtraversal.py",
     # Unit tests
     "test_cython_integration.py",
-    "test_root_py3_compatibility.py",
     "test_string_handling.py",
 ]
 
@@ -34,7 +34,7 @@ def pytest_collection_modifyitems(items):
         # Skip tests that are not essential
         if any(skip_test in str(item.fspath) for skip_test in SKIP_TESTS):
             item.add_marker(pytest.mark.skip(reason="Skipping non-essential test"))
-        
+
         # Add appropriate markers
         if "integration" in str(item.fspath):
             item.add_marker(mark.integration)

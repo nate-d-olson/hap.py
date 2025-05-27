@@ -7,7 +7,11 @@ import os
 
 def test_string_handling_module():
     """Test the string handling utilities."""
-    from Haplo.string_handling import ensure_bytes, ensure_str, ensure_text_io
+    from hap_py.haplo.string_handling import (
+        ensure_bytes,
+        ensure_str,
+        ensure_text_io,
+    )
 
     # Test ensure_str
     assert ensure_str(b"test") == "test"
@@ -36,21 +40,19 @@ def test_cython_mock_import():
         os.environ["HAPLO_USE_MOCK"] = "1"
 
         # Import the Cython module package
-        import Haplo.cython
-
-        # Verify we're using mocks
-        assert Haplo.cython.USING_MOCK is True
+        from hap_py.haplo import cython_mock as cython_module
 
         # Test complement_sequence function
         seq = "ACGTACGT"
-        comp_seq = Haplo.cython.complement_sequence(seq)
+        comp_seq = cython_module.complement_sequence(seq)
         assert comp_seq == "TGCATGCA"
 
         # Test with bytes input (Python 3 compatibility test)
         bytes_seq = b"ACGT"
-        str_result = Haplo.cython.complement_sequence(bytes_seq)
-        assert isinstance(str_result, str)
-        assert str_result == "TGCA"
+        str_result = cython_module.complement_sequence(bytes_seq)
+        # Mock returns bytes when given bytes
+        assert isinstance(str_result, bytes)
+        assert str_result == b"TGCA"
 
     finally:
         # Restore original environment

@@ -42,17 +42,17 @@ def run_all_tests():
     success = True
 
     # Test each CLI tool with --help
-    for command in ["hap", "qfy", "pre"]:
+    for command in ["hap.py", "quantify", "preprocess"]:
         if not test_cli_tool(command):
             success = False
 
     # Test each CLI tool with --version
-    for command in ["hap", "qfy", "pre"]:
+    for command in ["hap.py", "quantify", "preprocess"]:
         if not test_cli_tool(command, ["--version"]):
             success = False
 
     # Test with invalid arguments (should fail with non-zero exit code)
-    if not test_cli_tool("hap", ["--invalid-option"], expected_exit_code=1):
+    if not test_cli_tool("hap.py", ["--invalid-option"], expected_exit_code=1):
         success = False
 
     return success

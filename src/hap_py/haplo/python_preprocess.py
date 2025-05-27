@@ -187,7 +187,11 @@ class PreprocessEngine:
 
                 fields = line.strip().split("\t")
                 if len(fields) >= 3:
-                    chrom, start, end = fields[0], int(fields[1]), int(fields[2])
+                    chrom, start, end = (
+                        fields[0],
+                        int(fields[1]),
+                        int(fields[2]),
+                    )
                     regions.append(f"{chrom}:{start}-{end}")
 
         return regions
@@ -236,6 +240,10 @@ class PreprocessEngine:
         """
         Normalize a variant by trimming common prefixes/suffixes.
 
+        This follows the C++ reference implementation order:
+        1. First trim all common suffix characters (trimRight)
+        2. Then trim all common prefix characters and adjust position (trimLeft)
+
         Args:
             chrom: Chromosome name
             pos: 1-based position
@@ -253,24 +261,37 @@ class PreprocessEngine:
         if not ref or not alt:
             return pos, ref, alt
 
-        # Trim common suffix
-        while len(ref) > 1 and len(alt) > 1 and ref[-1] == alt[-1]:
-            ref = ref[:-1]
-            alt = alt[:-1]
-
-        # Trim common prefix and adjust position
         new_pos = pos
-        while len(ref) > 1 and len(alt) > 1 and ref[0] == alt[0]:
-            ref = ref[1:]
-            alt = alt[1:]
-            new_pos += 1
+        new_ref = ref
+        new_alt = alt
+
+        # Step 1: Trim common suffix (trimRight in C++)
+        while len(new_ref) > 1 and len(new_alt) > 1 and new_ref[-1] == new_alt[-1]:
+            new_ref = new_ref[:-1]
+            new_alt = new_alt[:-1]
+
+        # Step 2: Trim common prefix and adjust position (trimLeft in C++)
+        trimmed_prefix_len = 0
+        while len(new_ref) > 1 and len(new_alt) > 1 and new_ref[0] == new_alt[0]:
+            new_ref = new_ref[1:]
+            new_alt = new_alt[1:]
+            trimmed_prefix_len += 1
+
+        if trimmed_prefix_len > 0:
+            new_pos += trimmed_prefix_len
 
         # Make sure we don't end up with empty alleles
-        if not ref or not alt:
-            ref = "."
-            alt = "."
+        if not new_ref or not new_alt:
+            # This case should ideally not happen if inputs are valid VCF
+            # However, if it does, we should revert to original to avoid issues
+            # or handle as an error. For now, let's log and return original.
+            # logger.warning(f"Normalization resulted in empty allele for {chrom}:{pos} {ref}>{alt}")
+            # return pos, ref, alt # Reverting to original to be safe
+            # Alternatively, represent as a dot, though this might lose info
+            new_ref = "." if not new_ref else new_ref
+            new_alt = "." if not new_alt else new_alt
 
-        return new_pos, ref, alt
+        return new_pos, new_ref, new_alt
 
     def left_shift_variant(
         self, chrom: str, pos: int, ref: str, alt: str
@@ -432,7 +453,9 @@ class PreprocessEngine:
                     try:
                         new_record.info[key] = value
                     except Exception as e:
-                        logger.warning(f"Failed to set INFO field {key}={value} (type: {type(value)}): {e}")
+                        logger.warning(
+                            f"Failed to set INFO field {key}={value} (type: {type(value)}): {e}"
+                        )
                         # Get the field definition to understand expected format
                         field_info = new_record.header.info.get(key)
                         if field_info and isinstance(value, (list, tuple)):
@@ -440,10 +463,18 @@ class PreprocessEngine:
                             if field_info.number == 1 and len(value) == 1:
                                 # Single value field - extract the value
                                 new_record.info[key] = value[0]
-                            elif field_info.type in ('Integer', 'Float') and len(value) == 1:
+                            elif (
+                                field_info.type in ("Integer", "Float")
+                                and len(value) == 1
+                            ):
                                 # Numeric field with single value
                                 new_record.info[key] = value[0]
-                            elif field_info.type == 'String' and field_info.number in ('.', 'A', 'R', 'G'):
+                            elif field_info.type == "String" and field_info.number in (
+                                ".",
+                                "A",
+                                "R",
+                                "G",
+                            ):
                                 # Multi-value string field - join with commas
                                 new_record.info[key] = ",".join(str(v) for v in value)
                             elif len(value) == 1:
@@ -461,7 +492,9 @@ class PreprocessEngine:
             new_record.info["ORIGINAL_POS"] = original_pos
             # Convert alleles tuple to comma-separated string for INFO field
             if isinstance(original_alleles, (list, tuple)):
-                new_record.info["ORIGINAL_ALLELES"] = ",".join(str(a) for a in original_alleles)
+                new_record.info["ORIGINAL_ALLELES"] = ",".join(
+                    str(a) for a in original_alleles
+                )
             else:
                 new_record.info["ORIGINAL_ALLELES"] = str(original_alleles)
 
@@ -661,7 +694,10 @@ def main():
     )
     parser.add_argument("input_vcf", help="Input VCF/BCF file")
     parser.add_argument(
-        "-r", "--reference", required=True, help="Reference FASTA file (required)"
+        "-r",
+        "--reference",
+        required=True,
+        help="Reference FASTA file (required)",
     )
     parser.add_argument(
         "-o", "--output", help="Output VCF/BCF file (default: auto-generate)"

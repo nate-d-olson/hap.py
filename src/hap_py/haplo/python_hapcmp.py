@@ -376,7 +376,7 @@ class HaploComparator:
 
         for variant in variants:
             # Skip non-variant sites
-            if len(variant.alts) == 0:
+            if not variant.alts or len(variant.alts) == 0:
                 continue
 
             # Adjust position to be relative to region start
@@ -558,7 +558,9 @@ def main():
         help="Maximum number of haplotypes to enumerate",
     )
     parser.add_argument(
-        "--output-sequences", action="store_true", help="Output haplotype sequences"
+        "--output-sequences",
+        action="store_true",
+        help="Output haplotype sequences",
     )
     parser.add_argument(
         "--progress", action="store_true", help="Output progress information"
@@ -577,7 +579,10 @@ def main():
         help="Maximum number of haplotype blocks to process",
     )
     parser.add_argument(
-        "-f", "--apply-filters", action="store_true", help="Apply filtering in VCF"
+        "-f",
+        "--apply-filters",
+        action="store_true",
+        help="Apply filtering in VCF",
     )
     parser.add_argument(
         "--do-alignment",
@@ -602,7 +607,8 @@ def main():
         log_level = logging.DEBUG
 
     logging.basicConfig(
-        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     logger = logging.getLogger("hapcmp")

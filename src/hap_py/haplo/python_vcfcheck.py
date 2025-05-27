@@ -162,12 +162,12 @@ class VCFChecker:
 
         # Check for required fields (be less strict for INFO as some simple VCFs may not have it)
         # Note: pysam VariantHeader doesn't support 'in' operator, so check attributes directly
-        if not hasattr(header, 'filters'):
+        if not hasattr(header, "filters"):
             issues.append("Missing required header field: FILTER")
-        if not hasattr(header, 'formats') or len(header.formats) == 0:
+        if not hasattr(header, "formats") or len(header.formats) == 0:
             issues.append("Missing required header field: FORMAT")
         # INFO field is optional for simple VCFs, just warn if missing
-        if not hasattr(header, 'info') or len(header.info) == 0:
+        if not hasattr(header, "info") or len(header.info) == 0:
             # Just a warning, not an error
             pass
 
@@ -404,7 +404,9 @@ def main():
     )
     parser.add_argument("input_file", help="Input VCF/BCF file to check")
     parser.add_argument(
-        "-r", "--reference", help="Reference FASTA file for checking reference alleles"
+        "-r",
+        "--reference",
+        help="Reference FASTA file for checking reference alleles",
     )
     parser.add_argument("-o", "--output", help="Output file to write issues to")
     parser.add_argument(
@@ -428,7 +430,8 @@ def main():
     # Setup logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Create and run the VCF checker

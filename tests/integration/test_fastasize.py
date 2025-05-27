@@ -13,7 +13,7 @@ import pytest
 @pytest.fixture(scope="module", autouse=True)
 def setup_path():
     script_dir = Path(__file__).resolve().parent.parent.parent  # project root
-    tools_dir = script_dir / "src" / "python" / "Tools"
+    tools_dir = script_dir / "src" / "hap_py" / "tools"
     sys.path.append(str(tools_dir))
 
 
@@ -21,7 +21,7 @@ def setup_path():
 def test_fastasize_calculation():
     """Test fastasize's calculateLength function"""
     # Import the function after the path has been set up
-    from Tools.fastasize import calculateLength
+    from tools.fastasize import calculateLength
 
     # Test with the same parameters as in the original script
     locations = "chrMT chrY:1-10"

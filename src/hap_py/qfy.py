@@ -23,6 +23,7 @@
 #
 
 import argparse
+import contextlib
 import gzip
 import json
 import logging
@@ -35,22 +36,21 @@ from pathlib import Path
 
 import pandas as pd
 
-import contextlib
-
 # Modern imports using the new package structure
 try:
     # When run as module
     from .haplo import gvcf2bed, happyroc, quantify
-    from .tools import vcfextract, fastasize
+    from .tools import fastasize, vcfextract
     from .tools.metric import dataframeToMetricsTable, makeMetricsObject
     from .tools.version import version
 except ImportError:
     # When run directly or as script
     import sys
     from pathlib import Path
+
     sys.path.insert(0, str(Path(__file__).parent))
     from haplo import gvcf2bed, happyroc, quantify
-    from tools import vcfextract, fastasize
+    from tools import fastasize, vcfextract
     from tools.metric import dataframeToMetricsTable, makeMetricsObject
     from tools.version import version
 

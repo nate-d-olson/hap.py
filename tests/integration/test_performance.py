@@ -7,7 +7,12 @@ import re
 
 import pytest
 
-from tests.utils import find_reference_file, get_bin_dir, get_example_dir, run_command
+from tests.utils import (
+    find_reference_file,
+    get_bin_dir,
+    get_example_dir,
+    run_command,
+)
 
 
 @pytest.mark.integration

@@ -10,10 +10,7 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
-    get_project_root,
-    get_python_executable,
     run_command,
 )
 
@@ -22,15 +19,14 @@ from tests.utils import (
 def test_small_giab_rtg(tmp_path):
     """Test small GiaB/RTG comparison"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     giab_dir = example_dir / "GiaB"
-    nist_vcf = giab_dir / "Complex_2ormoreindels_framerestoring_NIST2.19.ucsccoding.vcf"
-    rtg_vcf = giab_dir / "Complex_2ormoreindels_framerestoring_RTG.ucsccoding.vcf"
+    nist_vcf = giab_dir / (
+        "Complex_2ormoreindels_framerestoring_NIST2.19.ucsccoding.vcf"
+    )
+    rtg_vcf = giab_dir / ("Complex_2ormoreindels_framerestoring_RTG.ucsccoding.vcf")
 
     # Define output path
     output_prefix = tmp_path / "small_giab_test_out"
@@ -40,7 +36,7 @@ def test_small_giab_rtg(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",
@@ -59,10 +55,7 @@ def test_small_giab_rtg(tmp_path):
 def test_large_giab_rtg_chr21(tmp_path):
     """Test large GiaB/RTG comparison on chromosome 21"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     nist_indels_dir = example_dir / "NIST_indels"
@@ -79,7 +72,7 @@ def test_large_giab_rtg_chr21(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",
@@ -110,10 +103,7 @@ def test_large_giab_rtg_chr21(tmp_path):
 def test_large_giab_rtg_chr1(tmp_path):
     """Test large GiaB/RTG comparison on chromosome 1"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Define file paths for the test
     nist_indels_dir = example_dir / "NIST_indels"
@@ -130,7 +120,7 @@ def test_large_giab_rtg_chr1(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap",
+        "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
         "-o",
