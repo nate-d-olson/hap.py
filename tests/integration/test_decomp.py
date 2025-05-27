@@ -17,8 +17,12 @@ from tests.utils import (
 
 
 @pytest.mark.integration
-def test_decomp(tmp_path):
+def test_decomp(tmp_path, rtg_executable, reference_file):
     """Test variant decomposition functionality"""
+    # Skip test if reference file is not available
+    if reference_file is None:
+        pytest.skip("Reference file not available for testing")
+
     # Get paths to required files and tools
     example_dir = get_example_dir()
 
@@ -44,6 +48,8 @@ def test_decomp(tmp_path):
         str(query_vcf),
         "-f",
         str(conf_bed),
+        "-r",
+        reference_file,  # Add reference file
         "-o",
         str(output_prefix),
         "--preprocess-truth",
@@ -51,7 +57,7 @@ def test_decomp(tmp_path):
         "-V",
         "--force-interactive",
         "--engine-vcfeval-path",
-        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
+        rtg_executable,  # Use fixture instead of hardcoded path
     ]
 
     result = run_command(cmd)

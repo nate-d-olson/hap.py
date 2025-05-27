@@ -7,7 +7,12 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from test_utils import get_build_dir, get_example_data_dir, get_project_root
+
+from tests.test_utils import (
+    get_build_dir,
+    get_example_data_dir,
+    get_project_root,
+)
 
 
 @pytest.mark.integration

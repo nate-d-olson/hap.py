@@ -5,6 +5,7 @@ These fixtures provide test resources for integration tests of the hap.py toolki
 """
 
 import os
+from pathlib import Path
 
 import pytest
 from pytest import mark
@@ -40,6 +41,67 @@ def pytest_collection_modifyitems(items):
             item.add_marker(mark.integration)
         elif "unit" in str(item.fspath):
             item.add_marker(mark.unit)
+
+
+def get_rtg_path():
+    """Get the RTG tools path for integration tests."""
+    project_root = Path(__file__).parent.parent
+
+    # Try project root first (where the rtg symlink is)
+    rtg_path = project_root / "rtg"
+    if rtg_path.exists():
+        return str(rtg_path)
+
+    # Try libexec directory
+    rtg_path = project_root / "libexec" / "rtg"
+    if rtg_path.exists():
+        return str(rtg_path)
+
+    # Try external directory (legacy location)
+    rtg_path = project_root / "external" / "rtg-tools-3.12.1" / "rtg"
+    if rtg_path.exists():
+        return str(rtg_path)
+
+    # Fallback to system RTG
+    return "rtg"
+
+
+@pytest.fixture(scope="session")
+def rtg_executable():
+    """Provide RTG executable path for tests."""
+    return get_rtg_path()
+
+
+@pytest.fixture(scope="session")
+def project_root():
+    """Provide project root directory."""
+    return Path(__file__).parent.parent
+
+
+@pytest.fixture(scope="session")
+def example_dir(project_root):
+    """Provide example data directory."""
+    return project_root / "example"
+
+
+@pytest.fixture(scope="session")
+def reference_file(example_dir):
+    """Provide reference file for tests."""
+    # Check environment variable first
+    if "HGREF" in os.environ:
+        return os.environ["HGREF"]
+
+    # Use chr21.fa from example directory
+    ref_path = example_dir / "chr21.fa"
+    if ref_path.exists():
+        return str(ref_path)
+
+    # Fallback to example.fa
+    ref_path = example_dir / "example.fa"
+    if ref_path.exists():
+        return str(ref_path)
+
+    return None
 
 
 @pytest.fixture

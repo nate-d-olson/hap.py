@@ -39,7 +39,8 @@ import pandas as pd
 # Modern imports using the new package structure
 try:
     # When run as module
-    from .haplo import gvcf2bed, happyroc, quantify
+    from .haplo import gvcf2bed, happyroc
+    from .haplo import quantify as quantify_module
     from .tools import fastasize, vcfextract
     from .tools.metric import dataframeToMetricsTable, makeMetricsObject
     from .tools.version import version
@@ -49,13 +50,52 @@ except ImportError:
     from pathlib import Path
 
     sys.path.insert(0, str(Path(__file__).parent))
-    from haplo import gvcf2bed, happyroc, quantify
+    from haplo import gvcf2bed, happyroc
+    from haplo import quantify as quantify_module
     from tools import fastasize, vcfextract
     from tools.metric import dataframeToMetricsTable, makeMetricsObject
     from tools.version import version
 
 
-def quantify(args: argparse.Namespace) -> None:
+class NumpyJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder to handle numpy data types."""
+
+    def default(self, obj):
+        # Handle numpy types
+        try:
+            import numpy as np
+
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.bool_):
+                return bool(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+        except ImportError:
+            # Fallback for when numpy is not available
+            pass
+
+        # Handle pandas types (which often contain numpy under the hood)
+        if hasattr(obj, "dtype"):
+            # Handle numpy scalars embedded in pandas
+            if hasattr(obj.dtype, "kind"):
+                if obj.dtype.kind in "iu":  # integer types
+                    return int(obj)
+                elif obj.dtype.kind == "f":  # float types
+                    return float(obj)
+                elif obj.dtype.kind == "b":  # boolean types
+                    return bool(obj)
+
+        # Handle other integer types that might cause issues
+        if isinstance(obj, (int, float, bool)):
+            return obj
+
+        return super().default(obj)
+
+
+def run_quantify_command(args: argparse.Namespace) -> None:
     """Run quantify and write tables"""
     vcf_name = args.in_vcf[0]
 
@@ -119,7 +159,7 @@ def quantify(args: argparse.Namespace) -> None:
     with contextlib.suppress(Exception):
         roc_header = args.roc_header
 
-    quantify.run_quantify(
+    quantify_module.run_quantify(
         vcf_name,
         roc_table,
         output_vcf if args.write_vcf else False,
@@ -243,7 +283,11 @@ def quantify(args: argparse.Namespace) -> None:
         with gzip.open(
             args.reports_prefix + ".metrics.json.gz", "wt", encoding="utf-8"
         ) as fp:
-            json.dump(metrics_output, fp)
+            json.dump(metrics_output, fp, cls=NumpyJSONEncoder)
+
+
+# Provide backwards compatibility alias
+quantify = run_quantify_command
 
 
 def updateArgs(parser: argparse.ArgumentParser) -> None:
@@ -527,7 +571,7 @@ def main() -> int:
         args.strat_regions.append("CONF_VARS:" + conf_temp)
         args.preprocessing_truth_confregions = None
 
-    quantify(args)
+    run_quantify_command(args)
     return 0
 
 

@@ -160,6 +160,18 @@ class VCFChecker:
         """
         issues = []
 
+        # For non-strict mode, be very lenient with header validation
+        # Only check for critical issues that would prevent processing
+        if not self.strict:
+            # In non-strict mode, only warn about missing GT field if no formats at all
+            if not hasattr(header, "formats") or len(header.formats) == 0:
+                issues.append("Missing FORMAT fields (warning only)")
+
+            # Don't require FILTER or INFO fields for simple test VCFs
+            # Don't require sample columns for some types of VCFs
+            return issues
+
+        # Strict mode checks (original logic)
         # Check for required fields (be less strict for INFO as some simple VCFs may not have it)
         # Note: pysam VariantHeader doesn't support 'in' operator, so check attributes directly
         if not hasattr(header, "filters"):

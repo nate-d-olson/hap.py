@@ -16,8 +16,12 @@ from tests.utils import (
 
 
 @pytest.mark.integration
-def test_small_giab_rtg(tmp_path):
+def test_small_giab_rtg(tmp_path, rtg_executable, reference_file):
     """Test small GiaB/RTG comparison"""
+    # Skip test if reference file is not available
+    if reference_file is None:
+        pytest.skip("Reference file not available for testing")
+
     # Get paths to required files and tools
     example_dir = get_example_dir()
 
@@ -39,10 +43,14 @@ def test_small_giab_rtg(tmp_path):
         "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
+        "-r",
+        reference_file,  # Add reference file
         "-o",
         str(output_prefix),
         "-X",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        rtg_executable,  # Add RTG path
     ]
 
     result = run_command(cmd)
@@ -52,8 +60,12 @@ def test_small_giab_rtg(tmp_path):
 
 
 @pytest.mark.integration
-def test_large_giab_rtg_chr21(tmp_path):
+def test_large_giab_rtg_chr21(tmp_path, rtg_executable, reference_file):
     """Test large GiaB/RTG comparison on chromosome 21"""
+    # Skip test if reference file is not available
+    if reference_file is None:
+        pytest.skip("Reference file not available for testing")
+
     # Get paths to required files and tools
     example_dir = get_example_dir()
 
@@ -75,6 +87,8 @@ def test_large_giab_rtg_chr21(tmp_path):
         "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
+        "-r",
+        reference_file,  # Add reference file
         "-o",
         str(output_prefix),
         "-l",
@@ -82,6 +96,8 @@ def test_large_giab_rtg_chr21(tmp_path):
         "-X",
         "--verbose",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        rtg_executable,  # Add RTG path
     ]
 
     result = run_command(cmd)
@@ -100,8 +116,12 @@ def test_large_giab_rtg_chr21(tmp_path):
 
 
 @pytest.mark.integration
-def test_large_giab_rtg_chr1(tmp_path):
+def test_large_giab_rtg_chr1(tmp_path, rtg_executable, reference_file):
     """Test large GiaB/RTG comparison on chromosome 1"""
+    # Skip test if reference file is not available
+    if reference_file is None:
+        pytest.skip("Reference file not available for testing")
+
     # Get paths to required files and tools
     example_dir = get_example_dir()
 
@@ -123,6 +143,8 @@ def test_large_giab_rtg_chr1(tmp_path):
         "hap.py",
         str(nist_vcf),
         str(rtg_vcf),
+        "-r",
+        reference_file,  # Add reference file
         "-o",
         str(output_prefix),
         "-l",
@@ -130,6 +152,8 @@ def test_large_giab_rtg_chr1(tmp_path):
         "-X",
         "--verbose",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        rtg_executable,  # Add RTG path
     ]
 
     result = run_command(cmd)

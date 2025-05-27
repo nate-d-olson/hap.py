@@ -183,10 +183,16 @@ def runVCFEval(
             template_dir = None
 
             try:
-                # Use mkdtemp to create a unique directory for the SDF template
-                template_dir = tempfile.mkdtemp(
-                    dir=args.scratch_prefix, prefix="vcfeval.sdf."
+                # Create a unique temporary directory name for the SDF template
+                # Use a secure temporary file name to avoid conflicts
+                template_fd, template_path = tempfile.mkstemp(
+                    dir=args.scratch_prefix,
+                    prefix="vcfeval.sdf.",
+                    suffix=".dir",
                 )
+                os.close(template_fd)  # Close the file descriptor
+                os.unlink(template_path)  # Remove the file
+                template_dir = template_path  # Use the unique path as directory name
                 args.engine_vcfeval_template = template_dir
 
                 # Quote paths for shell safety

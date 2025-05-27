@@ -96,7 +96,7 @@ def makeMetricsObject(name):
      }
     """
 
-    version_string = "%s" % version.version
+    version_string = "%s" % version
 
     mdict = {
         "name": name,

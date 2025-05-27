@@ -561,7 +561,7 @@ def main() -> int:
 
         args.in_vcf = [output_name]
         args.runner = "hap.py"
-        qfy.quantify(args)
+        qfy.run_quantify_command(args)
         return 0
 
     finally:
