@@ -5,6 +5,7 @@ These fixtures provide test resources for integration tests of the hap.py toolki
 """
 
 import os
+import shutil
 from pathlib import Path
 
 import pytest
@@ -47,22 +48,33 @@ def get_rtg_path():
     """Get the RTG tools path for integration tests."""
     project_root = Path(__file__).parent.parent
 
-    # Try project root first (where the rtg symlink is)
+    # Check environment variable first
+    if "RTG_PATH" in os.environ and Path(os.environ["RTG_PATH"]).exists():
+        return os.environ["RTG_PATH"]
+
+    # Try external directory (modernized location)
+    rtg_path = project_root / "external" / "rtg-tools-3.12.1" / "rtg"
+    if rtg_path.exists():
+        print(f"Found RTG tools at {rtg_path}")
+        return str(rtg_path)
+
+    # Try project root (where the rtg symlink might be)
     rtg_path = project_root / "rtg"
     if rtg_path.exists():
         return str(rtg_path)
 
-    # Try libexec directory
+    # Try libexec directory (legacy location)
     rtg_path = project_root / "libexec" / "rtg"
     if rtg_path.exists():
         return str(rtg_path)
 
-    # Try external directory (legacy location)
-    rtg_path = project_root / "external" / "rtg-tools-3.12.1" / "rtg"
-    if rtg_path.exists():
-        return str(rtg_path)
+    # Check if rtg is available in PATH
+    rtg_in_path = shutil.which("rtg")
+    if rtg_in_path:
+        return rtg_in_path
 
-    # Fallback to system RTG
+    # Fallback to system RTG, but let the user know it's not found
+    print("WARNING: RTG tools not found. Integration tests requiring RTG may fail.")
     return "rtg"
 
 

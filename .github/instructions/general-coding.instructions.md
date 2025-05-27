@@ -72,6 +72,14 @@ The project uses pre-commit hooks to enforce code quality standards:
 - Use the `pathlib` module for cross-platform compatibility
 - Ensure all required tools and dependencies are available
 - Properly handle temporary files and directories
+- Use the `rtg_executable` fixture to access RTG tools
+- Use the `reference_file` fixture for reference FASTA files
+- When testing with `hap.py`, use `--engine-vcfeval-path` with the correct RTG path
+- For temporary directories, use `tempfile.mkdtemp()` or pytest's `tmp_path` fixture
+- Make sure tests create and clean up their own test data
+- Use patching carefully; ensure order of decorators matches function arguments
+- For diagnosing integration test failures, check `integration_test_output.txt`
+- Handle both string and bytes data types appropriately
 
 ## Python 3 Compatibility Notes
 - Use type annotations for function parameters and return values

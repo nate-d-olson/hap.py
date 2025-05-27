@@ -176,6 +176,9 @@ class TestVCFChecker:
                 # Simulate pysam VariantHeader attributes
                 if has_filters:
                     self.filters = {"PASS": None}  # Mock filters dict
+                # Note: when has_filters=False, we don't create self.filters at all
+                # This simulates a header missing the FILTER section
+
                 if has_formats:
                     self.formats = formats or {}
                 else:

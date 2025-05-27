@@ -83,23 +83,43 @@ pre-commit run ruff --files src/python/path/to/file.py
 
 2. For RTG-related failures:
    - Ensure RTG tools is properly located and accessible
-   - Check that `--engine-vcfeval-path` points to the correct RTG executable
-   - Verify the `findVCFEval()` function is correctly locating the RTG tools
+   - Verify the `get_rtg_path()` function in `tests/conftest.py` correctly locates RTG tools
+   - Check that `--engine-vcfeval-path` points to the correct RTG executable (usually at `/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg`)
+   - Ensure tests are passing the RTG path via the `rtg_executable` fixture
+   - Look for "SDF directory already exists" errors from RTG format commands
+   - Validate that `@patch` decorators for RTG-related functions are applied in the correct order
 
 3. For temporary file/directory issues:
    - Confirm proper cleanup in test fixtures
    - Use `tempfile.mkdtemp()` instead of `tempfile.NamedTemporaryFile()` for directories
+   - Look for issues in `vcfeval.py` related to SDF template directory creation
    - Check for permission or cross-filesystem issues with temporary directories
+   - Ensure test fixtures are using `tmp_path` to create isolated test directories
 
 4. For reference file errors:
    - Verify reference FASTA files have proper `.fai` indexes
    - Check that VCF files have appropriate `.tbi` indexes
+   - Ensure tests are using the `reference_file` fixture from `conftest.py`
    - Use `pathlib.Path` for cross-platform path handling
+   - Check for missing environment variables like `HGREF` that might be needed
 
-5. For implementation mismatches:
-   - Compare actual implementation behavior with test expectations
-   - Look for algorithm differences (e.g., maximal vs. minimal trimming in variant normalization)
-   - Check for off-by-one errors in position calculations
+5. For VCF parsing and validation issues:
+   - Look for header validation errors in `_check_header` method
+   - Check for proper detection of required fields like FILTER
+   - Ensure VCF preprocessing handles AC field values correctly
+   - Verify that the `normalize_variant` method behaves consistently
+
+6. For missing modernized tools:
+   - Check if placeholder scripts like `multimerge` need implementation
+   - Ensure binary wrapper scripts are available in the `build/bin` directory
+   - Look for "has been replaced with Python modules" error messages
+
+7. Systematic debugging approach:
+   - Start by fixing the SDF template directory issues in `vcfeval.py`
+   - Then address reference file availability using the `reference_file` fixture
+   - Update tests to use proper RTG path detection
+   - Fix VCF header validation issues
+   - Finally, address any remaining test-specific failures
 
 ## Release Process
 

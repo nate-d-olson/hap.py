@@ -158,26 +158,31 @@ class VCFChecker:
         Returns:
             List of issue descriptions
         """
-        issues = []
+        issues: List[str] = []
 
-        # For non-strict mode, be very lenient with header validation
-        # Only check for critical issues that would prevent processing
+        # Check for required fields - FILTER should always be checked
+        if not hasattr(header, "filters") or header.filters is None:
+            issues.append("Missing required header field: FILTER")
+
+        # Check FORMAT field - needed for test consistency
+        if not hasattr(header, "formats") or len(header.formats) == 0:
+            issues.append("Missing required header field: FORMAT")
+
+        # Check for sample columns
+        if not header.samples or len(header.samples) == 0:
+            issues.append("No sample columns found in VCF header")
+
+        # Check for GT format if formats exist
+        if hasattr(header, "formats") and header.formats and "GT" not in header.formats:
+            issues.append("Missing GT format in FORMAT field")
+
+        # For non-strict mode, return early after basic checks
         if not self.strict:
-            # In non-strict mode, only warn about missing GT field if no formats at all
-            if not hasattr(header, "formats") or len(header.formats) == 0:
-                issues.append("Missing FORMAT fields (warning only)")
-
-            # Don't require FILTER or INFO fields for simple test VCFs
-            # Don't require sample columns for some types of VCFs
+            # Don't require additional validations for simple test VCFs in non-strict mode
             return issues
 
         # Strict mode checks (original logic)
-        # Check for required fields (be less strict for INFO as some simple VCFs may not have it)
-        # Note: pysam VariantHeader doesn't support 'in' operator, so check attributes directly
-        if not hasattr(header, "filters"):
-            issues.append("Missing required header field: FILTER")
-        if not hasattr(header, "formats") or len(header.formats) == 0:
-            issues.append("Missing required header field: FORMAT")
+
         # INFO field is optional for simple VCFs, just warn if missing
         if not hasattr(header, "info") or len(header.info) == 0:
             # Just a warning, not an error

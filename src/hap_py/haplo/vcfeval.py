@@ -30,7 +30,7 @@ import subprocess
 import tempfile
 import time
 from argparse import Namespace
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional
 
 # Set up versioning
 try:
@@ -100,7 +100,7 @@ def findVCFEval() -> str:
 
 
 def runVCFEval(
-    vcf1: str, vcf2: str, target: str, args: Union[Namespace, Dict[str, Any]]
+    vcf1: str, vcf2: str, target: str, args: Namespace
 ) -> Optional[List[str]]:
     """Run VCFEval and convert its output to something quantify understands.
 
@@ -183,16 +183,11 @@ def runVCFEval(
             template_dir = None
 
             try:
-                # Create a unique temporary directory name for the SDF template
-                # Use a secure temporary file name to avoid conflicts
-                template_fd, template_path = tempfile.mkstemp(
+                # Create a unique temporary directory for the SDF template
+                template_dir = tempfile.mkdtemp(
                     dir=args.scratch_prefix,
                     prefix="vcfeval.sdf.",
-                    suffix=".dir",
                 )
-                os.close(template_fd)  # Close the file descriptor
-                os.unlink(template_path)  # Remove the file
-                template_dir = template_path  # Use the unique path as directory name
                 args.engine_vcfeval_template = template_dir
 
                 # Quote paths for shell safety
