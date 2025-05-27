@@ -51,3 +51,33 @@ The project uses pre-commit hooks to enforce code quality standards:
 - Use appropriate access modifiers in C++ (public/private/protected)
 - Keep dependencies explicit and minimize global state
 - Follow a consistent naming convention for each language
+
+## Testing Best Practices
+
+### Unit Tests
+- Each function should have corresponding unit tests
+- Use pytest fixtures for common setup/teardown operations
+- Add type annotations to test functions for better validation
+- Use descriptive test names that explain what's being tested
+- Include tests for edge cases and error handling
+- When mocking objects:
+  - Ensure decorator parameter order matches function signature
+  - Use proper parameter names in mock objects to match actual objects
+  - Add assertions to verify mock calls are made as expected
+
+### Integration Tests
+- Verify interactions between components work correctly
+- Set up proper test fixtures and cleanup
+- Use relative paths or environment variables for file paths
+- Use the `pathlib` module for cross-platform compatibility
+- Ensure all required tools and dependencies are available
+- Properly handle temporary files and directories
+
+## Python 3 Compatibility Notes
+- Use type annotations for function parameters and return values
+- Convert byte strings to Unicode where appropriate: `ensure_str()` and `ensure_bytes()`
+- Use `pathlib.Path` for file path operations instead of `os.path`
+- Replace Python 2 dictionary methods with Python 3 equivalents
+- Ensure all package folders have proper `__init__.py` files
+- Use proper relative imports: `from . import module` instead of `import module`
+- Handle iterator differences: `list(map(...))` instead of `map(...)`

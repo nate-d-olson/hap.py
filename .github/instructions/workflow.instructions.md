@@ -62,6 +62,45 @@ pre-commit run ruff --files src/python/path/to/file.py
 3. Test fixes thoroughly before committing
 4. Document root causes of significant bugs for future reference
 
+### Debugging Test Failures
+
+#### Unit Test Failures
+
+1. Identify the specific failing test and error message
+2. Examine the test's expected vs. actual behavior
+3. Check for:
+   - Decorator parameter order in patched tests
+   - Type annotation issues
+   - Implementation vs. test expectation mismatches
+   - Inconsistent behavior between strict and non-strict modes
+
+#### Integration Test Failures
+
+1. Run integration tests with output capture:
+   ```bash
+   pytest tests/integration/ -v | tee integration_test_output.txt
+   ```
+
+2. For RTG-related failures:
+   - Ensure RTG tools is properly located and accessible
+   - Check that `--engine-vcfeval-path` points to the correct RTG executable
+   - Verify the `findVCFEval()` function is correctly locating the RTG tools
+
+3. For temporary file/directory issues:
+   - Confirm proper cleanup in test fixtures
+   - Use `tempfile.mkdtemp()` instead of `tempfile.NamedTemporaryFile()` for directories
+   - Check for permission or cross-filesystem issues with temporary directories
+
+4. For reference file errors:
+   - Verify reference FASTA files have proper `.fai` indexes
+   - Check that VCF files have appropriate `.tbi` indexes
+   - Use `pathlib.Path` for cross-platform path handling
+
+5. For implementation mismatches:
+   - Compare actual implementation behavior with test expectations
+   - Look for algorithm differences (e.g., maximal vs. minimal trimming in variant normalization)
+   - Check for off-by-one errors in position calculations
+
 ## Release Process
 
 1. Update version numbers in relevant files
