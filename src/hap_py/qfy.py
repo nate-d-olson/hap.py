@@ -57,44 +57,6 @@ except ImportError:
     from tools.version import version
 
 
-class NumpyJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder to handle numpy data types."""
-
-    def default(self, obj):
-        # Handle numpy types
-        try:
-            import numpy as np
-
-            if isinstance(obj, np.integer):
-                return int(obj)
-            elif isinstance(obj, np.floating):
-                return float(obj)
-            elif isinstance(obj, np.bool_):
-                return bool(obj)
-            elif isinstance(obj, np.ndarray):
-                return obj.tolist()
-        except ImportError:
-            # Fallback for when numpy is not available
-            pass
-
-        # Handle pandas types (which often contain numpy under the hood)
-        if hasattr(obj, "dtype"):
-            # Handle numpy scalars embedded in pandas
-            if hasattr(obj.dtype, "kind"):
-                if obj.dtype.kind in "iu":  # integer types
-                    return int(obj)
-                elif obj.dtype.kind == "f":  # float types
-                    return float(obj)
-                elif obj.dtype.kind == "b":  # boolean types
-                    return bool(obj)
-
-        # Handle other integer types that might cause issues
-        if isinstance(obj, (int, float, bool)):
-            return obj
-
-        return super().default(obj)
-
-
 def run_quantify_command(args: argparse.Namespace) -> None:
     """Run quantify and write tables"""
     vcf_name = args.in_vcf[0]
@@ -283,7 +245,7 @@ def run_quantify_command(args: argparse.Namespace) -> None:
         with gzip.open(
             args.reports_prefix + ".metrics.json.gz", "wt", encoding="utf-8"
         ) as fp:
-            json.dump(metrics_output, fp, cls=NumpyJSONEncoder)
+            json.dump(metrics_output, fp)
 
 
 # Provide backwards compatibility alias
@@ -477,7 +439,11 @@ def main() -> int:
     )
 
     parser.add_argument(
-        "-r", "--reference", dest="ref", default=None, help="Specify a reference file."
+        "-r",
+        "--reference",
+        dest="ref",
+        default=None,
+        help="Specify a reference file.",
     )
 
     parser.add_argument(
