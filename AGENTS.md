@@ -36,12 +36,6 @@ pip install -e .
 pip install .
 ```
 
-Optional: to build native C/C++ components:
-```bash
-./configure.sh [Debug|Release|install] [config] [install_path]
-cmake --build . -- -j$(nproc)
-cmake --install .
-```
 
 Use the provided `nox` sessions, which install the package before testing or linting.
 
@@ -55,7 +49,7 @@ Key project configuration files:
 - noxfile.py: reproducible sessions for linting, formatting, type checking, and tests
 - Jenkinsfile: CI pipeline for automated builds and tests
  - Dockerfile and .dockerignore: Docker image setup for development or CI
- - .codex/config.toml and .codex/run_in_container.sh: Codex agent configuration and container wrapper
+- .codex/plan_*.md: Dated plan files for tracking progress
 
 ## CLI Entry Points
 
