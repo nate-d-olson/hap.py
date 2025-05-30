@@ -103,7 +103,6 @@ nox -s tests
 While working on the project, track your milestones in dated plan files under `.codex/` (e.g., `.codex/plan_YYYY-MM-DD.md`) and update them as you make progress. For significant completed work, update `README.md` with a dated changelog entry referencing relevant documentation.
 
 Key upcoming milestones:
-- Migrate `sequence_utils` Cython extension to pure-Python.
 - Continue dropping remaining Cython/C++ extension dependencies.
 - Advance packaging to a PEP 517-only build system.
 - Add unit and integration tests for pure-Python modules.

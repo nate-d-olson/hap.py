@@ -21,7 +21,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Include custom CMake modules
 include(cxx)
 include(configureFiles)
-include(CythonSupport)
+# include(CythonSupport)  # Disabled: Cython extension support removed
 
 # Python version detection
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
@@ -94,7 +94,7 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
-add_subdirectory(src/c++)
+# add_subdirectory(src/c++)  # Disabled: C++ components removed
 
 # Status message at the end
 message(STATUS "Configuration completed successfully. Run 'make' to build.")
