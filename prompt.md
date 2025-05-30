@@ -17,11 +17,11 @@ Refer to `.codex/plan_2025-05-30.md` for detailed objectives for today's session
 
 ## Development Environment
 - Python 3.7+ with `requirements-dev.txt`, `pre-commit`, and `nox` for testing, linting, and formatting.
-- Optional C++ components: use `./configure.sh` and CMake.
++ Build is now pure-Python; CMake-based builds and scripts are deprecated.
 
 ## Next Steps
-1. Migrate the `sequence_utils` Cython extension to pure-Python.
-2. Add unit tests for `sequence_utils` and validate functionality.
-3. Run the full test suite (`pytest`) to ensure no regressions.
-4. Update documentation (`AGENTS.md`, `README.md`) to reflect completed migrations.
-5. Review remaining Cython/C++ modules and plan their migration.
+1. Add comprehensive unit and integration tests for key modules (e.g., Haplo.variant_processor, Tools.fastasize, Tools.vcfextract).
+2. Identify and replace external shell/subprocess calls with pure-Python implementations.
+3. Configure CI pipelines for pip-based install and pytest-driven tests.
+4. Profile and optimize performance-critical code paths.
+5. Draft migration plan for remaining C++/Cython modules.

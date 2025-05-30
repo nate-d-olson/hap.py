@@ -97,10 +97,11 @@ nox -s tests
 While working on the project, track your milestones in dated plan files under `.codex/` (e.g., `.codex/plan_YYYY-MM-DD.md`) and update them as you make progress. For significant completed work, update `README.md` with a dated changelog entry referencing relevant documentation.
 
 Key upcoming milestones:
-- Continue dropping remaining Cython/C++ extension dependencies.
-- Advance packaging to a PEP 517-only build system.
-- Add unit and integration tests for pure-Python modules.
-- Refine CLI scripts and expand test coverage.
+- Add comprehensive unit and integration tests for core modules (e.g., Haplo.variant_processor, Tools.fastasize, Tools.vcfextract).
+- Replace external shell/subprocess dependencies with pure-Python implementations where feasible (e.g., grep, samtools in Tools.fastasize).
+- Update CI pipeline (Jenkinsfile and nox sessions) to use pip-based installation and pytest for Python-only builds.
+- Enhance documentation to reflect new testing and packaging workflows.
+- Profile and optimize performance-critical paths in Haplo benchmarking logic.
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.
