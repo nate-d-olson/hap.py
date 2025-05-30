@@ -574,7 +574,7 @@ Thank you for your contributions!
 - Introduced `noxfile.py` for reproducible linting, formatting, type checking, and testing sessions.
 
 
-(See [.codex/plan_2025-05-19.md] for details on the modernization plan.)
+(See [.codex/plan_2025-05-29.md] for details on the modernization plan.)
 
 ### 2025-05-22: Fix build dependency isolation
 
@@ -600,14 +600,14 @@ Thank you for your contributions!
 - Added pure-Python `PythonRocCurve`, `create_roc_curve`, and `test_module` functions to `src/python/Haplo/happyroc.py`.
 - Updated `setup.py` to drop the `happy.Haplo.happyroc` extension.
 
-### 2025-06-XX: Migrate variant_processor to pure Python implementation
+### 2025-06-05: Migrate variant_processor to pure Python implementation
 
 - Removed Cython/C++ VariantProcessor extension (`src/python/Haplo/variant_processor.pyx`, \
   `src/python/Haplo/variant_processor.cpp`).
 - Added pure-Python `VariantProcessor`, `create_standard_processor`, and `test_module` to `src/python/Haplo/variant_processor.py`.
 - Updated `setup.py` to drop the `happy.Haplo.variant_processor` extension.
 
-### 2025-06-XX: Migrate sequence_utils to pure Python implementation
+### 2025-06-07: Migrate sequence_utils to pure Python implementation
 
 - Removed Cython/C++ sequence_utils extension (`src/python/Haplo/sequence_utils.pyx`, `src/python/Haplo/sequence_utils.cpp`).
 - Added pure-Python `complement_sequence`, `reverse_complement`, and `process_sequence` to `src/python/Haplo/sequence_utils.py`.

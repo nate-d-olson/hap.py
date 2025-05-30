@@ -41,6 +41,7 @@ complement_sequence = import_with_fallback(
 )
 
 reverse_complement = import_with_fallback("Haplo.sequence_utils", "reverse_complement")
+process_sequence = import_with_fallback("Haplo.sequence_utils", "process_sequence")
 
 # Import variant processing utilities
 VariantProcessor = import_with_fallback("Haplo.variant_processor", "VariantProcessor")

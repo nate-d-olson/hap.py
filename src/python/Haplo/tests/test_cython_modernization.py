@@ -18,6 +18,7 @@ try:
         complement_sequence,
         compute_roc_points,
         get_module_info,
+        process_sequence,
         reverse_complement,
         sort_chromosomes,
     )
@@ -66,6 +67,26 @@ def test_sequence_functions():
     assert (
         actual_revcomp == expected_revcomp
     ), f"Expected '{expected_revcomp}', got '{actual_revcomp}'"
+
+    # Test process_sequence
+    expected_proc = reverse_complement(test_seq)
+    actual_proc = process_sequence(test_seq)
+    if isinstance(actual_proc, bytes):
+        actual_proc = actual_proc.decode("ascii")
+    print(f"  process_sequence('{test_seq}') = '{actual_proc}'")
+    assert (
+        actual_proc == expected_proc
+    ), f"Expected process_sequence('{test_seq}') to be '{expected_proc}', got '{actual_proc}'"
+
+    # Test bytes input for process_sequence
+    expected_proc_bytes = reverse_complement(test_bytes)
+    actual_proc_bytes = process_sequence(test_bytes)
+    if not isinstance(actual_proc_bytes, bytes):
+        actual_proc_bytes = actual_proc_bytes.encode("ascii")
+    print(f"  process_sequence({test_bytes}) = {actual_proc_bytes}")
+    assert (
+        actual_proc_bytes == expected_proc_bytes
+    ), f"Expected process_sequence({test_bytes}) to be {expected_proc_bytes}, got {actual_proc_bytes}"
 
     print("Sequence functions test: PASSED")
 

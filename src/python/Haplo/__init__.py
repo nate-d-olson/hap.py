@@ -28,6 +28,7 @@ from .cython_compat import (
     complement_sequence,
     compute_roc_points,
     is_using_cython,
+    process_sequence,
     reverse_complement,
     sort_chromosomes,
 )
@@ -50,6 +51,7 @@ def get_module_info():
 __all__ = [
     "complement_sequence",
     "reverse_complement",
+    "process_sequence",
     "VariantProcessor",
     "compute_roc_points",
     "cmp_chromosomes",
