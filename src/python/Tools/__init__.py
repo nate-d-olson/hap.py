@@ -92,8 +92,9 @@ def init() -> None:
     for p in paths:
         pp = os.path.join(base, p)
         if not os.path.exists(pp):
-            raise Exception(f"Dependency path {pp} not found")
-        os.environ["PATH"] = pp + os.pathsep + os.environ["PATH"]
+            logging.warning(f"Dependency path {pp} not found; skipping adding to PATH")
+            continue
+        os.environ["PATH"] = pp + os.pathsep + os.environ.get("PATH", "")
 
     executables = [
         "blocksplit",
@@ -107,7 +108,9 @@ def init() -> None:
 
     for x in executables:
         if not which(x):
-            raise Exception(f"Dependency {x} not found")
+            logging.warning(
+                f"Executable {x} not found in PATH; some features may be unavailable"
+            )
 
     os.environ["DYLD_LIBRARY_PATH"] = os.path.join(base, "lib")
     os.environ["LD_LIBRARY_PATH"] = os.path.join(base, "lib")
@@ -115,12 +118,18 @@ def init() -> None:
 
 init()
 
-# noinspection PyUnresolvedReferences
-import pandas  # noqa: F401
+# Optional imports for data analysis; wrap in try/except to allow minimal installs
+try:
+    import pandas  # noqa: F401
+except ImportError:
+    pandas = None
+    logging.warning("pandas not found; some features may be unavailable")
 
-# safely import here
-# noinspection PyUnresolvedReferences
-import pysam  # noqa: F401
+try:
+    import pysam  # noqa: F401
+except ImportError:
+    pysam = None
+    logging.warning("pysam not found; some features may be unavailable")
 
 
 class LoggingWriter:

@@ -22,10 +22,12 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
+import ast
 import contextlib
 import logging
 import os
-import pipes
+import re
+import shlex
 import subprocess
 import tempfile
 from typing import Dict, List
@@ -56,80 +58,72 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
     return fastacontiglengths
 
 
+def calculateLength(fastacontiglengths, locations) -> int:
+    """Calculate total base count for given regions or contigs.
+
+    fastacontiglengths: dict or str; mapping contig name to length
+    locations: str or iterable of 'contig' or 'contig:start-end' specs
+    """
+    # Parse lengths dict if given as string
+    if isinstance(fastacontiglengths, str):
+        try:
+            fastacontiglengths = ast.literal_eval(fastacontiglengths)
+        except Exception:
+            raise ValueError("Invalid contig lengths specification")
+    if not isinstance(fastacontiglengths, dict):
+        raise ValueError("fastacontiglengths must be a dict or string repr")
+    # Build list of location specs
+    if isinstance(locations, str):
+        # split on whitespace or commas
+        locs = [tok for tok in re.split(r"[\s,]+", locations) if tok]
+    else:
+        locs = list(locations)
+    total = 0
+    for spec in locs:
+        if ":" in spec and "-" in spec:
+            name, rng = spec.split(":", 1)
+            parts = rng.split("-", 1)
+            try:
+                start = int(parts[0])
+                end = int(parts[1])
+            except ValueError:
+                continue
+            length = max(0, end - start + 1)
+        else:
+            name = spec
+            length = fastacontiglengths.get(name, 0)
+        total += length
+    return total
+
+
 def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
-    """Return contig lengths in a fasta file excluding
-    N bases.
+    """Return contig lengths in a FASTA file excluding N bases.
 
     Args:
         fastafile: Path to the FASTA file
 
     Returns:
-        Dictionary mapping contig names to non-N lengths
+        Dictionary mapping 'all' and each contig to non-N base counts
     """
-    # FIXME -- this could be made more efficient by using Python code
-    #          instead of calling out
-    #
-    # NOTE: This code uses a subprocess call to 'grep' which counts the number of
-    # non-N characters in the FASTA file for each contig.
-    fd, t = tempfile.mkstemp(prefix="fasta_tmp")
-    os.close(fd)
+    counts: Dict[str, int] = {}
+    current = None
     try:
-        cmd_line = "cat {} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > {}".format(
-            pipes.quote(fastafile),
-            pipes.quote(t),
-        )
-        logging.info(cmd_line)
-
-        po = subprocess.Popen(
-            cmd_line,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-        )
-
-        stdout, stderr = po.communicate()
-
-        po.wait()
-
-        return_code = po.returncode
-
-        if return_code != 0:
-            logging.error("cat | grep | tr | wc error: %s" % stderr)
-            raise Exception("Failed to count non-N bases in %s" % fastafile)
-
-        v = int(open(t, encoding="utf-8").read().strip())
-        result = {"all": v}
-
-        # also figure contig-by-contig
-        cts = fastaContigLengths(fastafile)
-        for c in cts:
-            cmd_line = f"samtools faidx {pipes.quote(fastafile)} {pipes.quote(c)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
-            logging.debug(cmd_line)
-
-            po = subprocess.Popen(
-                cmd_line,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-            )
-
-            stdout, stderr = po.communicate()
-
-            po.wait()
-
-            return_code = po.returncode
-
-            if return_code != 0:
-                logging.error("samtools faidx | grep | tr | wc error: %s" % stderr)
-                raise Exception(f"Failed to count non-N bases in {fastafile}:{c}")
-
-            result[c] = int(stdout.strip())
-    finally:
-        with contextlib.suppress(Exception):
-            os.unlink(t)
-
+        with open(fastafile, encoding="utf-8") as fh:
+            for line in fh:
+                if line.startswith(">"):
+                    name = line[1:].strip().split()[0]
+                    counts[name] = 0
+                    current = name
+                else:
+                    if current is None:
+                        continue
+                    seq = line.strip().upper()
+                    counts[current] += sum(1 for c in seq if c in ("A", "C", "G", "T"))
+    except Exception as e:
+        raise Exception(f"Failed to read FASTA file {fastafile}: {e}")
+    total = sum(counts.values())
+    result: Dict[str, int] = {"all": total}
+    result.update(counts)
     return result
 
 
@@ -151,14 +145,14 @@ def fastaSampleRegions(
     result = []
     cts = fastaContigLengths(fastafile)
 
-    if n_regions == 0:
-        return result
-    elif n_regions == 1:
-        l = list(cts.keys())
-        c = l[random.randint(0, len(l) - 1)]
-        start = random.randint(0, max(0, cts[c] - region_length))
-        result = ["%s:%i-%i" % (c, start, start + region_length)]
-        return result
+    if n_regions <= 0:
+        return []
+    if n_regions == 1:
+        chromosomes = list(cts.keys())
+        chosen = random.choice(chromosomes)
+        max_start = max(0, cts[chosen] - region_length)
+        start = random.randint(0, max_start)
+        return [f"{chosen}:{start}-{start + region_length}"]
 
     total = 0
     for c in cts:

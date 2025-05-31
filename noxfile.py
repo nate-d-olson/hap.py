@@ -1,6 +1,6 @@
 import nox
 
-nox.options.sessions = ["lint", "format", "type_check", "tests"]
+nox.options.sessions = ["lint", "format", "type_check", "tests", "benchmarks"]
 nox.options.reuse_existing_virtualenvs = True
 
 LOCATIONS = ("src/python", "tests", "noxfile.py", "setup.py")
@@ -8,8 +8,8 @@ LOCATIONS = ("src/python", "tests", "noxfile.py", "setup.py")
 
 @nox.session
 def tests(session):
-    session.install("-r", "requirements-dev.txt")
     session.install(".")
+    session.install("-r", "requirements-dev.txt")
     session.run("pytest", "-q", *session.posargs)
 
 
@@ -33,3 +33,23 @@ def type_check(session):
         session.run("mypy", "--ignore-missing-imports", *LOCATIONS)
     except Exception:
         session.log("mypy failed but skipping type errors for now", style="yellow")
+    # End of type_check session
+
+
+@nox.session(name="benchmarks")
+def benchmarks(session):
+    """Run microbenchmarks using pytest-benchmark plugin."""
+    session.install(".")
+    session.install("-r", "requirements-dev.txt")
+    session.run(
+        "pytest", "-q", "--benchmark-only", "tests/benchmark_variant_processor.py"
+    )
+    # Run coverage as part of benchmarks (optional)
+    session.run(
+        "pytest",
+        "--cov=src/python",
+        "--cov-report=term-missing",
+        "--cov-fail-under=90",
+        "--maxfail=1",
+        "--disable-warnings",
+    )

@@ -13,7 +13,26 @@ import gzip
 from collections import defaultdict
 from typing import Callable, List, Optional, Union
 
-from bx.intervals.intersection import Interval, IntervalTree
+try:
+    from bx.intervals.intersection import Interval, IntervalTree
+except ImportError:
+    # Minimal fallback implementations if bx is unavailable
+    class Interval:
+        def __init__(self, start: int, end: int, value=None, chrom=None):
+            self.start = start
+            self.end = end
+            self.value = value
+            self.chrom = chrom
+
+    class IntervalTree:
+        def __init__(self):
+            self._intervals = []
+
+        def add_interval(self, iv):
+            self._intervals.append(iv)
+
+        def find(self, start: int, end: int):
+            return [iv for iv in self._intervals if iv.start < end and iv.end > start]
 
 
 class BedIntervalTree:
@@ -113,7 +132,7 @@ class BedIntervalTree:
             return self.count_by_label[label]
 
     def addFromBed(
-        self, bed_file: str, label: Union[str, Callable] = "fp", fixchr: bool = False
+        self, bed_file: str, label: Union[str, Callable] = None, fixchr: bool = False
     ) -> None:
         """Add all intervals from a bed file, attaching a given label
 

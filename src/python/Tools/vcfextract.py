@@ -167,9 +167,12 @@ def extract_variants(
 
     result = []
 
-    p = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
-    )
+    try:
+        p = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+    except FileNotFoundError:
+        raise Exception(f"Tabix executable not found: {command[0]}")
 
     header = extract_header(filename, extract_columns=True)
     columns = header.get("columns", [])

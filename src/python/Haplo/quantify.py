@@ -18,7 +18,7 @@ import contextlib
 import json
 import logging
 import os
-import pipes
+import shlex as pipes
 import subprocess
 import tempfile
 from typing import Any, Dict, List, Optional, Tuple, Union

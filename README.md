@@ -10,24 +10,16 @@ to benchmark variant calls against gold standard truth datasets.
 > The core functionality (vcfeval engine and stratified metrics) has been successfully
 > migrated to modern Python 3 practices.
 
-To compare a VCF against a gold standard dataset, use the following commmand line
-to perform genotype-level haplotype comparison.
+To compare a VCF against a gold standard dataset, use the `hap.py` command:
 
 ```bash
-# With Python 3 (recommended)
-python3 /path/to/bin/hap.py.py3 truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
-
-# Legacy Python 2 version
 hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 ```
-
-We also have a script to perform comparisons only based on chromosome, position,
-and allele identity. This comparison will not resolve haplotypes and only verify
-that the same alleles were observed at the same positions (e.g. for comparison
-of somatic callsets).
+The helper scripts `qfy` and `pre` provide subcommands for quantification and preprocessing:
 
 ```bash
-som.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+qfy --help   # quantification driver
+pre --help   # preprocessing for a VCF file
 ```
 
 More information can be found below in the [usage section](#usage).
@@ -44,7 +36,6 @@ More information can be found below in the [usage section](#usage).
 * [Installation](#installation)
   * [Helper script](#helper-script)
   * [Docker](#docker)
-  * [Compiling from source with CMake](#compiling-from-source-with-cmake)
 * [System requirements](#system-requirements)
   * [Hardware](#hardware)
   * [Linux](#linux)
@@ -279,55 +270,14 @@ coverage of the truthset.
 
 ## Installation
 
-### Helper script
-
-The simplest way to install hap.py is to use the helper script and your system Python install.
-
-#### Python 3 Installation (recommended)
+This project uses a pure-Python, PEP 517 build system. You can install the package via pip:
 
 ```bash
-# Create and activate a Python 3 virtual environment
-python3 -m venv venv_py3
-source venv_py3/bin/activate
+# Regular install
+pip install .
 
-# Install Python dependencies
-pip install -r happy.requirements.py3.txt
-
-# Install using the Python 3 installer
-python3 install_py3.py /path/to/install/dir
-```
-
-#### Legacy Python 2 Installation
-
-```bash
-python install.py ~/hap.py-install
-```
-
-To also download rtgtools during the installation process and deploy it with this version
-of hap.py, you can add the `--with-rtgtools` flag. For this to work, you must have a working
-installation of Java 1.8 and Apache Ant 1.9.x.
-
-```
-python install.py ~/hap.py-install --with-rtgtools
-```
-
-The installer has an option `--boost-root` that allows us to use a specific installation of boost
-(see above for instructions):
-
-```
-python install.py ~/hap.py-install --boost-root $HOME/boost_1_55_0_install
-```
-
-To use a special version of Python, run the installer with it:
-
-```
-$HOME/my-virtualenv/bin/python install.py ~/hap.py-install
-```
-
-To create a virtualenv:
-
-```
-python install.py ~/workspace-is/hap.py-install --python=virtualenv --python-virtualenv-dir=$HOME/my-virtualenv/hc.ve
+# Editable install for development
+pip install -e .
 ```
 
 There are various workaround / testing switches:
@@ -376,49 +326,26 @@ The default Docker image is based on Ubuntu. To use a Centos6 image as a base, u
 docker build -f Dockerfile.centos6 .
 ```
 
-### Compiling from source with CMake
-
-You will need these tools / libraries on your system to compile the code:
-
-* CMake &gt; 2.8
-* GCC/G++ 4.9.2+ for compiling
-* Boost 1.55+
-* Python 3.7+ (recommended) or Python 2.7.8+
-* Python packages: Pandas, Numpy, Scipy, pysam, bx-python
-* Java 1.8 when using vcfeval.
-
-Then to compile:
-
-1. Get a hap.py checkout:
-
-    ```bash
-    git clone https://github.com/sequencing/hap.py
-    ```
-
-2. Make a build folder
-
-    ```bash
-    mkdir hap.py-build
-    cd hap.py-build
-    ```
-
-3. Run CMake (for Python 3, add -DBUILD_PYTHON3=ON)
-
-    ```bash
-    cmake ../hap.py -DBUILD_PYTHON3=ON
-    ```
-
-4. Build
-
-    ```bash
-    make
-    ```
-
-If this is successful, the bin subdirectory of your build folder will contain binaries and scripts:
+### Pure-Python Installation
+This project uses a PEP 517/518 build backend and does not require CMake.
+Install in editable mode for development:
 
 ```bash
-$ python3 bin/hap.py.py3 --version
-Hap.py v0.3.7
+pip install -e .
+```
+Or install normally:
+
+```bash
+pip install .
+```
+
+## Testing
+
+We use pytest for running unit and integration tests, and pytest-cov for measuring code coverage.
+To execute the test suite and ensure a minimum coverage threshold of 90%, run:
+
+```bash
+pytest --cov=src/python --cov-report=term-missing --cov-fail-under=90
 ```
 
 ## System requirements

@@ -27,7 +27,7 @@ import contextlib
 import logging
 import multiprocessing
 import os
-import pipes
+import shlex as pipes
 import subprocess
 import sys
 import tempfile

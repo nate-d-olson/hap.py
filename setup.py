@@ -1,17 +1,12 @@
 # Modern setup for Cython extension modules
-import os
-
-from setuptools import setup
-
-ext_modules = []
+from setuptools import find_packages, setup
 
 setup(
     name="happy",
     version="0.4.0",
     description="Haplotype Comparison Tools",
-    packages=["happy", "happy.Haplo", "happy.Tools"],
-    package_dir={"happy": "src/python"},
-    ext_modules=ext_modules,
+    package_dir={"": "src/python"},
+    packages=find_packages(where="src/python"),
     install_requires=[
         "numpy>=1.15.0",
         "pysam>=0.15.0",

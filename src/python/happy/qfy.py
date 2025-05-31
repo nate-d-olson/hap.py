@@ -33,8 +33,6 @@ import sys
 import tempfile
 import traceback
 
-import pandas
-
 from happy import Tools
 from happy.Haplo import quantify
 from happy.Tools import fastasize
@@ -203,8 +201,10 @@ def quantify(args):
 
     essential_numbers = summary_df[summary_columns]
 
-    pandas.set_option("display.max_columns", 500)
-    pandas.set_option("display.width", 1000)
+    import pandas as pd
+
+    pd.set_option("display.max_columns", 500)
+    pd.set_option("display.width", 1000)
 
     essential_numbers = essential_numbers[
         essential_numbers["Type"].isin(["SNP", "INDEL"])

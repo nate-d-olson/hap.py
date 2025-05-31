@@ -1,27 +1,36 @@
-Please proceed with the next task in the development plan. Review the codebase, `AGENTS.md`, and the plan file to align with project objectives.
+Please proceed with the next task in the development plan.
+Refer to `.codex/plan_2025-05-30.md` for detailed development plan.
+Before starting the next step review the codebase, `AGENTS.md`, and the plan file. To they accurately describe the next logical step to complete the project objective for modernization the hap.py bioinformatics tool codebase while maintaining key functionality.
 
 ## Repository Overview
-- `happy`: Haplotype benchmarking tool for germline variant comparison.
+
 - Transition to pure-Python implementation and a PEP 517 build.
 - CLI entry points: `hap.py`, `qfy`, `pre`.
 - Shell scripts in `src/sh` for integration tests.
 - Documentation in `doc/`, `README.md`, and `AGENTS.md`.
+- Prepared plan structure in the `.codex/` directory.
+- Development Environment
+   - Python 3.7+ with `requirements-dev.txt`, `pre-commit`, and `nox` for testing, linting, and formatting.
+   - Build is now pure-Python; CMake-based builds and scripts are deprecated.
 
 ## Recent Changes (2025-05-29)
+
 - Updated `AGENTS.md` with refreshed upcoming milestones.
 - Created `.codex/plan_2025-05-30.md` outlining objectives.
-- Prepared plan structure in the `.codex/` directory.
 
-## Plan for Next Session
-Refer to `.codex/plan_2025-05-30.md` for detailed objectives for today's session.
+## Next Steps for Plan Implementation
 
-## Development Environment
-- Python 3.7+ with `requirements-dev.txt`, `pre-commit`, and `nox` for testing, linting, and formatting.
-+ Build is now pure-Python; CMake-based builds and scripts are deprecated.
+- Improve test coverage:
+  - Add and enforce unit, integration, and coverage thresholds (e.g., 90%).
+- Enforce type safety:
+  - Add type annotations, enable mypy in CI.
+- Optimize performance:
+  - Implement microbenchmarks, profile hotspots, and address bottlenecks.
+- Enhance documentation and packaging:
+  - Separate core logic from CLI, add docstrings, generate Sphinx docs, migrate metadata to pyproject.toml.
+- CI/CD and developer experience:
+  - Add GitHub Actions workflows for tests, linting, formatting, benchmarks, and coverage, and automate releases.
+- Migration of native extensions:
+  - Draft and prioritize refactoring remaining C++/Cython modules to pure-Python or C bindings.
 
-## Next Steps
-1. Add comprehensive unit and integration tests for key modules (e.g., Haplo.variant_processor, Tools.fastasize, Tools.vcfextract).
-2. Identify and replace external shell/subprocess calls with pure-Python implementations.
-3. Configure CI pipelines for pip-based install and pytest-driven tests.
-4. Profile and optimize performance-critical code paths.
-5. Draft migration plan for remaining C++/Cython modules.
+When you are done, update the README.md, AGENTS.md, and the plan document as appropriate then commit the changes to the repository.

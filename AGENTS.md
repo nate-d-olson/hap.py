@@ -96,12 +96,22 @@ nox -s tests
 
 While working on the project, track your milestones in dated plan files under `.codex/` (e.g., `.codex/plan_YYYY-MM-DD.md`) and update them as you make progress. For significant completed work, update `README.md` with a dated changelog entry referencing relevant documentation.
 
-Key upcoming milestones:
-- Add comprehensive unit and integration tests for core modules (e.g., Haplo.variant_processor, Tools.fastasize, Tools.vcfextract).
-- Replace external shell/subprocess dependencies with pure-Python implementations where feasible (e.g., grep, samtools in Tools.fastasize).
-- Update CI pipeline (Jenkinsfile and nox sessions) to use pip-based installation and pytest for Python-only builds.
-- Enhance documentation to reflect new testing and packaging workflows.
-- Profile and optimize performance-critical paths in Haplo benchmarking logic.
+- Completed milestones:
+- Updated CI pipeline (Jenkinsfile and nox sessions) to use pip-based installation and pytest for Python-only builds.
+-
+- Key upcoming milestones:
+- Improve test coverage:
+  - Add and enforce unit, integration, and coverage thresholds for Haplo and Tools modules.
+- Enforce type safety:
+  - Introduce type annotations and enable mypy checks in CI.
+- Optimize performance:
+  - Develop microbenchmarks, profile hotspots, and address bottlenecks.
+- Enhance documentation and packaging:
+  - Separate core logic from CLI, add docstrings, generate Sphinx docs, and migrate metadata to pyproject.toml.
+- CI/CD and developer experience:
+  - Add GitHub Actions for tests, lint, format, benchmarks, coverage, and automate releases.
+- Migration of native extensions:
+  - Draft and prioritize a plan to refactor remaining C++/Cython modules to pure-Python or C bindings.
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.
