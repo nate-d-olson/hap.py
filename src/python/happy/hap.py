@@ -34,7 +34,41 @@ def main():
         action="store_true",
         help="Do not delete scratch files",
     )
-    # Include quantification args if available
+    # Accept legacy CLI flags for chromosome limiting and modes
+    parser.add_argument(
+        "-l", "--chrom", dest="chrom", nargs="+", help=argparse.SUPPRESS
+    )
+    parser.add_argument(
+        "--force-interactive",
+        dest="force_interactive",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--unhappy", dest="unhappy", action="store_true", help=argparse.SUPPRESS
+    )
+    parser.add_argument(
+        "--pass-only", dest="pass_only", action="store_true", help=argparse.SUPPRESS
+    )
+    # Ensure basic quantification flags are recognized
+    parser.add_argument(
+        "-V",
+        "--write-vcf",
+        dest="write_vcf",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "-X",
+        "--write-counts",
+        dest="write_counts",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--output-vtc", dest="output_vtc", action="store_true", help=argparse.SUPPRESS
+    )
+    # Include full quantification args if available
     if qfy and hasattr(qfy, "updateArgs"):
         qfy.updateArgs(parser)
     args = parser.parse_args()
