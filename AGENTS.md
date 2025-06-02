@@ -110,6 +110,8 @@ nox -s tests
 
 ## Development Plan
 
+- Completed milestones:
+- Added type annotations to `sequence_utils.py` and corresponding unit tests, and enabled mypy checking in CI for this module.
 While working on the project, track your milestones in dated plan files under `.codex/` (e.g., `.codex/plan_YYYY-MM-DD.md`) and update them as you make progress. For significant completed work, update `README.md` with a dated changelog entry referencing relevant documentation.
 
 - Completed milestones:

@@ -27,10 +27,12 @@ More information can be found below in the [usage section](#usage).
 ## Contents
 
 * [Motivation](#motivation)
+* [Development Roadmap](#development-roadmap)
   * [Complex variant comparison](#complex-variant-comparison)
   * [Variant preprocessing](#variant-preprocessing)
   * [Variant counting](#variant-counting)
-* [Usage](#usage)
+ * [Usage](#usage)
+ * [Development Roadmap](#development-roadmap)
   * [hap.py](#happy)
   * [som.py](#sompy)
 * [Installation](#installation)
@@ -44,6 +46,15 @@ More information can be found below in the [usage section](#usage).
   * [Other requirements](#other-requirements)
 
 ## Motivation
+## Development Roadmap
+
+Refer to `.codex/plan_2025-05-30.md` for the detailed development plan and upcoming milestones.  Key next steps include:
+- Improve test coverage and enforce a minimum threshold (e.g., 90%).
+- Enforce type safety with incremental type annotations and mypy checks.
+- Optimize performance via microbenchmarks and profiling.
+- Enhance documentation and packaging, including Sphinx docs and PEP 621 metadata.
+- Expand CI/CD workflows with GitHub Actions for testing, linting, formatting, and coverage reporting.
+- Plan migration of native extensions to pure-Python or C bindings.
 
 ### Complex variant comparison
 
