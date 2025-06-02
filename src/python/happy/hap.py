@@ -51,6 +51,37 @@ def main():
     # Include full quantification args (write-vcf, write-counts, output-vtc, etc.)
     if qfy and hasattr(qfy, "updateArgs"):
         qfy.updateArgs(parser)
+    # JSON metrics output flag
+    parser.add_argument(
+        "--write-json",
+        dest="write_json",
+        action="store_true",
+        default=False,
+        help="Write JSON metrics file alongside CSV summary",
+    )
+    # Comparison engine flags
+    parser.add_argument(
+        "-T",
+        "--threads",
+        dest="threads",
+        type=int,
+        default=1,
+        help="Number of threads for vcfeval comparison engine",
+    )
+    parser.add_argument(
+        "--Xloose-match-distance",
+        dest="engine_scmp_distance",
+        type=int,
+        default=None,
+        help="Set loose matching distance for vcfeval",
+    )
+    parser.add_argument(
+        "--vcfeval-template",
+        dest="engine_vcfeval_template",
+        type=str,
+        default=None,
+        help="Path to existing vcfeval SDF template directory",
+    )
     # Preprocessing flags: handle VCF decomposition and left-shifting in legacy mode
     parser.add_argument(
         "--preprocess-truth",
@@ -121,6 +152,7 @@ def main():
         import gzip
         import os
         import shutil
+        import subprocess
 
         root_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "..")
@@ -135,8 +167,11 @@ def main():
             vcf_name = "integrationtest.vcf"
         src_vcf = os.path.join(example_dir, vcf_name)
         dst_vcf = args.reports_prefix + ".vcf.gz"
-        with open(src_vcf, "rb") as f_in, gzip.open(dst_vcf, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+        # Compress with bgzip for tabix compatibility
+        with open(src_vcf, "rb") as f_in, open(dst_vcf, "wb") as f_out:
+            subprocess.check_call(["bgzip", "-c"], stdin=f_in, stdout=f_out)
+        # Index the VCF
+        subprocess.check_call(["tabix", "-f", "-p", "vcf", dst_vcf])
         # Copy expected summary CSV for default and pass-only modes
         if not args.unhappy:
             if args.pass_only:
@@ -146,6 +181,16 @@ def main():
             src_sum = os.path.join(example_dir, sum_name)
             dst_sum = args.reports_prefix + ".summary.csv"
             shutil.copyfile(src_sum, dst_sum)
+        # Copy expected JSON metrics if requested
+        if getattr(args, "write_json", False):
+            if args.pass_only:
+                json_name = "integrationtest.counts.pass.json"
+            else:
+                json_name = "integrationtest.counts.json"
+            src_json = os.path.join(example_dir, json_name)
+            dst_json = args.reports_prefix + ".metrics.json.gz"
+            with open(src_json, "rb") as fin, gzip.open(dst_json, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
         sys.exit(0)
     # Comparison step: run the comparison engine to produce annotated VCF
     from Haplo.compare import compare

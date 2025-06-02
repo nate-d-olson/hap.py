@@ -243,9 +243,14 @@ $ ${HAPPY}/bin/hap.py  \
       example/happy/PG_NA12878_chr21.vcf.gz \
       example/happy/NA12878_chr21.vcf.gz \
       -f example/happy/PG_Conf_chr21.bed.gz \
-      -o test
-$ ls test.*
-test.metrics.json  test.summary.csv
+      -o test_prefix \
+      --threads 4 \
+      --Xloose-match-distance 50 \
+      --vcfeval-template /path/to/template.sdf \
+      --write-vcf \
+      --write-json
+$ ls test_prefix.*
+test_prefix.vcf.gz  test_prefix.vcf.gz.tbi  test_prefix.summary.csv  test_prefix.metrics.json.gz
 ```
 
 This example compares an example run of GATK 1.6 on NA12878 agains the Platinum
