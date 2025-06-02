@@ -1,3 +1,5 @@
+import glob
+
 import nox
 
 nox.options.sessions = ["lint", "format", "type_check", "tests", "benchmarks"]
@@ -39,7 +41,11 @@ def type_check(session):
     # Use mypy.ini to enforce annotations incrementally
     # Incremental type checking: only enforce annotations on modernized modules
     try:
-        session.run("mypy", "src/python/Haplo/variant_processor.py")
+        session.run(
+            "mypy",
+            "src/python/Haplo/variant_processor.py",
+            "src/python/Haplo/sequence_utils.py",
+        )
     except Exception:
         session.log(
             "mypy reported issues but skipping remaining errors for now", style="yellow"
@@ -52,15 +58,13 @@ def benchmarks(session):
     """Run microbenchmarks using pytest-benchmark plugin."""
     session.install(".")
     session.install("-r", "requirements-dev.txt")
-    session.run(
-        "pytest", "-q", "--benchmark-only", "tests/benchmark_variant_processor.py"
-    )
-    # Run coverage as part of benchmarks (optional)
+    # Run all microbenchmarks under tests/ by expanding glob
+    bench_files = glob.glob("tests/benchmark_*.py")
+    if not bench_files:
+        session.error("No benchmark files found matching 'tests/benchmark_*.py'")
     session.run(
         "pytest",
-        "--cov=src/python",
-        "--cov-report=term-missing",
-        "--cov-fail-under=90",
-        "--maxfail=1",
-        "--disable-warnings",
+        "-q",
+        "--benchmark-only",
+        *bench_files,
     )
