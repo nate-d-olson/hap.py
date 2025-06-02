@@ -47,7 +47,7 @@ Key project configuration files:
 - requirements-dev.txt: development dependencies for formatting, linting, and testing
 - .pre-commit-config.yaml: pre-commit hooks configuration
 - noxfile.py: reproducible sessions for linting, formatting, type checking, and tests
-- Jenkinsfile: CI pipeline for automated builds and tests
+ - Jenkinsfile: CI pipeline for automated builds and tests (deprecated; migrating to GitHub Actions)
  - Dockerfile and .dockerignore: Docker image setup for development or CI
 - .codex/plan_*.md: Dated plan files for tracking progress
 
@@ -67,7 +67,7 @@ The repository follows a multi-language layout under the `src` directory:
   - Haplo: benchmarking and variant comparison logic
   - Tools: helper utilities (VCF parsing, metrics, etc.)
   - happy: CLI entry points (hap.py, qfy, and pre)
-- src/c++: native C++ libraries and tools
+ - src/c++: deprecated C++ libraries and tools (no longer built; retained for reference)
 - src/sh: shell scripts for integration tests and wrappers (run_tests.sh, rtg-wrapper.sh, etc.)
 - src/R: R scripts for additional analyses and reports
 - src/data: reference and test datasets used by examples and tests
@@ -75,11 +75,27 @@ Examples and integration test scenarios are provided in the `example/` directory
 
 ## Testing
 
-Unit tests and smoke tests are in `tests/`. Run:
+We distinguish between unit tests (fast, no external data) and integration tests (end-to-end workflows).
+Tests are located in `tests/` and marked accordingly:
+- Unit tests or smoke tests: no marker or `@pytest.mark.unit`
+- Integration tests: `@pytest.mark.integration`
+
+Run all tests with coverage enforcement:
 ```bash
-pytest -q
+pytest --cov=src/python --cov-report=term-missing --cov-fail-under=90
 ```
-(requires pytest installation in the env)
+
+Run only unit tests quickly:
+```bash
+pytest -m "not integration" -q
+```
+
+Run only integration tests:
+```bash
+pytest -m integration -q
+```
+
+After writing new tests or updating code, commit both test files and documentation changes so the team can track progress.
 
 ## Reproducible Environments
 
@@ -99,19 +115,20 @@ While working on the project, track your milestones in dated plan files under `.
 - Completed milestones:
 - Updated CI pipeline (Jenkinsfile and nox sessions) to use pip-based installation and pytest for Python-only builds.
 -
-- Key upcoming milestones:
-- Improve test coverage:
-  - Add and enforce unit, integration, and coverage thresholds for Haplo and Tools modules.
-- Enforce type safety:
-  - Introduce type annotations and enable mypy checks in CI.
-- Optimize performance:
-  - Develop microbenchmarks, profile hotspots, and address bottlenecks.
-- Enhance documentation and packaging:
-  - Separate core logic from CLI, add docstrings, generate Sphinx docs, and migrate metadata to pyproject.toml.
-- CI/CD and developer experience:
-  - Add GitHub Actions for tests, lint, format, benchmarks, coverage, and automate releases.
-- Migration of native extensions:
-  - Draft and prioritize a plan to refactor remaining C++/Cython modules to pure-Python or C bindings.
+## Development Plan
+Key upcoming milestones:
+- [ ] Improve test coverage:
+  - [ ] Add and enforce unit, integration, and coverage thresholds for Haplo and Tools modules.
+- [ ] Enforce type safety:
+  - [ ] Introduce type annotations and enable mypy checks in CI.
+- [ ] Optimize performance:
+  - [ ] Develop microbenchmarks, profile hotspots, and address bottlenecks.
+- [ ] Enhance documentation and packaging:
+  - [ ] Separate core logic from CLI, add docstrings, generate Sphinx docs, and migrate metadata to pyproject.toml.
+- [ ] CI/CD and developer experience:
+  - [ ] Add GitHub Actions for tests, lint, format, benchmarks, coverage, and automate releases.
+- [ ] Migration of native extensions:
+  - [ ] Draft and prioritize a plan to refactor remaining C++/Cython modules to pure-Python or C bindings.
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.

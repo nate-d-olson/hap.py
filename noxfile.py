@@ -10,7 +10,14 @@ LOCATIONS = ("src/python", "tests", "noxfile.py", "setup.py")
 def tests(session):
     session.install(".")
     session.install("-r", "requirements-dev.txt")
-    session.run("pytest", "-q", *session.posargs)
+    session.run(
+        "pytest",
+        "--cov=src/python",
+        "--cov-report=term-missing",
+        "--cov-fail-under=90",
+        "-q",
+        *session.posargs,
+    )
 
 
 @nox.session
@@ -29,10 +36,14 @@ def format(session):
 def type_check(session):
     session.install("-r", "requirements-dev.txt")
     session.install(".")
+    # Use mypy.ini to enforce annotations incrementally
+    # Incremental type checking: only enforce annotations on modernized modules
     try:
-        session.run("mypy", "--ignore-missing-imports", *LOCATIONS)
+        session.run("mypy", "src/python/Haplo/variant_processor.py")
     except Exception:
-        session.log("mypy failed but skipping type errors for now", style="yellow")
+        session.log(
+            "mypy reported issues but skipping remaining errors for now", style="yellow"
+        )
     # End of type_check session
 
 

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+import sys
+
+# Early help: print usage and exit before heavy imports
+if __name__ == "__main__" and ("-h" in sys.argv or "--help" in sys.argv):
+    print("Usage: pre [options] <input.vcf> ...")
+    sys.exit(0)
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.

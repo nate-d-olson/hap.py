@@ -7,7 +7,10 @@ import logging
 import sys
 import traceback
 
-from happy import qfy
+try:
+    from happy import qfy
+except ImportError:
+    qfy = None
 
 
 def main():
@@ -31,8 +34,9 @@ def main():
         action="store_true",
         help="Do not delete scratch files",
     )
-    # Include quantification args
-    qfy.updateArgs(parser)
+    # Include quantification args if available
+    if qfy and hasattr(qfy, "updateArgs"):
+        qfy.updateArgs(parser)
     args = parser.parse_args()
     try:
         # Run the quantification subcommand

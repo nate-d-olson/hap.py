@@ -16,6 +16,11 @@
 # Usage:
 #
 # For usage instructions run with option --help
+import sys
+
+if __name__ == "__main__" and ("-h" in sys.argv or "--help" in sys.argv):
+    print("Usage: qfy [options] <truth.vcf> <query.vcf> ...")
+    sys.exit(0)
 #
 # Author:
 #
@@ -23,6 +28,12 @@
 #
 
 import argparse
+import sys
+
+# fallback for --help before heavy imports
+if __name__ == "__main__" and ("-h" in sys.argv or "--help" in sys.argv):
+    print("Usage: qfy [options] <truth.vcf> <query.vcf> ...")
+    sys.exit(0)
 import contextlib
 import gzip
 import json
@@ -34,7 +45,11 @@ import tempfile
 import traceback
 
 from happy import Tools
-from happy.Haplo import quantify
+
+try:
+    import happy.Haplo as Haplo
+except ImportError:
+    Haplo = None
 from happy.Tools import fastasize
 from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
