@@ -48,7 +48,7 @@ More information can be found below in the [usage section](#usage).
 ## Motivation
 ## Development Roadmap
 
-Refer to `.codex/plan_2025-05-30.md` for the detailed development plan and upcoming milestones.  Key next steps include:
+Refer to `.codex/plan.md` for the detailed development plan and upcoming milestones.  Key next steps include:
 - Improve test coverage and enforce a minimum threshold (e.g., 90%).
 - Enforce type safety with incremental type annotations and mypy checks.
 - Optimize performance via microbenchmarks and profiling.
@@ -511,8 +511,7 @@ Thank you for your contributions!
 - Updated `.pre-commit-config.yaml` to run ruff and mypy on both `Haplo` and `happy` packages.
 - Introduced `noxfile.py` for reproducible linting, formatting, type checking, and testing sessions.
 
-
-(See [.codex/plan_2025-05-29.md] for details on the modernization plan.)
+(See `.codex/plan.md` for dated development plan files, including details on the modernization plan.)
 
 ### 2025-05-22: Fix build dependency isolation
 

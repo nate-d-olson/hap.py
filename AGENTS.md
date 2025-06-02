@@ -25,7 +25,8 @@ Run all hooks before pushing:
 ```bash
 pre-commit run --all-files
 ```
-This includes formatting (Black, isort), linting (Ruff), syntax upgrades (pyupgrade), and type checks (mypy scoped to core modules).
+This includes formatting (Black, isort), linting (Ruff), syntax upgrades (pyupgrade),
+and type checks (mypy scoped to core modules).
 
 ## Build & Installation
 
@@ -110,27 +111,11 @@ nox -s tests
 
 ## Development Plan
 
-- Completed milestones:
-- Added type annotations to `sequence_utils.py` and corresponding unit tests, and enabled mypy checking in CI for this module.
-While working on the project, track your milestones in dated plan files under `.codex/` (e.g., `.codex/plan_YYYY-MM-DD.md`) and update them as you make progress. For significant completed work, update `README.md` with a dated changelog entry referencing relevant documentation.
-
-- Completed milestones:
-- Updated CI pipeline (Jenkinsfile and nox sessions) to use pip-based installation and pytest for Python-only builds.
--
-## Development Plan
-Key upcoming milestones:
-- [ ] Improve test coverage:
-  - [ ] Add and enforce unit, integration, and coverage thresholds for Haplo and Tools modules.
-- [ ] Enforce type safety:
-  - [ ] Introduce type annotations and enable mypy checks in CI.
-- [ ] Optimize performance:
-  - [ ] Develop microbenchmarks, profile hotspots, and address bottlenecks.
-- [ ] Enhance documentation and packaging:
-  - [ ] Separate core logic from CLI, add docstrings, generate Sphinx docs, and migrate metadata to pyproject.toml.
-- [ ] CI/CD and developer experience:
-  - [ ] Add GitHub Actions for tests, lint, format, benchmarks, coverage, and automate releases.
-- [ ] Migration of native extensions:
-  - [ ] Draft and prioritize a plan to refactor remaining C++/Cython modules to pure-Python or C bindings.
+Refer to `.codex/plan.md` for a list of dated development plan files and instructions on how to create new plans.
+Alternatively, you can automatically create a new dated plan file by running:
+```bash
+touch .codex/plan_$(date +%F).md
+```
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.
