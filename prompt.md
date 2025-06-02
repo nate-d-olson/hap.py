@@ -1,8 +1,10 @@
 Please proceed with the next task in the development plan.
-Refer to the dated development plan file (e.g. `.codex/plan_$(date +%F).md`). You can create today’s plan with:
+Refer to the dated development plan file (e.g. `.codex/plan_$(date +%F).md`).
+You can create today’s plan with:
 ```bash
 touch .codex/plan_$(date +%F).md
 ```
+
 Before starting the next step review the codebase, `AGENTS.md`, and the plan file.
 Evaluate whether the development plan should be revised or updated ensuring it outline the optimal process for completing the project objective,
 modernization the hap.py bioinformatics tool codebase while maintaining key functionality.

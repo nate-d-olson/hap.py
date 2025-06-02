@@ -48,7 +48,7 @@ More information can be found below in the [usage section](#usage).
 ## Motivation
 ## Development Roadmap
 
-Refer to `.codex/plan.md` for the detailed development plan and upcoming milestones.  Key next steps include:
+Refer to `.codex/plan.md` for the detailed development plan and upcoming milestones. Key next sessions focus on testing, coverage, integration tests, and continuous integration:
 - Improve test coverage and enforce a minimum threshold (e.g., 90%).
 - Enforce type safety with incremental type annotations and mypy checks.
 - Optimize performance via microbenchmarks and profiling.
@@ -537,15 +537,14 @@ Thank you for your contributions!
 - Added pure-Python `PythonRocCurve`, `create_roc_curve`, and `test_module` functions to `src/python/Haplo/happyroc.py`.
 - Updated `setup.py` to drop the `happy.Haplo.happyroc` extension.
 
-### 2025-06-05: Migrate variant_processor to pure Python implementation
+### 2025-06-02:
 
-- Removed Cython/C++ VariantProcessor extension (`src/python/Haplo/variant_processor.pyx`, \
+- Migrate variant_processor to pure Python implementation
+	- Removed Cython/C++ VariantProcessor extension (`src/python/Haplo/variant_processor.pyx`, \
   `src/python/Haplo/variant_processor.cpp`).
-- Added pure-Python `VariantProcessor`, `create_standard_processor`, and `test_module` to `src/python/Haplo/variant_processor.py`.
-- Updated `setup.py` to drop the `happy.Haplo.variant_processor` extension.
-
-### 2025-06-07: Migrate sequence_utils to pure Python implementation
-
-- Removed Cython/C++ sequence_utils extension (`src/python/Haplo/sequence_utils.pyx`, `src/python/Haplo/sequence_utils.cpp`).
-- Added pure-Python `complement_sequence`, `reverse_complement`, and `process_sequence` to `src/python/Haplo/sequence_utils.py`.
-- Updated `setup.py` to drop the `happy.Haplo.sequence_utils` extension.
+	- Added pure-Python `VariantProcessor`, `create_standard_processor`, and `test_module` to `src/python/Haplo/variant_processor.py`.
+	- Updated `setup.py` to drop the `happy.Haplo.variant_processor` extension.
+- Migrate sequence_utils to pure Python implementation
+	- Removed Cython/C++ sequence_utils extension (`src/python/Haplo/sequence_utils.pyx`, `src/python/Haplo/sequence_utils.cpp`).
+	- Added pure-Python `complement_sequence`, `reverse_complement`, and `process_sequence` to `src/python/Haplo/sequence_utils.py`.
+	- Updated `setup.py` to drop the `happy.Haplo.sequence_utils` extension.
