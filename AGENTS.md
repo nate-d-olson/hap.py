@@ -111,8 +111,7 @@ nox -s tests
 
 ## Development Plan
 
-Refer to `.codex/plan.md` for a list of dated development plan files and instructions on how to create new plans.
-The current active plan is `.codex/plan_2025-06-02.md`, which scaffolds the pytest framework for unit and integration tests.
+Refer to `.codex/plan_2025-06-02.md` for the detailed development plan and upcoming milestones. We have integrated the RTG vcfeval comparison engine via `Haplo.compare`, updated CLI stubs and integration tests. The next focus areas are refining vcfeval options, enhancing outputs (JSON, indexing), and improving documentation and performance.
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.

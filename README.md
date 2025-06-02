@@ -48,7 +48,7 @@ More information can be found below in the [usage section](#usage).
 ## Motivation
 ## Development Roadmap
 
-Refer to `.codex/plan.md` for the detailed development plan and upcoming milestones. Key next sessions focus on testing, coverage, integration tests, and continuous integration:
+Refer to `.codex/plan_2025-06-02.md` for the detailed development plan and upcoming milestones. Key next focus areas include:
 - Improve test coverage and enforce a minimum threshold (e.g., 90%).
 - Enforce type safety with incremental type annotations and mypy checks.
 - Optimize performance via microbenchmarks and profiling.
@@ -56,6 +56,13 @@ Refer to `.codex/plan.md` for the detailed development plan and upcoming milesto
 - Expand CI/CD workflows with GitHub Actions for testing, linting, formatting, and coverage reporting.
 - Plan migration of native extensions to pure-Python or C bindings.
 
+### Next Steps: Comparison Engine Integration
+ We have integrated the RTG vcfeval-based comparison pipeline via `Haplo.compare`. Next steps:
+ - Expose vcfeval configuration flags (`--roc`, `--threads`, `--Xloose-match-distance`).
+ - Ensure annotated VCF is tabix-indexed and JSON metrics (`--write-json`) are generated.
+ - Improve logging and error reporting around vcfeval execution.
+ - Update examples and documentation with vcfeval requirements and usage guidance.
+ Refer to `.codex/plan_2025-06-02.md` for full details.
 ### Complex variant comparison
 
 A major challenge when comparing VCF files for diploid samples is the handling

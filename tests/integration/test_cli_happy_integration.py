@@ -9,14 +9,18 @@ import pytest
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "mode, expected",
+    "mode, expected_vcf, expected_summary",
     [
-        ([], "integrationtest.vcf"),
-        (["--unhappy"], "integrationtest.unhappy.vcf"),
-        (["--pass-only"], "integrationtest.pass.vcf"),
+        ([], "integrationtest.vcf", "integrationtest.summary.csv"),
+        (["--unhappy"], "integrationtest.unhappy.vcf", None),
+        (
+            ["--pass-only"],
+            "integrationtest.pass.vcf",
+            "integrationtest.summary.pass.csv",
+        ),
     ],
 )
-def test_hap_py_integration(tmp_path, mode, expected):
+def test_hap_py_integration(tmp_path, mode, expected_vcf, expected_summary):
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     example = os.path.join(root, "example", "integration")
     lhs_vcf = os.path.join(example, "integrationtest_lhs.vcf")
@@ -62,8 +66,19 @@ def test_hap_py_integration(tmp_path, mode, expected):
             if not line.startswith("#"):
                 fo.write(line)
 
-    # Compare to expected
-    expected_vcf = os.path.join(example, expected)
+    # Compare annotated VCF content (data lines only)
+    exp_vcf_path = os.path.join(example, expected_vcf)
     assert filecmp.cmp(
-        str(out_vcf), expected_vcf
-    ), f"Mismatch in {mode or ['default']} output"
+        str(out_vcf), exp_vcf_path
+    ), f"VCF mismatch for mode {mode or ['default']}"
+    # Optionally compare summary CSV
+    if expected_summary:
+        out_sum = tmp_path / f"out.summary.csv"
+        # copy summary file
+        prefix = tmp_path / "out"
+        generated = f"{prefix}.summary.csv"
+        assert os.path.exists(generated), "Summary CSV not generated"
+        exp_sum = os.path.join(example, expected_summary)
+        assert filecmp.cmp(
+            generated, exp_sum
+        ), f"Summary CSV mismatch for mode {mode or ['default']}"

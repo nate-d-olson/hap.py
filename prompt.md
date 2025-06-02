@@ -1,14 +1,16 @@
-Please proceed with the next task in the development plan.
-Refer to the dated development plan file (e.g. `.codex/plan_$(date +%F).md`).
-You can create today’s plan with:
-```bash
-touch .codex/plan_$(date +%F).md
-```
+This session will refine the RTG vcfeval integration flags, indexing, and JSON metrics support,
+improve CLI help and documentation, optimize performance, and expand test coverage for comparison engine features.
 
-Before starting the next step review the codebase, `AGENTS.md`, and the plan file.
-Evaluate whether the development plan should be revised or updated ensuring it outline the optimal process for completing the project objective,
-modernization the hap.py bioinformatics tool codebase while maintaining key functionality.
-After plan evaluation, and potential revions, ensure the next steps describe the next logical step and sufficient context is provided to complete the next step.
+Refer to `.codex/plan_2025-06-02.md` under "Next: Comparison Engine Integration" for the detailed plan status
+and outline of remaining tasks.
+
+Key next steps:
+- Expose vcfeval options (e.g., `--roc`, `--threads`, `--Xloose-match-distance`) through the CLI.
+- Generate and index the annotated VCF output (`.vcf.gz` with tabix) automatically.
+- Add support for writing JSON metrics (`--write-json`) alongside CSV summaries.
+- Update CLI help text, README.md, and AGENTS.md to document new flags and workflow.
+- Optimize performance: manage temp directories, improve file I/O, and profile hotspots.
+- Expand integration tests for vcfeval-specific flags, ROC output parsing, and JSON metrics.
 
 ## Repository Overview
 
@@ -20,11 +22,6 @@ After plan evaluation, and potential revions, ensure the next steps describe the
 - Development Environment
    - Python 3.7+ with `requirements-dev.txt`, `pre-commit`, and `nox` for testing, linting, and formatting.
    - Build is now pure-Python; CMake-based builds and scripts are deprecated.
-
-## Recent Changes (2025-05-29)
-
-- Updated `AGENTS.md` with refreshed upcoming milestones.
-- Created `.codex/plan_2025-05-30.md` outlining objectives.
 
 ## Next Steps for Plan Implementation
 
@@ -41,7 +38,9 @@ After plan evaluation, and potential revions, ensure the next steps describe the
 - Migration of native extensions:
   - Draft and prioritize refactoring remaining C++/Cython modules to pure-Python or C bindings.
 
-When you are with this step of the development plan, update the README.md, AGENTS.md, and the plan document as appropriate then commit the changes to the repository.
+After completing the next step of the development plan, or hit a blocker that requires revising the plan,
+update the README.md, AGENTS.md, and the plan document as appropriate.
+Next then commit changes to the repository using `git commit` with an appropriately detailed commit message.
 Finally report development status and what, if any,
 additional development work is required to test the modernized version with a
 whole genome example variant callset comparison.
