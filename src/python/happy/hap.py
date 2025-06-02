@@ -34,10 +34,8 @@ def main():
         action="store_true",
         help="Do not delete scratch files",
     )
-    # Accept legacy CLI flags for chromosome limiting and modes
-    parser.add_argument(
-        "-l", "--chrom", dest="chrom", nargs="+", help=argparse.SUPPRESS
-    )
+    # Accept legacy CLI flag for chromosome limiting (single value)
+    parser.add_argument("-l", "--chrom", dest="chrom", help=argparse.SUPPRESS)
     parser.add_argument(
         "--force-interactive",
         dest="force_interactive",
@@ -50,30 +48,19 @@ def main():
     parser.add_argument(
         "--pass-only", dest="pass_only", action="store_true", help=argparse.SUPPRESS
     )
-    # Ensure basic quantification flags are recognized
-    parser.add_argument(
-        "-V",
-        "--write-vcf",
-        dest="write_vcf",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "-X",
-        "--write-counts",
-        dest="write_counts",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--output-vtc", dest="output_vtc", action="store_true", help=argparse.SUPPRESS
-    )
-    # Include full quantification args if available
+    # Include full quantification args (write-vcf, write-counts, output-vtc, etc.)
     if qfy and hasattr(qfy, "updateArgs"):
         qfy.updateArgs(parser)
-    args = parser.parse_args()
+    # Parse options first; capture two positional VCF inputs: truth and query
+    args, unknown = parser.parse_known_args()
+    if len(unknown) < 2:
+        parser.error("the following arguments are required: truth_vcf, query_vcf")
+    args.truth_vcf, args.query_vcf = unknown[0], unknown[1]
+
+    # Run quantification or comparison backend
+
+    # Default: run quantification
     try:
-        # Run the quantification subcommand
         qfy.quantify(args)
     except Exception as e:
         logging.error(str(e))

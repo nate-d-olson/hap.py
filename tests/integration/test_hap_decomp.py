@@ -40,9 +40,11 @@ def test_hap_decomposition(tmp_path):
     assert filecmp.cmp(out_summary, expected_summary), "Summary CSV mismatch"
     # Compare VCF (ignore header lines)
     out_vcf = tmp_path / "decomp.vcf"
-    with gzip.open(f"{prefix}.vcf.gz", "rt") as fi, open(out_vcf, "w") as fo:
-        for line in fi:
-            if not line.startswith("#"):
-                fo.write(line)
+    # Extract body lines from output VCF
+    with gzip.open(f"{prefix}.vcf.gz", "rt") as fi:
+        out_lines = [l for l in fi if not l.startswith("#")]
+    # Extract body lines from expected VCF
     expected_vcf = os.path.join(example, "expected.vcf")
-    assert filecmp.cmp(str(out_vcf), expected_vcf), "Decomposition VCF mismatch"
+    with open(expected_vcf) as fe:
+        exp_lines = [l for l in fe if not l.startswith("#")]
+    assert out_lines == exp_lines, "Decomposition VCF mismatch"
