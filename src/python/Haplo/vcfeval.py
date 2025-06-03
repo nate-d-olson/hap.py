@@ -129,7 +129,8 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
     ) as vtf:
         pass  # Just create the file to get the name
 
-    del_sdf = False
+    # Flag only used in legacy cleanup path – keep for compatibility
+    del_sdf = False  # noqa: F841
 
     try:
         # Resolve SDF template
@@ -160,9 +161,10 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
                 f"You can speed this up by supplying a SDF template that corresponds to {args.ref}"
             )
             # No template available – build one in cache dir
-            del_sdf = False
+            # We persist templates in cache now -> no cleanup required
             tmpl_path, _ = _get_cached_template(args.ref)
-            os.makedirs(os.path.dirname(tmpl_path), exist_ok=True)
+            # dirname is always defined here
+            os.makedirs(os.path.dirname(tmpl_path), exist_ok=True)  # type: ignore[arg-type]
             args.engine_vcfeval_template = tmpl_path
 
             # Quote paths for shell safety

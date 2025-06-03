@@ -102,6 +102,10 @@ def main() -> None:
         action="store_true",
         help="Do not delete scratch files",
     )
+    # Generic logging flags
+    parser.add_argument("--verbose", action="store_true", help="Enable DEBUG output")
+    parser.add_argument("--quiet", action="store_true", help="Only warnings / errors")
+    parser.add_argument("--log-file", dest="log_file", help="Write full log to file")
     # Accept legacy CLI flag for chromosome limiting (single value)
     parser.add_argument("-l", "--chrom", dest="chrom", help=argparse.SUPPRESS)
     parser.add_argument(
@@ -189,6 +193,13 @@ def main() -> None:
         parser.error("the following arguments are required: truth_vcf, query_vcf")
 
     args.truth_vcf, args.query_vcf = unknown[0], unknown[1]
+
+    # ---------------------------------------------------------------------
+    # Initialise logging as early as possible
+    # ---------------------------------------------------------------------
+    from happy.logging_utils import setup_logging  # local import to avoid cycle
+
+    setup_logging(verbose=args.verbose, quiet=args.quiet, log_file=args.log_file)
 
     # Fallback for FP region accuracy tests: use precomputed data in src/data/fp_region_accuracy
     if (

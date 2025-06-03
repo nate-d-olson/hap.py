@@ -47,6 +47,7 @@ def type_check(session):
             "--follow-imports=skip",
             "src/python/happy/hap.py",
             "src/python/Haplo/vcfeval.py",
+            "src/python/Haplo/compare.py",
         )
     except Exception:
         session.log(
