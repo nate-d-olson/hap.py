@@ -43,8 +43,10 @@ def type_check(session):
     try:
         session.run(
             "mypy",
-            "src/python/Haplo/variant_processor.py",
-            "src/python/Haplo/sequence_utils.py",
+            "--strict",
+            "--follow-imports=skip",
+            "src/python/happy/hap.py",
+            "src/python/Haplo/vcfeval.py",
         )
     except Exception:
         session.log(

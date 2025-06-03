@@ -29,7 +29,35 @@ import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
+
+# Persistent template cache directory (e.g. ~/.cache/happy/sdf)
+_CACHE_DIR = os.environ.get(
+    "HAPPY_CACHE_DIR", os.path.join(os.path.expanduser("~"), ".cache", "happy")
+)
+
+# Environment variable override for the vcfeval executable
+_VCFEVAL_ENV = "HAPPY_VCFEVAL"
+
+
+# ---------------------------------------------------------------------------
+# Helper utilities
+# ---------------------------------------------------------------------------
+
+
+def _get_cached_template(ref_fasta: str) -> Tuple[Optional[str], bool]:
+    """Return path to cached SDF template for *ref_fasta*.
+
+    Returns (template_path, exists) where *exists* indicates whether the path
+    already existed on disk.  Callers are responsible for creating the
+    template when *exists* is ``False``.
+    """
+
+    fasta_name = os.path.basename(ref_fasta)
+    name_no_ext = os.path.splitext(os.path.splitext(fasta_name)[0])[0]
+    tmpl_dir = os.path.join(_CACHE_DIR, "sdf", name_no_ext + ".sdf")
+    return tmpl_dir, os.path.isdir(tmpl_dir)
+
 
 # Set up versioning
 try:
@@ -75,6 +103,10 @@ def findVCFEval() -> str:
             return "rtg"
     else:
         # default: return
+        # env-override first
+        if os.getenv(_VCFEVAL_ENV):
+            return os.getenv(_VCFEVAL_ENV)  # type: ignore[return-value]
+
         return "rtg"
 
 
@@ -100,10 +132,24 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
     del_sdf = False
 
     try:
-        # Check for existing SDF template
-        if not args.engine_vcfeval_template and os.path.isdir(args.ref[:-3] + ".sdf"):
-            logging.info(f"Using vcfeval template from {args.ref[:-3] + '.sdf'}")
-            args.engine_vcfeval_template = args.ref[:-3] + ".sdf"
+        # Resolve SDF template
+        if args.engine_vcfeval_template:
+            logging.info(
+                "Using user-provided vcfeval template at %s",
+                args.engine_vcfeval_template,
+            )
+        else:
+            # 1) Env cache ~/.cache/happy/sdf/<ref>.sdf
+            tmpl_path, tmpl_exists = _get_cached_template(args.ref)
+            if tmpl_exists:
+                logging.info("Using cached vcfeval template at %s", tmpl_path)
+                args.engine_vcfeval_template = tmpl_path
+            # 2) Local <ref>.sdf sibling directory
+            elif os.path.isdir(args.ref[:-3] + ".sdf"):
+                args.engine_vcfeval_template = args.ref[:-3] + ".sdf"
+                logging.info(
+                    "Using sibling vcfeval template at %s", args.engine_vcfeval_template
+                )
 
         # Create template if needed
         if not args.engine_vcfeval_template or not os.path.exists(
@@ -113,13 +159,11 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
                 "Creating template for vcfeval. "
                 f"You can speed this up by supplying a SDF template that corresponds to {args.ref}"
             )
-            del_sdf = True
-            with tempfile.NamedTemporaryFile(
-                dir=args.scratch_prefix, prefix="vcfeval.sdf", suffix=".dir"
-            ) as stf:
-                pass  # Just create the file to get the name
-
-            args.engine_vcfeval_template = stf.name
+            # No template available – build one in cache dir
+            del_sdf = False
+            tmpl_path, _ = _get_cached_template(args.ref)
+            os.makedirs(os.path.dirname(tmpl_path), exist_ok=True)
+            args.engine_vcfeval_template = tmpl_path
 
             # Quote paths for shell safety
             quoted_engine = shlex.quote(args.engine_vcfeval)
@@ -208,9 +252,7 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
         with contextlib.suppress(OSError):
             shutil.rmtree(vtf.name)
 
-        if del_sdf:
-            with contextlib.suppress(OSError):
-                shutil.rmtree(args.engine_vcfeval_template)
+    # Do not delete cached template
 
     elapsed = time.time() - starttime
     logging.info(f"vcfeval for {vcf1} vs. {vcf2} -- time taken {elapsed:.2f}")
