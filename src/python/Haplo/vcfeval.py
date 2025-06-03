@@ -75,6 +75,15 @@ def findVCFEval() -> str:
     Returns:
         Path to rtg executable or 'rtg' if not found
     """
+    # User override via env var takes highest precedence
+    env_path = os.getenv(_VCFEVAL_ENV)
+    if env_path:
+        if os.path.isfile(env_path) and os.access(env_path, os.X_OK):
+            return env_path
+        raise FileNotFoundError(
+            f"HAPPY_VCFEVAL is set to '{env_path}' but the file is not executable or does not exist"
+        )
+    # If bundled vcfeval present, use it
     if has_vcfeval:
         script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
         base = os.path.abspath(
@@ -101,13 +110,13 @@ def findVCFEval() -> str:
                 "its location on the command line."
             )
             return "rtg"
-    else:
-        # default: return
-        # env-override first
-        if os.getenv(_VCFEVAL_ENV):
-            return os.getenv(_VCFEVAL_ENV)  # type: ignore[return-value]
-
-        return "rtg"
+    # No bundled vcfeval; fallback to 'rtg' on PATH
+    rtg_bin = shutil.which("rtg")
+    if rtg_bin:
+        return rtg_bin
+    raise FileNotFoundError(
+        "Could not find 'rtg' executable on PATH. Please install RTG tools or set HAPPY_VCFEVAL to its path."
+    )
 
 
 def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[str]]:

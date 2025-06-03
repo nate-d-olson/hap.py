@@ -56,6 +56,15 @@ from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 def quantify(args):
     """Run quantify and write tables"""
+    # Ensure helper environment initialised (legacy side-effect removed from
+    # Tools import).  We keep the call lightweight; verbose mode aligns with
+    # the CLI --verbose flag when present in *args*.
+    try:
+        from Tools import init as _tools_init  # pylint: disable=import-error
+
+        _tools_init(verbose=getattr(args, "verbose", False))
+    except ModuleNotFoundError:
+        pass
     vcf_name = args.in_vcf[0]
 
     if not vcf_name or not os.path.exists(vcf_name):

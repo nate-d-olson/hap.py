@@ -5,6 +5,15 @@ description = "Haplotype Comparison Tools"
 readme = "README.md"
 requires-python = ">=3.7"
 
+# Runtime dependencies – keep in sync with historical setup.py until full
+# migration is complete.
+dependencies = [
+    "numpy>=1.15.0",
+    "pysam>=0.15.0",
+    "scipy>=1.0.0",
+    "pandas>=0.23.0",
+]
+
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.20.0"
 black = "23.3.0"
@@ -30,4 +39,19 @@ package-dir = {"" = "src/python"}
 
 [tool.setuptools.packages.find]
 where = ["src/python"]
-include = ["happy*"]
+# Install the three historical top-level namespaces (happy, Haplo, Tools)
+# so that users can simply ``import Haplo`` after ``pip install happy``.
+include = [
+    "happy*",  # CLI package with entry-points (hap.py, qfy, pre)
+    "Haplo*",  # Core benchmarking engine – public import ``import Haplo``
+    "Tools*",  # Helper utilities – public import ``import Tools``
+]
+
+# ---------------------------------------------------------------------------
+# PEP 621 – entry-points
+# ---------------------------------------------------------------------------
+
+[project.scripts]
+"hap.py" = "happy.hap:main"
+qfy = "happy.qfy:main"
+pre = "happy.pre:main"

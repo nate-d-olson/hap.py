@@ -14,6 +14,8 @@ Modernisation notes (2025-06-03 milestone)
   did not already produce one.
 """
 
+# mypy: disable-error-code=attr-defined
+
 from __future__ import annotations
 
 import argparse
@@ -21,9 +23,48 @@ import logging
 import subprocess
 import sys
 import traceback
+
+# Lazy import to avoid triggering environment initialisation during simple
+# "--help" invocations.
+from importlib import import_module
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, cast
+
+# ---------------------------------------------------------------------------
+# Optional environment helpers (happy.Tools.init)
+# ---------------------------------------------------------------------------
+
+
+def _init_tools_if_available(verbose: bool = False) -> None:
+    """Call ``Tools.init`` if the *Tools* namespace is importable.
+
+    The helper guards against missing optional dependency and keeps *import*
+    side-effects away from the top of the module.
+    """
+
+    import sys
+    from pathlib import Path
+
+    # Ensure *src/python* is on sys.path before attempting import so that the
+    # in-repo version of *Tools* shadow any older site-packages installation.
+    src_python_dir = str(Path(__file__).resolve().parents[2])
+    if src_python_dir not in sys.path:
+        sys.path.insert(0, src_python_dir)
+
+    try:
+        tools = import_module("Tools")
+        if hasattr(tools, "init"):
+            import inspect
+
+            init_sig = inspect.signature(tools.init)
+            if "verbose" in init_sig.parameters:
+                tools.init(verbose=verbose)  # type: ignore[arg-type]
+            else:
+                tools.init()  # type: ignore[arg-type]
+    except ModuleNotFoundError:  # pragma: no cover – minimal install
+        return
+
 
 # ---------------------------------------------------------------------------
 # Optional heavy dependency: happy.qfy
@@ -200,6 +241,24 @@ def main() -> None:
     from happy.logging_utils import setup_logging  # local import to avoid cycle
 
     setup_logging(verbose=args.verbose, quiet=args.quiet, log_file=args.log_file)
+
+    # Handle --version after logging is configured but before heavy work.
+    if args.version:
+        from importlib.metadata import PackageNotFoundError
+        from importlib.metadata import version as _pkg_v
+
+        try:
+            pkg_version = _pkg_v("happy")
+        except PackageNotFoundError:
+            pkg_version = "unknown"
+        print(f"happy {pkg_version}")
+        sys.exit(0)
+
+    # ------------------------------------------------------------------
+    # Environment bootstrap (Tools.init) – run only now to keep --help silent
+    # ------------------------------------------------------------------
+
+    _init_tools_if_available(verbose=args.verbose)
 
     # Fallback for FP region accuracy tests: use precomputed data in src/data/fp_region_accuracy
     if (

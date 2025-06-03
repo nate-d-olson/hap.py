@@ -30,7 +30,7 @@ def setup_logging(
     elif quiet:
         level = logging.WARNING
 
-    fmt = "% (asctime)s %(levelname)-8s | %(message)s"
+    fmt = "%(asctime)s %(levelname)-8s | %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     logging.basicConfig(level=level, format=fmt, datefmt=datefmt, stream=sys.stderr)
