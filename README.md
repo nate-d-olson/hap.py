@@ -31,10 +31,9 @@ More information can be found below in the [usage section](#usage).
   * [Complex variant comparison](#complex-variant-comparison)
   * [Variant preprocessing](#variant-preprocessing)
   * [Variant counting](#variant-counting)
- * [Usage](#usage)
- * [Development Roadmap](#development-roadmap)
-  * [hap.py](#happy)
-  * [som.py](#sompy)
+* [Usage](#usage)
+* [hap.py](#happy)
+* [som.py](#sompy)
 * [Installation](#installation)
   * [Helper script](#helper-script)
   * [Docker](#docker)
@@ -46,9 +45,32 @@ More information can be found below in the [usage section](#usage).
   * [Other requirements](#other-requirements)
 
 ## Motivation
+
+This repository provides a reproducible, end-to-end framework for benchmarking variant
+calling results against curated ground-truth data sets.  Although the underlying
+algorithms have existed for several years, the surrounding tooling is currently
+being modernised to follow contemporary Python best-practices (PEP-517/518
+builds, type-checked code, automated CI, etc.).  The modernisation work is
+tracked in dated plan files under `.codex/` and summarised below.
+
 ## Development Roadmap
 
-Refer to `.codex/plan_2025-06-02.md` for the detailed development plan and upcoming milestones. Key next focus areas include:
+The full, living plan for the modernisation effort is stored in
+`.codex/plan_<date>.md`.  The most recent version is
+`.codex/plan_2025-06-03.md` (created during the latest coding session).
+
+Highlights for the current milestone:
+• Restore full CLI parity with the legacy `hap.py` interface while keeping the
+  new pure-Python comparison pipeline.
+• Expose RTG `vcfeval` options through the CLI and surface advanced metrics
+  (ROC, JSON report, tabix index).
+• Enforce a 90 % coverage threshold and gradually increase type-hint
+  completeness (mypy “strict” mode for new code).
+• Replace remaining Cython stubs with pure-Python equivalents or thin C FFI
+  bindings.
+• Migrate CI from the legacy Jenkinsfile to GitHub Actions.
+
+See the dated plan file for a task-by-task breakdown and progress tracker.
 - Improve test coverage and enforce a minimum threshold (e.g., 90%).
 - Enforce type safety with incremental type annotations and mypy checks.
 - Optimize performance via microbenchmarks and profiling.

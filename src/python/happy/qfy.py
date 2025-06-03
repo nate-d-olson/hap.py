@@ -233,19 +233,32 @@ def quantify(args):
         print(essential_numbers.to_string(index=False))
 
     # keep this for verbose output
-    if not args.verbose:
+    # Remove the (potentially large) ROC TSV unless the caller explicitly
+    # requested ROC computation *and* wants to keep the file.  Historically we
+    # always generated the file and immediately deleted it unless ``--verbose``
+    # was supplied which was surprising for users enabling ROCs.  The new CLI
+    # contract (tasks C-1/C-2) stipulates that the file must be preserved when
+    # ROC generation is enabled (``args.do_roc`` is *True*).  We therefore
+    # discard it only when ROC generation is disabled **and** the user did not
+    # ask for verbose logs.
+
+    if not args.verbose and not getattr(args, "do_roc", True):
         with contextlib.suppress(Exception):
             os.unlink(roc_table)
 
     for t in list(res.keys()):
         metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
 
-    # gzip JSON output
+    # JSON metrics output
     if args.write_json:
+        json_path = args.reports_prefix + ".metrics.json"  # new canonical name C-4
+        with open(json_path, "w", encoding="utf-8") as fp:
+            json.dump(metrics_output, fp)
+        # Retain legacy gzipped variant for backward-compatibility
         with gzip.open(
             args.reports_prefix + ".metrics.json.gz", "wt", encoding="utf-8"
-        ) as fp:
-            json.dump(metrics_output, fp)
+        ) as gfp:
+            json.dump(metrics_output, gfp)
 
 
 def updateArgs(parser):

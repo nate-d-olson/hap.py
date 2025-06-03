@@ -114,7 +114,16 @@ nox -s tests
 
 ## Development Plan
 
-Refer to `.codex/plan_2025-06-02.md` for the detailed development plan and upcoming milestones. We have integrated the RTG vcfeval comparison engine via `Haplo.compare`, updated CLI stubs and integration tests. The next focus areas are refining vcfeval options, enhancing outputs (JSON, indexing), and improving documentation and performance.
+Refer to `.codex/plan_2025-06-03.md` for the up-to-date development plan and
+upcoming milestones.  The RTG `vcfeval` comparison engine has been wired into
+`Haplo.compare`; current focus areas are:
+
+* Surfacing additional `vcfeval` flags (`--roc`, `--threads`,
+  `--Xloose-match-distance`) via the CLI.
+* Emitting auxiliary artefacts (tabix index, JSON metrics, ROC TSV) in a
+  predictable location next to the primary report prefix.
+* Tightening test coverage and performance regression checks.
+* Finalising the migration from Jenkins to GitHub Actions CI.
 
 ## Contact & Resources
 - Issues and PRs: use GitHub issues for bugs and feature requests.

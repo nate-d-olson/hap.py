@@ -163,7 +163,18 @@ def runVCFEval(vcf1: str, vcf2: str, target: str, args: Any) -> Optional[List[st
         if not args.pass_only:
             runme += " --all-records"
 
-        if args.roc:
+        # Add ROC feature selection only when ROC computation is enabled.  The
+        # CLI exposes a pair of mutually–exclusive flags ``--roc`` / ``--no-roc``
+        # via ``happy.qfy.updateArgs`` which set ``args.roc`` (feature name) and
+        # ``args.do_roc`` (boolean).  Historically we *always* passed ``-f`` to
+        # vcfeval because ``args.roc`` had a default of "QUAL".  This prevented
+        # users from disabling ROC generation and incurred unnecessary work in
+        # vcfeval.  We now respect ``--no-roc`` by only appending the flag when
+        # ``args.do_roc`` is truthy.
+
+        if getattr(args, "do_roc", True):
+            # When ROC computation is requested, ``args.roc`` contains the INFO
+            # field (or QUAL, GQX, …) to use for scoring.
             runme += f" -f {shlex.quote(args.roc)}"
 
         if hasattr(args, "engine_scmp_distance") and args.engine_scmp_distance:
