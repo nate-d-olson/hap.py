@@ -5,97 +5,62 @@ The 2025-06-03 milestone has been delivered (see `.codex/plan_2025-06-03.md` ✔
 Actions workflows are merged.  We can now pivot towards preparing the first
 α-quality build that can be exercised on the full **HG002** truth-set.
 
-### High-level goal for the upcoming session
+> ⚠️  **Breaking-change heads-up (2025-06-03 refactor)**
 
-Ship an “alpha” artefact of the modernised codebase that:
-1. Runs end-to-end on a *full-size* dataset (≈ 4 GB gzipped VCFs, whole-genome
-   FASTA) without manual intervention.
-2. Produces the complete deliverable set for a standard run:
-   – annotated VCF **and** `.tbi`
-   – summary CSV / extended CSV / JSON metrics
-   – ROC TSV when `--roc` is requested
-3. Passes the existing test-suite **and** a new large-dataset smoke test that
-   executes only selected heavy steps in CI (behind `@pytest.mark.heavy`).
+The refactor removed import-time side-effects from the *Tools* namespace and
+added a `verbose` kw-arg to `Tools.init`.  Down-stream code that still calls
 
-### Task list (ordered)
-
-1. **Reference handling & template caching**
-   • Confirm that `Haplo.vcfeval.runVCFEval` re-uses an SDF template across
-     multiple invocations when `--scratch-prefix` is shared.  Persist the
-     template in `~/.cache/happy/` to avoid repeated `rtg format` costs on
-     large references.
-
-2. **Robust vcfeval discovery**
-   • Current `findVCFEval()` falls back to `rtg` on `$PATH`; add env-var
-     override (`HAPPY_VCFEVAL`) and clearer error when binary is missing.
-
-3. **Streamlined logging**
-   • Replace scattered `logging.info`/`warning` calls with a central helper
-     that honours `--quiet/--verbose` and timestamps.  Provide
-     `--log-file <path>` CLI option.
-
-4. **Complete type-hints phase-2**
-   • Annotate `happy/qfy.py` and `Haplo/compare.py`; bump `mypy` coverage to
-     these modules (`mypy.ini`, `noxfile.py`).
-
-5. **Performance/Memory smoke-test**
-   • Add `tests/heavy/test_full_dataset.py` (pytest-skipped by default) that
-     references a Git-LFS placeholder or synthetic stub; executed only when
-     `RUN_HEAVY=1` env-var is set.
-
-6. **Packaging & distribution**
-   • Update `pyproject.toml` metadata: classifiers, URLs.
-   • Provide a minimal `Dockerfile.alpha` that pins rtg-tools and installs
-     the editable package.
-
-7. **Documentation refresh**
-   • Draft `doc/alpha_release_notes.md` summarising new CLI, system
-     requirements, and migration caveats.
-
-### Stretch goals
-• Remove the remaining deprecated C++/Cython shims (`src/c++` folder) from
-  the default build.
-• Introduce `ruff` autofix in the pre-commit chain (currently only lint).
-
----
-
-_Focus on tasks 1-4 for the next session; tasks 5-7 can spill into the
-following iteration once the full-dataset run succeeds._
-
-## 🚧 Detailed plan for Task 6 – Packaging & distribution
-
-1. **Adopt PEP 621 metadata**
-   • Migrate from the legacy *setup.py/setup.cfg* mix to a single
-     `pyproject.toml` build‐backend (setuptools ≥ 68).  Remove redundant
-     fields from *setup.cfg* once verified.
-
-2. **Namespace packages & entry-points**
-   • Ensure the three logical namespaces – `happy`, `Haplo`, `Tools` – are
-     packaged so that a clean install supports `import Haplo`.
-   • Add console-script shims so that a user can simply run `hap.py`, `qfy`,
-     or `pre` after `pip install happy-alpha.whl`.
-
-3. **CI smoke-test**
-   • Extend `python-tests.yml` with an extra job `build-install` that creates
-     a fresh venv, runs `pip install .`, and asserts `hap.py --help` works.
-
-4. **Dockerfile.alpha**
-   • Minimal image containing RTG tools 3.12, env-var `HAPPY_VCFEVAL`, and an
-     editable installation of the repo – acts as the reference environment
-     for the heavy smoke-test.
-
-5. **Documentation**
-   • Update *README.md* (Build & Installation) to showcase the new
-     entry-points and clarify how namespace imports work.
-
-6. **Commit workflow**
-   • Separate logical commits: metadata, CI addition, Dockerfile, docs.
-
-Task 6 is considered **done** when a fresh venv can `pip install .` and run
-
-```bash
-hap.py --version
-python -c "import Haplo, Tools, happy; print('namespaces OK')"
+```python
+import Tools
+Tools.init()
 ```
 
-without errors, and the new CI job passes.
+continues to work, but to get INFO-level diagnostics now use
+
+```python
+Tools.init(verbose=True)
+```
+
+CI helpers and notebooks should therefore either:
+
+1. Pass the argument explicitly *or*
+2. Copy the defensive shim used in `happy.hap`:
+
+```python
+import inspect, Tools
+sig = inspect.signature(Tools.init)
+if "verbose" in sig.parameters:
+    Tools.init(verbose=want_verbose)
+else:
+    Tools.init()
+```
+
+Pytest 8 also changed the behaviour of `pytest.approx`; do **not** subscript
+the return object.  Instead compare directly, e.g. `assert value ==
+pytest.approx(0.5)` or iterate over it.
+
+All new documentation and examples follow these conventions.
+
+## Task
+
+The 2025-06-03 milestone is now complete, including:
+  - Automatic VCF indexing and JSON/ROC outputs
+  - Strict typing in key modules (happy.hap, Tools.init)
+  - GitHub Actions workflows replacing Jenkins
+  - pytest 8 compatibility fixes (removed subscripting of `pytest.approx`)
+
+### Next Objectives (2025-06-04)
+1. Prepare the first α-quality release candidate:
+   - Validate end-to-end benchmarking on the full HG002 truth set (integration tests)
+   - Implement and verify auto-index creation (`_ensure_vcf_index`) for all outputs (task C-5)
+   - Optimize performance for large genomes and multi-threading
+2. Finalize packaging and versioning:
+   - Bump package version to `0.1.0a1` (alpha)
+   - Update `RELEASES.md` and `setup.cfg`/`pyproject.toml` accordingly
+   - Ensure `pip install .` creates the console scripts properly
+3. Polish documentation and examples:
+   - Update README and doc/ with HG002 usage instructions
+   - Add example command-lines and expected output for full-genome benchmarking
+   - Incorporate new code examples for Tools.init with `verbose`
+
+After these tasks, update `.codex/plan_2025-06-04.md` with detailed subtasks and continue agile development toward the α-release.
