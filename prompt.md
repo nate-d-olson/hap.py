@@ -61,3 +61,41 @@ Ship an “alpha” artefact of the modernised codebase that:
 
 _Focus on tasks 1-4 for the next session; tasks 5-7 can spill into the
 following iteration once the full-dataset run succeeds._
+
+## 🚧 Detailed plan for Task 6 – Packaging & distribution
+
+1. **Adopt PEP 621 metadata**
+   • Migrate from the legacy *setup.py/setup.cfg* mix to a single
+     `pyproject.toml` build‐backend (setuptools ≥ 68).  Remove redundant
+     fields from *setup.cfg* once verified.
+
+2. **Namespace packages & entry-points**
+   • Ensure the three logical namespaces – `happy`, `Haplo`, `Tools` – are
+     packaged so that a clean install supports `import Haplo`.
+   • Add console-script shims so that a user can simply run `hap.py`, `qfy`,
+     or `pre` after `pip install happy-alpha.whl`.
+
+3. **CI smoke-test**
+   • Extend `python-tests.yml` with an extra job `build-install` that creates
+     a fresh venv, runs `pip install .`, and asserts `hap.py --help` works.
+
+4. **Dockerfile.alpha**
+   • Minimal image containing RTG tools 3.12, env-var `HAPPY_VCFEVAL`, and an
+     editable installation of the repo – acts as the reference environment
+     for the heavy smoke-test.
+
+5. **Documentation**
+   • Update *README.md* (Build & Installation) to showcase the new
+     entry-points and clarify how namespace imports work.
+
+6. **Commit workflow**
+   • Separate logical commits: metadata, CI addition, Dockerfile, docs.
+
+Task 6 is considered **done** when a fresh venv can `pip install .` and run
+
+```bash
+hap.py --version
+python -c "import Haplo, Tools, happy; print('namespaces OK')"
+```
+
+without errors, and the new CI job passes.
