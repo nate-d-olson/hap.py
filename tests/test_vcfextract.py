@@ -1,6 +1,7 @@
 """
 Unit tests for the Tools.vcfextract module: field conversion, INFO parsing, and header extraction.
 """
+
 import gzip
 import os
 

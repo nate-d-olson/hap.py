@@ -1,6 +1,7 @@
 """
 Microbenchmarks for the pure-Python VariantProcessor implementation.
 """
+
 import pytest
 from Haplo.variant_processor import VariantProcessor
 

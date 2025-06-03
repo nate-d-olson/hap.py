@@ -5,6 +5,7 @@ This module replaces the Cython/C++ VariantProcessor extension with a pure-
 Python class that uses pysam and built-in types to normalize, split, and
 process variants. It provides the same API as the original Cython module.
 """
+
 from typing import Any, Dict, List
 
 

@@ -1,6 +1,7 @@
 """
 Unit tests for the pure-Python VariantProcessor in Haplo.variant_processor.
 """
+
 import pytest
 from Haplo.variant_processor import VariantProcessor, create_standard_processor
 

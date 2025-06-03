@@ -1,6 +1,7 @@
 """
 Happy: CLI entry point package for hap.py commands.
 """
+
 # Removed deprecated subcommands cnx and ftx
 
 # Extend package path to include parent directory, enabling imports of Haplo as happy.Haplo

@@ -1,6 +1,7 @@
 """
 Microbenchmarks for Tools.fastasize module.
 """
+
 import os
 import tempfile
 

@@ -1,6 +1,7 @@
 """
 Pure-Python implementations of sequence utility functions.
 """
+
 # Complement mapping
 _COMP_MAP = {
     "A": "T",

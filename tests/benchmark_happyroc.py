@@ -1,6 +1,7 @@
 """
 Microbenchmarks for ROC computation in Haplo.happyroc
 """
+
 import pytest
 from Haplo import compute_roc_points
 

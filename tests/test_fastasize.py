@@ -1,6 +1,7 @@
 """
 Unit tests for the fastaContigLengths and fastaSampleRegions utilities.
 """
+
 import os
 import re
 
