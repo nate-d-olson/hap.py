@@ -2,9 +2,6 @@
 Microbenchmarks for Tools.fastasize module.
 """
 
-import os
-import tempfile
-
 import pytest
 
 from happy.Tools.fastasize import calculateLength, fastaContigLengths
@@ -21,9 +18,9 @@ def fasta_and_index(tmp_path_factory):
     fai = d / "test.fa.fai"
     # fai columns: name, length, offset, linebases, linewidth
     lines = [
-        f"chrA\t5\t0\t6\t6",
-        f"chrB\t9\t0\t9\t9",
-        f"chrC\t4\t0\t4\t4",
+        "chrA\t5\t0\t6\t6",
+        "chrB\t9\t0\t9\t9",
+        "chrC\t4\t0\t4\t4",
     ]
     fai.write_text("\n".join(lines) + "\n")
     return str(fa)

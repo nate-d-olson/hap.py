@@ -2,9 +2,6 @@
 Unit tests for the Tools.vcfextract module: field conversion, INFO parsing, and header extraction.
 """
 
-import gzip
-import os
-
 import pytest
 
 from happy.Tools.vcfextract import extract_header, field, getInfo

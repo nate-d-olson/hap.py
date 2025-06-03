@@ -73,7 +73,7 @@ def test_hap_py_integration(tmp_path, mode, expected_vcf, expected_summary):
     ), f"VCF mismatch for mode {mode or ['default']}"
     # Optionally compare summary CSV
     if expected_summary:
-        out_sum = tmp_path / f"out.summary.csv"
+        out_sum = tmp_path / "out.summary.csv"
         # copy summary file
         prefix = tmp_path / "out"
         generated = f"{prefix}.summary.csv"

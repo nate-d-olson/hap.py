@@ -2,7 +2,6 @@
 Microbenchmarks for Tools.vcfextract module.
 """
 
-import tempfile
 import textwrap
 
 import pytest

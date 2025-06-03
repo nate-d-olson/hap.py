@@ -1,4 +1,3 @@
-import filecmp
 import gzip
 import json
 import os

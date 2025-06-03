@@ -1,6 +1,4 @@
 import gzip
-import os
-import tempfile
 
 import pytest
 from Tools.bedintervaltree import BedIntervalTree

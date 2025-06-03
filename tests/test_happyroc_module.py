@@ -1,10 +1,7 @@
-import tempfile
-
 import pytest
 
 # skip if pandas not installed
 pytest.importorskip("pandas", reason="pandas is required for happyroc tests")
-import pandas as pd
 from Haplo.happyroc import RESULT_ALLCOLUMNS, roc
 
 
