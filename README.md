@@ -365,11 +365,15 @@ pip install .
 ## Testing
 
 We use pytest for running unit and integration tests, and pytest-cov for measuring code coverage.
+New integration tests cover FP-region accuracy and full quantification pipeline.
 To execute the test suite and ensure a minimum coverage threshold of 90%, run:
 
 ```bash
 pytest --cov=src/python --cov-report=term-missing --cov-fail-under=90
 ```
+Additional integration tests now cover:
+  - FP region accuracy (tests/integration/test_hap_fp_region_accuracy.py)
+  - Full quantification pipeline (tests/integration/test_hap_quantify_full_pipeline.py)
 
 ## System requirements
 

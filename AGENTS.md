@@ -95,6 +95,9 @@ Run only integration tests:
 ```bash
 pytest -m integration -q
 ```
+Integration tests now include:
+- FP region accuracy (tests/integration/test_hap_fp_region_accuracy.py)
+- Full quantification pipeline (tests/integration/test_hap_quantify_full_pipeline.py)
 
 After writing new tests or updating code, commit both test files and documentation changes so the team can track progress.
 
