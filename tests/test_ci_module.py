@@ -17,7 +17,7 @@ from Tools.ci import jeffreysCI
             5,
             10,
             0.05,
-            pytest.approx((0.5,)),  # symmetric case p=0.5
+            (0.5,),  # symmetric case p=0.5
         ),
     ],
 )
