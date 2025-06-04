@@ -30,6 +30,16 @@ class BenchmarkDecision(Enum):
     UNK = "UNK"  # Unknown/Unclassified
 
 
+class VariantMatchType(Enum):
+    """Types of variant matches found by sophisticated matching algorithms."""
+
+    EXACT = "exact"  # Exact coordinate and allele match
+    OVERLAP = "overlap"  # Overlapping variants
+    MULTIALLELIC = "multiallelic"  # Multi-allelic decomposition match
+    SUPERLOCUS = "superlocus"  # Superlocus-level match
+    NONE = "none"  # No match found
+
+
 @dataclass
 class QuantifyMetrics:
     """Core metrics calculated by quantify."""

@@ -14,7 +14,7 @@ This fork aims to modernize the codebase for continued use and development.
 ## Repository Structure
 - `src/`: Main source code directory
   - `hap_py/`: Core Python package (modernized from src/python)
-  - `c++/`: Performance-critical algorithms implemented in C++
+  - `c++/`: Performance-critical algorithms implemented in C++ (Note: C++ code was largely replaced with Python for simplicity in the modernized version.)
   - `sh/`: Shell scripts for testing and utility functions
   - `data/`: Reference data files
 - `external/`: External dependencies (e.g. htslib, rtg-tools)
@@ -45,14 +45,32 @@ This fork aims to modernize the codebase for continued use and development.
 - C++ component modernization (Note: C++ code was largely replaced with Python for simplicity in the modernized version.)
 - Performance optimization
 - Documentation updates
+- Implementation of the `quantify` package functionality
+    - ✅ **Completed Analysis**: Comprehensive review of current quantify module implementation status
+    - ✅ **Architecture Review**: Analyzed original C++ vs modernized Python implementation differences
+    - ✅ **Gap Analysis**: Identified missing critical components including `_match_variants` method
+    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `QUANTIFY_IMPLEMENTATION_PLAN.md`)
+    - ✅ **Phase 1**: Core variant matching implementation (`_match_variants` method, benchmarking decision tracking)
+        - ✅ Fixed critical test failures related to allele compatibility, variant classification, and performance.
+        - ✅ Enhanced method compatibility to properly handle both pandas Series and dictionary inputs
+        - ✅ Added robust tests for sophisticated variant matching algorithms
+        - ✅ Established realistic performance expectations for current implementation
+        - Phase 1 is now considered complete with core variant matching functionality working and tested.
+    - 🔄 **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
+        - Implementation includes methods: `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, `_calculate_bootstrap_confidence_intervals()`, `_perform_multi_threshold_analysis()`, and `_write_roc_results()`.
+    - 🔄 **Phase 3**: Superlocus analysis
+    - 🔄 **Phase 4**: Performance optimization for large datasets
+    - Ensure the original functionality of the quantify module is maintained in the updated (modernized codebase).
+    - Evaluate whether any of the original cython provides significant performance improvements compared to the in progress updated implementation that would justify the additional layer of complexity for package maintenance, development, and install.
 
 ## Development Environment Setup
 
 ### Prerequisites
-- Python 3.8+ (recommended: 3.9 or 3.10)
+- Python 3.8+ (recommended: 3.11)
 - CMake 3.10+
 - C++ compiler (GCC 7+ or Clang 10+)
 - Git
+- micromamba (recommended) or conda/mamba
 - Standard bioinformatics tools: bcftools, samtools, tabix
 
 ### Initial Setup
@@ -63,15 +81,20 @@ git clone <repository-url>
 cd hap.py
 ```
 
-2. **Create and activate a virtual environment:**
+2. **Create and activate the development environment:**
 ```bash
-# Using venv (recommended)
+# Using micromamba (RECOMMENDED for this project)
+micromamba create -n happy-dev python=3.11
+micromamba activate happy-dev
+
+# Alternative: using venv
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
 
-# Or using micromamba
-micromamba create -n happy python=3.9
-micromamba activate happy
+**IMPORTANT:** For all development work, use the `happy-dev` micromamba environment:
+```bash
+micromamba activate happy-dev
 ```
 
 3. **Install development dependencies:**
@@ -135,6 +158,11 @@ pre-commit run --all-files
 - `conftest.py`: Pytest configuration and fixtures
 
 ### Running Tests
+
+**Always activate the environment first:**
+```bash
+micromamba activate happy-dev
+```
 
 **Unit Tests:**
 ```bash
@@ -261,6 +289,72 @@ pytest tests/unit/test_specific.py -v -s --tb=long
 
 ## Build and Installation
 
+### Getting the Version from `pyproject.toml`
+
+To have the install process use the version from `pyproject.toml`, configure the build system to read the version dynamically. The recommended approach is using `setuptools_scm` as it automatically manages versions based on Git tags.
+
+**Steps:**
+
+1.  **Update `pyproject.toml`:**
+
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hap-py"
+dynamic = ["version"]
+description = "Haplotype VCF comparison tools"
+# ... other metadata
+
+[tool.setuptools_scm]
+write_to = "src/hap_py/_version.py"
+fallback_version = "0.4.0"
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+```
+
+2.  **Create `src/hap_py/_version.py`:**
+
+This file will be automatically generated and updated by `setuptools_scm`.
+
+3.  **Import the version in `src/hap_py/__init__.py`:**
+
+```python
+try:
+    from ._version import version as __version__
+except ImportError:
+    # Fallback for development installs
+    __version__ = "0.4.0"
+```
+
+4.  **Tag your current version:**
+
+```bash
+git tag v0.4.0
+git push origin v0.4.0
+```
+
+5.  **Install in development mode:**
+
+```bash
+pip install -e .
+```
+
+6.  **Verify Installation:**
+
+```bash
+# Check the version
+python -c "import hap_py; print(hap_py.__version__)"
+
+# Or check from command line if you have a CLI
+python -m hap_py --version
+```
+
 ### Development Installation
 ```bash
 # Install in development mode (changes reflected immediately)
@@ -305,6 +399,24 @@ cmake --build build --config Release
 - Update C++ code to use modern standards (Note: C++ code was largely replaced with Python for simplicity in the modernized version.)
 - Optimize memory usage for large genomic datasets
 - Improve parallelization for performance
+- 🔄 Implementation of the `quantify` package functionality
+    - ✅ **Completed Analysis**: Comprehensive review of current quantify module implementation status
+    - ✅ **Architecture Review**: Analyzed original C++ vs modernized Python implementation differences
+    - ✅ **Gap Analysis**: Identified critical components including sophisticated variant matching algorithms
+    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `QUANTIFY_IMPLEMENTATION_PLAN.md`)
+    - ✅ **Phase 1**: Core variant matching implementation (`_match_variants` method, benchmarking decision tracking)
+        - ✅ Fixed critical test failures related to allele compatibility, variant classification, and performance.
+        - ✅ Enhanced method compatibility to properly handle both pandas Series and dictionary inputs
+        - ✅ Added robust tests for sophisticated variant matching algorithms
+        - ✅ Established realistic performance expectations for current implementation
+        - Phase 1 is now considered complete with core variant matching functionality working and tested.
+    - 🔄 **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
+        - Implementation includes methods: `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, `_calculate_bootstrap_confidence_intervals()`, `_perform_multi_threshold_analysis()`, and `_write_roc_results()`.
+    - 🔄 **Phase 3**: Superlocus analysis and region-based quantification
+    - 🔄 **Phase 4**: Performance optimization for large datasets
+    - 🔄 **Phase 5**: GA4GH compliance and standards support
+    - Ensure the original functionality of the quantify module is maintained in the updated (modernized codebase).
+    - Evaluate whether any of the original cython provides significant performance improvements compared to the in progress updated implementation that would justify the additional layer of complexity for package maintenance, development, and install.
 
 ### 📋 Future: Infrastructure and Documentation
 - Add CI/CD pipeline for testing
@@ -337,9 +449,33 @@ cmake --build build --config Release
 
 ## Workflow & Release Rules
 
+### Environment Management
+
+**CRITICAL:** Always start terminal sessions with:
+```bash
+micromamba activate happy-dev
+```
+
+This environment provides:
+- Python 3.11.12
+- All required dependencies for hap.py development
+- Isolated environment preventing conflicts with other projects
+
+**Environment Verification:**
+```bash
+# Verify correct environment is active
+which python  # Should show: /Users/nolson/micromamba/envs/happy-dev/bin/python
+python --version  # Should show: Python 3.11.12
+```
+
+**For all development tasks:**
+- Running tests: `micromamba activate happy-dev && pytest tests/`
+- Code formatting: `micromamba activate happy-dev && black src/`
+- Building: `micromamba activate happy-dev && pip install -e .`
+
 - When fixing failing tests, always clean up any temporary files created and used during the debugging process.
 - Tests should accurately reflect tool functionality; failures should indicate errors in the source code, not the tests themselves.
-- Use the micromamba environment `happy` (`micromammba activate happy`) for an isolated Python environment and installation.
+- Use the micromamba environment `happy` (`micromammba activate happy`) for an isolated Python environment and installation. **NOTE:** Use `micromamba activate happy-dev` instead of `happy`.
 - When debugging tests:
     - First run the unit tests to identify failures.
     - Then proceed with debugging the integration tests.
@@ -362,10 +498,16 @@ cmake --build build --config Release
 - **Examine the corresponding test files in `tests/integration/` and their fixtures/utilities.**
 - **Check the example/reference data in `example/integration/` for correctness and completeness.**
 - **Trace failures to the source code in `src/hap_py/` and fix bugs or update tests as needed.**
-- **Use the `happy` micromamba environment and ensure all dependencies (like RTG) are available.**
+- **Use the `happy` micromamba environment and ensure all dependencies (like RTG) are available.** **NOTE:** Use `micromamba activate happy-dev` instead of `happy`.
 - If the test is hanging, consider that it might be related to temporary directory permissions or cross-filesystem issues. Try using a temporary directory within the repo as a test.
 - When running integration tests, capture the actual error output to see what's going wrong.
 - If tests are still failing, check if you need to restart Python or reinstall the package.
+- To ensure RTG tools are accessible during testing, set up the RTG path by creating a symbolic link (e.g., `ln -s external/rtg-tools-3.12.1/rtg .`) and including it in the PATH environment variable (e.g., `export PATH=$PATH:$(pwd)/`).
+- When running tests, ensure RTG is in the PATH: `export PATH=$PATH:$(pwd)/`.
+- When running tests, make sure to include rtg in path e.g. `export PATH=$PATH:$(pwd)/` after creating a symbolic link for rtg e.g. ` ln -s external/rtg-tools-3.12.1/rtg .`
+- Integration tests should only fail when the output files don't match the equivalent expected files, and not when there are additional output files than the expected data files.
+- When analyzing integration test failures, remember that tests can fail because the `hap.py` command itself is returning non-zero exit status, not always because of file comparison issues. Examine the error messages to understand the root cause.
+- **Integration tests MUST NOT fail when there are additional output files than the expected data files. Tests should only fail when the output files don't match the equivalent expected files.**
 
 ### Detailed Plan for Debugging Failing Integration Tests
 
@@ -373,9 +515,9 @@ This outlines a strategic approach to debug and resolve failing integration test
 
 #### 1. Preparation and Environment Setup
 
-- **Activate the `happy` environment:**
+- **Activate the `happy-dev` environment:**
   ```bash
-  micromamba activate happy
+  micromamba activate happy-dev
   ```
   This ensures all necessary dependencies are available and isolated, preventing conflicts with other projects or system-level packages.
 
@@ -516,6 +658,7 @@ When running `rtg format`, the command fails if the SDF template directory alrea
     *   RTG executable path not properly resolved
     *   Tests are hardcoded with the specific RTG path that may not be consistent
     *   VCF header validation errors: Missing FILTER field and duplicate FORMAT entries.
+    *   `roc.tsv` output file is missing.
 
 3.  **Path Configuration:**
     *   RTG tools are available at `rtg` but tests need proper path handling
@@ -570,6 +713,7 @@ When running `rtg format`, the command fails if the SDF template directory alrea
 - `multimerge` implementation needs Python equivalent
 - Some integration tests still failing with reference file issues
 - Inconsistent RTG path handling in some tests
+- The `roc.tsv` output file is missing in some tests
 
 ### **Next Steps** 📋
 1. **Complete Python Implementation**: The `multimerge` and other C++ functionality needs Python equivalents
@@ -602,27 +746,5 @@ When running `rtg format`, the command fails if the SDF template directory alrea
 - **RTG-related Issues:**
   - Ensure the `--engine-vcfeval-path` argument is correctly passed to the `hap.py` call within the test.
   - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location.
-  - If tests are failing because the RTG `format` command fails with "directory already exists" errors, simplify the `mkdtemp` logic in `vcfeval.py`.
 
-- **SDF Directory Conflicts:**
-  - If tests are failing due to SDF template directory issues, review and simplify the `mkdtemp` logic in `vcfeval.py`.
-
-- **VCF Parsing and Validation Issues:**
-  - When addressing `test_runVCFEval_missing_output` failures, verify the `@patch` decorators are in the correct order.
-  - If the `_check_header` method is failing, ensure it checks for the FILTER field in both strict and non-strict modes. Use strict mode if the FILTER field is expected to be required.
-  - **Ensure VCF headers in test data include `FILTER` definitions and do not have duplicate `FORMAT` entries.**
-
-- **Systematic Debugging Approach:**
-  1. Start with the first failing integration test.
-  2. Carefully read the error message and traceback to understand the cause of the failure.
-  3. If the error indicates a missing command or file, verify the path and dependency setup.
-  4. If the error indicates a logic or output mismatch, compare the actual output with the expected output to identify discrepancies.
-  5. Clean up any temporary files created during the debugging process.
-  6. Run unit tests first to identify any low-level issues before running the integration tests.
-
-### Additional Notes (2025-05-27_15-42)
-- When debugging, always follow the systematic debugging approach: verify environment setup, run tests to identify failures, and then examine the current test status.
-
-### VCF Header Guidelines (2025-05-27_15-42)
-- **All VCF files used in tests MUST include a FILTER field definition in the header.**
-- **VCF headers MUST NOT contain duplicate FORMAT entries.**
+### ROC

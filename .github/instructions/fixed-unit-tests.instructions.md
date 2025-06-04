@@ -1,5 +1,8 @@
-````markdown
-# Fixed Unit Test Failures
+---
+applyTo: "tests/**"
+---
+
+# Fix Unit Test Failures
 
 This document describes the unit test failures that were fixed in the recent update to the hap.py modernization project. Understanding these fixes will help when addressing similar issues in integration tests.
 
@@ -109,4 +112,3 @@ When fixing integration tests, look for similar patterns:
 3. Ensure reference files are properly located and indexed
 4. Watch for header validation errors in VCF processing
 5. Check for proper type annotations in modernized code
-````

@@ -1,4 +1,3 @@
-````markdown
 # SDF Template Directory Fix Guide
 
 This document provides a detailed explanation of the SDF template directory issue that causes many integration test failures, and how to fix it.
@@ -117,4 +116,3 @@ pytest tests/integration/test_integration.py::test_vcfeval_integration -v
 ```
 
 This specific test should pass without the "directory already exists" error.
-````

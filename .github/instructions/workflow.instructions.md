@@ -3,6 +3,13 @@ applyTo: "**"
 ---
 # Development Workflow Guidelines
 
+## Environment Setup
+
+**ALWAYS activate the micromamba environment before starting any development work:**
+```bash
+micromamba activate happy-dev
+```
+
 ## %%TODO%% Install and Build Process
 
 ## %%TODO%% Debugging and Fixing Build Issues
@@ -11,25 +18,32 @@ applyTo: "**"
 
 ### Making Code Changes
 
-1. Branch approach:
+1. **Environment activation:**
+   * Always start with: `micromamba activate happy-dev`
+   * Verify correct environment: `which python` should show `/Users/nolson/micromamba/envs/happy-dev/bin/python`
+
+2. Branch approach:
 
    * Create a fix-build-system branch for CMake and build fixes
    * Create a python3-migration branch for Python code updates
    * Work on these branches in parallel when possible
 
-2. Testing workflow:
+3. Testing workflow:
 
    * Test build system fixes with existing Python 2 code first
    * Test Python 3 updates with mock C++ interfaces when needed
    * Integrate both changes when each part is stable
 
-3. Code quality workflow:
+4. Code quality workflow:
 
   * Use pre-commit for automated checks: `pre-commit run --files <changed_files>`
   * Fix any issues reported by pre-commit
   * Run specific hooks as needed:
 
 ```bash
+# Always ensure environment is active first
+micromamba activate happy-dev
+
 # Format specific files with Black
 pre-commit run black --files src/python/path/to/file.py
 
@@ -42,11 +56,12 @@ pre-commit run ruff --files src/python/path/to/file.py
 
 ### Testing Process
 
-1. Run build verification tests after any CMake changes
-2. Run unit tests for components you modified
-3. Run integration tests to ensure components work together
-4. Capture and analyze test failures to identify root causes
-5. Document any new test cases you add
+1. **Always activate environment first:** `micromamba activate happy-dev`
+2. Run build verification tests after any CMake changes
+3. Run unit tests for components you modified
+4. Run integration tests to ensure components work together
+5. Capture and analyze test failures to identify root causes
+6. Document any new test cases you add
 
 ### Code Review
 
@@ -57,18 +72,20 @@ pre-commit run ruff --files src/python/path/to/file.py
 
 ### Debugging
 
-1. Use logging to trace execution flow
-2. For build issues, use CMake's verbose output and message() commands
-3. Test fixes thoroughly before committing
-4. Document root causes of significant bugs for future reference
+1. **Ensure correct environment:** `micromamba activate happy-dev`
+2. Use logging to trace execution flow
+3. For build issues, use CMake's verbose output and message() commands
+4. Test fixes thoroughly before committing
+5. Document root causes of significant bugs for future reference
 
 ### Debugging Test Failures
 
 #### Unit Test Failures
 
-1. Identify the specific failing test and error message
-2. Examine the test's expected vs. actual behavior
-3. Check for:
+1. **Activate environment:** `micromamba activate happy-dev`
+2. Identify the specific failing test and error message
+3. Examine the test's expected vs. actual behavior
+4. Check for:
    - Decorator parameter order in patched tests
    - Type annotation issues
    - Implementation vs. test expectation mismatches
@@ -76,8 +93,10 @@ pre-commit run ruff --files src/python/path/to/file.py
 
 #### Integration Test Failures
 
-1. Run integration tests with output capture:
+1. **Activate environment:** `micromamba activate happy-dev`
+2. Run integration tests with output capture:
    ```bash
+   micromamba activate happy-dev
    pytest tests/integration/ -v | tee integration_test_output.txt
    ```
 

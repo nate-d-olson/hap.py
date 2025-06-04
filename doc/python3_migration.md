@@ -136,4 +136,5 @@ python scripts/demo_modernized.py --sequence --reference ref.fa
 
 ## Feedback and Contributions
 
-We welcome feedback and contributions to improve the Python implementations. Please open issues or pull requests on the GitHub repository.
+We welcome feedback and contributions to improve the Python implementations.
+Please open issues or pull requests on the GitHub repository.

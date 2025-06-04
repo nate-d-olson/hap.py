@@ -1,6 +1,7 @@
 ---
 applyTo: "tests/**"
 ---
+
 # Test Debugging Guide
 
 This document provides detailed strategies for debugging test failures in the hap.py codebase, focusing on common issues encountered during the Python 3 migration.

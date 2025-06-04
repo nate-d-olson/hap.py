@@ -1,7 +1,5 @@
-````instructions
-// filepath: /Users/nolson/hap.py-modern-claude4/hap.py/.github/instructions/integration-test-debugging.md
 ---
-applyTo: "**"
+applyTo: "tests/integration/**"
 ---
 # Integration Test Debugging Guide
 
@@ -210,4 +208,3 @@ Before committing fixes:
 3. ✅ Check that temporary files are cleaned up
 4. ✅ Ensure all tests are passing or explicitly skipped
 5. ✅ Run linting and formatting tools: `pre-commit run --all-files`
-````

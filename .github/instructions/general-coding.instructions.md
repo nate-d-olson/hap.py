@@ -3,6 +3,19 @@ applyTo: "**"
 ---
 # Project General Coding Standards
 
+## Environment Setup
+
+**ALWAYS activate the micromamba environment before any development work:**
+```bash
+micromamba activate happy-dev
+```
+
+**Verify the correct environment is active:**
+```bash
+which python  # Should show: /Users/nolson/micromamba/envs/happy-dev/bin/python
+python --version  # Should show: Python 3.11.12
+```
+
 ## Code Formatting and Quality Tools
 
 - Follow language-specific style guides (Python: PEP 8, C++: C++11 style)
@@ -16,6 +29,7 @@ The project uses pre-commit hooks to enforce code quality standards:
 
 - **Installation**:
   ```bash
+  micromamba activate happy-dev
   pip install pre-commit
   pre-commit install
   ```
@@ -30,9 +44,9 @@ The project uses pre-commit hooks to enforce code quality standards:
 
 - **Running hooks**:
   - Automatically on commit: `git commit -m "Your message"`
-  - Manually on all files: `pre-commit run --all-files`
-  - On specific files: `pre-commit run --files path/to/file.py`
-  - Single hook: `pre-commit run black --files path/to/file.py`
+  - Manually on all files: `micromamba activate happy-dev && pre-commit run --all-files`
+  - On specific files: `micromamba activate happy-dev && pre-commit run --files path/to/file.py`
+  - Single hook: `micromamba activate happy-dev && pre-commit run black --files path/to/file.py`
 
 - **CI Integration**:
   - Pre-commit hooks are part of the CI pipeline
