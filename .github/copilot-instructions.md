@@ -475,7 +475,7 @@ python --version  # Should show: Python 3.11.12
 
 - When fixing failing tests, always clean up any temporary files created and used during the debugging process.
 - Tests should accurately reflect tool functionality; failures should indicate errors in the source code, not the tests themselves.
-- Use the micromamba environment `happy` (`micromammba activate happy`) for an isolated Python environment and installation. **NOTE:** Use `micromamba activate happy-dev` instead of `happy`.
+- Use the micromamba environment `happy` (`micromamba activate happy`) for an isolated Python environment and installation. **NOTE:** Use `micromamba activate happy-dev` instead of `happy`.
 - When debugging tests:
     - First run the unit tests to identify failures.
     - Then proceed with debugging the integration tests.
@@ -747,4 +747,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
   - Ensure the `--engine-vcfeval-path` argument is correctly passed to the `hap.py` call within the test.
   - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location.
 
-### ROC
+### Implementation Details:

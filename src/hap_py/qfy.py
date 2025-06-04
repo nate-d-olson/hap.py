@@ -342,7 +342,10 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
         "--roc",
         dest="roc",
         default="QUAL",
-        help="Select a feature to produce a ROC on (INFO feature, QUAL, GQX, ...).",
+        help="Select a feature to produce a ROC on (INFO feature, QUAL, GQX, ...). "
+        "Enhanced ROC analysis includes bootstrap confidence intervals, quality score "
+        "stratification (Q1-10, Q10-20, etc.), and multi-threshold analysis at "
+        "standard quality points (Q10, Q20, Q30, Q40, Q50).",
     )
 
     parser.add_argument(
@@ -350,7 +353,9 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
         dest="do_roc",
         default=True,
         action="store_false",
-        help="Disable ROC computation and only output summary statistics for more concise output.",
+        help="Disable ROC computation and only output summary statistics for more concise output. "
+        "This disables enhanced ROC features including bootstrap confidence intervals, "
+        "quality stratification, and multi-threshold analysis.",
     )
 
     parser.add_argument(
@@ -382,7 +387,9 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
         dest="ci_alpha",
         default=0.0,
         type=float,
-        help="Confidence level for Jeffrey's CI for recall, precision and fraction of non-assessed calls.",
+        help="Confidence level for Jeffrey's CI for recall, precision and fraction of non-assessed calls. "
+        "Enhanced ROC analysis uses bootstrap sampling to calculate confidence intervals when > 0. "
+        "Common values: 0.05 (95% CI), 0.1 (90% CI). Set to 0 to disable confidence intervals.",
     )
 
     parser.add_argument(

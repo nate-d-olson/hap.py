@@ -37,6 +37,7 @@ More information can be found below in the [usage section](#usage).
 * [Complex variant comparison](#complex-variant-comparison)
 * [Variant preprocessing](#variant-preprocessing)
 * [Variant counting](#variant-counting)
+* [Enhanced ROC Analysis](#enhanced-roc-analysis-and-statistical-confidence)
 * [Usage](#usage)
   * [hap.py](#happy)
   * [som.py](#sompy)
@@ -232,18 +233,52 @@ In this example, the variant call given above would not be captured by the bed r
 homopolymers because it is associated with the reference base just before. To account for this,
 the bed intervals need to be expanded to include the padding base just before the regions.
 
-Finally, we produce input data for ROC and precision/recall curves. An
-[example](doc/microbench.md) is included.
+### Enhanced ROC Analysis and Statistical Confidence
+
+**✅ Phase 2 Complete (January 2025)** - The modernized quantify module provides sophisticated ROC (Receiver Operating Characteristic) analysis
+with statistical rigor through bootstrap confidence intervals. This enables robust evaluation of
+variant caller performance across different quality score thresholds.
+
+**Key ROC Analysis Features:**
+
+* **✅ Statistical Confidence Intervals**: Bootstrap sampling with Jeffreys method for reliable uncertainty estimates
+* **✅ Quality Score Stratification**: Performance analysis across quality bins (Q1-10, Q10-20, Q20-30, Q30-40, Q40+)
+* **✅ Multi-threshold Analysis**: Standardized evaluation at Q10, Q20, Q30, Q40, Q50 thresholds
+* **✅ Variant Type Stratification**: Separate ROC curves for SNPs, INDELs, and combined analysis
+* **✅ Precision-Recall Curves**: Comprehensive performance characterization across all quality thresholds
+
+**ROC Analysis Output Files:**
+
+* `.roc.tsv` - ROC curve data with confidence intervals for each variant type
+* `.quality_stratification.tsv` - Performance metrics within each quality score bin
+* `.multi_threshold.tsv` - Standardized threshold analysis for consistent benchmarking
+
+**Documentation:**
+* [Quantify Module Overview](doc/quantify.md) - Comprehensive documentation and configuration
+* [ROC Analysis User Guide](doc/roc_analysis_guide.md) - Practical examples and interpretation
+* [QuantifyEngine API Reference](doc/api/quantify_engine.md) - Technical API documentation
+* [Integration Testing Guide](doc/testing/roc_analysis_integration_tests.md) - Testing framework documentation
+* [ROC Analysis Migration Guide](doc/migration/roc_analysis_migration_guide.md) - Upgrade guide for existing users
 
 ```bash
-# Example of qfy.py command
-./qfy.py truth.vcf query.vcf -o output/prefix -r ref.fa
+# ROC analysis is enabled by default in hap.py
+hap.py truth.vcf query.vcf -r reference.fa -o benchmark_results
+
+# Direct quantify usage with ROC analysis
+qfy.py truth.vcf query.vcf -o output/prefix -r ref.fa
 ```
 
 ```bash
-# Another qfy.py example
-./qfy.py ${truth_vcf} ${query_vcf} -o ${eval_out} -r ${ref_fa} -f ${conf_bed} -T ${target_bed} --threads 2
+# Example showing ROC analysis output files
+ls benchmark_results.*
+# benchmark_results.summary.csv
+# benchmark_results.roc.tsv
+# benchmark_results.quality_stratification.tsv
+# benchmark_results.multi_threshold.tsv
 ```
+
+**Legacy ROC Output:** We also produce input data for ROC and precision/recall curves compatible
+with external plotting tools. An [example](doc/microbench.md) is included.
 
 ```bash
 # Example of xcmp.py command
