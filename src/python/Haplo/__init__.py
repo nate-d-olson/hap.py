@@ -99,7 +99,7 @@ def sort_chromosomes(chrom_list):
 
 
 # Version information
-__version__ = "0.4.0"
+__version__ = "0.4.0a1"
 
 
 # Info about package

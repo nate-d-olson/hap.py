@@ -1,4 +1,6 @@
-# Hap.py Release Notes / Change Log
+## v0.4.0a1
+* Alpha release candidate 0.4.0a1: auto-index support, threading improvements, full HG002 validation
+
 ## v0.3.15
 * Updated rtgtools to v3.12.1
 * Defect remains: https://jira.illumina.com/browse/HAP-373. Use stable som.py v0.3.10.
