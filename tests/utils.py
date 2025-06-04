@@ -252,3 +252,111 @@ def check_vcfeval_availability() -> bool:
     except Exception:
         # If any error occurs, assume vcfeval is not available
         return False
+
+
+def validate_output_files(
+    output_prefix: str,
+    expected_files: List[str],
+    optional_files: Optional[List[str]] = None,
+    reference_dir: Optional[str] = None,
+) -> Tuple[List[str], List[str]]:
+    """Validate output files against expected files.
+
+    Args:
+        output_prefix: Prefix for output files
+        expected_files: List of required file suffixes (e.g., ['.summary.csv', '.vcf.gz'])
+        optional_files: List of optional file suffixes (e.g., ['.roc.tsv'])
+        reference_dir: Directory containing reference files for comparison
+
+    Returns:
+        Tuple of (missing_required_files, failed_comparisons)
+    """
+    missing_required = []
+    failed_comparisons = []
+
+    # Check required files
+    for suffix in expected_files:
+        output_file = output_prefix + suffix
+        if not os.path.exists(output_file):
+            missing_required.append(output_file)
+        elif reference_dir:
+            reference_file = os.path.join(reference_dir, f"expected{suffix}")
+            if os.path.exists(reference_file):
+                if not compare_files_content(output_file, reference_file):
+                    failed_comparisons.append(f"{output_file} != {reference_file}")
+
+    # Optional files - just log if missing but don't fail
+    if optional_files:
+        for suffix in optional_files:
+            output_file = output_prefix + suffix
+            if not os.path.exists(output_file):
+                print(f"Optional file not found: {output_file}")
+
+    return missing_required, failed_comparisons
+
+
+def compare_files_content(file1: str, file2: str, ignore_headers: bool = False) -> bool:
+    """Compare file contents, optionally ignoring header differences.
+
+    Args:
+        file1: Path to first file
+        file2: Path to second file
+        ignore_headers: If True, ignore lines starting with '#'
+
+    Returns:
+        True if files match, False otherwise
+    """
+    try:
+        if ignore_headers:
+            return compare_files_ignore_headers(file1, file2)
+        else:
+            return filecmp.cmp(file1, file2, shallow=False)
+    except Exception as e:
+        print(f"Error comparing {file1} and {file2}: {e}")
+        return False
+
+
+def compare_files_ignore_headers(file1: str, file2: str) -> bool:
+    """Compare files ignoring header lines (starting with #)."""
+    try:
+        with open(file1) as f1, open(file2) as f2:
+            lines1 = [line for line in f1 if not line.strip().startswith("#")]
+            lines2 = [line for line in f2 if not line.strip().startswith("#")]
+            return lines1 == lines2
+    except Exception:
+        return False
+
+
+def check_file_exists_and_size(file_path: str, min_size: int = 0) -> bool:
+    """Check if file exists and has minimum size.
+
+    Args:
+        file_path: Path to file
+        min_size: Minimum file size in bytes
+
+    Returns:
+        True if file exists and meets size requirement
+    """
+    if not os.path.exists(file_path):
+        return False
+
+    try:
+        return os.path.getsize(file_path) >= min_size
+    except OSError:
+        return False
+
+
+def cleanup_test_files(output_prefix: str, extensions: List[str]):
+    """Clean up test output files.
+
+    Args:
+        output_prefix: Prefix for output files
+        extensions: List of file extensions to clean up
+    """
+    for ext in extensions:
+        file_path = output_prefix + ext
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except OSError:
+            pass  # Ignore cleanup errors

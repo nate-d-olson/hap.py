@@ -3,7 +3,6 @@ Integration tests for GiaB (Genome in a Bottle) functionality.
 Migrated from src/sh/run_giab_test.sh
 """
 
-import os
 from pathlib import Path
 
 import pytest
@@ -12,6 +11,7 @@ from tests.utils import (
     compare_summary_files,
     get_example_dir,
     run_command,
+    validate_output_files,
 )
 
 
@@ -57,6 +57,16 @@ def test_small_giab_rtg(tmp_path, rtg_executable, reference_file):
     assert (
         result.returncode == 0
     ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
+
+    # Validate output files with robust checking
+    required_files = [".summary.csv", ".vcf.gz"]
+    optional_files = [".roc.tsv", ".extended.csv", ".metrics.json.gz"]
+
+    missing_required, failed_comparisons = validate_output_files(
+        str(output_prefix), required_files, optional_files
+    )
+
+    assert not missing_required, f"Missing required output files: {missing_required}"
 
 
 @pytest.mark.integration
@@ -105,11 +115,18 @@ def test_large_giab_rtg_chr21(tmp_path, rtg_executable, reference_file):
         result.returncode == 0
     ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
 
-    # Check summary file
+    # Validate output files with robust checking
+    required_files = [".summary.csv", ".vcf.gz"]
+    optional_files = [".roc.tsv", ".extended.csv", ".metrics.json.gz"]
+
+    missing_required, failed_comparisons = validate_output_files(
+        str(output_prefix), required_files, optional_files
+    )
+
+    assert not missing_required, f"Missing required output files: {missing_required}"
+
+    # Check summary file content against expected
     output_summary = str(output_prefix) + ".summary.csv"
-    assert os.path.exists(
-        output_summary
-    ), f"Output summary not generated: {output_summary}"
     assert compare_summary_files(
         Path(output_summary), expected_summary
     ), f"Summary files differ: {output_summary} vs {expected_summary}"
@@ -161,11 +178,18 @@ def test_large_giab_rtg_chr1(tmp_path, rtg_executable, reference_file):
         result.returncode == 0
     ), f"hap.py failed with output: {result.stdout}\n{result.stderr}"
 
-    # Check summary file
+    # Validate output files with robust checking
+    required_files = [".summary.csv", ".vcf.gz"]
+    optional_files = [".roc.tsv", ".extended.csv", ".metrics.json.gz"]
+
+    missing_required, failed_comparisons = validate_output_files(
+        str(output_prefix), required_files, optional_files
+    )
+
+    assert not missing_required, f"Missing required output files: {missing_required}"
+
+    # Check summary file content against expected
     output_summary = str(output_prefix) + ".summary.csv"
-    assert os.path.exists(
-        output_summary
-    ), f"Output summary not generated: {output_summary}"
     assert compare_summary_files(
         Path(output_summary), expected_summary
     ), f"Summary files differ: {output_summary} vs {expected_summary}"

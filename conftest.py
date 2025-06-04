@@ -6,11 +6,56 @@ import os
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 
 import pytest
 
 # Add src/hap_py to path for imports during tests
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "hap_py"))
+
+
+@pytest.fixture(scope="session")
+def rtg_tools_path():
+    """
+    Robust RTG tools finder fixture.
+    Returns the path to RTG tools executable for tests.
+    """
+    # List of potential RTG locations in order of preference
+    repo_root = Path(__file__).parent
+    potential_paths = [
+        # Local build directory paths
+        repo_root / "external" / "rtg-tools-3.12.1" / "rtg",
+        repo_root / "build" / "external" / "rtg-tools" / "rtg",
+        repo_root / "external" / "rtg-tools" / "rtg",
+        # Check if rtg is in PATH
+        shutil.which("rtg"),
+        # Other common locations
+        "/usr/local/bin/rtg",
+        "/opt/rtg/rtg",
+    ]
+
+    for path in potential_paths:
+        if path is not None:
+            path_str = str(path)
+            if Path(path_str).exists() and os.access(path_str, os.X_OK):
+                return path_str
+
+    # If no RTG found, skip tests that require it
+    pytest.skip("RTG tools not found. Please install RTG tools or check the path.")
+
+
+@pytest.fixture(scope="session")
+def temp_dir_with_rtg(rtg_tools_path):
+    """Create a temporary directory and ensure RTG tools are available."""
+    temp_dir = tempfile.mkdtemp(prefix="happy_rtg_test_")
+
+    # Create a symbolic link to RTG in the temp directory for tests
+    rtg_link = os.path.join(temp_dir, "rtg")
+    try:
+        os.symlink(rtg_tools_path, rtg_link)
+        yield temp_dir, rtg_tools_path
+    finally:
+        shutil.rmtree(temp_dir)
 
 
 @pytest.fixture(scope="session")

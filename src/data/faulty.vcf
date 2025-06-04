@@ -1,4 +1,5 @@
 ##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
 ##contig=<ID=chrQ,length=37>
 ##INFO=<ID=END,Number=1,Type=Integer,Description="Variant end">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

@@ -10,7 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import get_bin_dir, get_project_root, get_python_executable
+from tests.utils import (
+    compare_files_content,
+    get_bin_dir,
+    get_project_root,
+    get_python_executable,
+    validate_output_files,
+)
 
 
 @pytest.mark.integration
@@ -69,23 +75,31 @@ def test_numeric_chrs(tmp_path, rtg_executable):
         result.returncode == 0
     ), f"hap.py failed with numeric chromosomes: {result.stderr.decode()}"
 
-    # Compare summary files using a simple diff approach
-    # Instead of calling a separate compare script, we'll compare directly
-    with open(output_summary, encoding="utf-8") as f_out:
-        output_lines = f_out.readlines()
-    with open(expected_summary, encoding="utf-8") as f_exp:
-        expected_lines = f_exp.readlines()
+    # Validate output files with robust checking
+    required_files = [".summary.csv", ".vcf.gz"]
+    optional_files = [".roc.tsv", ".extended.csv", ".metrics.json.gz"]
 
-    assert output_lines == expected_lines, "Summary output differs from expected"
+    missing_required, failed_comparisons = validate_output_files(
+        str(output_prefix), required_files, optional_files
+    )
 
-    # Compare VCF files
+    assert not missing_required, f"Missing required output files: {missing_required}"
+
+    # Compare summary files
+    assert compare_files_content(
+        str(output_summary), str(expected_summary)
+    ), "Summary output differs from expected"
+
+    # Compare VCF files - extract content from gzipped output
     with gzip.open(output_vcf_gz, "rt") as f_gz:
         vcf_content = [line for line in f_gz if not line.startswith("#")]
 
     with open(output_vcf, "w", encoding="utf-8") as f_out:
         f_out.writelines(vcf_content)
 
-    assert filecmp.cmp(output_vcf, expected_vcf), "VCF output differs from expected"
+    assert compare_files_content(
+        str(output_vcf), str(expected_vcf)
+    ), "VCF output differs from expected"
 
 
 @pytest.mark.integration

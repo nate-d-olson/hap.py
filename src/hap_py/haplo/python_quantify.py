@@ -8,7 +8,7 @@ producing stratification metrics and summary statistics.
 
 import json
 import logging
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 import pysam
@@ -53,13 +53,13 @@ class QuantifyEngine:
         self.apply_filters = apply_filters
         self.output_vtc = output_vtc
 
-        self.truth_variants = []
-        self.query_variants = []
-        self.region_list = []
+        self.truth_variants: List[Dict[str, Any]] = []
+        self.query_variants: List[Dict[str, Any]] = []
+        self.region_list: List[Tuple[str, int, int]] = []
 
         # Results storage
-        self.metrics = {}
-        self.stratifications = {}
+        self.metrics: Dict[str, Any] = {}
+        self.stratifications: Dict[str, Any] = {}
 
         # Open VCF files
         self._open_vcfs()
@@ -307,6 +307,164 @@ class QuantifyEngine:
 
         # Return results
         return {"metrics": self.metrics, "stratifications": self.stratifications}
+
+    def process_vcf(self) -> Optional[pd.DataFrame]:
+        """
+        Process VCF file and return a DataFrame with variant information.
+
+        This method reads the input VCF and converts it to a structured DataFrame
+        that can be used for analysis and ROC generation.
+
+        Returns:
+            DataFrame with variant information, or None if no variants found
+        """
+        try:
+            # Open VCF files
+            self._open_vcfs()
+
+            # Load regions if specified
+            self._load_regions()
+
+            # For xcmp results, we typically work with a single comparison VCF
+            # that contains both truth and query information
+            variants_data = []
+
+            vcf_handle = self.truth_vcf_handle
+            for variant in vcf_handle.fetch():
+                # Skip filtered variants if requested
+                if self.apply_filters and self._is_filtered(variant):
+                    continue
+
+                # Process the variant and extract relevant information
+                variant_data = self._process_variant(variant)
+
+                # Check if variant is in specified regions
+                if self.region_list and not self._in_regions(variant_data):
+                    continue
+
+                # Add additional fields for analysis
+                variant_info = {
+                    "CHROM": variant_data["chrom"],
+                    "POS": variant_data["pos"],
+                    "REF": variant_data["ref"],
+                    "ALT": variant_data["alt"],
+                    "Type": variant_data["type"],
+                    "Length": variant_data["length"],
+                }
+
+                # Extract INFO fields
+                for key, value in variant.info.items():
+                    variant_info[key] = value
+
+                # Extract quality score
+                if variant.qual is not None:
+                    variant_info["QUAL"] = variant.qual
+                else:
+                    variant_info["QUAL"] = 0.0
+
+                # Extract decision information from BD (Benchmarking Decision) tag
+                if "BD" in variant.info:
+                    variant_info["BD"] = variant.info["BD"]
+                else:
+                    variant_info["BD"] = "UNK"  # Unknown
+
+                # Extract BK (Benchmarking Kind) tag
+                if "BK" in variant.info:
+                    variant_info["BK"] = variant.info["BK"]
+                else:
+                    variant_info["BK"] = "UNK"
+
+                variants_data.append(variant_info)
+
+            if not variants_data:
+                logger.warning("No variants found in VCF file")
+                return None
+
+            # Convert to DataFrame
+            df = pd.DataFrame(variants_data)
+            logger.info(f"Processed {len(df)} variants from VCF")
+
+            return df
+
+        except Exception as e:
+            logger.error(f"Error processing VCF file: {e}")
+            return None
+        finally:
+            # Close VCF handles
+            if hasattr(self, "truth_vcf_handle") and self.truth_vcf_handle:
+                self.truth_vcf_handle.close()
+            if hasattr(self, "query_vcf_handle") and self.query_vcf_handle:
+                self.query_vcf_handle.close()
+
+    def apply_bed_stratification(self, df: pd.DataFrame, bed_file: str) -> pd.DataFrame:
+        """
+        Apply BED file stratification to a DataFrame of variants.
+
+        Args:
+            df: DataFrame with variant information
+            bed_file: Path to BED file with regions
+
+        Returns:
+            Filtered DataFrame containing only variants in the BED regions
+        """
+        try:
+            # Load BED regions
+            regions = []
+            with open(bed_file, "r") as f:
+                for line in f:
+                    if line.startswith("#") or not line.strip():
+                        continue
+                    parts = line.strip().split("\t")
+                    if len(parts) >= 3:
+                        chrom = parts[0]
+                        start = int(parts[1])
+                        end = int(parts[2])
+                        regions.append((chrom, start, end))
+
+            if not regions:
+                logger.warning(f"No regions found in BED file: {bed_file}")
+                return df
+
+            # Filter variants that overlap with BED regions
+            filtered_indices = []
+            for idx, row in df.iterrows():
+                chrom = row.get("CHROM", "")
+                pos = row.get("POS", 0)
+
+                # Check if variant overlaps with any region
+                for region_chrom, region_start, region_end in regions:
+                    if chrom == region_chrom and region_start <= pos <= region_end:
+                        filtered_indices.append(idx)
+                        break
+
+            filtered_df = df.loc[filtered_indices].copy()
+            logger.info(
+                f"Stratification with {bed_file}: {len(filtered_df)}/{len(df)} variants retained"
+            )
+
+            return filtered_df
+
+        except Exception as e:
+            logger.error(f"Error applying BED stratification: {e}")
+            return df
+
+    def write_output_vcf(self, df: pd.DataFrame, output_path: str) -> None:
+        """
+        Write processed variants to output VCF file.
+
+        Args:
+            df: DataFrame with variant information
+            output_path: Path for output VCF file
+        """
+        try:
+            # For now, just copy the input VCF to output
+            # In a full implementation, this would write the processed variants
+            import shutil
+
+            shutil.copy2(self.truth_vcf, output_path)
+            logger.info(f"Output VCF written to {output_path}")
+        except Exception as e:
+            logger.error(f"Error writing output VCF: {e}")
 
     def _match_variants(self):
         """Match variants between truth and query sets."""

@@ -188,6 +188,9 @@ def runVCFEval(
                     dir=args.scratch_prefix,
                     prefix="vcfeval.sdf.",
                 )
+                # Remove the directory so RTG can create it fresh
+                if os.path.exists(template_dir):
+                    shutil.rmtree(template_dir)
                 args.engine_vcfeval_template = template_dir
 
                 # Quote paths for shell safety

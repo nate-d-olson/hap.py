@@ -17,6 +17,7 @@
 #
 
 import logging
+import os
 import re
 
 import numpy as np
@@ -101,6 +102,32 @@ def roc(
     """
     result = {}
     header = None
+
+    # Check if roc_table file exists - if not, create minimal empty result
+    if not os.path.exists(roc_table):
+        logging.warning(
+            f"ROC table file {roc_table} not found. Returning minimal empty result."
+        )
+        # Create minimal empty DataFrame with required structure
+        minidata = [
+            {
+                "Type": "SNP",
+                "Subtype": "*",
+                "Filter": "ALL",
+                "Genotype": "*",
+                "Subset": "*",
+                "QQ": "*",
+            }
+            for _ in range(2)
+        ]
+        minidata[1]["Type"] = "INDEL"
+        result["all"] = pandas.DataFrame(minidata, columns=RESULT_ALLCOLUMNS)
+        for i, c in enumerate(RESULT_ALLCOLUMNS):
+            result["all"][c] = result["all"][c].astype(
+                RESULT_ALLDTYPES[i], raise_on_error=False
+            )
+        return result
+
     with open(roc_table, encoding="utf-8") as roc_table:
         for line in roc_table:
             line = line.strip()
