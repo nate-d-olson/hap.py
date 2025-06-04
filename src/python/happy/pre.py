@@ -260,6 +260,15 @@ def preprocessWrapper(args):
 
     elapsed = time.time() - starttime
     logging.info(f"preprocess for {args.input} -- time taken {elapsed:.2f}")
+    # Ensure index for output VCF if created
+    try:
+        from pathlib import Path
+
+        from happy.hap import _ensure_vcf_index
+
+        _ensure_vcf_index(Path(args.output))
+    except Exception:
+        pass
 
 
 def updateArgs(parser):

@@ -23,9 +23,11 @@ def test_q100_smoke(tmp_path: Path) -> None:  # pragma: no cover – heavy path
         pytest.skip("RUN_HEAVY env not set – skipping heavy dataset test")
 
     cmd = [
-        "hap.py",
+        "python",
+        "-m",
+        "happy.hap",
         "--threads",
-        "2",  # limit during CI to keep job short
+        "20",  # limit during CI to keep job short
         "--engine",
         "vcfeval",
         "--gender",

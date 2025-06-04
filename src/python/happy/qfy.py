@@ -180,6 +180,17 @@ def quantify(args):
 
     # only use summary numbers
     df = df[(df["QQ"] == "*") & (df["Filter"].isin(["ALL", "PASS"]))]
+    # Ensure index for output VCF if created
+    try:
+        if args.write_vcf:
+            from pathlib import Path
+
+            from happy.hap import _ensure_vcf_index
+
+            output_vcf = args.reports_prefix + (".bcf" if args.bcf else ".vcf.gz")
+            _ensure_vcf_index(Path(output_vcf))
+    except Exception:
+        pass
 
     summary_columns = [
         "Type",
