@@ -6,12 +6,12 @@ with proper handling of edge cases and numerical stability.
 """
 
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
 
-from .quantify_models import BenchmarkDecision, QuantifyMetrics
+from .quantify_models import QuantifyMetrics
 
 logger = logging.getLogger(__name__)
 

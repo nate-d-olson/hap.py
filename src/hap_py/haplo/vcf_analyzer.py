@@ -7,13 +7,16 @@ compatible with the original hap.py quantify functionality.
 
 import logging
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional
 
-import numpy as np
 import pandas as pd
 import pysam
 
-from .quantify_models import BenchmarkDecision, StratificationRegion, VariantType
+from .quantify_models import (
+    BenchmarkDecision,
+    StratificationRegion,
+    VariantType,
+)
 from .string_handling import ensure_str
 
 logger = logging.getLogger(__name__)

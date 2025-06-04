@@ -27,8 +27,6 @@ import numpy as np
 import pandas as pd
 
 from .metrics_calculator import MetricsCalculator
-from .quantify_models import ROCThresholds, StratificationRegion
-from .vcf_analyzer import VCFAnalyzer
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -485,7 +483,6 @@ def v_vcfeval(
     Returns:
         Dictionary with summary metrics
     """
-    import os
     from pathlib import Path
 
     logging.info(f"Processing vcfeval results for {variant_type}")
@@ -619,7 +616,7 @@ def _parse_vcfeval_summary(summary_file: Path) -> Dict[str, int]:
     counts = {}
 
     try:
-        with open(summary_file, "r") as f:
+        with open(summary_file) as f:
             for line in f:
                 line = line.strip()
                 if line.startswith("Threshold"):

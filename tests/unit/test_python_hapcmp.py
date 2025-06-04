@@ -18,10 +18,7 @@ import tempfile
 
 import pytest
 
-from src.hap_py.haplo.python_hapcmp import (
-    HaploComparator,
-    HaplotypeBlock,
-)
+from src.hap_py.haplo.python_hapcmp import HaploComparator, HaplotypeBlock
 
 
 @pytest.fixture

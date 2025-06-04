@@ -9,11 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import (
-    compare_summary_files,
-    get_example_dir,
-    run_command,
-)
+from tests.utils import compare_summary_files, get_example_dir, run_command
 
 
 @pytest.mark.integration

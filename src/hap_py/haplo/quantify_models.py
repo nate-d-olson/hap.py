@@ -7,10 +7,9 @@ ensuring type safety and compatibility with the original hap.py implementation.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
-import pandas as pd
 
 
 class VariantType(Enum):

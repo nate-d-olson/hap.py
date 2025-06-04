@@ -410,7 +410,7 @@ class QuantifyEngine:
         try:
             # Load BED regions
             regions = []
-            with open(bed_file, "r") as f:
+            with open(bed_file) as f:
                 for line in f:
                     if line.startswith("#") or not line.strip():
                         continue
