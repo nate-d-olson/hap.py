@@ -1,13 +1,31 @@
-name: happy-dev
+name: hap-py
 channels:
+  - bioconda
   - conda-forge
 dependencies:
   - python=3.11
+  - numpy
+  - pandas
+  - psutil
+  - pysam
+  - scipy
+  - bx-python
+  - biopython
+  - rtg-tools
   - pip
-  - cmake
-  - gcc
-  - make
-  - zlib
-  - boost
   - pip:
-      - '.[dev,cpp]'
+      - .[cpp]
+
+## Env for dev - might want a separate yml for this
+# name: happy-dev
+# channels:
+#   - conda-forge
+# dependencies:
+#   - python=3.11
+#  - cmake
+#  - gcc
+#  - make
+#  - zlib
+#  - boost
+#  - pip:
+#      - '.[dev,cpp]'

@@ -362,12 +362,26 @@ command-line entry points. For most users, installing via `pip` or with
 `conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
 are only required when contributing to the Cython extensions.
 
-To install with optional dependencies for Cython extensions (recommended for performance) or development tools:
+### Using Conda
+
+Alternatively, you can create a fully configured conda environment using
+[mamba](https://github.com/mamba-org/mamba):
+
+```bash
+mamba env create -f environment.yml
+conda activate hap-py
+```
+
+The provided `environment.yml` installs hap.py with the optional C++ extras and
+includes `rtg-tools` from the Bioconda channel.
+
+To install with optional dependencies for C++/Cython extensions (recommended for performance) or development tools:
 
 ```bash
 pip install .[cpp]      # For optional Cython accelerated features
 pip install .[dev]      # For development tools (testing, linting)
 pip install .[cpp,dev]  # For both
+pip install .[rtgtools] # For using the vcfeval engine via RTG Tools
 ```
 
 For an editable installation that includes both development and Cython extras, you
