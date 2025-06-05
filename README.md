@@ -501,9 +501,7 @@ This project is undergoing a migration to Python 3. Key goals include:
 
 For more details, see:
 
-* [Migration Status](PYTHON3_MIGRATION_FINAL.md) - Current state and test plan.
-* [Migration Tools](PYTHON3_MIGRATION_TOOLS.md) - Tools for fixing remaining issues (if applicable, link may be outdated).
-* [Core Documentation](PYTHON3_CORE.md) - Technical details of the Python 3 implementation (if applicable, link may be outdated).
+* [Python 3 Migration Guide](doc/python3_migration.md) - Comprehensive guide covering migration status, tools, and technical details.
 
 ## Key Features
 
