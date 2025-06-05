@@ -49,7 +49,7 @@ This fork aims to modernize the codebase for continued use and development.
     - ✅ **Completed Analysis**: Comprehensive review of current quantify module implementation status
     - ✅ **Architecture Review**: Analyzed original C++ vs modernized Python implementation differences
     - ✅ **Gap Analysis**: Identified missing critical components including `_match_variants` method
-    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `QUANTIFY_IMPLEMENTATION_PLAN.md`)
+    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `.github/prompt/quantify-development.prompt.md`)
     - ✅ **Phase 1**: Core variant matching implementation (`_match_variants` method, benchmarking decision tracking)
         - ✅ Fixed critical test failures related to allele compatibility, variant classification, and performance.
         - ✅ Enhanced method compatibility to properly handle both pandas Series and dictionary inputs
@@ -403,7 +403,7 @@ cmake --build build --config Release
     - ✅ **Completed Analysis**: Comprehensive review of current quantify module implementation status
     - ✅ **Architecture Review**: Analyzed original C++ vs modernized Python implementation differences
     - ✅ **Gap Analysis**: Identified critical components including sophisticated variant matching algorithms
-    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `QUANTIFY_IMPLEMENTATION_PLAN.md`)
+    - ✅ **Development Plan**: Created comprehensive implementation roadmap (see `.github/prompt/quantify-development.prompt.md`)
     - ✅ **Phase 1**: Core variant matching implementation (`_match_variants` method, benchmarking decision tracking)
         - ✅ Fixed critical test failures related to allele compatibility, variant classification, and performance.
         - ✅ Enhanced method compatibility to properly handle both pandas Series and dictionary inputs

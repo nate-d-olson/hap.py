@@ -65,10 +65,10 @@ jobs:
     - name: Run tests with Pytest
       run: |
         pytest tests/unit # Run unit tests
-        pytest tests/integration # Run integration tests (which require building the C++ components)
+        pytest tests/integration # Run integration tests (exercise optional Cython modules)
 
-    # Placeholder for C++ integration tests - adapt as needed
-    # - name: Run C++ integration tests
+    # Placeholder for additional integration tests - adapt as needed
+    # - name: Run additional integration tests
     #   run: |
     #     bash src/sh/run_tests.sh # Or convert these to pytest
 
