@@ -21,6 +21,8 @@ This fork aims to modernize the codebase for continued use and development.
 - `example/`: Test data and usage examples
 - `tests/`: Unit and integration test suite
 - `scripts/`: Development and build scripts
+- `.github/instructions/`: Instructions for project implementation and debugging
+- `doc/`: Documentation files
 
 ## Current Project Status
 ✅ **Completed Modernization Tasks:**
@@ -743,6 +745,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
 
 ### **Remaining Challenges** ⚠️
 - `multimerge` implementation needs Python equivalent
-- Some integration tests still failing with reference file issues
-- Inconsistent RTG path handling in some tests
-- The `roc
+- Some integration tests

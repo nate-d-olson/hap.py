@@ -518,3 +518,38 @@ som truth.vcf.gz query.vcf.gz -r reference.fa -o output_prefix
 ```
 
 Other tools (`qfy`, `ftx`, etc.) are also available as entry points after installation.
+
+## GA4GH Compliance
+
+hap.py provides comprehensive support for the Global Alliance for Genomics and Health (GA4GH) benchmarking standards for variant calling evaluation. The implementation includes:
+
+### Features
+- **GA4GH VCF Format**: Standard intermediate VCF format with GA4GH-required fields
+- **Stratification Support**: Region-based analysis using GA4GH stratification BED files
+- **Standard Metrics**: GA4GH-compliant precision, recall, and F1-score calculation
+- **Confidence Intervals**: Bootstrap-based confidence intervals for statistical rigor
+- **RTG Integration**: Compatible with RTG Tools for GA4GH-compliant comparison
+
+### Basic Usage
+```bash
+# Enable GA4GH compliance mode
+hap.py truth.vcf query.vcf -o output --quantify-method=ga4gh
+
+# With stratification regions
+hap.py truth.vcf query.vcf -o output --quantify-method=ga4gh --ga4gh-stratification=regions.bed
+
+# Using RTG vcfeval engine with GA4GH output
+hap.py truth.vcf query.vcf -o output --engine=vcfeval --quantify-method=ga4gh
+```
+
+### Output Files
+GA4GH-compliant analysis generates additional output files:
+- `output.ga4gh.vcf`: VCF file with GA4GH decision annotations (BD, BK, QD, QK fields)
+- `output.ga4gh.json`: Comprehensive GA4GH metrics in JSON format
+- `output.ga4gh.tsv`: GA4GH metrics in TSV format for spreadsheet analysis
+- `output.stratified.tsv`: Stratified metrics by region and variant type
+
+### Documentation
+- **Comprehensive Guide**: See [`doc/ga4gh_compliance.md`](doc/ga4gh_compliance.md) for detailed implementation information
+- **API Reference**: Complete documentation of GA4GH classes and methods
+- **Usage Examples**: Practical examples for common GA4GH workflows
