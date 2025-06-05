@@ -134,6 +134,15 @@ gold-standard datasets that cover difficult regions of the genome (e.g.
 subsets of the genome will be responsible for most of the difference between
 methods.
 
+### RTG vcfeval Integration
+
+hap.py relies on the external [RTG vcfeval](https://github.com/RealTimeGenomics/rtg-tools)
+binary when using the ``--engine=vcfeval`` option. The executable is located by
+checking the ``RTG`` or ``RTGTOOLS_PATH`` environment variables and then falling
+back to ``rtg`` on the ``PATH``. If the executable cannot be found, hap.py will
+raise an error. Set ``RTG`` or ``RTGTOOLS_PATH`` to the full path of the
+``rtg`` binary if it is not available globally.
+
 ### Variant preprocessing
 
 Another component of hap.py is a variant pre-processing method which

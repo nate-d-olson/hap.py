@@ -90,36 +90,26 @@ def init():
     tools_to_check = list(GA4GH_TOOLS)
 
     for x in tools_to_check:
-        found = which(x)  # Use the 'which' function defined in this file
-
-        # Special handling for rtg - check our included version
-        if not found and x == "rtg":
+        if x == "rtg":
             try:
-                # Import and use findVCFEval to check for included RTG tools
                 from ..haplo.vcfeval import findVCFEval
 
-                rtg_path = findVCFEval()
-                if (
-                    rtg_path != "rtg"
-                    and os.path.isfile(rtg_path)
-                    and os.access(rtg_path, os.X_OK)
-                ):
-                    found = rtg_path
-                    logging.info(f"Using included RTG tools at: {rtg_path}")
-            except ImportError:
-                pass  # vcfeval module not available
+                found = findVCFEval()
+            except (ImportError, FileNotFoundError) as e:
+                logging.warning(str(e))
+                if x in GA4GH_TOOLS:
+                    GA4GH_TOOLS.remove(x)
+                continue
+        else:
+            found = which(x)  # Use the 'which' function defined in this file
 
         if not found:
-            if x == "rtg":  # Specific handling for rtg
-                logging.warning(
-                    "Executable for %s not found. This is an optional " "dependency.",
-                    x,
-                )
+            if x == "rtg":
+                # Should not happen due to earlier continue, but keep safeguard
                 if x in GA4GH_TOOLS:
                     GA4GH_TOOLS.remove(x)
                 continue
 
-            # For other tools (bgzip, tabix), if not found, raise an exception.
             raise Exception(f"Dependency {x} not found")
 
 

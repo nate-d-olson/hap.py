@@ -43,60 +43,46 @@ except ImportError:
 
 
 def findVCFEval() -> str:
-    """Return default version of rtgtools if hap.py was built with rtgtools included.
+    """Locate the ``rtg`` executable.
+
+    The lookup order is:
+
+    1. ``RTG`` or ``RTGTOOLS_PATH`` environment variables
+    2. ``shutil.which("rtg")``
 
     Returns:
-        Path to rtg executable or 'rtg' if not found
+        Path to the ``rtg`` executable.
+
+    Raises:
+        FileNotFoundError: if the executable cannot be located.
     """
-    # Always check for our included RTG tools first, regardless of has_vcfeval flag
-    script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
-    # For modernized version, look in external/rtg-tools-3.12.1/
-    project_root = os.path.abspath(
-        os.path.join(
-            script_dir,  # haplo
-            "..",  # hap_py
-            "..",  # src
-            "..",  # project root
+    env_vars = ["RTG", "RTGTOOLS_PATH"]
+    for var in env_vars:
+        val = os.environ.get(var)
+        if not val:
+            continue
+
+        exe = val
+        if os.path.isdir(exe):
+            exe = os.path.join(exe, "rtg")
+
+        if os.path.isfile(exe) and os.access(exe, os.X_OK):
+            logging.info(f"Using RTG tools from ${var}: {exe}")
+            return exe
+
+        raise FileNotFoundError(
+            f"RTG executable specified via ${var} not found or not executable: {val}"
         )
-    )
 
-    # Check for RTG tools in external directory (modernized version)
-    external_rtg = os.path.join(project_root, "external", "rtg-tools-3.12.1", "rtg")
-    if os.path.isfile(external_rtg) and os.access(external_rtg, os.X_OK):
-        logging.info(f"Using RTG tools from external directory: {external_rtg}")
-        return external_rtg
+    rtg = shutil.which("rtg")
+    if rtg:
+        logging.info(f"Using RTG tools from PATH: {rtg}")
+        return rtg
 
-    # Fallback to legacy paths
-    base = os.path.abspath(
-        os.path.join(
-            script_dir,  # Haplo
-            "..",  # python
-            "..",  # src
-            "..",  # hap.py-base
-            "libexec",
-            "rtg-tools-install",
-        )
+    raise FileNotFoundError(
+        "rtg executable not found. Set RTG or RTGTOOLS_PATH or ensure it is on your PATH."
     )
-    # prefer wrapper when it's there
-    bfile = os.path.join(base, "rtg-wrapper.sh")
-    bfile2 = os.path.join(base, "rtg")
-    if os.path.isfile(bfile) and os.access(bfile, os.X_OK):
-        logging.info(f"Using included RTG tools wrapper: {bfile}")
-        return bfile
-    elif os.path.isfile(bfile2) and os.access(bfile2, os.X_OK):
-        logging.info(f"Using included RTG tools binary: {bfile2}")
-        return bfile2
-    else:
-        # Fallback to checking if has_vcfeval is set
-        if has_vcfeval:
-            logging.warning(
-                f"Could not find our included version of rtg-tools at {base} or {external_rtg}. "
-                "To use vcfeval for comparison, you might have to specify "
-                "its location on the command line."
-            )
-        # default: return
-        return "rtg"
 
 
 def runVCFEval(
