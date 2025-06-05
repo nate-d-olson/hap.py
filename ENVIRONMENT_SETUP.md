@@ -11,7 +11,7 @@ The `happy-dev` micromamba environment has been successfully configured for hap.
 - **Python Location**: `/Users/nolson/micromamba/envs/happy-dev/bin/python`
 - **Package Installation**: Normal install in site-packages
 - **Testing Framework**: pytest 8.3.5
-- **RTG Tools**: Available at `/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg`
+- **RTG Tools**: Use the `rtg` executable installed in the `happy-dev` conda environment. After activating the environment, run `which rtg` to confirm its location.
 
 ## System Dependencies
 
@@ -37,6 +37,9 @@ To verify the environment is working correctly:
 # Check Python version and location
 which python
 python --version
+
+# Verify RTG tools availability
+which rtg
 
 # Test package imports
 python -c "import hap_py; print('✅ hap_py imported successfully')"
