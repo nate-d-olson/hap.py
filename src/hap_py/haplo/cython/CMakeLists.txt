@@ -7,9 +7,8 @@ cmake_minimum_required(VERSION 3.10)
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 find_package(NumPy REQUIRED)
 
-# Include directories for C++ headers
+# Include directories
 include_directories(
-    ${CMAKE_SOURCE_DIR}/src/c++/include
     ${CMAKE_BINARY_DIR}/include
     ${Python3_INCLUDE_DIRS}
     ${NumPy_INCLUDE_DIRS}
@@ -32,10 +31,9 @@ foreach(CYTHON_SOURCE ${CYTHON_SOURCES})
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${CYTHON_SOURCE}")
         get_filename_component(MODULE_NAME ${CYTHON_SOURCE} NAME_WE)
 
-        add_cython_module(${MODULE_NAME} ${CYTHON_SOURCE}
-            LIBRARIES haplotypes
+        add_cython_module(
+            ${MODULE_NAME} ${CYTHON_SOURCE}
             INCLUDES
-                ${CMAKE_SOURCE_DIR}/src/c++/include
                 ${CMAKE_BINARY_DIR}/include
         )
 
