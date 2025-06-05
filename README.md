@@ -357,7 +357,10 @@ cd hap.py
 pip install .
 ```
 
-This will build all necessary components including the C++ parts and install the Python package with command-line entry points.
+This will build all necessary components and install the Python package with
+command-line entry points. For most users, installing via `pip` or with
+`conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
+are only required when contributing to the Cython extensions.
 
 To install with optional dependencies for C++/Cython extensions (recommended for performance) or development tools:
 
@@ -440,8 +443,8 @@ Ubuntu 12.04,14.04,16.04,18.04
 CentOS 6.x, 7.x
 ```
 
-Hap.py must be compiled with g++ version 4.9.x or later, or with a recent version of Clang (testing is performed
-with g++).
+If you plan to build the optional C++/Cython extensions yourself, a C++14
+compiler such as a recent g++ or Clang is required.
 
 ### OS X
 
@@ -455,40 +458,19 @@ of htslib and pysam, using hap.py on Windows should be possible.
 ### Other requirements
 
 Hap.py requires a human genome reference sequence which contains at least
-chromosomes 1-22,X,Y,M. The chromosomes should be named chr1-chr22, chrX, chrY,
-chrM. there is a script  in [src/sh/make_hg19.sh](src/sh/make_hg19.sh) to create
-such a sequence, but you can also  specify your own. In order for the
-integration tests to run successfully, it is necessary  to point hap.py to the
-reference sequence using
+chromosomes `1-22`, `X`, `Y`, and `M`. The chromosomes should be named
+`chr1`-`chr22`, `chrX`, `chrY`, `chrM`. A helper script
+[src/sh/make_hg19.sh](src/sh/make_hg19.sh) can be used to create such a
+reference. Point the tests to your reference with
 
 ```bash
-export HGREF=<path-to-hg19.fa>
+export HGREF=<path-to-reference.fa>
 ```
 
-Note that, while the test cases are based on hg19, other reference sequences are
-usable as well  once the tool is installed.
-
-Hap.py also requires a copy of the [Boost libraries](http://www.boost.org) to
-work, with version >=  1.55. If compilation should fail using the included version
-of boost, you can compile a subset of boost like this:
-
-```bash
-cd ~
-wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
-tar xjf boost_1_55_0.tar.bz2
-cd boost_1_55_0
-./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options
-./b2 --prefix=$HOME/boost_1_55_0_install install
-```
-
-You can point Cmake to your version of boost as follows:
-
-```bash
-export BOOST_ROOT=$HOME/boost_1_55_0_install
-```
-
-The complete list of dependencies / packages to install beforehand can be found
-in the [Dockerfile](Dockerfile).
+All other dependencies can be installed via `pip` or `conda`. Use the
+[environment.yml](environment.yml) file to create a development environment.
+Manual Boost builds are rarely needed—only developers working on the Cython
+extensions may need to provide a custom Boost installation.
 
 ## Python 3 Migration
 
