@@ -1,0 +1,22 @@
+name: happy-dev
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - psutil
+  - pysam
+  - scipy
+  - bx-python
+  - biopython
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - pytest
+  - pytest-cov
+  - nose
+  - pip
+  - pip:
+      - -e .[dev,cpp]

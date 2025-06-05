@@ -381,6 +381,21 @@ Debian/Ubuntu systems the required packages can be installed with:
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
 ```
 
+### Development environment
+
+An `environment-dev.yml` file is provided for creating a conda or
+micromamba environment with optional packages used for ROC analysis and
+testing (Matplotlib, Seaborn, scikit-learn, etc.). Create the environment
+with:
+
+```bash
+micromamba env create -f environment-dev.yml
+# or
+conda env create -f environment-dev.yml
+
+micromamba activate happy-dev
+```
+
 ### Building from Source (Advanced)
 
 If you need to build from source and `pip install .` does not meet your needs (e.g., you need to customize the C++ build process extensively or are working in an environment without pip):
