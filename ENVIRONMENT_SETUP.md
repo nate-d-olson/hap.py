@@ -22,15 +22,22 @@ libraries are present. On Debian/Ubuntu systems these can be installed with:
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
 ```
 
-## RTG Tools Installation
+## Creating the Environment
 
-Install `rtg-tools` from Bioconda if it is not already available in the `external` directory:
+Use the provided `environment-dev.yml` file to create a micromamba or conda
+environment with the optional ROC and testing packages:
 
 ```bash
-mamba install -c bioconda rtg-tools
+micromamba env create -f environment-dev.yml
+# or
+conda env create -f environment-dev.yml
 ```
 
-After installation the executable will be found at `$CONDA_PREFIX/bin/rtg`.
+Activate the environment before development:
+
+```bash
+micromamba activate happy-dev
+```
 
 ## Required Activation Command
 
