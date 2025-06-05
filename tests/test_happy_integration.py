@@ -25,7 +25,6 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
 
     # Run hap.py with mock environment to avoid requirement C++ components
     env = os.environ.copy()
-    env["HAPLO_USE_MOCK"] = "1"
 
     # Run the command
     cmd = [
@@ -76,7 +75,6 @@ def test_happy_with_bed_file(
 
     # Run hap.py with mock environment
     env = os.environ.copy()
-    env["HAPLO_USE_MOCK"] = "1"
 
     # Run the command with BED file
     cmd = [
@@ -125,7 +123,6 @@ def test_error_handling(sample_vcf_files, tmp_path):
 
     # Run hap.py with mock environment
     env = os.environ.copy()
-    env["HAPLO_USE_MOCK"] = "1"
 
     # Run the command with non-existent reference
     cmd = [

@@ -28,83 +28,47 @@ def test_string_handling_module():
 
 def test_cython_mock_import():
     """Test using mock Cython implementations."""
-    # Store original environment value
-    original_value = os.environ.get("HAPLO_USE_MOCK", None)
+    import src.hap_py.haplo.cython as haplo_cython
 
-    try:
-        # Set environment variable to use mocks
-        os.environ["HAPLO_USE_MOCK"] = "1"
+    assert haplo_cython.USING_MOCK is True
 
-        # Import the Cython module package
-        import src.hap_py.haplo.cython as haplo_cython
+    seq = "ACGTACGT"
+    comp_seq = haplo_cython.complement_sequence(seq)
+    assert comp_seq == "TGCATGCA"
 
-        # Verify we're using mocks
-        assert haplo_cython.USING_MOCK is True
-
-        # Test complement_sequence function
-        seq = "ACGTACGT"
-        comp_seq = haplo_cython.complement_sequence(seq)
-        assert comp_seq == "TGCATGCA"
-
-        # Test with bytes input (Python 3 compatibility test)
-        bytes_seq = b"ACGT"
-        str_result = haplo_cython.complement_sequence(bytes_seq)
-        assert isinstance(str_result, str)
-        assert str_result == "TGCA"
-
-    finally:
-        # Restore original environment
-        if original_value is None:
-            del os.environ["HAPLO_USE_MOCK"]
-        else:
-            os.environ["HAPLO_USE_MOCK"] = original_value
+    bytes_seq = b"ACGT"
+    str_result = haplo_cython.complement_sequence(bytes_seq)
+    assert isinstance(str_result, str)
+    assert str_result == "TGCA"
 
 
 def test_mock_variant_classes():
     """Test the mock variant record and comparison classes."""
-    # Store original environment value
-    original_value = os.environ.get("HAPLO_USE_MOCK", None)
+    import src.hap_py.haplo.cython as haplo_cython
 
-    try:
-        # Set environment variable to use mocks
-        os.environ["HAPLO_USE_MOCK"] = "1"
+    record = haplo_cython.MockVariantRecord(
+        chrom="chr1", pos=100, ref="A", alt="T", qual=30
+    )
+    assert record.chrom == "chr1"
+    assert record.pos == 100
+    assert record.ref == "A"
+    assert record.alt == "T"
+    assert str(record) == "chr1:100 A>T"
 
-        # Import the Cython module package
-        import src.hap_py.haplo.cython as haplo_cython
+    comparator = haplo_cython.MockHaploCompare()
+    comparator.add_truth_variant(record)
+    comparator.add_query_variant(record)
+    results = comparator.compare()
 
-        # Test record class
-        record = haplo_cython.MockVariantRecord(
-            chrom="chr1", pos=100, ref="A", alt="T", qual=30
-        )
-        assert record.chrom == "chr1"
-        assert record.pos == 100
-        assert record.ref == "A"
-        assert record.alt == "T"
-        assert str(record) == "chr1:100 A>T"
+    assert "total_truth" in results
+    assert "total_query" in results
+    assert results["total_truth"] == 1
+    assert results["total_query"] == 1
 
-        # Test mock comparison
-        comparator = haplo_cython.MockHaploCompare()
-        comparator.add_truth_variant(record)
-        comparator.add_query_variant(record)
-        results = comparator.compare()
+    tp_key = next(
+        (k for k in results if k.lower().replace("_", "") == "truepositives"),
+        None,
+    )
+    assert tp_key is not None, "No true positives key found in results"
+    assert results[tp_key] == 1
 
-        # Check the results - ensure they have expected keys
-        assert "total_truth" in results
-        assert "total_query" in results
-        assert results["total_truth"] == 1
-        assert results["total_query"] == 1
-
-        # Check either true_positives or true_positives are present
-        # (allowing either naming convention)
-        tp_key = next(
-            (k for k in results if k.lower().replace("_", "") == "truepositives"), None
-        )
-        assert tp_key is not None, "No true positives key found in results"
-        assert results[tp_key] == 1
-
-    finally:
-        # Restore original environment
-        if original_value is None:
-            del os.environ["HAPLO_USE_MOCK"]
-        else:
-            os.environ["HAPLO_USE_MOCK"] = original_value
