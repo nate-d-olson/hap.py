@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""Placeholder wrapper for multimerge tool."""
+import sys
+from pathlib import Path
+
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root / "src"))
+try:
+    from hap_py.utils.multimerge import main
+except Exception as exc:  # if module missing or fails
+
+    def main(*args, _err=exc):
+        print(f"ERROR: multimerge not implemented: {_err}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
