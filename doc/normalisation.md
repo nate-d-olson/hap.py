@@ -120,15 +120,6 @@ test if a given VCF can be translated into BCF.
                         header.
 ```
 
-When left-shifting and pre-blocking, we will assume that variants that are further
-apart than the following window size will not interact w.r.t. haplotype representations.
-The default value is 10000, which should be sufficient for short reads.
-
-```
-  -w WINDOW, --window-size WINDOW
-                        Preprocessing window size (variants further apart than
-                        that size are not expected to interfere).
-```
 
 The presence of the <NON_REF> symbolic allele in genome VCFs can cause problems
 for hap.py, especially if it is part of a genotype. As a workaround, we
