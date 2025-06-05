@@ -22,13 +22,8 @@ def import_with_fallback(
         The imported object or its mock implementation
     """
     if mock_module is None:
-        # Use relative import for mock module when within package
-        try:
-            from . import cython_mock  # noqa: F401
-
-            mock_module = "cython_mock"
-        except ImportError:
-            mock_module = "hap_py.haplo.cython_mock"
+        # Default to the local cython_mock module
+        mock_module = "cython_mock"
 
     try:
         # Try to import the Cython module
@@ -52,7 +47,10 @@ def import_with_fallback(
                 module = __import__(mock_module, fromlist=["*"])
         except ImportError:
             # Fallback to local mock implementations
-            from .cython import mock_cpp_internal as module
+            try:
+                from . import cython_mock as module
+            except ImportError:
+                from .cython import mock_internal as module
 
         obj = getattr(module, mock_attribute)
         return obj
