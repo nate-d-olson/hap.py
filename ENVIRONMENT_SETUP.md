@@ -2,16 +2,16 @@
 
 ## ✅ Environment Status: READY
 
-The `happy-dev` micromamba environment has been successfully configured for hap.py development.
+Create and activate a `happy-dev` environment with **conda** or **mamba** for hap.py development.
 
 ## Environment Details
 
 - **Environment Name**: `happy-dev`
 - **Python Version**: 3.11.12
-- **Python Location**: `/Users/nolson/micromamba/envs/happy-dev/bin/python`
+- **Python Location**: `$CONDA_PREFIX/bin/python`
 - **Package Installation**: Normal install in site-packages
 - **Testing Framework**: pytest 8.3.5
-- **RTG Tools**: Available at `/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg`
+- **RTG Tools**: Use the `rtg` executable installed in the `happy-dev` conda environment. After activating the environment, run `which rtg` to confirm its location.
 
 ## System Dependencies
 
@@ -22,11 +22,28 @@ libraries are present. On Debian/Ubuntu systems these can be installed with:
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
 ```
 
+## Creating the Environment
+
+Use the provided `environment-dev.yml` file to create a micromamba or conda
+environment with the optional ROC and testing packages:
+
+```bash
+micromamba env create -f environment-dev.yml
+# or
+conda env create -f environment-dev.yml
+```
+
+Activate the environment before development:
+
+```bash
+micromamba activate happy-dev
+```
+
 ## Required Activation Command
 
 **ALWAYS run this before any development work:**
 ```bash
-micromamba activate happy-dev
+conda activate happy-dev
 ```
 
 ## Verification Commands
@@ -38,6 +55,9 @@ To verify the environment is working correctly:
 which python
 python --version
 
+# Verify RTG tools availability
+which rtg
+
 # Test package imports
 python -c "import hap_py; print('✅ hap_py imported successfully')"
 python -c "from hap_py.haplo import quantify, vcfeval; print('✅ Core modules available')"
@@ -48,7 +68,7 @@ python -c "import pytest; print(f'✅ pytest {pytest.__version__} available')"
 
 1. **Activate Environment**:
    ```bash
-   micromamba activate happy-dev
+   conda activate happy-dev
    ```
 
 2. **Run Tests**:
@@ -76,4 +96,4 @@ Following the instructions from the prompt files:
 
 ## Next Steps
 
-The environment is ready for continuing work on the quantify module implementation as outlined in `QUANTIFY_IMPLEMENTATION_PLAN.md`.
+The environment is ready for continuing work on the quantify module implementation as outlined in `.github/prompt/quantify-development.prompt.md`.

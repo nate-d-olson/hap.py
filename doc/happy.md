@@ -587,6 +587,10 @@ RTG-Tools (see [https://github.com/RealTimeGenomics/rtg-tools](https://github.co
 provides a feature called "vcfeval" which performs complex variant comparisons. Hap.py
 can use this tool as a comparison engine instead of its built-in `xcmp` tool.
 
+> **Note**: `rtg-tools` is an optional runtime dependency. It can be installed
+> via `pip install .[rtgtools]` or through the provided `environment.yml`
+> with `mamba env create -f environment.yml`.
+
 This feature requires a version of rtg-tools which supports the GA4GH benchmarking intermediate
 file formats (see [https://github.com/ga4gh/benchmarking-tools](https://github.com/ga4gh/benchmarking-tools)).
 Currently, such a version is available in this branch:

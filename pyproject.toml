@@ -72,6 +72,9 @@ docs = [
     "sphinx",
     "sphinx-rtd-theme",
 ]
+rtgtools = [
+    "rtg-tools>=3.12",
+]
 
 [project.urls]
 Homepage = "https://github.com/nate-d-olson/hap.py"

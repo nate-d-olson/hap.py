@@ -89,7 +89,6 @@ find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 # Include subdirectories
-add_subdirectory(src/c++/lib)
 add_subdirectory(src/hap_py/haplo/cython)
 
 message(STATUS "Configuration completed successfully. Use 'pip install .' to build and install.")
