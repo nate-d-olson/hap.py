@@ -9,7 +9,7 @@ globs: *
 hap.py is a bioinformatics tool for benchmarking small variant calls.
 The tool is a critical resource in the genomics community for evaluating the accuracy of variant callers.
 The original codebase used Python 2, which is no longer supported, and had outdated dependencies.
-This fork aims to modernize the codebase for continued use and development.
+This fork aims to modernize the codebase for continued use and development. When appropriate, refer to the initial implementation of [hap.py](https://github.com/Illumina/hap.py) when there is ambigutity in the functionality and logic.
 
 ## Repository Structure
 - `src/`: Main source code directory
@@ -542,6 +542,8 @@ python --version  # Should show: Python 3.11.12
 - The `PHASE5_IMPLEMENTATION_PLAN.md` file should be added to git and finalized.
 - Changes to the `test_phase3_implementation.py` and `validate_phase3_complete.py` files should be committed.
 - All changes to the repository while implementing phase 3 MUST be committed and pushed to github.
+- Use the `TEST_STATUS.md` file to track the current status of the tests.
+- Implement fixes according to the `TEST_ERROR_ANALYSIS_AND_FIXING_PLAN.md` file.
 
 ### Detailed Plan for Debugging Failing Integration Tests
 
@@ -732,17 +734,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
   - `hapenum` ✅
   - `hapcmp` ✅
   - `multimerge` ✅ (placeholder script)
-  - `qfy.py` wrapper script ✅
-
-## Current Test Status (2023)
-
-### **Working** ✅
-- RTG tools are properly detected and accessible
-- SDF template creation logic fixed
-- Test package imports working correctly
-- Binary wrapper scripts available
-- All unit tests are now passing after implementing the fixes
-
-### **Remaining Challenges** ⚠️
-- `multimerge` implementation needs Python equivalent
-- Some integration tests
+  - `qfy.py

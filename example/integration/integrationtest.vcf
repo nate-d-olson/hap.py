@@ -1,3 +1,16 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr21>
+##INFO=<ID=BS,Number=1,Type=Integer,Description="Base start position">
+##INFO=<ID=XCMP,Number=1,Type=String,Description="XCMP comparison result">
+##INFO=<ID=VTC,Number=1,Type=String,Description="Variant truth categories">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=BD,Number=1,Type=String,Description="Benchmarking decision">
+##FORMAT=<ID=BK,Number=1,Type=String,Description="Benchmarking key">
+##FORMAT=<ID=BI,Number=1,Type=String,Description="Benchmarking info">
+##FORMAT=<ID=BVT,Number=1,Type=String,Description="Benchmarking variant type">
+##FORMAT=<ID=BLT,Number=1,Type=String,Description="Benchmarking level type">
+##FORMAT=<ID=QQ,Number=1,Type=String,Description="Quality score">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	truth	query
 chr21	20001394	.	C	G	0	.	BS=20001394;XCMP=TP:match:gt_het:gt_het:simple:match;VTC=nuc__s,al__s,het__rs	GT:BD:BK:BI:BVT:BLT:QQ	0|1:TP:gm:tv:SNP:het:0	0/1:TP:gm:tv:SNP:het:0
 chr21	20001602	.	A	G	0	.	BS=20001602;XCMP=FP:gtmismatch:gt_het:gt_homalt:simple:mismatch;VTC=nuc__s,al__s,het__rs,homalt__s	GT:BD:BK:BI:BVT:BLT:QQ	0|1:FN:am:ti:SNP:het:.	1/1:FP:am:ti:SNP:homalt:0
 chr21	20004839	.	AGTGT	A,AGT	0	.	BS=20004839;XCMP=TP:hapmatch__FN__missing:gt_hetalt:.:hap:match;VTC=nuc__d,al__d,hetalt__d,nocall__nc	GT:BD:BK:BI:BVT:BLT:QQ	2/1:TP:gm:d1_5:INDEL:hetalt:0	./.:.:.:.:NOCALL:nocall:0

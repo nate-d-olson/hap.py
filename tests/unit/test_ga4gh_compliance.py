@@ -230,12 +230,15 @@ class TestGA4GHStratification:
         assert stratification.regions["highconf"]["bed_file"] == "highconf.bed"
         assert stratification.regions["highconf"]["region"] is None
 
-    @patch("hap_py.haplo.ga4gh_compliance.pybedtools")
-    def test_get_region_ids_for_variant(self, mock_pybedtools):
+    @patch("importlib.import_module")
+    def test_get_region_ids_for_variant(self, mock_import):
         """Test getting regions for a variant."""
+        # Mock pybedtools module
+        mock_pybedtools = MagicMock()
         mock_bedtool = MagicMock()
         mock_bedtool.intersect.return_value = [1]  # Non-empty intersection
         mock_pybedtools.BedTool.return_value = mock_bedtool
+        mock_import.return_value = mock_pybedtools
 
         stratification = GA4GHStratification()
         stratification.regions = {

@@ -439,7 +439,8 @@ class QuantifyEngine:
             logger.info("Using enhanced GA4GH integration for quantification")
 
         # Load variants from VCF files
-        self._load_variants()
+        self.truth_variants = self._load_variants(is_truth=True)
+        self.query_variants = self._load_variants(is_truth=False)
 
         # Convert to DataFrames for easier processing
         truth_df = pd.DataFrame(self.truth_variants)
@@ -447,11 +448,29 @@ class QuantifyEngine:
 
         if truth_df.empty:
             logger.warning("No truth variants loaded")
-            return {"all": {"TP": 0, "FP": len(query_df), "FN": 0}}
+            self.metrics = {
+                "TP": 0,
+                "FP": len(query_df),
+                "FN": 0,
+                "PRECISION": 0.0,
+                "RECALL": 0.0,
+                "F1": 0.0,
+            }
+            self.stratifications = {}
+            return {"metrics": self.metrics, "stratifications": self.stratifications}
 
         if query_df.empty:
             logger.warning("No query variants loaded")
-            return {"all": {"TP": 0, "FP": 0, "FN": len(truth_df)}}
+            self.metrics = {
+                "TP": 0,
+                "FP": 0,
+                "FN": len(truth_df),
+                "PRECISION": 0.0,
+                "RECALL": 0.0,
+                "F1": 0.0,
+            }
+            self.stratifications = {}
+            return {"metrics": self.metrics, "stratifications": self.stratifications}
 
         # Initialize benchmarking decisions
         self._initialize_benchmarking_decisions(truth_df, query_df)
@@ -472,9 +491,14 @@ class QuantifyEngine:
         self.truth_variants = truth_df.to_dict("records")
         self.query_variants = query_df.to_dict("records")
 
-        logger.info(
-            f"Variant matching complete: {len(matches)} matches found using {self.quantify_method.upper()} method"
-        )
+        # Calculate metrics from the processed variants
+        self._calculate_metrics(truth_df, query_df)
+
+        # Stratify results by variant type and other attributes
+        self._stratify_results()
+
+        logger.info("Quantification complete")
+        return {"metrics": self.metrics, "stratifications": self.stratifications}
 
     def process_vcf(self) -> Optional[pd.DataFrame]:
         """
@@ -1000,6 +1024,10 @@ class QuantifyEngine:
             truth_df.loc[truth_idx, "match_idx"] = query_idx
             query_df.loc[query_idx, "match_idx"] = truth_idx
 
+            # Update benchmarking decisions for matched variants
+            truth_df.loc[truth_idx, "BD"] = "TP"  # True Positive
+            query_df.loc[query_idx, "BD"] = "TP"  # True Positive
+
             # Store additional match metadata
             truth_df.loc[truth_idx, "match_type"] = match_type
             query_df.loc[query_idx, "match_type"] = match_type
@@ -1481,23 +1509,48 @@ class QuantifyEngine:
 
         return False
 
-    def _calculate_metrics(self):
-        """Calculate performance metrics."""
-        # Count TP, FP, FN
-        tp = sum(1 for v in self.truth_variants if v["match"])
-        fp = sum(1 for v in self.query_variants if not v["match"])
-        fn = sum(1 for v in self.truth_variants if not v["match"])
+    def _calculate_metrics(
+        self, truth_df: pd.DataFrame, query_df: pd.DataFrame
+    ) -> None:
+        """
+        Calculate precision, recall, and F1 metrics from matched variants.
 
-        # Calculate precision, recall, F1
-        precision = tp / (tp + fp) if tp + fp > 0 else 0
-        recall = tp / (tp + fn) if tp + fn > 0 else 0
+        Args:
+            truth_df: DataFrame containing truth variants with match information
+            query_df: DataFrame containing query variants with match information
+        """
+        # Count true positives, false positives, false negatives
+        # Use the BD (Benchmarking Decision) field to classify variants
+        if "BD" in truth_df.columns:
+            tp = len(truth_df[truth_df["BD"] == "TP"])
+            fn = len(truth_df[truth_df["BD"] == "FN"])
+        else:
+            # Fallback to 'matched' column if BD not available
+            if "matched" in truth_df.columns:
+                tp = len(truth_df[truth_df["matched"]])
+                fn = len(truth_df[~truth_df["matched"]])
+            else:
+                tp = 0
+                fn = len(truth_df)
+
+        if "BD" in query_df.columns:
+            fp = len(query_df[query_df["BD"] == "FP"])
+        else:
+            # Fallback to 'matched' column if BD not available
+            if "matched" in query_df.columns:
+                fp = len(query_df[~query_df["matched"]])
+            else:
+                fp = len(query_df)
+
+        # Calculate metrics
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = (
             2 * precision * recall / (precision + recall)
-            if precision + recall > 0
-            else 0
+            if (precision + recall) > 0
+            else 0.0
         )
 
-        # Store metrics
         self.metrics = {
             "TP": tp,
             "FP": fp,
@@ -1506,6 +1559,10 @@ class QuantifyEngine:
             "RECALL": recall,
             "F1": f1,
         }
+
+        logger.info(
+            f"Calculated metrics: TP={tp}, FP={fp}, FN={fn}, Precision={precision:.3f}, Recall={recall:.3f}, F1={f1:.3f}"
+        )
 
     def _stratify_results(self):
         """Stratify results by variant type and other attributes."""
@@ -1531,7 +1588,7 @@ class QuantifyEngine:
                 else 0
             )
 
-            # Store metrics
+            # Store metrics for this type
             self.stratifications["variant_type"][type_value] = {
                 "TP": tp,
                 "FP": fp,
@@ -2806,3 +2863,59 @@ class QuantifyEngine:
         except Exception as e:
             logger.error(f"Error writing VCF outputs: {e}")
             raise
+
+    def run(self) -> Dict[str, Any]:
+        """
+        Main entry point to run the complete quantification analysis.
+
+        This method orchestrates the entire analysis pipeline including:
+        - Basic quantification (via quantify())
+        - Phase 2: ROC analysis if enabled
+        - Phase 3: Superlocus and region-based analysis if enabled
+
+        Returns:
+            Dictionary containing all analysis results
+        """
+        logger.info("Starting complete quantification analysis")
+
+        # Phase 1: Basic quantification
+        self.metrics = self.quantify()
+
+        results = {
+            "metrics": self.metrics,
+            "truth_variants": len(self.truth_variants),
+            "query_variants": len(self.query_variants),
+        }
+
+        # Phase 2: ROC Analysis if enabled
+        if self.enable_roc_analysis:
+            logger.info("Performing ROC analysis")
+            try:
+                self._perform_roc_analysis()
+                results["roc_data"] = self.roc_data
+                results["bootstrap_confidence_intervals"] = (
+                    self.bootstrap_confidence_intervals
+                )
+            except Exception as e:
+                logger.warning(f"ROC analysis failed: {e}")
+
+        # Phase 3: Superlocus analysis if enabled
+        if self.enable_superlocus_analysis:
+            logger.info("Performing superlocus analysis")
+            try:
+                self._perform_superlocus_analysis()
+                results["superlocus_data"] = self.superlocus_data
+            except Exception as e:
+                logger.warning(f"Superlocus analysis failed: {e}")
+
+        # Phase 3: Region-based stratification if enabled
+        if self.enable_region_stratification:
+            logger.info("Performing region-based stratification")
+            try:
+                self._perform_region_stratification()
+                results["region_stratification"] = self.region_stratification_results
+            except Exception as e:
+                logger.warning(f"Region stratification failed: {e}")
+
+        logger.info("Complete quantification analysis finished")
+        return results
