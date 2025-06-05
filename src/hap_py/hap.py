@@ -137,14 +137,6 @@ def main() -> int:
         default=False,
         help="Use filtered variant calls in truth file (by default, only PASS calls in the truth file are used)",
     )
-    ## %%TODO: Remove preprocess windowing as it causes unnecessary overhead and seems error prone.
-    parser.add_argument(
-        "--preprocessing-window-size",
-        dest="preprocess_window",
-        default=10000,
-        type=int,
-        help="Preprocessing window size (variants further apart than that size are not expected to interfere).",
-    )
     parser.add_argument(
         "--adjust-conf-regions",
         dest="preprocessing_truth_confregions",
@@ -368,7 +360,6 @@ def main() -> int:
             args.preprocessing_leftshift if args.preprocessing_truth else False,
             args.preprocessing_decompose if args.preprocessing_truth else False,
             args.preprocessing_norm if args.preprocessing_truth else False,
-            args.preprocess_window,
             args.threads,
             args.gender,
             False,
@@ -442,7 +433,6 @@ def main() -> int:
             args.preprocessing_leftshift,
             args.preprocessing_decompose,
             args.preprocessing_norm,
-            args.preprocess_window,
             args.threads,
             args.gender,  # same gender as truth above
             False,
