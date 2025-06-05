@@ -357,44 +357,42 @@ cd hap.py
 pip install .
 ```
 
-This will build all necessary components including the C++ parts and install the Python package with command-line entry points.
+This will build the package and install the Python command-line entry points.
 
-To install with optional dependencies for C++/Cython extensions (recommended for performance) or development tools:
+To install with optional dependencies for Cython extensions (recommended for performance) or development tools:
 
 ```bash
-pip install .[cpp]      # For C++/Cython accelerated features
+pip install .[cpp]      # For optional Cython accelerated features
 pip install .[dev]      # For development tools (testing, linting)
 pip install .[cpp,dev]  # For both
 ```
 
-For an editable installation that includes both development and C++ extras, you
+For an editable installation that includes both development and Cython extras, you
 can run:
 
 ```bash
 pip install -e .[dev,cpp]
 ```
 
-Before installing, ensure that basic build tools and headers are available. On
+Before installing, ensure that build tools and Python headers are available. On
 Debian/Ubuntu systems the required packages can be installed with:
 
 ```bash
-sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
+sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev
 ```
 
 ### Building from Source (Advanced)
 
-If you need to build from source and `pip install .` does not meet your needs (e.g., you need to customize the C++ build process extensively or are working in an environment without pip):
+If you need to build from source and `pip install .` does not meet your needs (e.g., you want to customize the build process or are working in an environment without pip):
 
 1. **Prerequisites**:
 
-   * A C++14 compatible compiler (e.g., GCC, Clang, MSVC)
    * CMake (version 3.10 or newer)
    * Python (version 3.7 or newer, including development headers)
-   * Boost libraries (version 1.55.0 or newer - iostreams, regex, filesystem, system, program_options). These can be automatically built by our scripts if not found system-wide.
-   * Zlib development libraries.
+   * Zlib development libraries
 
 2. **Configure and Build**:
-   The `pyproject.toml` and CMake setup are designed to be handled by `pip`. For manual control, you would typically invoke CMake directly, but this is now an advanced use case. The `install.py` script is being deprecated.
+   The `pyproject.toml` and CMake setup are designed to be handled by `pip`. For manual control, you can invoke CMake directly, but this is now an advanced use case. The `install.py` script is deprecated.
 
    For developers, the standard Python build frontends should be used:
 
@@ -440,8 +438,6 @@ Ubuntu 12.04,14.04,16.04,18.04
 CentOS 6.x, 7.x
 ```
 
-Hap.py must be compiled with g++ version 4.9.x or later, or with a recent version of Clang (testing is performed
-with g++).
 
 ### OS X
 
@@ -466,26 +462,7 @@ export HGREF=<path-to-hg19.fa>
 ```
 
 Note that, while the test cases are based on hg19, other reference sequences are
-usable as well  once the tool is installed.
-
-Hap.py also requires a copy of the [Boost libraries](http://www.boost.org) to
-work, with version >=  1.55. If compilation should fail using the included version
-of boost, you can compile a subset of boost like this:
-
-```bash
-cd ~
-wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
-tar xjf boost_1_55_0.tar.bz2
-cd boost_1_55_0
-./bootstrap.sh --with-libraries=filesystem,chrono,thread,iostreams,system,regex,test,program_options
-./b2 --prefix=$HOME/boost_1_55_0_install install
-```
-
-You can point Cmake to your version of boost as follows:
-
-```bash
-export BOOST_ROOT=$HOME/boost_1_55_0_install
-```
+usable as well once the tool is installed.
 
 The complete list of dependencies / packages to install beforehand can be found
 in the [Dockerfile](Dockerfile).
