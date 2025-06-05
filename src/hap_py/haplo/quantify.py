@@ -860,6 +860,7 @@ def run_quantify(
             regions=None,  # Will handle regions separately
             apply_filters=not clean_info,
             output_vtc=output_vtc,
+            quantify_method=qtype,
         )
 
         # Process the VCF file to extract variant metrics

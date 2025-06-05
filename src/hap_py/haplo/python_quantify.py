@@ -131,6 +131,17 @@ class QuantifyEngine:
         except Exception as e:
             raise ValueError(f"Failed to open query VCF: {e}")
 
+        # If GA4GH method is requested, validate that the VCF conforms to the
+        # GA4GH benchmarking intermediate specification. The query VCF is
+        # often the same file in re-quantification workflows, but we validate
+        # both handles in case they differ.
+        if self.quantify_method == "ga4gh":
+            try:
+                self._validate_ga4gh_vcf(self.truth_vcf_handle)
+                self._validate_ga4gh_vcf(self.query_vcf_handle)
+            except Exception as e:
+                raise ValueError(f"GA4GH compliance check failed: {e}")
+
         # Open reference if provided
         if self.reference:
             try:
@@ -145,6 +156,30 @@ class QuantifyEngine:
                 self.reference_file = None
         else:
             self.reference_file = None
+
+    def _validate_ga4gh_vcf(self, vcf_handle: pysam.VariantFile) -> None:
+        """Validate required GA4GH intermediate VCF fields."""
+
+        header = vcf_handle.header
+
+        required_info = ["BS"]
+        missing_info = [f for f in required_info if f not in header.info]
+
+        required_format = ["GT", "BD", "BK", "BI", "QQ", "BVT", "BLT"]
+        missing_format = [f for f in required_format if f not in header.formats]
+
+        required_samples = ["TRUTH", "QUERY"]
+        missing_samples = [s for s in required_samples if s not in header.samples]
+
+        if missing_info or missing_format or missing_samples:
+            problems = []
+            if missing_info:
+                problems.append(f"INFO fields: {', '.join(missing_info)}")
+            if missing_format:
+                problems.append(f"FORMAT fields: {', '.join(missing_format)}")
+            if missing_samples:
+                problems.append(f"samples: {', '.join(missing_samples)}")
+            raise ValueError("Input VCF missing GA4GH fields - " + "; ".join(problems))
 
     def _load_regions(self):
         """Load regions from BED file."""

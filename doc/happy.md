@@ -323,6 +323,7 @@ for each variant in truth and query, along with information on the decision
 for truth and query calls (TP/FP/FN/N/UNK).
 See the [GA4GH page above](https://github.com/ga4gh/benchmarking-tools/blob/master/doc/ref-impl/README.md)
 for more details.
+When GA4GH quantification is selected, hap.py verifies that the intermediate VCF contains required INFO and FORMAT fields and that both TRUTH and QUERY sample columns are present. Missing fields cause an error before quantification begins so that problems are detected early.
 
 ## Comparison engines
 

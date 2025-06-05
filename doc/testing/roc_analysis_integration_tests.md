@@ -9,7 +9,6 @@ This document describes the integration testing approach for the Phase 2 ROC ana
 ### Test Files
 - **`tests/unit/test_roc_analysis.py`**: Unit tests for individual ROC methods
 - **`tests/integration/test_quantify_roc.py`**: Integration tests with real VCF data
-- **`test_roc_functionality.py`**: Standalone ROC functionality demonstration
 
 ### Test Categories
 

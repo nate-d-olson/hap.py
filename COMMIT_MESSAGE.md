@@ -31,7 +31,6 @@ This commit implements Phase 2 of the quantify module enhancement plan, focusing
 
 All implemented functionality has been thoroughly tested:
 - Unit tests in `tests/unit/test_roc_analysis.py`
-- Functional tests in `test_roc_functionality.py`
 
 ## Notes
 
