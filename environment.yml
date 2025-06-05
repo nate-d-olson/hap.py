@@ -1,0 +1,17 @@
+name: hap-py
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - psutil
+  - pysam
+  - scipy
+  - bx-python
+  - biopython
+  - rtg-tools
+  - pip
+  - pip:
+      - .[cpp]
