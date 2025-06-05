@@ -23,5 +23,16 @@ def test_basic_functionality():
     return "Mock basic functionality working"
 
 
+def complement_sequence(sequence: str) -> str:
+    """Return the DNA complement for a sequence."""
+    trans = str.maketrans("ACGTacgt", "TGCAtgca")
+    return sequence.translate(trans)
+
+
+def reverse_complement(sequence: str) -> str:
+    """Return the reverse complement of a sequence."""
+    return complement_sequence(sequence)[::-1]
+
+
 # Add mock implementations of the functions in the Cython module
 # TODO: Analyze the original module and add appropriate mock functions

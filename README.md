@@ -9,7 +9,7 @@ to benchmark variant calls against gold standard truth datasets.
 > See the [Python 3 migration guide](doc/python3_migration.md)
 > for details about the migration and compatibility.
 
-To compare a VCF against a gold standard dataset, use the following commmand line
+To compare a VCF against a gold standard dataset, use the following command line
 to perform genotype-level haplotype comparison.
 
 ```bash
