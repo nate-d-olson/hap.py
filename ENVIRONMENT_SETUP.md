@@ -13,6 +13,15 @@ The `happy-dev` micromamba environment has been successfully configured for hap.
 - **Testing Framework**: pytest 8.3.5
 - **RTG Tools**: Available at `/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg`
 
+## System Dependencies
+
+Before installing hap.py in this environment, ensure that common build tools and
+libraries are present. On Debian/Ubuntu systems these can be installed with:
+
+```bash
+sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
+```
+
 ## Required Activation Command
 
 **ALWAYS run this before any development work:**

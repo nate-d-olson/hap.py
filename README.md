@@ -367,6 +367,20 @@ pip install .[dev]      # For development tools (testing, linting)
 pip install .[cpp,dev]  # For both
 ```
 
+For an editable installation that includes both development and C++ extras, you
+can run:
+
+```bash
+pip install -e .[dev,cpp]
+```
+
+Before installing, ensure that basic build tools and headers are available. On
+Debian/Ubuntu systems the required packages can be installed with:
+
+```bash
+sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
+```
+
 ### Building from Source (Advanced)
 
 If you need to build from source and `pip install .` does not meet your needs (e.g., you need to customize the C++ build process extensively or are working in an environment without pip):
