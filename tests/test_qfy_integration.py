@@ -43,7 +43,6 @@ chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
 
     # Run qfy.py with mock environment
     env = os.environ.copy()
-    env["HAPLO_USE_MOCK"] = "1"
 
     # Run the command
     cmd = [
@@ -106,7 +105,6 @@ chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
 
     # Run qfy.py with mock environment
     env = os.environ.copy()
-    env["HAPLO_USE_MOCK"] = "1"
 
     # Run the command with ROC output
     cmd = [

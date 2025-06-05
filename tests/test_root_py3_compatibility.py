@@ -32,31 +32,13 @@ def test_string_handling_module():
 
 def test_cython_mock_import():
     """Test using mock Cython implementations."""
-    # Store original environment value
-    original_value = os.environ.get("HAPLO_USE_MOCK", None)
+    from hap_py.haplo import cython_mock as cython_module
 
-    try:
-        # Set environment variable to use mocks
-        os.environ["HAPLO_USE_MOCK"] = "1"
+    seq = "ACGTACGT"
+    comp_seq = cython_module.complement_sequence(seq)
+    assert comp_seq == "TGCATGCA"
 
-        # Import the Cython module package
-        from hap_py.haplo import cython_mock as cython_module
-
-        # Test complement_sequence function
-        seq = "ACGTACGT"
-        comp_seq = cython_module.complement_sequence(seq)
-        assert comp_seq == "TGCATGCA"
-
-        # Test with bytes input (Python 3 compatibility test)
-        bytes_seq = b"ACGT"
-        str_result = cython_module.complement_sequence(bytes_seq)
-        # Mock returns bytes when given bytes
-        assert isinstance(str_result, bytes)
-        assert str_result == b"TGCA"
-
-    finally:
-        # Restore original environment
-        if original_value is None:
-            del os.environ["HAPLO_USE_MOCK"]
-        else:
-            os.environ["HAPLO_USE_MOCK"] = original_value
+    bytes_seq = b"ACGT"
+    str_result = cython_module.complement_sequence(bytes_seq)
+    assert isinstance(str_result, bytes)
+    assert str_result == b"TGCA"
