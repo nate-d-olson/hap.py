@@ -148,13 +148,13 @@ class VCFAnalyzer:
         ref_len = len(record.ref)
         alt_len = len(record.alts[0]) if record.alts else 0
 
-        if ref_len == 1 and alt_len == 1:
-            return VariantType.SNP.value
-        elif ref_len != alt_len:
+        if ref_len == alt_len:
+            return (
+                VariantType.SNP.value if ref_len == 1 else VariantType.MNP.value
+            )
+        if ref_len != alt_len:
             return VariantType.INDEL.value
-        else:
-            # Complex variants (MNPs, etc.)
-            return VariantType.COMPLEX.value
+        return VariantType.COMPLEX.value
 
     def _extract_benchmark_decision(self, record: pysam.VariantRecord) -> str:
         """
