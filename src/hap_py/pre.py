@@ -94,7 +94,6 @@ def preprocess(
     leftshift: bool = True,
     decompose: bool = True,
     bcftools_norm: bool = False,
-    windowsize: int = 10000,
     threads: int = 1,
     gender: Optional[str] = None,
     somatic_allele_conversion: Union[bool, str] = False,
@@ -115,7 +114,6 @@ def preprocess(
     :param leftshift: left-shift variants
     :param decompose: decompose variants
     :param bcftools_norm: use bcftools_norm
-    :param windowsize: normalisation window size
     :param threads: number of threads to for preprcessing
     :param gender: the sex of the sample ("male" / "female" / "auto" / None)
     :param somatic_allele_conversion: convert somatic alleles -- False / half / het / hemi / hom
@@ -269,7 +267,6 @@ def preprocess(
                 reference,
                 locations,
                 threads=threads,
-                window=windowsize,
                 leftshift=leftshift,
                 decompose=decompose,
                 haploid_x=gender == "male",
@@ -305,7 +302,6 @@ def preprocessWrapper(args: argparse.Namespace) -> None:
         args.preprocessing_leftshift,
         args.preprocessing_decompose,
         args.preprocessing_norm,
-        args.window,
         args.threads,
         args.gender,
         args.somatic_allele_conversion,
@@ -508,15 +504,6 @@ def main() -> int:
         dest="ref",
         help="Specify a reference file.",
         default=None,
-    )
-
-    parser.add_argument(
-        "-w",
-        "--window-size",
-        dest="window",
-        default=10000,
-        type=int,
-        help="Preprocessing window size (variants further apart than that size are not expected to interfere).",
     )
 
     parser.add_argument(

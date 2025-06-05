@@ -151,7 +151,6 @@ def partialCredit(
     reference: str,
     locations: Optional[Union[str, List[str]]] = None,
     threads: int = 1,
-    window: int = 10000,
     leftshift: bool = True,
     decompose: bool = True,
     haploid_x: bool = False,
@@ -164,7 +163,6 @@ def partialCredit(
         reference: Reference FASTA
         locations: List of regions or comma-separated string of regions
         threads: Number of threads to use
-        window: Window size for blocksplit
         leftshift: Enable left-shifting of variants
         decompose: Decompose complex variants
         haploid_x: Treat X chromosome as haploid
@@ -194,7 +192,7 @@ def partialCredit(
             pool,
             directProcessWrapper,
             locations,
-            {"vcf": vcfname, "dist": window, "pieces": min(40, threads * 4)},
+            {"vcf": vcfname, "pieces": min(40, threads * 4)},
         )
 
         # Direct processing - no splitting means no failures to filter

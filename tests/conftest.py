@@ -5,8 +5,6 @@ These fixtures provide test resources for integration tests of the hap.py toolki
 """
 
 import os
-
-os.environ.setdefault("HAPLO_USE_MOCK", "1")
 import shutil
 from pathlib import Path
 

@@ -15,3 +15,17 @@ dependencies:
   - pip
   - pip:
       - .[cpp]
+
+## Env for dev - might want a separate yml for this
+# name: happy-dev
+# channels:
+#   - conda-forge
+# dependencies:
+#   - python=3.11
+#  - cmake
+#  - gcc
+#  - make
+#  - zlib
+#  - boost
+#  - pip:
+#      - '.[dev,cpp]'
