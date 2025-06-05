@@ -362,42 +362,40 @@ command-line entry points. For most users, installing via `pip` or with
 `conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
 are only required when contributing to the Cython extensions.
 
-To install with optional dependencies for C++/Cython extensions (recommended for performance) or development tools:
+To install with optional dependencies for Cython extensions (recommended for performance) or development tools:
 
 ```bash
-pip install .[cpp]      # For C++/Cython accelerated features
+pip install .[cpp]      # For optional Cython accelerated features
 pip install .[dev]      # For development tools (testing, linting)
 pip install .[cpp,dev]  # For both
 ```
 
-For an editable installation that includes both development and C++ extras, you
+For an editable installation that includes both development and Cython extras, you
 can run:
 
 ```bash
 pip install -e .[dev,cpp]
 ```
 
-Before installing, ensure that basic build tools and headers are available. On
+Before installing, ensure that build tools and Python headers are available. On
 Debian/Ubuntu systems the required packages can be installed with:
 
 ```bash
-sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
+sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev
 ```
 
 ### Building from Source (Advanced)
 
-If you need to build from source and `pip install .` does not meet your needs (e.g., you need to customize the C++ build process extensively or are working in an environment without pip):
+If you need to build from source and `pip install .` does not meet your needs (e.g., you want to customize the build process or are working in an environment without pip):
 
 1. **Prerequisites**:
 
-   * A C++14 compatible compiler (e.g., GCC, Clang, MSVC)
    * CMake (version 3.10 or newer)
    * Python (version 3.7 or newer, including development headers)
-   * Boost libraries (version 1.55.0 or newer - iostreams, regex, filesystem, system, program_options). These can be automatically built by our scripts if not found system-wide.
-   * Zlib development libraries.
+   * Zlib development libraries
 
 2. **Configure and Build**:
-   The `pyproject.toml` and CMake setup are designed to be handled by `pip`. For manual control, you would typically invoke CMake directly, but this is now an advanced use case. The `install.py` script is being deprecated.
+   The `pyproject.toml` and CMake setup are designed to be handled by `pip`. For manual control, you can invoke CMake directly, but this is now an advanced use case. The `install.py` script is deprecated.
 
    For developers, the standard Python build frontends should be used:
 
@@ -434,7 +432,10 @@ can use up to 64GB of RAM (20GB typical, depending on the input VCF) and about 4
 using 40 processor cores. Whole exome comparison (using an exome bed mask and the `-T` switch)
 can be carried out on a desktop system.
 
+
 ### Linux
+
+%%TODO%% Update based on CI/CD once there is a functional new version
 
 Tested on:
 
@@ -448,9 +449,13 @@ compiler such as a recent g++ or Clang is required.
 
 ### OS X
 
+%%TODO%% Update based on CI/CD once there is a functional new version
+
 Hap.py builds and passes basic tests on OS X 10.9+, but full WGS analyses are not tested for this platform.
 
 ### Windows
+
+%%TODO%% Update based on CI/CD once there is a functional new version
 
 Hap.py is not tested on Windows. The main dependency that fails compilation is htslib. Given a build
 of htslib and pysam, using hap.py on Windows should be possible.
@@ -483,9 +488,7 @@ This project is undergoing a migration to Python 3. Key goals include:
 
 For more details, see:
 
-* [Migration Status](PYTHON3_MIGRATION_FINAL.md) - Current state and test plan.
-* [Migration Tools](PYTHON3_MIGRATION_TOOLS.md) - Tools for fixing remaining issues (if applicable, link may be outdated).
-* [Core Documentation](PYTHON3_CORE.md) - Technical details of the Python 3 implementation (if applicable, link may be outdated).
+* [Python 3 Migration Guide](doc/python3_migration.md) - Comprehensive guide covering migration status, tools, and technical details.
 
 ## Key Features
 
