@@ -357,7 +357,10 @@ cd hap.py
 pip install .
 ```
 
-This will build the package and install the Python command-line entry points.
+This will build all necessary components and install the Python package with
+command-line entry points. For most users, installing via `pip` or with
+`conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
+are only required when contributing to the Cython extensions.
 
 To install with optional dependencies for Cython extensions (recommended for performance) or development tools:
 
@@ -429,7 +432,10 @@ can use up to 64GB of RAM (20GB typical, depending on the input VCF) and about 4
 using 40 processor cores. Whole exome comparison (using an exome bed mask and the `-T` switch)
 can be carried out on a desktop system.
 
+
 ### Linux
+
+%%TODO%% Update based on CI/CD once there is a functional new version
 
 Tested on:
 
@@ -438,12 +444,18 @@ Ubuntu 12.04,14.04,16.04,18.04
 CentOS 6.x, 7.x
 ```
 
+If you plan to build the optional C++/Cython extensions yourself, a C++14
+compiler such as a recent g++ or Clang is required.
 
 ### OS X
+
+%%TODO%% Update based on CI/CD once there is a functional new version
 
 Hap.py builds and passes basic tests on OS X 10.9+, but full WGS analyses are not tested for this platform.
 
 ### Windows
+
+%%TODO%% Update based on CI/CD once there is a functional new version
 
 Hap.py is not tested on Windows. The main dependency that fails compilation is htslib. Given a build
 of htslib and pysam, using hap.py on Windows should be possible.
@@ -451,21 +463,19 @@ of htslib and pysam, using hap.py on Windows should be possible.
 ### Other requirements
 
 Hap.py requires a human genome reference sequence which contains at least
-chromosomes 1-22,X,Y,M. The chromosomes should be named chr1-chr22, chrX, chrY,
-chrM. there is a script  in [src/sh/make_hg19.sh](src/sh/make_hg19.sh) to create
-such a sequence, but you can also  specify your own. In order for the
-integration tests to run successfully, it is necessary  to point hap.py to the
-reference sequence using
+chromosomes `1-22`, `X`, `Y`, and `M`. The chromosomes should be named
+`chr1`-`chr22`, `chrX`, `chrY`, `chrM`. A helper script
+[src/sh/make_hg19.sh](src/sh/make_hg19.sh) can be used to create such a
+reference. Point the tests to your reference with
 
 ```bash
-export HGREF=<path-to-hg19.fa>
+export HGREF=<path-to-reference.fa>
 ```
 
-Note that, while the test cases are based on hg19, other reference sequences are
-usable as well once the tool is installed.
-
-The complete list of dependencies / packages to install beforehand can be found
-in the [Dockerfile](Dockerfile).
+All other dependencies can be installed via `pip` or `conda`. Use the
+[environment.yml](environment.yml) file to create a development environment.
+Manual Boost builds are rarely needed—only developers working on the Cython
+extensions may need to provide a custom Boost installation.
 
 ## Python 3 Migration
 
