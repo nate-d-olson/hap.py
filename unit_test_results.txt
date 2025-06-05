@@ -1,0 +1,160 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.12, pytest-8.3.5, pluggy-1.5.0 -- /Users/nolson/micromamba/envs/happy-dev/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /Users/nolson/hap.py-modern-claude4/hap.py
+configfile: pytest.ini
+plugins: cov-6.1.1
+collecting ... collected 76 items
+
+tests/unit/test_ga4gh_compliance.py::TestGA4GHDecisionEnum::test_decision_values PASSED [  1%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHFormatter::test_init PASSED [  2%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHFormatter::test_format_vcf_header_disabled PASSED [  3%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHFormatter::test_format_vcf_header_enabled PASSED [  5%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHFormatter::test_annotate_record PASSED [  6%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHFormatter::test_annotate_record_disabled PASSED [  7%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_init[region_files0] PASSED [  9%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_init[region_files1] PASSED [ 10%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_load_regions[region_files0] PASSED [ 11%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_load_regions[region_files1] PASSED [ 13%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_get_overlapping_regions[region_files0] PASSED [ 14%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHStratification::test_get_overlapping_regions[region_files1] PASSED [ 15%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHMetrics::test_calculate_precision PASSED [ 17%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHMetrics::test_calculate_recall PASSED [ 18%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHMetrics::test_calculate_f1 FAILED [ 19%]
+tests/unit/test_ga4gh_compliance.py::TestGA4GHMetrics::test_calculate_stratified_metrics PASSED [ 21%]
+tests/unit/test_pre.py::test_hasChrPrefix PASSED                         [ 22%]
+tests/unit/test_pre.py::test_vcfextract_integration PASSED               [ 23%]
+tests/unit/test_python_hapcmp.py::test_hapcmp_initialization PASSED      [ 25%]
+tests/unit/test_python_hapcmp.py::test_haplotype_block_initialization PASSED [ 26%]
+tests/unit/test_python_hapcmp.py::test_set_max_haplotypes[1] PASSED      [ 27%]
+tests/unit/test_python_hapcmp.py::test_set_max_haplotypes[10] PASSED     [ 28%]
+tests/unit/test_python_hapcmp.py::test_set_max_haplotypes[100] PASSED    [ 30%]
+tests/unit/test_python_hapcmp.py::test_set_max_haplotypes[4096] PASSED   [ 31%]
+tests/unit/test_python_hapcmp.py::test_set_do_alignments PASSED          [ 32%]
+tests/unit/test_python_hapcmp.py::test_basic_comparison PASSED           [ 34%]
+tests/unit/test_python_preprocess.py::test_preprocess_initialization PASSED [ 35%]
+tests/unit/test_python_preprocess.py::test_normalize_variant PASSED      [ 36%]
+tests/unit/test_python_preprocess.py::test_process_file PASSED           [ 38%]
+tests/unit/test_python_preprocess.py::test_decompose_variants PASSED     [ 39%]
+tests/unit/test_python_preprocess.py::test_left_shift_variants PASSED    [ 40%]
+tests/unit/test_python_preprocess.py::test_haploid_x_handling PASSED     [ 42%]
+tests/unit/test_python_preprocess.py::test_region_filtering PASSED       [ 43%]
+tests/unit/test_python_preprocess.py::test_pass_only_filtering PASSED    [ 44%]
+tests/unit/test_roc_analysis.py::TestROCAnalysis::test_perform_roc_analysis PASSED [ 46%]
+tests/unit/test_roc_analysis.py::TestROCAnalysis::test_roc_analysis_initialization PASSED [ 47%]
+tests/unit/test_roc_analysis.py::TestROCAnalysis::test_write_roc_results SKIPPED [ 48%]
+tests/unit/test_sequence_utils.py::TestSequenceUtils::test_complement_sequence PASSED [ 50%]
+tests/unit/test_sequence_utils.py::TestSequenceUtils::test_reverse_complement PASSED [ 51%]
+tests/unit/test_sequence_utils.py::TestSequenceUtils::test_normalize_sequence PASSED [ 52%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_init PASSED     [ 53%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_get_sequence PASSED [ 55%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_get_invalid_sequence PASSED [ 56%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_get_chromosomes PASSED [ 57%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_get_chromosome_length PASSED [ 59%]
+tests/unit/test_sequence_utils.py::TestFastaReader::test_get_all_chromosome_lengths PASSED [ 60%]
+tests/unit/test_tools.py::test_which PASSED                              [ 61%]
+tests/unit/test_tools.py::test_defaultReference PASSED                   [ 63%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_init SKIPPED  [ 64%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_init_custom_params SKIPPED [ 65%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_quantify SKIPPED [ 67%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_write_results SKIPPED [ 68%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_is_filtered PASSED [ 69%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_get_variant_type PASSED [ 71%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_match_variants PASSED [ 72%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_allele_compatibility PASSED [ 73%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_variant_classification FAILED [ 75%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_overlapping_variant_matching_edge_cases PASSED [ 76%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_variant_matching_performance PASSED [ 77%]
+tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_benchmarking_decision_tracking PASSED [ 78%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_init PASSED            [ 80%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_init_custom_params PASSED [ 81%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_check_file PASSED      [ 82%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_check_file_with_output PASSED [ 84%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_check_with_reference PASSED [ 85%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_is_filtered PASSED     [ 86%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_check_header PASSED    [ 88%]
+tests/unit/test_vcfcheck.py::TestVCFChecker::test_print_summary PASSED   [ 89%]
+tests/unit/test_vcfeval.py::TestVCFEval::test_findVCFEval PASSED         [ 90%]
+tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_default_params PASSED [ 92%]
+tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_input_validation PASSED [ 93%]
+tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_missing_output PASSED [ 94%]
+tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_subprocess_errors PASSED [ 96%]
+tests/unit/test_vcfextract.py::test_extractHeadersJSON_returns_data PASSED [ 97%]
+tests/unit/test_vcfextract.py::test_extractHeadersJSON_with_outfile PASSED [ 98%]
+tests/unit/test_vcfextract.py::test_extract_header_filters PASSED        [100%]
+
+=================================== FAILURES ===================================
+______________________ TestGA4GHMetrics.test_calculate_f1 ______________________
+
+self = <test_ga4gh_compliance.TestGA4GHMetrics object at 0x165fe65d0>
+
+    def test_calculate_f1(self):
+        """Test F1 score calculation."""
+        metrics = GA4GHMetrics()
+>       assert metrics.calculate_f1(0.8, 0.8) == 0.8
+E       assert 0.8000000000000002 == 0.8
+E        +  where 0.8000000000000002 = calculate_f1(0.8, 0.8)
+E        +    where calculate_f1 = <hap_py.haplo.ga4gh_compliance.GA4GHMetrics object at 0x166dc4a50>.calculate_f1
+
+tests/unit/test_ga4gh_compliance.py:497: AssertionError
+________________ TestQuantifyEngine.test_variant_classification ________________
+
+self = <test_unit_quantify.TestQuantifyEngine object at 0x166d8fc90>
+
+        def test_variant_classification(self):
+            """Test the _classify_variant_type helper method."""
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".vcf", delete=False
+            ) as truth_f, tempfile.NamedTemporaryFile(
+                mode="w", suffix=".vcf", delete=False
+            ) as query_f:
+
+                # Write minimal valid VCF content
+                vcf_content = """##fileformat=VCFv4.2
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+    #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+    chr1	100	.	A	T	60	PASS	.	GT	0/1
+    """
+                truth_f.write(vcf_content)
+                query_f.write(vcf_content)
+                truth_f.flush()
+                query_f.flush()
+
+                try:
+                    engine = QuantifyEngine(truth_vcf=truth_f.name, query_vcf=query_f.name)
+
+                    if hasattr(engine, "_classify_variant_type"):
+                        # Test SNP classification
+                        snp_variant = {"ref": "A", "alt": "T"}
+                        assert engine._classify_variant_type(snp_variant) == "SNP"
+
+                        # Test deletion classification
+                        del_variant = {"ref": "ATG", "alt": "A"}
+                        assert engine._classify_variant_type(del_variant) == "DEL"
+
+                        # Test insertion classification
+                        ins_variant = {"ref": "A", "alt": "ATCG"}
+                        assert engine._classify_variant_type(ins_variant) == "INS"
+
+                        # Test variant with length change (the implementation classifies this as INS)
+                        # ATG -> TCCG is ref_len=3, alt_len=4, so it's classified as INS
+                        length_change_variant = {"ref": "ATG", "alt": "TCCG"}
+                        result = engine._classify_variant_type(length_change_variant)
+                        assert (
+                            result == "INS"
+                        )  # This is what the implementation actually returns
+
+                        # Test MNP (same length, multiple changes)
+                        mnp_variant = {"ref": "ATG", "alt": "TCC"}
+                        result = engine._classify_variant_type(mnp_variant)
+>                       assert result == "MNP"
+E                       AssertionError: assert 'COMPLEX' == 'MNP'
+E
+E                         - MNP
+E                         + COMPLEX
+
+tests/unit/test_unit_quantify.py:486: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_ga4gh_compliance.py::TestGA4GHMetrics::test_calculate_f1
+FAILED tests/unit/test_unit_quantify.py::TestQuantifyEngine::test_variant_classification
+=================== 2 failed, 69 passed, 5 skipped in 13.83s ===================
