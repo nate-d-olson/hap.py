@@ -31,33 +31,43 @@ def _merge_records(
     inputs: list[tuple[Path, str]], out_vcf: Path, reference: Path
 ) -> None:
     header = None
-    samples = []
+    opened_vcfs: list[tuple[pysam.VariantFile, str]] = []
     records: dict[tuple[str, int, str], pysam.VariantRecord] = {}
 
+    # Open all VCFs first to build the combined header
     for vcf_path, sample in inputs:
         vcf = _read_vcf(vcf_path)
+        opened_vcfs.append((vcf, sample))
         if header is None:
             header = vcf.header.copy()
+            if "GT" not in header.formats:
+                header.formats.add("GT", number=1, type="String", description="Genotype")
+
+    for _, sample in opened_vcfs:
         if sample not in header.samples:
             header.add_sample(sample)
-        samples.append(sample)
+
+    for vcf, sample in opened_vcfs:
         for rec in vcf.fetch():
             key = (rec.chrom, rec.pos, rec.ref)
             if key not in records:
+                if rec.alts:
+                    alleles = (rec.ref,) + tuple(rec.alts)
+                else:
+                    alleles = (rec.ref, ".")
                 new_rec = header.new_record(
                     contig=rec.chrom,
                     start=rec.pos - 1,
                     stop=rec.stop,
                     id=rec.id,
-                    ref=rec.ref,
-                    alts=list(rec.alts),
+                    alleles=alleles,
                 )
                 records[key] = new_rec
             else:
                 new_rec = records[key]
-                alts = set(new_rec.alts or [])
-                alts.update(rec.alts or [])
-                new_rec.alts = list(alts)
+                alts = set(a for a in new_rec.alts or [] if a != ".")
+                alts.update(a for a in (rec.alts or []) if a != ".")
+                new_rec.alts = list(alts) if alts else ["."]
             gt = rec.samples[0].get("GT")
             records[key].samples[sample]["GT"] = gt
     with pysam.VariantFile(str(out_vcf), "w", header=header) as out:
