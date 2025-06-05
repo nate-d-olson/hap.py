@@ -10,8 +10,11 @@ from pathlib import Path
 
 import pytest
 
-# Add src/hap_py to path for imports during tests
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "hap_py"))
+# Add the repository's ``src`` directory to ``sys.path`` so tests import the
+# ``hap_py`` package from the working tree rather than any installed version.
+repo_root = Path(__file__).resolve().parent
+src_path = repo_root / "src"
+sys.path.insert(0, str(src_path))
 
 
 @pytest.fixture(scope="session")
