@@ -409,4 +409,3 @@ def mock_vcf_header():
     header.add_format = MagicMock()
     header.add_info = MagicMock()
     return header
-
