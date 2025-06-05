@@ -16,6 +16,7 @@ class VariantType(Enum):
     """Variant classification types."""
 
     SNP = "SNP"
+    MNP = "MNP"
     INDEL = "INDEL"
     COMPLEX = "COMPLEX"
     UNKNOWN = "UNKNOWN"

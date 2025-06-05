@@ -679,14 +679,7 @@ class QuantifyEngine:
         ref = str(row.get("ref", ""))
         alt = str(row.get("alt", ""))
 
-        if len(ref) == 1 and len(alt) == 1:
-            return "SNP"
-        elif len(ref) > len(alt):
-            return "DEL"
-        elif len(ref) < len(alt):
-            return "INS"
-        else:
-            return "COMPLEX"
+        return self._classify_variant_type_from_lengths(len(ref), len(alt))
 
     def _perform_sophisticated_matching(
         self, truth_df: pd.DataFrame, query_df: pd.DataFrame
@@ -1312,14 +1305,13 @@ class QuantifyEngine:
 
     def _classify_variant_type_from_lengths(self, ref_len: int, alt_len: int) -> str:
         """Classify variant type based on reference and alternate allele lengths."""
-        if ref_len == 1 and alt_len == 1:
-            return "SNP"
-        elif ref_len > alt_len:
+        if ref_len == alt_len:
+            return "SNP" if ref_len == 1 else "MNP"
+        if ref_len > alt_len:
             return "DEL"
-        elif ref_len < alt_len:
+        if ref_len < alt_len:
             return "INS"
-        else:
-            return "COMPLEX"
+        return "COMPLEX"
 
     def _have_similar_sequence_impact(self, var1: pd.Series, var2: pd.Series) -> bool:
         """
