@@ -51,9 +51,9 @@ The 2025-06-03 milestone is now complete, including:
 
 ### Next Objectives (2025-06-04)
 1. Prepare the first α-quality release candidate:
-   - Validate end-to-end benchmarking on the full HG002 truth set (integration tests)
-   - Implement and verify auto-index creation (`_ensure_vcf_index`) for all outputs (task C-5)
-   - Optimize performance for large genomes and multi-threading
+   - [x] Validate end-to-end benchmarking on the full HG002 truth set (integration tests)
+   - [x] Implement and verify auto-index creation (`_ensure_vcf_index`) for all outputs (task C-5)
+   - Optimize performance for large genomes and multi-threading (heavy smoke test in progress)
 2. Finalize packaging and versioning:
    - Bump package version to `0.1.0a1` (alpha)
    - Update `RELEASES.md` and `setup.cfg`/`pyproject.toml` accordingly

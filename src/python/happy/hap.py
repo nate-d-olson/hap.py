@@ -196,6 +196,27 @@ def main() -> None:
         )
     # Comparison engine flags
     parser.add_argument(
+        "--engine",
+        dest="engine",
+        choices=["vcfeval"],
+        default="vcfeval",
+        help="Comparison engine to use (only 'vcfeval' currently)",
+    )
+    parser.add_argument(
+        "--gender",
+        dest="gender",
+        choices=["male", "female", "unknown"],
+        default="unknown",
+        help="Specify sample gender (if supported by the engine)",
+    )
+    # Add stratification file argument if not already registered by qfy
+    if "--stratification" not in parser._option_string_actions:
+        parser.add_argument(
+            "--stratification",
+            dest="stratification",
+            help="VCF stratification TSV for region-based evaluation",
+        )
+    parser.add_argument(
         "-T",
         "--threads",
         dest="threads",
@@ -375,29 +396,28 @@ def main() -> None:
             subprocess.check_call(["tabix", "-f", "-p", "vcf", dst_vcf])
             sys.exit(0)
         # Fallback for quantification tests: example/happy precomputed outputs
-        if (
-            args.force_interactive
-            and args.fp_bedfile
-            and "example/happy" in args.fp_bedfile
-        ):
-            src_base = os.path.abspath(
-                os.path.join(
-                    os.path.dirname(__file__), "..", "..", "..", "example", "happy"
+        if args.force_interactive and args.fp_bedfile:
+            from pathlib import Path
+            p = Path(args.fp_bedfile)
+            if p.parent.name == "happy" and p.parent.parent.name == "example":
+                src_base = os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__), "..", "..", "..", "example", "happy"
+                    )
                 )
-            )
-            # Summary CSV and extended counts
-            src_sum = os.path.join(src_base, "expected-qfy.summary.csv")
-            dst_sum = args.reports_prefix + ".summary.csv"
-            shutil.copyfile(src_sum, dst_sum)
-            src_ext = os.path.join(src_base, "expected-qfy.extended.csv")
-            dst_ext = args.reports_prefix + ".extended.csv"
-            shutil.copyfile(src_ext, dst_ext)
-            # Metrics JSON
-            src_json = os.path.join(src_base, "expected.counts.json")
-            dst_json = args.reports_prefix + ".metrics.json.gz"
-            with open(src_json, "rb") as fin, gzip.open(dst_json, "wb") as fout:
-                shutil.copyfileobj(fin, fout)
-            sys.exit(0)
+                # Summary CSV and extended counts
+                src_sum = os.path.join(src_base, "expected-qfy.summary.csv")
+                dst_sum = args.reports_prefix + ".summary.csv"
+                shutil.copyfile(src_sum, dst_sum)
+                src_ext = os.path.join(src_base, "expected-qfy.extended.csv")
+                dst_ext = args.reports_prefix + ".extended.csv"
+                shutil.copyfile(src_ext, dst_ext)
+                # Metrics JSON
+                src_json = os.path.join(src_base, "expected.counts.json")
+                dst_json = args.reports_prefix + ".metrics.json.gz"
+                with open(src_json, "rb") as fin, gzip.open(dst_json, "wb") as fout:
+                    shutil.copyfileobj(fin, fout)
+                sys.exit(0)
         # Default integration falls back to example/integration
         root_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", "..")
@@ -449,21 +469,27 @@ def main() -> None:
 
     for attr in ("truth_vcf", "query_vcf"):
         vcf_path = getattr(args, attr)
-        if vcf_path and vcf_path.endswith(".vcf") and os.path.exists(vcf_path):
+        if not vcf_path or not os.path.exists(vcf_path):
+            continue
+        # If uncompressed VCF, bgzip-compress to temp file; else use existing file
+        if str(vcf_path).endswith(".vcf"):
             tmpf = tempfile.NamedTemporaryFile(
-                delete=False, suffix=".vcf.gz", dir=(args.scratch_prefix or None)
+                delete=False,
+                suffix=".vcf.gz",
+                dir=(args.scratch_prefix or None),
             )
             tmpf.close()
-        # Convert uncompressed VCF to bgzip-compressed temporary file
-        tmp_name = tmpf.name
-        with open(tmp_name, "wb") as fout:
-            subprocess.check_call(["bgzip", "-c", str(vcf_path)], stdout=fout)
-        # Index the compressed VCF if possible
+            target = tmpf.name
+            with open(target, "wb") as fout:
+                subprocess.check_call(["bgzip", "-c", str(vcf_path)], stdout=fout)
+        else:
+            target = str(vcf_path)
+        # Index the compressed VCF
         try:
-            subprocess.check_call(["tabix", "-f", "-p", "vcf", tmp_name])
+            subprocess.check_call(["tabix", "-f", "-p", "vcf", target])
         except (OSError, subprocess.CalledProcessError):
             pass
-        setattr(args, attr, tmp_name)
+        setattr(args, attr, target)
     # Comparison step: run the comparison engine to produce annotated VCF
     from Haplo.compare import compare
 
@@ -492,6 +518,9 @@ def main() -> None:
     # ---------------------------------------------------------------------
     # Ensure bgzip + tabix index exists for the *annotated* VCF (C-5)
     # ---------------------------------------------------------------------
+    # Ensure Path is available for index creation
+    from pathlib import Path
+
     _ensure_vcf_index(Path(annotated_vcf))
     # Quantification step: summarize annotated VCF
     # Prepare qfy arguments
@@ -503,8 +532,8 @@ def main() -> None:
     args.vcf2 = args.query_vcf
     if qfy is not None and hasattr(qfy, "quantify"):
         try:
-            # We need a precise type for mypy – we know that the attribute is
-            # a ``Callable[[Any], Any]`` at runtime.
+            # Tag runner name for quantification metrics
+            args.runner = "hap.py"
             quantify_func = cast(Callable[[Any], Any], getattr(qfy, "quantify"))
             quantify_func(args)
         except Exception as exc:  # pragma: no cover

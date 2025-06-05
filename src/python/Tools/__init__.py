@@ -17,6 +17,8 @@ from importlib.metadata import version as _pkg_version
 from pathlib import Path
 from typing import Optional
 
+from . import vcfextract
+
 LOGGER = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -48,7 +50,6 @@ _DEFAULT_EXECUTABLES = (
     "hapenum",
     "dipenum",
     "hapcmp",
-    "xcmp",
     "bcftools",
     "samtools",
 )

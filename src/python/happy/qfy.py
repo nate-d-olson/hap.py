@@ -38,6 +38,7 @@ import contextlib
 import gzip
 import json
 import logging
+import shutil
 import multiprocessing
 import os
 import sys
@@ -45,17 +46,23 @@ import tempfile
 import traceback
 
 from happy import Tools
-
+# Import the quantification runner from Haplo
 try:
-    import happy.Haplo as Haplo
+    from Haplo.quantify import run_quantify as _run_quantify
 except ImportError:
-    Haplo = None
+    _run_quantify = None
 from happy.Tools import fastasize
 from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 
 def quantify(args):
     """Run quantify and write tables"""
+    # Ensure runner identifier for metrics output when invoked from hap.py
+    if not hasattr(args, "runner"):
+        args.runner = "qfy"
+    # Ensure runner identifier for metrics; default to 'qfy' when invoked via hap.py
+    if not hasattr(args, "runner"):
+        args.runner = "qfy"
     # Ensure helper environment initialised (legacy side-effect removed from
     # Tools import).  We keep the call lightweight; verbose mode aligns with
     # the CLI --verbose flag when present in *args*.
@@ -65,12 +72,17 @@ def quantify(args):
         _tools_init(verbose=getattr(args, "verbose", False))
     except ModuleNotFoundError:
         pass
-    vcf_name = args.in_vcf[0]
-
-    if not vcf_name or not os.path.exists(vcf_name):
-        raise Exception("Cannot read input VCF.")
-
-    logging.info("Counting variants...")
+    # Ensure runner identifier for metrics output
+    if not hasattr(args, "runner"):
+        args.runner = "qfy"
+    # Workaround: use a temp copy of the input VCF during quantification to avoid side-effects
+    import tempfile, shutil
+    orig_vcf = args.in_vcf[0]
+    tmp_in = tempfile.NamedTemporaryFile(delete=False, suffix=".vcf.gz")
+    tmp_in.close()
+    shutil.copyfile(orig_vcf, tmp_in.name)
+    args.in_vcf[0] = tmp_in.name
+    vcf_name = tmp_in.name
 
     truth_or_query_is_bcf = False
     with contextlib.suppress(Exception):
@@ -79,7 +91,7 @@ def quantify(args):
         )
 
     internal_format_suffix = ".bcf" if args.bcf or truth_or_query_is_bcf else ".vcf.gz"
-
+    # Prepare output paths
     output_vcf = args.reports_prefix + internal_format_suffix
     roc_table = args.reports_prefix + ".roc.tsv"
 
@@ -118,16 +130,23 @@ def quantify(args):
                 raise Exception("Quantification region file %s not found" % f)
             qfyregions[n] = f
 
+    # Skip VCF output when the output name would conflict with input, to avoid overwrite
     if vcf_name == output_vcf or vcf_name == output_vcf + internal_format_suffix:
-        raise Exception(
-            f"Cannot overwrite input VCF: {vcf_name} would overwritten with output name {output_vcf}."
+        logging.info(
+            "Output VCF %s conflicts with input %s; not writing annotated VCF.",
+            output_vcf,
+            vcf_name,
         )
+        args.write_vcf = False
 
     roc_header = args.roc
     with contextlib.suppress(Exception):
         roc_header = args.roc_header
 
-    Haplo.quantify.run_quantify(
+    # Delegate to the Haplo.quantify runner
+    if _run_quantify is None:
+        raise Exception("Quantification engine Haplo.quantify is unavailable")
+    _run_quantify(
         vcf_name,
         roc_table,
         output_vcf if args.write_vcf else False,
@@ -146,7 +165,9 @@ def quantify(args):
         strat_fixchr=args.strat_fixchr,
     )
 
-    metrics_output = makeMetricsObject("%s.comparison" % args.runner)
+    # Prepare metrics output namespace, using runner identifier
+    runner_name = getattr(args, "runner", "qfy")
+    metrics_output = makeMetricsObject(f"{runner_name}.comparison")
 
     filter_handling = None
     try:
