@@ -6,7 +6,7 @@ This document outlines known issues with the hap.py test suite that require atte
 
 ### 1. Integration Tests Hanging/Unresponsive During Execution
 
-**Priority**: HIGH  
+**Priority**: HIGH
 **Status**: Unresolved
 
 **Problem**: The integration test suite appears to hang or become unresponsive when running with `pytest tests/integration/`. This makes it difficult to complete the full test validation process.
@@ -30,7 +30,7 @@ This document outlines known issues with the hap.py test suite that require atte
 
 ### 2. GA4GH Integration Tests Failing with Import/Setup Errors
 
-**Priority**: MEDIUM  
+**Priority**: MEDIUM
 **Status**: Partially resolved (unit tests fixed)
 
 **Problem**: GA4GH-related integration tests fail with import errors and module setup issues.
@@ -44,7 +44,7 @@ This document outlines known issues with the hap.py test suite that require atte
 
 ### 3. VCF Processing Integration Tests Failing
 
-**Priority**: MEDIUM  
+**Priority**: MEDIUM
 **Status**: Unresolved
 
 **Problem**: Various VCF processing integration tests are failing, potentially due to:

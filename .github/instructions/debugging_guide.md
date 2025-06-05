@@ -13,10 +13,10 @@
    ```bash
    # Check if the RTG executable exists
    ls external/rtg-tools-3.12.1/rtg
-   
+
    # Create symbolic link if needed
    ln -s external/rtg-tools-3.12.1/rtg .
-   
+
    # Add to PATH for tests
    export PATH=$PATH:$(pwd)/
    ```

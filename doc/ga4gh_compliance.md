@@ -5,7 +5,7 @@
 The GA4GH (Global Alliance for Genomics and Health) has established benchmarking standards for variant calling evaluation. The hap.py tool provides full support for these standards through comprehensive implementation of:
 
 1. GA4GH stratification standards
-2. Benchmarking metrics according to GA4GH specifications  
+2. Benchmarking metrics according to GA4GH specifications
 3. Output formatting that adheres to GA4GH requirements
 4. Complete VCF intermediate format support
 5. Integration with RTG Tools for GA4GH-compliant comparison
@@ -28,7 +28,7 @@ Key methods:
 - `annotate_record()`: Annotates records with decision values and details
 - `add_ga4gh_info_fields()`: Adds standard INFO fields for regions and status
 
-#### GA4GHStratification  
+#### GA4GHStratification
 Handles GA4GH stratification regions for benchmarking:
 - **BED File Integration**: Loads and manages stratification regions from BED files
 - **Region Assignment**: Determines which regions contain each variant
@@ -49,7 +49,7 @@ Calculates benchmarking metrics according to GA4GH standards:
 
 Key methods:
 - `calculate_precision()`: Calculates precision with optional confidence intervals
-- `calculate_recall()`: Calculates recall with optional confidence intervals  
+- `calculate_recall()`: Calculates recall with optional confidence intervals
 - `calculate_f1()`: Calculates F1-score with optional confidence intervals
 - `calculate_metrics()`: Comprehensive metrics calculation
 
@@ -67,7 +67,7 @@ Provides seamless integration with QuantifyEngine:
 #### FORMAT Fields
 ```
 ##FORMAT=<ID=BD,Number=1,Type=String,Description="Decision for the benchmark variant (TP/FP/FN/N/UNK)">
-##FORMAT=<ID=BK,Number=1,Type=String,Description="Decision detail for the benchmark variant">  
+##FORMAT=<ID=BK,Number=1,Type=String,Description="Decision detail for the benchmark variant">
 ##FORMAT=<ID=QD,Number=1,Type=String,Description="Decision for the query variant (TP/FP/FN/N/UNK)">
 ##FORMAT=<ID=QK,Number=1,Type=String,Description="Decision detail for the query variant">
 ```
@@ -76,7 +76,7 @@ Provides seamless integration with QuantifyEngine:
 ```
 ##INFO=<ID=Regions,Number=.,Type=String,Description="List of region IDs this variant is located in">
 ##INFO=<ID=TruthStatus,Number=1,Type=String,Description="Status of the variant in truth VCF (TP/FN/FP/N/UNK)">
-##INFO=<ID=QueryStatus,Number=1,Type=String,Description="Status of the variant in query VCF (TP/FP/FN/N/UNK)">  
+##INFO=<ID=QueryStatus,Number=1,Type=String,Description="Status of the variant in query VCF (TP/FP/FN/N/UNK)">
 ##INFO=<ID=Subtype,Number=1,Type=String,Description="Variant subtype classification (SNP/INDEL/COMPLEX/OTHER)">
 ```
 
@@ -86,12 +86,12 @@ The implementation uses standardized enums for consistent decision tracking:
 
 #### GA4GHDecision
 - **TP**: True positive
-- **FP**: False positive  
+- **FP**: False positive
 - **FN**: False negative
 - **N**: Non-assessed (variant in non-confident region)
 - **UNK**: Unknown/undetermined
 
-#### GA4GHDecisionDetail  
+#### GA4GHDecisionDetail
 - **GT_MATCH**: Genotype match
 - **GT_MISMATCH**: Genotype mismatch
 - **ALLELE_MATCH**: Allele match only
@@ -111,7 +111,7 @@ from hap_py.haplo.python_quantify import QuantifyEngine
 # Create QuantifyEngine with GA4GH compliance
 engine = QuantifyEngine(
     truth_vcf="truth.vcf",
-    query_vcf="query.vcf", 
+    query_vcf="query.vcf",
     quantify_method="ga4gh",
     enable_ga4gh=True
 )
@@ -149,7 +149,7 @@ from hap_py.haplo.ga4gh_compliance import GA4GHStratification
 # Create stratification with standard regions
 stratification = GA4GHStratification({
     "highconf": "/path/to/highconf.bed",
-    "difficult": "/path/to/difficult.bed", 
+    "difficult": "/path/to/difficult.bed",
     "segdup": "/path/to/segmental_duplications.bed"
 })
 
@@ -173,7 +173,7 @@ result = metrics.calculate_metrics(tp=90, fp=10, fn=10, with_ci=True)
 
 # Extract metrics with confidence intervals
 precision, prec_lower, prec_upper = result["precision"]
-recall, rec_lower, rec_upper = result["recall"] 
+recall, rec_lower, rec_upper = result["recall"]
 f1, f1_lower, f1_upper = result["f1"]
 
 print(f"Precision: {precision:.3f} [{prec_lower:.3f}, {prec_upper:.3f}]")
@@ -247,7 +247,7 @@ Comprehensive unit tests validate all GA4GH functionality:
 - Individual class validation for all GA4GH components
 - Decision value and annotation testing
 
-### Integration Tests  
+### Integration Tests
 End-to-end testing ensures GA4GH workflows function correctly:
 - `tests/integration/test_ga4gh_integration.py`: Complete workflow testing
 - RTG integration testing with GA4GH output
