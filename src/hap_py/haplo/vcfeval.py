@@ -43,32 +43,46 @@ except ImportError:
 
 
 def findVCFEval() -> str:
-    """Return the path to the ``rtg`` executable.
+    """Locate the ``rtg`` executable.
 
-    The search order is:
-    1. Environment variable ``RTG_PATH``.
-    2. ``rtg`` found in the user's ``PATH``.
+    The lookup order is:
 
-    If neither is found, ``"rtg"`` is returned so that the caller can rely on the
-    system ``PATH``.
+    1. ``RTG`` or ``RTGTOOLS_PATH`` environment variables
+    2. ``shutil.which("rtg")``
+
+    Returns:
+        Path to the ``rtg`` executable.
+
+    Raises:
+        FileNotFoundError: if the executable cannot be located.
     """
 
-    rtg_env = os.environ.get("RTG_PATH")
-    if rtg_env and os.path.isfile(rtg_env) and os.access(rtg_env, os.X_OK):
-        logging.info("Using RTG tools from RTG_PATH: %s", rtg_env)
-        return rtg_env
+    env_vars = ["RTG", "RTGTOOLS_PATH"]
+    for var in env_vars:
+        val = os.environ.get(var)
+        if not val:
+            continue
 
-    rtg_in_path = shutil.which("rtg")
-    if rtg_in_path:
-        logging.info("Using RTG tools from PATH: %s", rtg_in_path)
-        return rtg_in_path
+        exe = val
+        if os.path.isdir(exe):
+            exe = os.path.join(exe, "rtg")
 
-    if has_vcfeval:
-        logging.warning(
-            "RTG tools not found via RTG_PATH or PATH. "
-            "Falling back to 'rtg'."
+        if os.path.isfile(exe) and os.access(exe, os.X_OK):
+            logging.info(f"Using RTG tools from ${var}: {exe}")
+            return exe
+
+        raise FileNotFoundError(
+            f"RTG executable specified via ${var} not found or not executable: {val}"
         )
-    return "rtg"
+
+    rtg = shutil.which("rtg")
+    if rtg:
+        logging.info(f"Using RTG tools from PATH: {rtg}")
+        return rtg
+
+    raise FileNotFoundError(
+        "rtg executable not found. Set RTG or RTGTOOLS_PATH or ensure it is on your PATH."
+    )
 
 
 def runVCFEval(
