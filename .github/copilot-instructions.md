@@ -56,9 +56,13 @@ This fork aims to modernize the codebase for continued use and development.
         - ✅ Added robust tests for sophisticated variant matching algorithms
         - ✅ Established realistic performance expectations for current implementation
         - Phase 1 is now considered complete with core variant matching functionality working and tested.
-    - 🔄 **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
+    - ✅ **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
         - Implementation includes methods: `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, `_calculate_bootstrap_confidence_intervals()`, `_perform_multi_threshold_analysis()`, and `_write_roc_results()`.
-    - 🔄 **Phase 3**: Superlocus analysis
+    - 🔄 **Phase 3**: Superlocus analysis and region-based quantification
+        - The Phase 3 implementation is missing the two critical classes `RegionBasedQuantifier` and `MultiSampleQuantifier`.
+        - Implement `RegionBasedQuantifier` and `MultiSampleQuantifier` classes in the `quantify` module.
+        - Consider `pybedtools` as an optional dependency for region-based quantification.
+        - Complete the implementation of region stratification and multi-sample analysis methods.
     - 🔄 **Phase 4**: Performance optimization for large datasets
     - Ensure the original functionality of the quantify module is maintained in the updated (modernized codebase).
     - Evaluate whether any of the original cython provides significant performance improvements compared to the in progress updated implementation that would justify the additional layer of complexity for package maintenance, development, and install.
@@ -72,6 +76,7 @@ This fork aims to modernize the codebase for continued use and development.
 - Git
 - micromamba (recommended) or conda/mamba
 - Standard bioinformatics tools: bcftools, samtools, tabix
+- `pybedtools` (optional, for Phase 3 quantify implementation)
 
 ### Initial Setup
 
@@ -410,9 +415,13 @@ cmake --build build --config Release
         - ✅ Added robust tests for sophisticated variant matching algorithms
         - ✅ Established realistic performance expectations for current implementation
         - Phase 1 is now considered complete with core variant matching functionality working and tested.
-    - 🔄 **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
+    - ✅ **Phase 2**: Enhanced ROC analysis with confidence intervals and quality score stratification
         - Implementation includes methods: `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, `_calculate_bootstrap_confidence_intervals()`, `_perform_multi_threshold_analysis()`, and `_write_roc_results()`.
     - 🔄 **Phase 3**: Superlocus analysis and region-based quantification
+        - The Phase 3 implementation is missing the two critical classes `RegionBasedQuantifier` and `MultiSampleQuantifier`.
+        - Implement `RegionBasedQuantifier` and `MultiSampleQuantifier` classes in the `quantify` module.
+        - Consider `pybedtools` as an optional dependency for region-based quantification.
+        - Complete the implementation of region stratification and multi-sample analysis methods.
     - 🔄 **Phase 4**: Performance optimization for large datasets
     - 🔄 **Phase 5**: GA4GH compliance and standards support
     - Ensure the original functionality of the quantify module is maintained in the updated (modernized codebase).
@@ -508,6 +517,7 @@ python --version  # Should show: Python 3.11.12
 - Integration tests should only fail when the output files don't match the equivalent expected files, and not when there are additional output files than the expected data files.
 - When analyzing integration test failures, remember that tests can fail because the `hap.py` command itself is returning non-zero exit status, not always because of file comparison issues. Examine the error messages to understand the root cause.
 - **Integration tests MUST NOT fail when there are additional output files than the expected data files. Tests should only fail when the output files don't match the equivalent expected files.**
+- Before committing any changes to the repository, the Phase 3 validation testing MUST be finalized and debugged, and the relevant documentation updated.
 
 ### Detailed Plan for Debugging Failing Integration Tests
 
@@ -735,16 +745,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
 - The `normalize_variant` function's behavior should match test expectations. If the test expects minimal trimming, the implementation should be adjusted accordingly.
 
 ### Test Failure Analysis (2025-05-27_14-38)
-- Key issues to address from the latest test runs:
-    - `test_normalize_variant`: Positions don't match (101 vs 102). Examine the `normalize_variant` implementation.
-    - `test_check_header`: The header check isn't detecting a missing FILTER field. Review the `_check_header` method in `VCFChecker`.
-    - `test_findVCFEval`: Issues with RTG path detection.
-    - RTG tool availability in subprocess tests.
-
-### Enhanced Debugging Test Failures (2025-05-27_14-38)
-
-- **RTG-related Issues:**
-  - Ensure the `--engine-vcfeval-path` argument is correctly passed to the `hap.py` call within the test.
-  - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location.
-
-### Implementation Details:
+- Key issues to

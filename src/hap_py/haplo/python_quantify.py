@@ -37,6 +37,9 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
+# Import Phase 3 components
+from .quantify_phase3 import MultiSampleQuantifier, RegionBasedQuantifier
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,6 +65,14 @@ class QuantifyEngine:
         enable_roc_analysis: bool = True,  # Phase 2: Enable ROC analysis
         roc_bootstrap_samples: int = 1000,  # Phase 2: Bootstrap samples for confidence intervals
         quality_stratification: bool = True,  # Phase 2: Enable quality-based stratification
+        # Phase 3: Superlocus and region-based analysis
+        enable_superlocus_analysis: bool = False,  # Enable superlocus analysis
+        enable_region_stratification: bool = False,  # Enable region-based stratification
+        enable_multi_sample: bool = False,  # Enable multi-sample analysis
+        region_bed_files: Optional[
+            Dict[str, str]
+        ] = None,  # BED files for region stratification
+        superlocus_window: int = 1000,  # Window size for superlocus identification
     ):
         """
         Initialize the quantify engine.
@@ -77,6 +88,11 @@ class QuantifyEngine:
             enable_roc_analysis: Enable Phase 2 ROC analysis with confidence intervals
             roc_bootstrap_samples: Number of bootstrap samples for confidence intervals
             quality_stratification: Enable quality score-based stratification
+            enable_superlocus_analysis: Enable Phase 3 superlocus analysis
+            enable_region_stratification: Enable Phase 3 region-based stratification
+            enable_multi_sample: Enable Phase 3 multi-sample analysis
+            region_bed_files: Dictionary of region names to BED file paths
+            superlocus_window: Window size for superlocus identification
         """
         self.truth_vcf = truth_vcf
         self.query_vcf = query_vcf
@@ -90,6 +106,13 @@ class QuantifyEngine:
         self.enable_roc_analysis = enable_roc_analysis
         self.roc_bootstrap_samples = roc_bootstrap_samples
         self.quality_stratification = quality_stratification
+
+        # Phase 3: Superlocus and Region Analysis Configuration
+        self.enable_superlocus_analysis = enable_superlocus_analysis
+        self.enable_region_stratification = enable_region_stratification
+        self.enable_multi_sample = enable_multi_sample
+        self.region_bed_files = region_bed_files or {}
+        self.superlocus_window = superlocus_window
 
         # Validate quantify method
         if self.quantify_method not in ["xcmp", "ga4gh"]:
@@ -109,6 +132,40 @@ class QuantifyEngine:
         self.roc_data: Dict[str, Any] = {}
         self.quality_metrics: Dict[str, Any] = {}
         self.bootstrap_confidence_intervals: Dict[str, Any] = {}
+
+        # Phase 3: Superlocus and Region Analysis Results Storage
+        self.superlocus_data: Dict[str, Any] = {}
+        self.region_stratification_results: Dict[str, Any] = {}
+        self.multi_sample_results: Dict[str, Any] = {}
+
+        # Phase 3: Initialize quantifiers
+        self.region_quantifier: Optional[RegionBasedQuantifier] = None
+        self.multi_sample_quantifier: Optional[MultiSampleQuantifier] = None
+
+        # Open VCF files
+        self._open_vcfs()
+
+        # Load regions if provided
+        if regions:
+            self._load_regions()
+
+        # Phase 3: Initialize region-based quantifier if enabled
+        if self.enable_region_stratification and self.region_bed_files:
+            self.region_quantifier = RegionBasedQuantifier(self.reference)
+            # Load BED regions if provided
+            if isinstance(self.region_bed_files, dict):
+                self.region_quantifier.load_bed_regions(self.region_bed_files)
+            elif isinstance(self.region_bed_files, list):
+                # Convert list to dict with region names
+                bed_dict = {
+                    f"region_{i+1}": bed_file
+                    for i, bed_file in enumerate(self.region_bed_files)
+                }
+                self.region_quantifier.load_bed_regions(bed_dict)
+
+        # Phase 3: Initialize multi-sample quantifier if enabled
+        if self.enable_multi_sample:
+            self.multi_sample_quantifier = MultiSampleQuantifier()
 
         # Open VCF files
         self._open_vcfs()
@@ -364,6 +421,19 @@ class QuantifyEngine:
         logger.info("Performing ROC analysis (Phase 2)...")
         self._perform_roc_analysis()
 
+        # Perform Phase 3 analyses if enabled
+        if self.enable_superlocus_analysis:
+            logger.info("Performing superlocus analysis (Phase 3)...")
+            self._perform_superlocus_analysis()
+
+        if self.enable_region_stratification:
+            logger.info("Performing region stratification (Phase 3)...")
+            self._perform_region_stratification()
+
+        if self.enable_multi_sample:
+            logger.info("Performing multi-sample analysis (Phase 3)...")
+            self._perform_multi_sample_analysis()
+
         # Store results
         results = {
             "metrics": self.metrics,
@@ -380,6 +450,18 @@ class QuantifyEngine:
             )
             if self.quality_stratification:
                 results["quality_metrics"] = self.quality_metrics
+
+        # Add Phase 3 results if enabled
+        if self.enable_superlocus_analysis:
+            results["superlocus_data"] = self.superlocus_data
+
+        if self.enable_region_stratification:
+            results["region_stratification_results"] = (
+                self.region_stratification_results
+            )
+
+        if self.enable_multi_sample:
+            results["multi_sample_results"] = self.multi_sample_results
 
         return results
 
@@ -2150,3 +2232,506 @@ class QuantifyEngine:
         self._perform_multi_threshold_analysis()
 
         logger.info("ROC analysis completed")
+
+    def _perform_superlocus_analysis(self) -> None:
+        """
+        Perform superlocus analysis - identifies and analyzes complex variant regions.
+
+        This method orchestrates the superlocus identification, grouping, and analysis
+        process to provide sophisticated genomic region analysis capabilities.
+        """
+        try:
+            logger.info("Starting superlocus analysis...")
+
+            # Convert variants to appropriate format for superlocus analysis
+            if not hasattr(self, "truth_variants") or not hasattr(
+                self, "query_variants"
+            ):
+                logger.warning("No variants available for superlocus analysis")
+                return
+
+            # Ensure we have matched variants from the core quantify process
+            if not hasattr(self, "matched_variants") or not self.matched_variants:
+                logger.warning(
+                    "No matched variants available - superlocus analysis requires matched variants"
+                )
+                self.superlocus_data = {
+                    "error": "No matched variants available",
+                    "superloci": [],
+                    "analysis_summary": {"total_superloci": 0},
+                }
+                return
+
+            # Initialize superlocus data storage
+            self.superlocus_data = {
+                "superloci": [],
+                "superlocus_metrics": {},
+                "complex_regions": [],
+                "analysis_summary": {},
+            }
+
+            # Step 1: Find superlocus matches using enhanced algorithm
+            logger.info("Finding superlocus matches...")
+            superlocus_matches = self._find_superlocus_matches(
+                self.truth_variants, self.query_variants, self.matched_variants
+            )
+
+            # Step 2: Group variants into superloci
+            logger.info("Grouping variants into superloci...")
+            superloci = self._group_into_superloci(superlocus_matches)
+            self.superlocus_data["superloci"] = superloci
+
+            # Step 3: Analyze each superlocus
+            logger.info(f"Analyzing {len(superloci)} superloci...")
+            superlocus_metrics = {}
+            complex_regions = []
+
+            for i, superlocus in enumerate(superloci):
+                superlocus_id = f"superlocus_{i+1}"
+
+                # Analyze this superlocus
+                metrics = self._analyze_superlocus(superlocus)
+                superlocus_metrics[superlocus_id] = metrics
+
+                # Identify complex regions
+                if self._is_complex_region(superlocus):
+                    complex_regions.append(
+                        {
+                            "superlocus_id": superlocus_id,
+                            "chromosome": superlocus.get("chromosome", ""),
+                            "start": superlocus.get("start", 0),
+                            "end": superlocus.get("end", 0),
+                            "complexity_score": metrics.get("complexity_score", 0),
+                            "variant_count": len(superlocus.get("variants", [])),
+                            "analysis": metrics,
+                        }
+                    )
+
+            # Store results
+            self.superlocus_data["superlocus_metrics"] = superlocus_metrics
+            self.superlocus_data["complex_regions"] = complex_regions
+
+            # Generate analysis summary
+            summary = {
+                "total_superloci": len(superloci),
+                "complex_regions_count": len(complex_regions),
+                "average_variants_per_superlocus": (
+                    sum(len(sl.get("variants", [])) for sl in superloci)
+                    / len(superloci)
+                    if superloci
+                    else 0
+                ),
+                "superlocus_coverage": self._calculate_superlocus_coverage(superloci),
+            }
+            self.superlocus_data["analysis_summary"] = summary
+
+            logger.info(
+                f"Superlocus analysis completed - found {len(superloci)} superloci, {len(complex_regions)} complex regions"
+            )
+
+        except Exception as e:
+            logger.error(f"Error in superlocus analysis: {e}")
+            self.superlocus_data = {
+                "error": str(e),
+                "superloci": [],
+                "analysis_summary": {"total_superloci": 0},
+            }
+
+    def _perform_region_stratification(self) -> None:
+        """
+        Perform region-based stratification using BED files and genomic regions.
+
+        This method coordinates region-based analysis using the RegionBasedQuantifier
+        to provide detailed performance metrics stratified by genomic regions.
+        """
+        try:
+            if not self.region_quantifier:
+                logger.warning("No region quantifier available for stratification")
+                return
+
+            logger.info("Starting region-based stratification...")
+
+            # Prepare variant data for region analysis
+            all_variants = []
+
+            # Add truth variants with labels
+            for variant in self.truth_variants:
+                variant_copy = variant.copy() if isinstance(variant, dict) else variant
+                if isinstance(variant_copy, dict):
+                    variant_copy["source"] = "truth"
+                    all_variants.append(variant_copy)
+
+            # Add query variants with labels
+            for variant in self.query_variants:
+                variant_copy = variant.copy() if isinstance(variant, dict) else variant
+                if isinstance(variant_copy, dict):
+                    variant_copy["source"] = "query"
+                    all_variants.append(variant_copy)
+
+            if not all_variants:
+                logger.warning("No variants available for region stratification")
+                self.region_stratification_results = {}
+                return
+
+            # Stratify variants by regions
+            logger.info("Stratifying variants by regions...")
+            stratified_variants = self.region_quantifier.stratify_variants(all_variants)
+
+            # Calculate region-specific metrics
+            logger.info("Calculating region-specific metrics...")
+            matched_variants = getattr(self, "matched_variants", [])
+            region_metrics = self.region_quantifier.calculate_region_metrics(
+                stratified_variants, matched_variants
+            )
+
+            # Store results
+            self.region_stratification_results = {
+                "stratified_variants": stratified_variants,
+                "region_metrics": region_metrics,
+                "summary": {
+                    "total_regions": len(stratified_variants),
+                    "regions_with_variants": len(
+                        [r for r in stratified_variants.values() if r]
+                    ),
+                    "total_variants_stratified": sum(
+                        len(v) for v in stratified_variants.values()
+                    ),
+                },
+            }
+
+            logger.info(
+                f"Region stratification completed - {len(stratified_variants)} regions analyzed"
+            )
+
+        except Exception as e:
+            logger.error(f"Error in region stratification: {e}")
+            self.region_stratification_results = {
+                "error": str(e),
+                "region_metrics": {},
+                "summary": {"total_regions": 0},
+            }
+
+    def _perform_multi_sample_analysis(self) -> None:
+        """
+        Perform multi-sample comparative analysis for population-level variant evaluation.
+
+        This method coordinates multi-sample analysis using the MultiSampleQuantifier
+        to provide population-level statistics and comparative genomics analysis.
+        """
+        try:
+            if not self.multi_sample_quantifier:
+                logger.warning("No multi-sample quantifier available")
+                return
+
+            logger.info("Starting multi-sample analysis...")
+
+            # For single-sample mode, add the current sample
+            self.multi_sample_quantifier.add_sample(
+                sample_id="current_sample",
+                truth_vcf=self.truth_vcf,
+                query_vcf=self.query_vcf,
+                metadata={"analysis_type": self.quantify_method},
+            )
+
+            # Load variants for the sample
+            logger.info("Loading variants for multi-sample analysis...")
+            self.multi_sample_quantifier.load_sample_variants("current_sample")
+
+            # Calculate population metrics
+            logger.info("Calculating population metrics...")
+            population_metrics = (
+                self.multi_sample_quantifier.calculate_population_metrics()
+            )
+
+            # Perform comparative analysis (will be more meaningful with multiple samples)
+            logger.info("Performing comparative analysis...")
+            comparative_results = (
+                self.multi_sample_quantifier.perform_comparative_analysis()
+            )
+
+            # Get sample concordance
+            logger.info("Calculating sample concordance...")
+            concordance = self.multi_sample_quantifier.get_sample_concordance()
+
+            # Analyze variant frequencies
+            logger.info("Analyzing variant frequencies...")
+            frequency_analysis = (
+                self.multi_sample_quantifier.analyze_variant_frequencies()
+            )
+
+            # Store results
+            self.multi_sample_results = {
+                "population_metrics": population_metrics,
+                "comparative_analysis": comparative_results,
+                "sample_concordance": concordance,
+                "frequency_analysis": frequency_analysis,
+                "summary": {
+                    "total_samples": 1,  # Single sample for now
+                    "analysis_complete": True,
+                },
+            }
+
+            logger.info("Multi-sample analysis completed")
+
+        except Exception as e:
+            logger.error(f"Error in multi-sample analysis: {e}")
+            self.multi_sample_results = {
+                "error": str(e),
+                "summary": {"total_samples": 0, "analysis_complete": False},
+            }
+
+    def _find_superlocus_matches(
+        self,
+        truth_variants,  # Can be List[Dict] or pd.DataFrame
+        query_variants,  # Can be List[Dict] or pd.DataFrame
+        matched_variants: List,
+    ) -> List[Dict]:
+        """
+        Find matches at the superlocus level for complex variant regions.
+
+        Args:
+            truth_variants: Truth set variants
+            query_variants: Query set variants
+            matched_variants: Already found simple matches
+
+        Returns:
+            List of superlocus match dictionaries
+        """
+        superlocus_matches = []
+
+        # Simple implementation for now - would be enhanced with sophisticated algorithms
+        # Group nearby variants into potential superloci
+        truth_groups = self._group_variants_by_proximity(
+            truth_variants, self.superlocus_window
+        )
+        query_groups = self._group_variants_by_proximity(
+            query_variants, self.superlocus_window
+        )
+
+        # Find overlapping groups
+        for truth_group in truth_groups:
+            for query_group in query_groups:
+                if self._groups_overlap(truth_group, query_group):
+                    superlocus_matches.append(
+                        {
+                            "truth_group": truth_group,
+                            "query_group": query_group,
+                            "match_type": "superlocus",
+                            "confidence": 0.8,  # Simplified confidence score
+                        }
+                    )
+
+        return superlocus_matches
+
+    def _group_into_superloci(self, superlocus_matches: List[Dict]) -> List[Dict]:
+        """
+        Group variant matches into superloci.
+
+        Args:
+            superlocus_matches: List of superlocus match dictionaries
+
+        Returns:
+            List of superlocus dictionaries
+        """
+        superloci = []
+
+        for i, match in enumerate(superlocus_matches):
+            truth_group = match["truth_group"]
+            query_group = match["query_group"]
+
+            # Calculate superlocus boundaries
+            all_positions = []
+            for var in truth_group + query_group:
+                all_positions.append(var.get("position", var.get("pos", 0)))
+
+            if all_positions:
+                start_pos = min(all_positions)
+                end_pos = max(all_positions)
+
+                superlocus = {
+                    "id": f"superlocus_{i+1}",
+                    "chromosome": (
+                        truth_group[0].get(
+                            "chromosome", truth_group[0].get("chrom", "")
+                        )
+                        if truth_group
+                        else ""
+                    ),
+                    "start": start_pos,
+                    "end": end_pos,
+                    "variants": truth_group + query_group,
+                    "truth_variants": truth_group,
+                    "query_variants": query_group,
+                    "match_info": match,
+                }
+                superloci.append(superlocus)
+
+        return superloci
+
+    def _analyze_superlocus(self, superlocus: Dict) -> Dict:
+        """
+        Analyze a single superlocus to generate metrics.
+
+        Args:
+            superlocus: Superlocus dictionary
+
+        Returns:
+            Dictionary of superlocus metrics
+        """
+        truth_variants = superlocus.get("truth_variants", [])
+        query_variants = superlocus.get("query_variants", [])
+
+        # Calculate basic metrics
+        truth_count = len(truth_variants)
+        query_count = len(query_variants)
+
+        # Calculate complexity score based on variant density and types
+        region_size = superlocus.get("end", 0) - superlocus.get("start", 0) + 1
+        variant_density = (truth_count + query_count) / max(region_size, 1)
+
+        # Simplified complexity scoring
+        complexity_score = variant_density * (truth_count + query_count) / 10.0
+
+        metrics = {
+            "truth_variant_count": truth_count,
+            "query_variant_count": query_count,
+            "total_variants": truth_count + query_count,
+            "region_size": region_size,
+            "variant_density": variant_density,
+            "complexity_score": min(complexity_score, 10.0),  # Cap at 10
+            "is_complex": complexity_score > 2.0,
+        }
+
+        return metrics
+
+    def _is_complex_region(self, superlocus: Dict) -> bool:
+        """
+        Determine if a superlocus represents a complex region.
+
+        Args:
+            superlocus: Superlocus dictionary
+
+        Returns:
+            True if the region is considered complex
+        """
+        metrics = self._analyze_superlocus(superlocus)
+        return metrics.get("complexity_score", 0) > 2.0
+
+    def _calculate_superlocus_coverage(self, superloci: List[Dict]) -> Dict:
+        """
+        Calculate coverage statistics for superloci.
+
+        Args:
+            superloci: List of superlocus dictionaries
+
+        Returns:
+            Coverage statistics dictionary
+        """
+        if not superloci:
+            return {"total_bases": 0, "covered_bases": 0, "coverage_fraction": 0.0}
+
+        # Calculate total coverage
+        total_bases = 0
+        for superlocus in superloci:
+            region_size = superlocus.get("end", 0) - superlocus.get("start", 0) + 1
+            total_bases += region_size
+
+        coverage = {
+            "total_bases": total_bases,
+            "superlocus_count": len(superloci),
+            "average_superlocus_size": total_bases / len(superloci) if superloci else 0,
+        }
+
+        return coverage
+
+    def _group_variants_by_proximity(
+        self, variants, window_size: int  # Can be List[Dict] or pd.DataFrame
+    ) -> List[List[Dict]]:
+        """
+        Group variants by genomic proximity.
+
+        Args:
+            variants: List of variant dictionaries or pandas DataFrame
+            window_size: Window size for grouping
+
+        Returns:
+            List of variant groups
+        """
+        # Handle DataFrame input
+        if hasattr(variants, "empty"):  # pandas DataFrame
+            if variants.empty:
+                return []
+            # Convert DataFrame to list of dictionaries
+            variants_list = variants.to_dict("records")
+        else:
+            # Handle list input
+            if not variants:
+                return []
+            variants_list = variants
+
+        # Sort variants by position
+        sorted_variants = sorted(
+            variants_list,
+            key=lambda v: (
+                v.get("chromosome", v.get("chrom", "")),
+                v.get("position", v.get("pos", 0)),
+            ),
+        )
+
+        groups = []
+        current_group = [sorted_variants[0]]
+
+        for variant in sorted_variants[1:]:
+            last_variant = current_group[-1]
+
+            # Check if variants are on the same chromosome and within window
+            same_chrom = variant.get(
+                "chromosome", variant.get("chrom", "")
+            ) == last_variant.get("chromosome", last_variant.get("chrom", ""))
+
+            if same_chrom:
+                distance = abs(
+                    variant.get("position", variant.get("pos", 0))
+                    - last_variant.get("position", last_variant.get("pos", 0))
+                )
+
+                if distance <= window_size:
+                    current_group.append(variant)
+                else:
+                    groups.append(current_group)
+                    current_group = [variant]
+            else:
+                groups.append(current_group)
+                current_group = [variant]
+
+        if current_group:
+            groups.append(current_group)
+
+        return groups
+
+    def _groups_overlap(self, group1: List[Dict], group2: List[Dict]) -> bool:
+        """
+        Check if two variant groups overlap genomically.
+
+        Args:
+            group1: First variant group
+            group2: Second variant group
+
+        Returns:
+            True if groups overlap
+        """
+        if not group1 or not group2:
+            return False
+
+        # Get position ranges for each group
+        positions1 = [v.get("position", v.get("pos", 0)) for v in group1]
+        positions2 = [v.get("position", v.get("pos", 0)) for v in group2]
+
+        if not positions1 or not positions2:
+            return False
+
+        start1, end1 = min(positions1), max(positions1)
+        start2, end2 = min(positions2), max(positions2)
+
+        # Check for overlap
+        return not (end1 < start2 or end2 < start1)
