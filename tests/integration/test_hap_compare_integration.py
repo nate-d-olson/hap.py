@@ -30,6 +30,8 @@ def test_hap_compare_end_to_end(tmp_path):
         sys.executable,
         "-m",
         "happy.hap",
+        "-T",
+        "20",
         str(lhs_gz),
         str(rhs_gz),
         "-o",

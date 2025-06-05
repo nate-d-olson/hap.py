@@ -19,6 +19,7 @@ setup(
             "hap.py = happy.hap:main",
             "qfy = happy.qfy:main",
             "pre = happy.pre:main",
+            "blocksplit = happy.blocksplit:main",
         ],
     },
 )

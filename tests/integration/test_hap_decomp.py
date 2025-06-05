@@ -22,6 +22,8 @@ def test_hap_decomposition(tmp_path):
         sys.executable,
         "-m",
         "happy.hap",
+        "-T",
+        "20",
         truth,
         query,
         "-f",

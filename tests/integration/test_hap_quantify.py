@@ -26,6 +26,8 @@ def test_hap_quantify_full_pipeline(tmp_path):
         sys.executable,
         "-m",
         "happy.hap",
+        "-T",
+        "20",
         os.path.join(example, vcfs[0]),
         os.path.join(example, vcfs[1]),
         "-f",

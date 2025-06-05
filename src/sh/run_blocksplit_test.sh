@@ -8,7 +8,10 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Load environment detection
 . ${DIR}/detect_vars.sh
+# Override HCDIR to point to project root bin directory (Python scripts)
+export HCDIR="${DIR}/../../bin"
 
 ##############################################################
 # Test blocksplit
@@ -25,7 +28,7 @@ VCF2=${DIR}/../../example/happy/NA12878-GATK3-chr21.vcf.gz
 ${HCDIR}/blocksplit $VCF1 $VCF2 \
 	-o ${TF_r} -l chr21 -w 10000
 
-${PYTHON} ${DIR}/../python/ovc.py ${TF_r}
+ ${PYTHON} ${DIR}/python/ovc.py ${TF_r}
 if [ $? -ne 0 ]; then
 	echo "blocksplit test FAILED -- overlaps found. You can inspect ${TF_r} for the failed result."
 	exit 1

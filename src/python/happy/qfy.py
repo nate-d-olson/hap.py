@@ -38,14 +38,20 @@ import contextlib
 import gzip
 import json
 import logging
-import shutil
 import multiprocessing
 import os
+import shutil
 import sys
 import tempfile
 import traceback
 
+import Haplo
+import Haplo.gvcf2bed
+import Haplo.happyroc
+
+# Core tools and quantification runner imports
 from happy import Tools
+
 # Import the quantification runner from Haplo
 try:
     from Haplo.quantify import run_quantify as _run_quantify
@@ -57,6 +63,9 @@ from happy.Tools.metric import dataframeToMetricsTable, makeMetricsObject
 
 def quantify(args):
     """Run quantify and write tables"""
+    # Ensure runner name is set for metrics; default when invoked via hap.py
+    if not hasattr(args, "runner"):
+        args.runner = "qfy"
     # Ensure runner identifier for metrics output when invoked from hap.py
     if not hasattr(args, "runner"):
         args.runner = "qfy"
@@ -76,7 +85,8 @@ def quantify(args):
     if not hasattr(args, "runner"):
         args.runner = "qfy"
     # Workaround: use a temp copy of the input VCF during quantification to avoid side-effects
-    import tempfile, shutil
+    import tempfile
+
     orig_vcf = args.in_vcf[0]
     tmp_in = tempfile.NamedTemporaryFile(delete=False, suffix=".vcf.gz")
     tmp_in.close()
@@ -106,8 +116,8 @@ def quantify(args):
 
     if args.strat_tsv:
         with open(args.strat_tsv, encoding="utf-8") as sf:
-            for l in sf:
-                n, _, f = l.strip().partition("\t")
+            for row in sf:
+                n, _, f = row.strip().partition("\t")
                 if n in qfyregions:
                     raise Exception("Duplicate stratification region ID: %s" % n)
                 if not f:

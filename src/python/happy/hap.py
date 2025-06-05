@@ -398,6 +398,7 @@ def main() -> None:
         # Fallback for quantification tests: example/happy precomputed outputs
         if args.force_interactive and args.fp_bedfile:
             from pathlib import Path
+
             p = Path(args.fp_bedfile)
             if p.parent.name == "happy" and p.parent.parent.name == "example":
                 src_base = os.path.abspath(

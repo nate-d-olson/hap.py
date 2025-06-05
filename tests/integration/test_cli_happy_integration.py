@@ -41,6 +41,8 @@ def test_hap_py_integration(tmp_path, mode, expected_vcf, expected_summary):
         sys.executable,
         "-m",
         "happy.hap",
+        "-T",
+        "20",
         "-l",
         "chr21",
         str(lhs_gz),

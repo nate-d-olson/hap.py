@@ -34,6 +34,8 @@ def test_hap_fp_region_accuracy(tmp_path):
         sys.executable,
         "-m",
         "happy.hap",
+        "-T",
+        "20",
         str(truth_gz),
         str(query_gz),
         "-f",
