@@ -252,7 +252,7 @@ def test_benchmarking_decisions():
             output_vtc=True,
         )
 
-        results = engine.quantify()
+        engine.quantify()
 
         # Check that BD, BVT, QQ fields are set
         truth_variant = engine.truth_variants[0]

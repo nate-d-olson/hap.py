@@ -96,5 +96,5 @@ finally:
     try:
         os.unlink(truth_file)
         os.unlink(query_file)
-    except:
-        pass
+    except Exception as e:
+        print(f"✗ Cleanup failed: {e}")
