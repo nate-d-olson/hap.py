@@ -6,12 +6,8 @@ This module tests the functionality of python_hapcmp.py to ensure
 it correctly performs haplotype comparison.
 """
 
-import sys  # Moved to top
-from pathlib import Path  # Moved to top
-
-# Add src to sys.path to allow importing hap_py
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
+import sys
+from pathlib import Path
 
 import os
 import tempfile

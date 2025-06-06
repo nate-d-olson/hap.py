@@ -80,6 +80,7 @@ Tests assume that:
 3. A reference genome is available (either via `HGREF` environment variable or in the example directory)
 4. `bgzip`, `tabix`, and `rtg` executables are available in `build/bin` or on the `PATH`. If `bgzip` or `tabix` are missing, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing. Tests that rely on `rtg` require the executable to be discoverable via the `PATH` or `RTG_PATH`.
 
+
 ### Building the Project Before Running Tests
 
 Before running tests, especially integration tests, you need to build the project:

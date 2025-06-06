@@ -1,12 +1,9 @@
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
 
 # Ensure dummy executables for bgzip and tabix so tools.init() succeeds
 tmp_tool_dir = tempfile.mkdtemp()

@@ -21,6 +21,12 @@ libraries are present. On Debian/Ubuntu systems these can be installed with:
 ```bash
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
 ```
+Install bgzip, tabix, and rtg tools if they are not already present:
+
+```bash
+sudo apt-get install -y tabix
+conda install -c bioconda htslib rtg-tools
+```
 
 ## Creating the Environment
 
