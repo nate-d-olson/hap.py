@@ -38,10 +38,6 @@ def test_hapcmp(example_data_dir, temp_dir):
     if not hapcmp_bin.exists():
         pytest.skip(f"Hapcmp binary not found: {hapcmp_bin}")
 
-    # Check for RTG tools dependency
-    rtg_path = project_root / "libexec" / "rtg-tools-install"
-    if not rtg_path.exists():
-        pytest.skip("RTG tools not found. Skipping hapcmp test.")
 
     # Define input files
     hc_bed = Path(example_data_dir) / "hc.bed"

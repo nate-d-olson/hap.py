@@ -86,10 +86,7 @@ def check_external_dependencies():
     """Check if required external dependencies are available."""
     project_root = get_project_root()
 
-    # Check for RTG tools
-    rtg_path = project_root / "libexec" / "rtg-tools-install"
-    if not rtg_path.exists():
-        print("Warning: RTG tools not found. Some tests may fail.")
+
 
     # Check for other required tools
     required_tools = ["bcftools", "samtools", "pysam"]
