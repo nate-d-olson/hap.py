@@ -1,26 +1,36 @@
 #!/usr/bin/env python3
-"""
-Test script to verify the CLI entry points are working correctly.
+"""Test script to verify the CLI entry points are working correctly."""
 
-This script tests each of the command-line tools to ensure they
-can be called properly and return appropriate exit codes.
-"""
-
+import os
 import subprocess
 import sys
+from pathlib import Path
+import pytest
 
 
-def test_cli_tool(command, args=None, expected_exit_code=0):
+COMMAND_TO_MODULE = {
+    "hap.py": "hap_py.hap",
+    "quantify": "hap_py.qfy",
+    "preprocess": "hap_py.pre",
+}
+
+
+def _cli_tool(command, args=None, expected_exit_code=0):
     """Test a CLI tool with given arguments and verify the exit code."""
     if args is None:
         args = ["--help"]
 
+    module_name = COMMAND_TO_MODULE.get(command, command)
+
     try:
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(Path(__file__).resolve().parent.parent / "src")
         result = subprocess.run(
-            [command] + args,
+            [sys.executable, "-m", module_name] + args,
             capture_output=True,
             text=True,
             check=False,
+            env=env,
         )
 
         if result.returncode != expected_exit_code:
@@ -37,26 +47,44 @@ def test_cli_tool(command, args=None, expected_exit_code=0):
         return False
 
 
+@pytest.mark.parametrize("command", list(COMMAND_TO_MODULE.keys()))
+def test_cli_tool_help(command):
+    assert _cli_tool(command)
+
+
+@pytest.mark.parametrize("command", list(COMMAND_TO_MODULE.keys()))
+def test_cli_tool_version(command):
+    assert _cli_tool(command, ["--version"])
+
+
+def test_cli_tool_check_deps():
+    assert _cli_tool("hap.py", ["--check-deps"])
+
+
+def test_cli_tool_invalid_option():
+    assert _cli_tool("hap.py", ["--invalid-option"], expected_exit_code=1)
+
+
 def run_all_tests():
     """Run tests for all CLI tools."""
     success = True
 
     # Test each CLI tool with --help
-    for command in ["hap.py", "quantify", "preprocess"]:
-        if not test_cli_tool(command):
+    for command in COMMAND_TO_MODULE:
+        if not _cli_tool(command):
             success = False
 
     # Test each CLI tool with --version
-    for command in ["hap.py", "quantify", "preprocess"]:
-        if not test_cli_tool(command, ["--version"]):
+    for command in COMMAND_TO_MODULE:
+        if not _cli_tool(command, ["--version"]):
             success = False
 
     # Check dependency reporting
-    if not test_cli_tool("hap.py", ["--check-deps"]):
+    if not _cli_tool("hap.py", ["--check-deps"]):
         success = False
 
     # Test with invalid arguments (should fail with non-zero exit code)
-    if not test_cli_tool("hap.py", ["--invalid-option"], expected_exit_code=1):
+    if not _cli_tool("hap.py", ["--invalid-option"], expected_exit_code=1):
         success = False
 
     return success

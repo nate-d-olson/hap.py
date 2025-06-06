@@ -6,24 +6,37 @@ This script tests each of the command-line tools to ensure they
 can be called directly and return appropriate exit codes.
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
+import pytest
 
 
-def test_cli_script(script_path, args=None, expected_exit_code=0):
+SCRIPTS = ["hap.py", "qfy.py", "pre.py"]
+
+
+def _script_dir():
+    return Path(__file__).resolve().parent.parent / "src" / "hap_py"
+
+
+def _cli_script(script_path, args=None, expected_exit_code=0):
     """Test a CLI script with given arguments and verify the exit code."""
     if args is None:
         args = ["--help"]
 
-    print(f"Testing: {script_path} {' '.join(args)}")
+    module_name = f"hap_py.{script_path.stem}"
+    print(f"Testing: {module_name} {' '.join(args)}")
 
     try:
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(_script_dir().parent)
         result = subprocess.run(
-            [sys.executable, script_path] + args,
+            [sys.executable, "-m", module_name] + args,
             capture_output=True,
             text=True,
             check=False,
+            env=env,
         )
 
         print(f"  Exit code: {result.returncode}")
@@ -48,6 +61,22 @@ def test_cli_script(script_path, args=None, expected_exit_code=0):
     except Exception as e:
         print(f"ERROR: Failed to run {script_path}: {str(e)}")
         return False
+
+
+@pytest.mark.parametrize("script_name", SCRIPTS)
+def test_cli_source_help(script_name):
+    script_path = _script_dir() / script_name
+    assert _cli_script(script_path)
+
+
+def test_cli_source_invalid_option():
+    script = _script_dir() / "hap.py"
+    assert _cli_script(script, ["--invalid-option"], expected_exit_code=1)
+
+
+def test_cli_source_check_deps():
+    script = _script_dir() / "hap.py"
+    assert _cli_script(script, ["--check-deps"])
 
 
 def run_all_tests():
@@ -76,16 +105,16 @@ def run_all_tests():
 
     # Test each CLI script with --help
     for script_path in scripts:
-        if not test_cli_script(script_path):
+        if not _cli_script(script_path):
             success = False
 
     # Test with invalid arguments (should fail with non-zero exit code)
     if (script_dir / "hap.py").exists():
-        if not test_cli_script(
+        if not _cli_script(
             script_dir / "hap.py", ["--invalid-option"], expected_exit_code=1
         ):
             success = False
-        if not test_cli_script(script_dir / "hap.py", ["--check-deps"]):
+        if not _cli_script(script_dir / "hap.py", ["--check-deps"]):
             success = False
 
     return success
