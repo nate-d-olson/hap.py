@@ -42,6 +42,11 @@ jobs:
         # Install build dependencies explicitly
         pip install setuptools wheel scikit-build cmake "cython>=0.29.24" "numpy>=1.19.0" toml build
 
+    - name: Add RTG tools to PATH
+      run: |
+        echo "RTGTOOLS_PATH=${{ github.workspace }}/rtg-core-3.13/rtg" >> $GITHUB_ENV
+        echo "${{ github.workspace }}/rtg-core-3.13" >> $GITHUB_PATH
+
     - name: Build and install
       run: |
         # Build wheel with pip

@@ -46,6 +46,11 @@ jobs:
       run: |
         pip install -e .[dev] # Installs hap.py in development mode with test dependencies
 
+    - name: Add RTG tools to PATH
+      run: |
+        echo "RTGTOOLS_PATH=${{ github.workspace }}/rtg-core-3.13/rtg" >> $GITHUB_ENV
+        echo "${{ github.workspace }}/rtg-core-3.13" >> $GITHUB_PATH
+
     - name: Lint with Black
       run: |
         pip install black
