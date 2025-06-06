@@ -487,6 +487,11 @@ def main() -> int:
     Returns:
         int: 0 on success, non-zero on failure
     """
+    if "--version" in sys.argv or "-v" in sys.argv:
+        from .tools.version import version
+        print(f"pre.py {version}")
+        return 0
+
     parser = argparse.ArgumentParser("VCF preprocessor")
 
     # input
@@ -584,9 +589,6 @@ def main() -> int:
         parser.print_help()
         exit(0)
 
-    if args.version:
-        print(f"pre.py {version}")
-        exit(0)
 
     args.input = args.input[0]
     args.output = args.output[0]

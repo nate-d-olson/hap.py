@@ -412,6 +412,11 @@ def main() -> int:
     Returns:
         int: 0 on success, non-zero on failure
     """
+    if "--version" in sys.argv or "-v" in sys.argv:
+        from .tools.version import version
+        print(f"qfy.py {version}")
+        return 0
+
     parser = argparse.ArgumentParser("Quantify annotated VCFs")
 
     parser.add_argument(
@@ -534,9 +539,6 @@ def main() -> int:
         parser.print_help()
         exit(0)
 
-    if args.version:
-        print(f"qfy.py {version}")
-        exit(0)
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:
         conf_temp = gvcf2bed.gvcf2bed(
