@@ -7,11 +7,12 @@ import filecmp
 import gzip
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from tests.utils import get_project_root, get_bin_dir
+from tests.utils import get_bin_dir, get_project_root
 
 
 @pytest.mark.integration
