@@ -360,3 +360,55 @@ def cleanup_test_files(output_prefix: str, extensions: List[str]):
                 os.remove(file_path)
         except OSError:
             pass  # Ignore cleanup errors
+
+
+def compress_and_index_vcf(vcf_path: Path, output_path: Optional[Path] = None) -> Path:
+    """Compress and index a VCF file.
+
+    If the ``bgzip`` and ``tabix`` executables are available in ``build/bin`` or
+    on the ``PATH`` they are used. Otherwise ``pysam`` is used as a fallback to
+    perform the compression and indexing.
+
+    Args:
+        vcf_path: Path to the VCF file to compress and index.
+        output_path: Optional path for the compressed file. Defaults to
+            ``vcf_path`` with ``.gz`` appended.
+
+    Returns:
+        Path to the compressed VCF file.
+    """
+
+    if output_path is None:
+        output_path = vcf_path.with_suffix(vcf_path.suffix + ".gz")
+
+    bgzip_bin = get_bin_dir() / "bgzip"
+    tabix_bin = get_bin_dir() / "tabix"
+
+    bgzip_cmd = None
+    if bgzip_bin.exists():
+        bgzip_cmd = [str(bgzip_bin), "-c", str(vcf_path)]
+    elif shutil.which("bgzip"):
+        bgzip_cmd = ["bgzip", "-c", str(vcf_path)]
+
+    if bgzip_cmd:
+        with open(output_path, "wb") as out_f:
+            subprocess.run(bgzip_cmd, check=True, stdout=out_f)
+    else:
+        import pysam
+
+        pysam.tabix_compress(str(vcf_path), str(output_path), force=True)
+
+    tabix_cmd = None
+    if tabix_bin.exists():
+        tabix_cmd = [str(tabix_bin), "-f", "-p", "vcf", str(output_path)]
+    elif shutil.which("tabix"):
+        tabix_cmd = ["tabix", "-f", "-p", "vcf", str(output_path)]
+
+    if tabix_cmd:
+        subprocess.run(tabix_cmd, check=True)
+    else:
+        import pysam
+
+        pysam.tabix_index(str(output_path), preset="vcf", force=True)
+
+    return output_path
