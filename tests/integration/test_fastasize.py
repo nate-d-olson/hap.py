@@ -21,7 +21,7 @@ def setup_path():
 def test_fastasize_calculation():
     """Test fastasize's calculateLength function"""
     # Import the function after the path has been set up
-    from tools.fastasize import calculateLength
+    from hap_py.tools.fastasize import calculateLength
 
     # Test with the same parameters as in the original script
     locations = "chrMT chrY:1-10"
