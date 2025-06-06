@@ -48,9 +48,14 @@ def get_rtg_path():
     """Get the RTG tools path for integration tests."""
     project_root = Path(__file__).parent.parent
 
-    # Check environment variable first
-    if "RTG_PATH" in os.environ and Path(os.environ["RTG_PATH"]).exists():
-        return os.environ["RTG_PATH"]
+    # Check common environment variables first
+    for var in ["RTG", "RTGTOOLS_PATH", "RTG_PATH"]:
+        if var in os.environ:
+            candidate = Path(os.environ[var])
+            if candidate.is_dir():
+                candidate = candidate / "rtg"
+            if candidate.exists():
+                return str(candidate)
 
     # Try external directory (modernized location)
     rtg_path = project_root / "external" / "rtg-tools-3.12.1" / "rtg"
@@ -81,7 +86,13 @@ def get_rtg_path():
 @pytest.fixture(scope="session")
 def rtg_executable():
     """Provide RTG executable path for tests."""
-    return get_rtg_path()
+    rtg = get_rtg_path()
+    # If we resolved to plain "rtg" ensure it exists in PATH
+    if rtg == "rtg" and shutil.which("rtg") is None:
+        pytest.skip(
+            "RTG tools not found. Set RTG or RTGTOOLS_PATH to run integration tests"
+        )
+    return rtg
 
 
 @pytest.fixture(scope="session")

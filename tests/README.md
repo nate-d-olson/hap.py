@@ -78,8 +78,10 @@ Tests assume that:
 1. The hap.py package is installed or available in the Python path
 2. C++ components have been built (for tests with the `cpp` marker)
 3. A reference genome is available (either via `HGREF` environment variable or in the example directory)
-4. `bgzip`, `tabix`, and `rtg` executables are available in `build/bin` or on the `PATH`. If `bgzip` or `tabix` are missing, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing. Tests that rely on `rtg` require the executable to be discoverable via the `PATH` or `RTG_PATH`.
-
+4. `bgzip` and `tabix` executables are available in `build/bin` or on the `PATH`. If not, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing.
+5. The `rtg` executable from RTG Tools is available. Set the `RTG` or
+   `RTGTOOLS_PATH` environment variable to its location if it is not on
+   your `PATH`.
 
 ### Building the Project Before Running Tests
 
