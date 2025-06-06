@@ -64,6 +64,26 @@ python -c "from hap_py.haplo import quantify, vcfeval; print('✅ Core modules a
 python -c "import pytest; print(f'✅ pytest {pytest.__version__} available')"
 ```
 
+## Testing Dependencies
+
+These Python packages are required to run the test suite:
+
+* `numpy`
+* `pandas`
+* `pysam`
+* `scipy`
+* `bx-python`
+* `biopython`
+* `matplotlib`
+* `seaborn`
+* `scikit-learn`
+* `pytest`
+* `pytest-cov`
+* `nose`
+
+They can be installed automatically by creating the `happy-dev` environment
+from [environment-dev.yml](environment-dev.yml).
+
 ## Development Workflow
 
 1. **Activate Environment**:
