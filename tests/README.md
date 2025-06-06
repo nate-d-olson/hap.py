@@ -65,6 +65,9 @@ Tests assume that:
 2. C++ components have been built (for tests with the `cpp` marker)
 3. A reference genome is available (either via `HGREF` environment variable or in the example directory)
 4. `bgzip` and `tabix` executables are available in `build/bin` or on the `PATH`. If not, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing.
+5. The `rtg` executable from RTG Tools is available. Set the `RTG` or
+   `RTGTOOLS_PATH` environment variable to its location if it is not on
+   your `PATH`.
 
 ### Building the Project Before Running Tests
 
