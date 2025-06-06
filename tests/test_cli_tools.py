@@ -51,6 +51,10 @@ def run_all_tests():
         if not test_cli_tool(command, ["--version"]):
             success = False
 
+    # Check dependency reporting
+    if not test_cli_tool("hap.py", ["--check-deps"]):
+        success = False
+
     # Test with invalid arguments (should fail with non-zero exit code)
     if not test_cli_tool("hap.py", ["--invalid-option"], expected_exit_code=1):
         success = False
