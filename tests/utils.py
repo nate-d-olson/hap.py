@@ -340,10 +340,7 @@ def check_file_exists_and_size(file_path: str, min_size: int = 0) -> bool:
     if not os.path.exists(file_path):
         return False
 
-    try:
-        return os.path.getsize(file_path) >= min_size
-    except OSError:
-        return False
+    return os.path.getsize(file_path) >= min_size
 
 
 def cleanup_test_files(output_prefix: str, extensions: List[str]):
@@ -355,8 +352,5 @@ def cleanup_test_files(output_prefix: str, extensions: List[str]):
     """
     for ext in extensions:
         file_path = output_prefix + ext
-        try:
-            if os.path.exists(file_path):
-                os.remove(file_path)
-        except OSError:
-            pass  # Ignore cleanup errors
+        if os.path.exists(file_path):
+            os.remove(file_path)
