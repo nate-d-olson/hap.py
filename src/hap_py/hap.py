@@ -34,6 +34,10 @@ import time
 import traceback
 from pathlib import Path
 
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    __package__ = "hap_py"
+
 # Modern imports using the new package structure
 try:
     # When run as module
