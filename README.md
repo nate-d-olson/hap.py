@@ -366,6 +366,22 @@ cd hap.py
 pip install .
 ```
 
+### Prerequisite Tools
+
+The `bgzip` and `tabix` utilities from **htslib** are required for compressing
+and indexing VCF files. When running with `--engine=vcfeval`, the `rtg`
+executable from **rtg-tools** must also be installed.
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install -y tabix
+
+# Conda
+conda install -c bioconda htslib rtg-tools
+```
+
+
+
 This will build all necessary components and install the Python package with
 command-line entry points. For most users, installing via `pip` or with
 `conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
