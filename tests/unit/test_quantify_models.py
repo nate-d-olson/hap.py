@@ -1,7 +1,4 @@
-from pathlib import Path
-
 import pytest
-
 
 from hap_py.haplo.quantify_models import StratificationRegion
 

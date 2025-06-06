@@ -3,12 +3,14 @@
 from dataclasses import dataclass
 from typing import List
 
+
 @dataclass
 class Variant:
     chrom: str
     pos: int
     ref: str
     alt: str
+
 
 class VariantProcessor:
     """Simplified Python implementation of VariantProcessor."""

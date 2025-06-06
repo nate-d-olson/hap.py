@@ -33,6 +33,7 @@ def reverse_complement(sequence: str) -> str:
     """Return the reverse complement of a sequence."""
     return complement_sequence(sequence)[::-1]
 
+
 def get_version() -> str:
     """Return a mock hap.py version string."""
     return "0.0.mock"
@@ -69,4 +70,3 @@ def test_module() -> dict:
         "build_time": get_build_time(),
         "git_hash": get_git_hash(),
     }
-

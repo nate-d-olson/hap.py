@@ -3,8 +3,6 @@ Integration tests for GVCF homref functionality.
 Migrated from src/sh/run_gvcf_homref_test.sh
 """
 
-from pathlib import Path
-
 import pytest
 
 from tests.utils import (
@@ -52,7 +50,7 @@ def test_gvcf_homref(tmp_path):
 
     # Ensure the output VCF was created and contains data.
     assert output_vcf.exists(), "multimerge did not produce an output VCF"
-    with open(output_vcf, "r", encoding="utf-8") as f:
+    with open(output_vcf, encoding="utf-8") as f:
         lines = [l for l in f.readlines() if not l.startswith("#")]
     assert lines, "multimerge output VCF is empty"
 
@@ -91,6 +89,6 @@ def test_gvcf_homref_with_variants(tmp_path):
 
     # Ensure output file has variant entries.
     assert output_vcf.exists(), "multimerge did not produce an output VCF"
-    with open(output_vcf, "r", encoding="utf-8") as f:
+    with open(output_vcf, encoding="utf-8") as f:
         lines = [l for l in f.readlines() if not l.startswith("#")]
     assert lines, "multimerge output VCF is empty"

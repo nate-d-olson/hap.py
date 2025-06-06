@@ -8,9 +8,9 @@ import gzip
 import subprocess
 from pathlib import Path
 
-from tests.utils import get_bin_dir
-
 import pytest
+
+from tests.utils import get_bin_dir
 
 
 @pytest.mark.integration

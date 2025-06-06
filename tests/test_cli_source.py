@@ -10,8 +10,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
+import pytest
 
 SCRIPTS = ["hap.py", "qfy.py", "pre.py"]
 

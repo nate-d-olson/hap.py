@@ -6,11 +6,9 @@ This module tests the functionality of python_hapcmp.py to ensure
 it correctly performs haplotype comparison.
 """
 
-import sys
-from pathlib import Path
-
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 

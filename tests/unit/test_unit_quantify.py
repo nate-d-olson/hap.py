@@ -17,7 +17,6 @@ pytest.importorskip("pandas")
 pytest.importorskip("pytest_benchmark")
 import pandas as pd
 
-
 from hap_py.haplo.python_quantify import QuantifyEngine
 
 

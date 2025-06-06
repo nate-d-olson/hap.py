@@ -1,8 +1,6 @@
 import json
 import os
 import tempfile
-from pathlib import Path
-
 
 from hap_py.tools.vcfextract import extract_header, extractHeadersJSON
 

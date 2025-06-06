@@ -38,7 +38,6 @@ def test_hapcmp(example_data_dir, temp_dir):
     if not hapcmp_bin.exists():
         pytest.skip(f"Hapcmp binary not found: {hapcmp_bin}")
 
-
     # Define input files
     hc_bed = Path(example_data_dir) / "hc.bed"
     hc_vcf = Path(example_data_dir) / "hc.vcf.gz"

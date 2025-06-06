@@ -1,6 +1,3 @@
-import os
-
-
 def test_string_handling_module():
     """Test the string handling utilities."""
     from src.hap_py.haplo.string_handling import (
@@ -71,4 +68,3 @@ def test_mock_variant_classes():
     )
     assert tp_key is not None, "No true positives key found in results"
     assert results[tp_key] == 1
-

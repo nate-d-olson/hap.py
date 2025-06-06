@@ -86,8 +86,6 @@ def check_external_dependencies():
     """Check if required external dependencies are available."""
     project_root = get_project_root()
 
-
-
     # Check for other required tools
     required_tools = ["bcftools", "samtools", "pysam"]
     missing_tools = []
