@@ -427,12 +427,9 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
                     pytest.skip("_are_alleles_compatible method not found")
 
             finally:
-                # Clean up temp files
-                try:
-                    os.unlink(truth_f.name)
-                    os.unlink(query_f.name)
-                except OSError:
-                    pass
+                # Clean up temp files and surface any errors
+                os.unlink(truth_f.name)
+                os.unlink(query_f.name)
 
     def test_variant_classification(self):
         """Test the _classify_variant_type helper method."""
