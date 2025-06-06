@@ -5,7 +5,6 @@ Migrated from src/sh/run_leftshift_test.sh
 
 import filecmp
 import gzip
-import os
 import subprocess
 import sys
 from pathlib import Path

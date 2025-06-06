@@ -149,9 +149,7 @@ class VCFAnalyzer:
         alt_len = len(record.alts[0]) if record.alts else 0
 
         if ref_len == alt_len:
-            return (
-                VariantType.SNP.value if ref_len == 1 else VariantType.MNP.value
-            )
+            return VariantType.SNP.value if ref_len == 1 else VariantType.MNP.value
         if ref_len != alt_len:
             return VariantType.INDEL.value
         return VariantType.COMPLEX.value

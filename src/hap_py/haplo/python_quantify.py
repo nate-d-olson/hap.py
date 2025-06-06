@@ -6,9 +6,9 @@ This module provides functionality to quantify variants in VCF files,
 producing stratification metrics and summary statistics.
 """
 
+import bisect
 import json
 import logging
-import bisect
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -208,9 +208,7 @@ class QuantifyEngine:
             for chrom in self.region_dict:
                 self.region_dict[chrom].sort()
 
-            logger.info(
-                f"Loaded {len(self.region_list)} regions from {self.regions}"
-            )
+            logger.info(f"Loaded {len(self.region_list)} regions from {self.regions}")
         except Exception as e:
             logger.error(f"Failed to load regions: {e}")
             self.region_list = []
@@ -423,9 +421,9 @@ class QuantifyEngine:
         # Add Phase 2 results if ROC analysis was performed
         if self.enable_roc_analysis:
             results["roc_data"] = self.roc_data
-            results[
-                "bootstrap_confidence_intervals"
-            ] = self.bootstrap_confidence_intervals
+            results["bootstrap_confidence_intervals"] = (
+                self.bootstrap_confidence_intervals
+            )
             if self.quality_stratification:
                 results["quality_metrics"] = self.quality_metrics
 

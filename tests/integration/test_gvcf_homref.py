@@ -3,8 +3,6 @@ Integration tests for GVCF homref functionality.
 Migrated from src/sh/run_gvcf_homref_test.sh
 """
 
-from pathlib import Path
-
 import pytest
 
 from tests.utils import (

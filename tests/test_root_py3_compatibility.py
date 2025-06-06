@@ -2,8 +2,6 @@
 Tests for string handling and mock Cython implementations in Python 3.
 """
 
-import os
-
 
 def test_string_handling_module():
     """Test the string handling utilities."""

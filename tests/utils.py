@@ -355,6 +355,7 @@ def cleanup_test_files(output_prefix: str, extensions: List[str]):
         if os.path.exists(file_path):
             os.remove(file_path)
 
+
 def compress_and_index_vcf(vcf_path: Path, output_path: Optional[Path] = None) -> Path:
     """Compress and index a VCF file.
 

@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-
 # Ensure dummy executables for bgzip and tabix so tools.init() succeeds
 tmp_tool_dir = tempfile.mkdtemp()
 for tool in ("bgzip", "tabix"):

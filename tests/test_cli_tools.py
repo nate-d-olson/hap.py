@@ -5,8 +5,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
+import pytest
 
 COMMAND_TO_MODULE = {
     "hap.py": "hap_py.hap",

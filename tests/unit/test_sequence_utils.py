@@ -8,10 +8,8 @@ it correctly performs sequence manipulations.
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
-
 
 from hap_py.haplo.sequence_utils import FastaReader, SequenceUtils
 

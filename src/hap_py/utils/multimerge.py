@@ -41,7 +41,9 @@ def _merge_records(
         if header is None:
             header = vcf.header.copy()
             if "GT" not in header.formats:
-                header.formats.add("GT", number=1, type="String", description="Genotype")
+                header.formats.add(
+                    "GT", number=1, type="String", description="Genotype"
+                )
 
     for _, sample in opened_vcfs:
         if sample not in header.samples:
@@ -65,7 +67,7 @@ def _merge_records(
                 records[key] = new_rec
             else:
                 new_rec = records[key]
-                alts = set(a for a in new_rec.alts or [] if a != ".")
+                alts = {a for a in new_rec.alts or [] if a != "."}
                 alts.update(a for a in (rec.alts or []) if a != ".")
                 new_rec.alts = list(alts) if alts else ["."]
             gt = rec.samples[0].get("GT")
