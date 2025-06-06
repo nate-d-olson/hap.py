@@ -51,14 +51,18 @@ fi
 export PYTHON=${PYTHON:-python}
 
 PYVERSION=$(${PYTHON} --version 2>&1)
-if [[ "$PYVERSION" != "Python 2.7."* ]] && [[ $DEFAULT_PYTHON == 1 ]]; then
-	PYTHON=python2.7
+PYMAJOR=$(${PYTHON} -c 'import sys; print(sys.version_info[0])' 2>/dev/null)
+PYMINOR=$(${PYTHON} -c 'import sys; print(sys.version_info[1])' 2>/dev/null)
+
+if [[ $DEFAULT_PYTHON == 1 ]] && [[ "$PYMAJOR" != "2" && "$PYMAJOR" != "3" ]]; then
+    PYTHON=python2.7
+    PYVERSION=$(${PYTHON} --version 2>&1)
+    PYMAJOR=$(${PYTHON} -c 'import sys; print(sys.version_info[0])' 2>/dev/null)
+    PYMINOR=$(${PYTHON} -c 'import sys; print(sys.version_info[1])' 2>/dev/null)
 fi
 
-PYVERSION=$(${PYTHON} --version 2>&1)
-if [[ "$PYVERSION" != "Python 2.7."* ]]; then
-    echo "Hap.py requires Python 2.7.x. $PYTHON is $PYVERSION"
-    exit 1
+if [[ "$PYMAJOR" == "2" && "$PYMINOR" != "7" ]] || [[ "$PYMAJOR" != "2" && "$PYMAJOR" != "3" ]]; then
+    echo "Warning: Hap.py is tested with Python 2.7 or 3.x. $PYTHON is $PYVERSION" >&2
 fi
 
 export HCVERSION=`${PYTHON} ${HCDIR}/hap.py --version`
