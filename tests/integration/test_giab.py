@@ -9,6 +9,7 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
+    get_bin_dir,
     get_example_dir,
     run_command,
     validate_output_files,
@@ -40,7 +41,7 @@ def test_small_giab_rtg(tmp_path, rtg_executable, reference_file):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(nist_vcf),
         str(rtg_vcf),
         "-r",
@@ -94,7 +95,7 @@ def test_large_giab_rtg_chr21(tmp_path, rtg_executable, reference_file):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(nist_vcf),
         str(rtg_vcf),
         "-r",
@@ -157,7 +158,7 @@ def test_large_giab_rtg_chr1(tmp_path, rtg_executable, reference_file):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(nist_vcf),
         str(rtg_vcf),
         "-r",

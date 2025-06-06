@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import get_project_root
+from utils import get_project_root, get_bin_dir
 
 
 @pytest.mark.integration
@@ -48,7 +48,7 @@ def test_leftshift(tmp_path):
 
     # Run hap.py with left-shifting
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(truth_vcf),
         str(query_vcf),
         "-o",

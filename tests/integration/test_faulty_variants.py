@@ -8,6 +8,8 @@ import gzip
 import subprocess
 from pathlib import Path
 
+from tests.utils import get_bin_dir
+
 import pytest
 
 
@@ -41,7 +43,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 1: hap.py with valid inputs
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(test_vcf),
         str(test_q_vcf),
         "-o",
@@ -73,7 +75,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 2: hap.py with faulty inputs - should fail
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(test_vcf),
         str(test_q_failure_vcf),
         "-o",
@@ -111,7 +113,7 @@ def test_faulty_variant_pre_py(temp_dir):
 
     # Run pre.py with faulty input - should fail
     cmd = [
-        "preprocess",
+        str(get_bin_dir() / "preprocess"),
         str(faulty_vcf),
         str(output_file),
         "--reference",
