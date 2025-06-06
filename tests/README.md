@@ -7,7 +7,21 @@ This directory contains tests for the hap.py project. The tests are organized in
 
 ## Running Tests
 
-Tests can be run using pytest:
+Before running the test suite it is recommended to activate the conda environment
+defined in `environment-dev.yml`:
+
+```bash
+conda env create -f environment-dev.yml    # one-time setup
+conda activate happy-dev
+```
+
+Example:
+
+```bash
+conda activate happy-dev && pytest
+```
+
+Tests can then be run using pytest:
 
 ```bash
 # Run all tests
@@ -64,7 +78,7 @@ Tests assume that:
 1. The hap.py package is installed or available in the Python path
 2. C++ components have been built (for tests with the `cpp` marker)
 3. A reference genome is available (either via `HGREF` environment variable or in the example directory)
-4. `bgzip` and `tabix` executables are available in `build/bin` or on the `PATH`. If not, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing.
+4. `bgzip`, `tabix`, and `rtg` executables are available in `build/bin` or on the `PATH`. If `bgzip` or `tabix` are missing, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing. Tests that rely on `rtg` require the executable to be discoverable via the `PATH` or `RTG_PATH`.
 
 ### Building the Project Before Running Tests
 
