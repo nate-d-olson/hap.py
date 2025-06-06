@@ -14,7 +14,7 @@ import pytest
 
 
 @pytest.mark.integration
-def test_faulty_variant_handling(temp_dir):
+def test_faulty_variant_handling(temp_dir, rtg_executable):
     """Test handling of faulty variants."""
     # Get paths to reference files
     project_root = Path(__file__).parent.parent.parent
@@ -56,7 +56,7 @@ def test_faulty_variant_handling(temp_dir):
         "-V",
         "--force-interactive",
         "--engine-vcfeval-path",
-        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
+        rtg_executable,
     ]
 
     result = subprocess.run(cmd, capture_output=True)
@@ -88,7 +88,7 @@ def test_faulty_variant_handling(temp_dir):
         "-V",
         "--force-interactive",
         "--engine-vcfeval-path",
-        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
+        rtg_executable,
     ]
 
     result = subprocess.run(cmd, capture_output=True)
