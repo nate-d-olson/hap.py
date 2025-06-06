@@ -448,13 +448,14 @@ of htslib and pysam, using hap.py on Windows should be possible.
 
 Hap.py requires a human genome reference sequence which contains at least
 chromosomes 1-22,X,Y,M. The chromosomes should be named chr1-chr22, chrX, chrY,
-chrM. there is a script  in [src/sh/make_hg19.sh](src/sh/make_hg19.sh) to create
-such a sequence, but you can also  specify your own. In order for the
-integration tests to run successfully, it is necessary  to point hap.py to the
-reference sequence using
+chrM. There is a script in [src/sh/make_hg19.sh](src/sh/make_hg19.sh) to create
+such a sequence, but you can also specify your own. In order for the
+integration tests to run successfully, hap.py must be able to locate the
+reference FASTA. Set the `HGREF` environment variable (or `HG19`, which is also
+recognized) before running the tests, e.g.
 
 ```bash
-export HGREF=<path-to-hg19.fa>
+export HGREF=example/chr21.fa  # or: export HG19=example/chr21.fa
 ```
 
 Note that, while the test cases are based on hg19, other reference sequences are
