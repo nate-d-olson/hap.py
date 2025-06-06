@@ -30,6 +30,7 @@ import subprocess
 import tempfile
 import time
 from argparse import Namespace
+from pathlib import Path
 from typing import List, Optional
 
 # Set up versioning
@@ -49,6 +50,7 @@ def findVCFEval() -> str:
 
     1. ``RTG`` or ``RTGTOOLS_PATH`` environment variables
     2. ``shutil.which("rtg")``
+    3. ``external/rtg-tools-*/rtg`` inside the repository
 
     Returns:
         Path to the ``rtg`` executable.
@@ -79,6 +81,13 @@ def findVCFEval() -> str:
     if rtg:
         logging.info(f"Using RTG tools from PATH: {rtg}")
         return rtg
+
+    # Look for bundled RTG tools in the repository
+    repo_root = Path(__file__).resolve().parents[3]
+    for candidate in sorted(repo_root.glob("external/rtg-tools-*/rtg")):
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            logging.info(f"Using RTG tools from repository: {candidate}")
+            return str(candidate)
 
     raise FileNotFoundError(
         "rtg executable not found. Set RTG or RTGTOOLS_PATH or ensure it is on your PATH."

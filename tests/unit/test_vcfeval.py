@@ -10,6 +10,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
+
 # Save the real os.path.isdir so patched versions can fall back to it
 REAL_ISDIR = os.path.isdir
 
@@ -39,16 +41,25 @@ class TestVCFEval(unittest.TestCase):
         # Create directory for template
         os.makedirs(self.test_template, exist_ok=True)
 
-        # Mock arguments with actual RTG path
+        # Mock arguments. Attempt to locate RTG tools for tests
         self.args = MagicMock(spec=object)
-        # Use the actual RTG path that findVCFEval returns
-        self.args.engine_vcfeval = vcfeval.findVCFEval()
+        try:
+            self.args.engine_vcfeval = vcfeval.findVCFEval()
+            self.rtg_available = True
+        except FileNotFoundError:
+            self.args.engine_vcfeval = "rtg"
+            self.rtg_available = False
+
         self.args.engine_vcfeval_template = self.test_template
         self.args.ref = self.test_ref
         self.args.scratch_prefix = self.temp_dir
         self.args.threads = 1
         self.args.pass_only = False
         self.args.roc = None
+
+    def require_rtg(self):
+        if not self.rtg_available:
+            pytest.skip("RTG tools not available")
 
     def tearDown(self):
         """Clean up after tests."""
@@ -72,7 +83,11 @@ class TestVCFEval(unittest.TestCase):
             self.assertEqual(result, fake_path)
 
         # Scenario 3: external RTG tools are found (current environment)
-        result = vcfeval.findVCFEval()
+        try:
+            result = vcfeval.findVCFEval()
+        except FileNotFoundError:
+            pytest.skip("RTG tools not available")
+
         self.assertTrue(isinstance(result, str))
         if result != "rtg":
             self.assertTrue(os.path.isabs(result))
@@ -83,6 +98,7 @@ class TestVCFEval(unittest.TestCase):
     @patch("os.path.exists")
     def test_runVCFEval_input_validation(self, mock_exists, mock_copy, mock_popen):
         """Test input validation in runVCFEval."""
+        self.require_rtg()
         # Mock for temp file
         vtf_mock = MagicMock()
         name_property = PropertyMock(
@@ -127,6 +143,7 @@ class TestVCFEval(unittest.TestCase):
         self, mock_isdir, mock_exists, mock_copy, mock_popen
     ):
         """Test default parameter handling in runVCFEval."""
+        self.require_rtg()
         # Setup mocks
         mock_exists.return_value = True
 
