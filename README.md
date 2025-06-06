@@ -89,6 +89,7 @@ chrQ  19    T    TGTGTG          0/1
 
 ```bash
 # Command to run hap.py for complex comparison (example)
+export RTG=./rtg-core-<ver>/rtg  # path to bundled RTG Tools if available
 ./hap.py truth.vcf query.vcf -o output/prefix -r ref.fa --engine=vcfeval --eval-outside-conf
 ```
 
@@ -140,8 +141,16 @@ hap.py relies on the external [RTG vcfeval](https://github.com/RealTimeGenomics/
 binary when using the ``--engine=vcfeval`` option. The executable is located by
 checking the ``RTG`` or ``RTGTOOLS_PATH`` environment variables and then falling
 back to ``rtg`` on the ``PATH``. If the executable cannot be found, hap.py will
-raise an error. Set ``RTG`` or ``RTGTOOLS_PATH`` to the full path of the
-``rtg`` binary if it is not available globally.
+raise an error.
+
+Set ``RTG`` or ``RTGTOOLS_PATH`` to the full path of the ``rtg`` binary if it is
+not available globally. If this repository includes a directory like
+``rtg-core-<ver>``, you can point the environment variable to the bundled
+``rtg`` script:
+
+```bash
+export RTG=/path/to/hap.py/rtg-core-<ver>/rtg
+```
 
 ### Variant preprocessing
 
