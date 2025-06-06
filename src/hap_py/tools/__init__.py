@@ -79,6 +79,23 @@ def which(program: str) -> Optional[str]:
 GA4GH_TOOLS = ["bgzip", "tabix", "rtg"]
 
 
+def check_dependencies() -> dict:
+    """Return a mapping of external tools and whether they are available."""
+    results = {}
+    for tool in GA4GH_TOOLS:
+        if tool == "rtg":
+            try:
+                from ..haplo.vcfeval import findVCFEval
+
+                findVCFEval()
+                results[tool] = True
+            except Exception:
+                results[tool] = False
+        else:
+            results[tool] = which(tool) is not None
+    return results
+
+
 def init():
     """
     Checks for external tool dependencies.

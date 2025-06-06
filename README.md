@@ -371,6 +371,11 @@ command-line entry points. For most users, installing via `pip` or with
 `conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
 are only required when contributing to the Cython extensions.
 
+Prebuilt wheels for Linux and macOS are built on our CI infrastructure and
+published to PyPI for each release. These wheels include the compiled C++
+extensions, so installing with `pip` on a supported platform does not require a
+C++ toolchain.
+
 ### Using Conda
 
 Alternatively, you can create a fully configured conda environment using
@@ -453,6 +458,9 @@ After installation, the `hap.py` command-line tool will be available.
 
 ```bash
 hap.py --help # Show help message
+
+# Verify that external dependencies are available
+hap.py --check-deps
 
 # Example: Compare a VCF file against a truth VCF
 hap.py truth.vcf.gz query.vcf.gz -r reference.fa -o output_prefix
