@@ -100,8 +100,7 @@ class StratificationRegion:
 
     def __post_init__(self):
         """Validate that either bed_file or filter_expression is provided."""
-        if not self.bed_file and not self.filter_expression:
-            raise ValueError("Either bed_file or filter_expression must be provided")
-            raise ValueError("Either bed_file or filter_expression must be provided")
-            raise ValueError("Either bed_file or filter_expression must be provided")
-            raise ValueError("Either bed_file or filter_expression must be provided")
+        if not (self.bed_file or self.filter_expression):
+            raise ValueError(
+                "Either bed_file or filter_expression must be provided"
+            )
