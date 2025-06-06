@@ -3,7 +3,11 @@
 set -e
 
 # Find python
-PYTHON=python
+if command -v python2 >/dev/null 2>&1; then
+    PYTHON=python2
+else
+    PYTHON=python3
+fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TLD=$(pwd)/scratch
 ISD=$(pwd)
@@ -40,7 +44,10 @@ then
         rm -rf ${TLD}/boost_subset_1_58_0
         tar xjf ${DIR}/boost_subset_1_58_0.tar.bz2
         cd boost_subset_1_58_0
-        ./bootstrap.sh
+        if [ "$PYTHON" = "python3" ]; then
+            sed -i 's/print sys.prefix/print(sys.prefix)/' bootstrap.sh
+        fi
+        ./bootstrap.sh --with-python=$PYTHON
         ./b2 link=static -j4 --prefix=$ISD -sZLIB_SOURCE=$TLD
         ./b2 link=static -j4 --prefix=$ISD install -sZLIB_SOURCE=$TLD/zlib-1.2.8
     else
