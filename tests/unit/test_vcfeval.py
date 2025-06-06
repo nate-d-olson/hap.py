@@ -10,6 +10,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
+# Save the real os.path.isdir so patched versions can fall back to it
+REAL_ISDIR = os.path.isdir
+
 from hap_py.haplo import vcfeval
 
 
@@ -126,7 +129,14 @@ class TestVCFEval(unittest.TestCase):
         """Test default parameter handling in runVCFEval."""
         # Setup mocks
         mock_exists.return_value = True
-        mock_isdir.return_value = True
+
+        # Only report True for directories we explicitly create
+        def isdir_side_effect(path):
+            if path == self.test_template:
+                return True
+            return REAL_ISDIR(path)
+
+        mock_isdir.side_effect = isdir_side_effect
 
         # Create mock output directory and files
         mock_out_dir = os.path.join(self.temp_dir, "vcfeval.result_mock")
@@ -200,7 +210,13 @@ class TestVCFEval(unittest.TestCase):
             mock_isfile.return_value = True
             mock_access.return_value = True
             mock_exists.return_value = True
-            mock_isdir.return_value = True
+
+            def isdir_side_effect(path):
+                if path == self.test_template:
+                    return True
+                return REAL_ISDIR(path)
+
+            mock_isdir.side_effect = isdir_side_effect
 
             # For this test skip SDF creation as we're directly testing the subprocess error handling
             self.args.engine_vcfeval_template = self.test_template
