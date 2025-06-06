@@ -1027,15 +1027,3 @@ def _generate_roc_curves(
     else:
         _create_empty_roc_table(roc_table)
         logger.warning("No ROC data generated, created empty table")
-
-
-# Backward compatibility function
-def quantify(*args, **kwargs):
-    """
-    Backward compatibility wrapper for quantify function.
-
-    This maintains compatibility with existing code that calls quantify()
-    directly instead of run_quantify().
-    """
-    logger.warning("quantify() function is deprecated. Use run_quantify() instead.")
-    return run_quantify(*args, **kwargs)

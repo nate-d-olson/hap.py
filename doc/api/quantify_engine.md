@@ -34,7 +34,7 @@ def __init__(
 - **truth_vcf** (*str*): Path to truth VCF file containing known variants
 - **query_vcf** (*str*): Path to query/test VCF file to be evaluated
 - **reference** (*Optional[str]*): Path to reference FASTA file (optional)
-- **regions** (*Optional[str]*): BED file with regions to quantify (optional)
+- **regions** (*Optional[str]*): BED file with regions to quantify (optional). The engine indexes regions per chromosome for efficient queries.
 - **apply_filters** (*bool*): Whether to apply filters from VCF FILTER field
 - **output_vtc** (*bool*): Whether to output variant truth categories
 - **quantify_method** (*str*): Quantification method - 'xcmp' or 'ga4gh' (default: 'xcmp')

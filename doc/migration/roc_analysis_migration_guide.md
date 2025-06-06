@@ -248,6 +248,7 @@ hap.py truth.vcf query.vcf -r ref.fa -o results --roc --ci-alpha 0.05
 from hap_py.haplo.quantify import quantify
 results = quantify(truth_vcf, query_vcf, reference_fa)
 ```
+*Note: The `quantify` convenience function has been removed. Use the `QuantifyEngine` interface instead.*
 
 **After (Phase 2):**
 ```python

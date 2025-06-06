@@ -101,6 +101,7 @@ class QuantifyEngine:
         self.truth_variants: List[Dict[str, Any]] = []
         self.query_variants: List[Dict[str, Any]] = []
         self.region_list: List[Tuple[str, int, int]] = []
+        self.region_dict: Dict[str, List[Tuple[int, int]]] = {}
 
         # Results storage
         self.metrics: Dict[str, Any] = {}
@@ -201,11 +202,19 @@ class QuantifyEngine:
 
                     # Store as tuple (chrom, start, end)
                     self.region_list.append((chrom, start, end))
+                    self.region_dict.setdefault(chrom, []).append((start, end))
 
-            logger.info(f"Loaded {len(self.region_list)} regions from {self.regions}")
+            # Sort intervals for each chromosome for efficient lookup
+            for chrom in self.region_dict:
+                self.region_dict[chrom].sort()
+
+            logger.info(
+                f"Loaded {len(self.region_list)} regions from {self.regions}"
+            )
         except Exception as e:
             logger.error(f"Failed to load regions: {e}")
             self.region_list = []
+            self.region_dict = {}
 
     def _load_variants(self, is_truth: bool = True):
         """
@@ -360,13 +369,16 @@ class QuantifyEngine:
         Returns:
             True if variant is in regions, False otherwise
         """
-        for chrom, start, end in self.region_list:
-            if (
-                variant["chrom"] == chrom
-                and variant["pos"] >= start
-                and variant["pos"] <= end
-            ):
+        intervals = self.region_dict.get(variant["chrom"])
+        if not intervals:
+            return False
+
+        pos = variant["pos"]
+        for start, end in intervals:
+            if start <= pos <= end:
                 return True
+            if pos < start:
+                break
 
         return False
 

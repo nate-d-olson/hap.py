@@ -8,6 +8,7 @@ Steps to follow:
 5. As appropriate update documentation, specifically `docs/quantify*md`, `.github/instructions/quantify-implementation.md`.
 6. Document changes using an informative commit message.
 7. Update `.github/prompt/quantify-development.prompt.md` to reflect the current state and next steps in the development process for use in the next development session.
+8. Recent update: deprecated `quantify` wrapper removed and region lookups optimized with per-chromosome indexes. Continue profiling variant matching for further improvements.
 
 # Quantify Module Development Plan
 
