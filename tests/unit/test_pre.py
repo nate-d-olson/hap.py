@@ -1,11 +1,5 @@
 import os
-import sys
 import tempfile
-
-# Add the src directory to the path
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../src"))
-)
 
 import hap_py.pre as pre
 from hap_py.tools.vcfextract import extractHeadersJSON

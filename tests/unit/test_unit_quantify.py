@@ -8,16 +8,12 @@ it correctly quantifies variant calls in VCF files.
 
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-# Add src to sys.path to allow importing hap_py
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
 
 from hap_py.haplo.python_quantify import QuantifyEngine
 
@@ -190,7 +186,10 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
                     def __init__(self, filter_values=None):
                         self.filter = filter_values or []
 
-                engine = QuantifyEngine(truth_vcf=truth_f.name, query_vcf=query_f.name)
+                engine = QuantifyEngine(
+                    truth_vcf=truth_f.name,
+                    query_vcf=query_f.name,
+                )
 
                 # Test unfiltered record
                 unfiltered = MockVariantRecord([])
@@ -274,7 +273,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -370,7 +368,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -441,7 +438,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -496,7 +492,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -612,7 +607,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -672,12 +666,12 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
                             }
                         )
 
-                engine.truth_variants = truth_variants
-                engine.query_variants = query_variants
+                truth_df = pd.DataFrame(truth_variants)
+                query_df = pd.DataFrame(query_variants)
 
-                if hasattr(engine, "_match_variants"):
+                if hasattr(engine, "_find_overlapping_matches"):
                     start_time = time.time()
-                    engine._match_variants()
+                    matches = engine._find_overlapping_matches(truth_df, query_df, [])
                     end_time = time.time()
 
                     processing_time = end_time - start_time
@@ -686,26 +680,85 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
                     )
 
                     # Verify some matches were found
-                    matched_truth = sum(
-                        1 for v in engine.truth_variants if v.get("match", False)
-                    )
-                    matched_query = sum(
-                        1 for v in engine.query_variants if v.get("match", False)
-                    )
-
-                    # Should have roughly num_variants/3 matches
                     expected_matches = num_variants // 3
-                    assert (
-                        matched_truth >= expected_matches * 0.8
-                    )  # Allow some tolerance
-                    assert matched_query >= expected_matches * 0.8
+                    assert len(matches) >= expected_matches * 0.8
 
                     # Performance check: should process 1000 variants in reasonable time (< 15 seconds)
-                    # Note: The current implementation is not optimized, so we allow more time
                     assert (
                         processing_time < 15.0
                     ), f"Matching took too long: {processing_time:.3f}s"
 
+            finally:
+                os.unlink(truth_f.name)
+                os.unlink(query_f.name)
+
+    def test_matching_benchmark(self, benchmark):
+        """Benchmark matching 1000 variants and ensure it completes quickly."""
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".vcf", delete=False
+        ) as truth_f, tempfile.NamedTemporaryFile(
+            mode="w", suffix=".vcf", delete=False
+        ) as query_f:
+            vcf_content = (
+                "##fileformat=VCFv4.2\n"
+                '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+                "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n"
+                "chr1\t100\t.\tA\tT\t60\tPASS\t.\tGT\t0/1\n"
+            )
+            truth_f.write(vcf_content)
+            query_f.write(vcf_content)
+            truth_f.flush()
+            query_f.flush()
+
+            try:
+                engine = QuantifyEngine(truth_vcf=truth_f.name, query_vcf=query_f.name)
+
+                num_variants = 1000
+                truth_variants = []
+                query_variants = []
+
+                for i in range(num_variants):
+                    pos = 1000 + i * 10
+                    truth_variants.append(
+                        {
+                            "chrom": "chr1",
+                            "pos": pos,
+                            "ref": "A",
+                            "alt": "G",
+                            "source": "truth",
+                            "match": False,
+                        }
+                    )
+
+                    if i % 3 == 0:
+                        query_variants.append(
+                            {
+                                "chrom": "chr1",
+                                "pos": pos,
+                                "ref": "A",
+                                "alt": "G",
+                                "source": "query",
+                                "match": False,
+                            }
+                        )
+                    else:
+                        query_variants.append(
+                            {
+                                "chrom": "chr1",
+                                "pos": pos + 5,
+                                "ref": "A",
+                                "alt": "T",
+                                "source": "query",
+                                "match": False,
+                            }
+                        )
+
+                truth_df = pd.DataFrame(truth_variants)
+                query_df = pd.DataFrame(query_variants)
+
+                if hasattr(engine, "_find_overlapping_matches"):
+                    benchmark(engine._find_overlapping_matches, truth_df, query_df, [])
+                    assert benchmark.stats.stats.mean < 15.0
             finally:
                 os.unlink(truth_f.name)
                 os.unlink(query_f.name)
@@ -717,7 +770,6 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
         ) as truth_f, tempfile.NamedTemporaryFile(
             mode="w", suffix=".vcf", delete=False
         ) as query_f:
-
             # Write minimal valid VCF content
             vcf_content = """##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">

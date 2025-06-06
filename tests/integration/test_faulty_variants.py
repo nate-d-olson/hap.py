@@ -8,11 +8,13 @@ import gzip
 import subprocess
 from pathlib import Path
 
+from tests.utils import get_bin_dir
+
 import pytest
 
 
 @pytest.mark.integration
-def test_faulty_variant_handling(temp_dir):
+def test_faulty_variant_handling(temp_dir, rtg_executable):
     """Test handling of faulty variants."""
     # Get paths to reference files
     project_root = Path(__file__).parent.parent.parent
@@ -41,7 +43,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 1: hap.py with valid inputs
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(test_vcf),
         str(test_q_vcf),
         "-o",
@@ -54,7 +56,7 @@ def test_faulty_variant_handling(temp_dir):
         "-V",
         "--force-interactive",
         "--engine-vcfeval-path",
-        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
+        rtg_executable,
     ]
 
     result = subprocess.run(cmd, capture_output=True)
@@ -73,7 +75,7 @@ def test_faulty_variant_handling(temp_dir):
 
     # Test 2: hap.py with faulty inputs - should fail
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(test_vcf),
         str(test_q_failure_vcf),
         "-o",
@@ -86,7 +88,7 @@ def test_faulty_variant_handling(temp_dir):
         "-V",
         "--force-interactive",
         "--engine-vcfeval-path",
-        "/Users/nolson/hap.py-modern-claude4/hap.py/external/rtg-tools-3.12.1/rtg",
+        rtg_executable,
     ]
 
     result = subprocess.run(cmd, capture_output=True)
@@ -111,7 +113,7 @@ def test_faulty_variant_pre_py(temp_dir):
 
     # Run pre.py with faulty input - should fail
     cmd = [
-        "preprocess",
+        str(get_bin_dir() / "preprocess"),
         str(faulty_vcf),
         str(output_file),
         "--reference",

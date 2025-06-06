@@ -87,30 +87,20 @@ def init():
     """
     global GA4GH_TOOLS
 
-    tools_to_check = list(GA4GH_TOOLS)
+    # Only check for bgzip and tabix here. ``rtg`` is checked lazily when the
+    # vcfeval engine is invoked.
+    tools_to_check = [t for t in GA4GH_TOOLS if t != "rtg"]
 
     for x in tools_to_check:
-        if x == "rtg":
-            try:
-                from ..haplo.vcfeval import findVCFEval
-
-                found = findVCFEval()
-            except (ImportError, FileNotFoundError) as e:
-                logging.warning(str(e))
-                if x in GA4GH_TOOLS:
-                    GA4GH_TOOLS.remove(x)
-                continue
-        else:
-            found = which(x)  # Use the 'which' function defined in this file
+        found = which(x)  # Use the 'which' function defined in this file
 
         if not found:
-            if x == "rtg":
-                # Should not happen due to earlier continue, but keep safeguard
-                if x in GA4GH_TOOLS:
-                    GA4GH_TOOLS.remove(x)
-                continue
-
-            raise Exception(f"Dependency {x} not found")
+            logging.warning(
+                "Dependency %s not found - some functionality may be disabled",
+                x,
+            )
+            if x in GA4GH_TOOLS:
+                GA4GH_TOOLS.remove(x)
 
 
 # Call init on import

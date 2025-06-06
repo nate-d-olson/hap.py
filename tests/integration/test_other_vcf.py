@@ -15,6 +15,7 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
+    get_bin_dir,
     get_example_dir,
     get_project_root,
     run_command,
@@ -44,7 +45,7 @@ def test_variant_filtering(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(per_sample_ft_lhs_vcf),
         str(per_sample_ft_rhs_vcf),
         "-o",
@@ -92,7 +93,7 @@ def test_haploid_variants(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        "hap.py",
+        str(get_bin_dir() / "hap.py"),
         str(truth_vcf),
         str(query_vcf),
         "-o",

@@ -21,6 +21,12 @@ libraries are present. On Debian/Ubuntu systems these can be installed with:
 ```bash
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev libboost-all-dev
 ```
+Install bgzip, tabix, and rtg tools if they are not already present:
+
+```bash
+sudo apt-get install -y tabix
+conda install -c bioconda htslib rtg-tools
+```
 
 ## Creating the Environment
 
@@ -63,6 +69,26 @@ python -c "import hap_py; print('✅ hap_py imported successfully')"
 python -c "from hap_py.haplo import quantify, vcfeval; print('✅ Core modules available')"
 python -c "import pytest; print(f'✅ pytest {pytest.__version__} available')"
 ```
+
+## Testing Dependencies
+
+These Python packages are required to run the test suite:
+
+* `numpy`
+* `pandas`
+* `pysam`
+* `scipy`
+* `bx-python`
+* `biopython`
+* `matplotlib`
+* `seaborn`
+* `scikit-learn`
+* `pytest`
+* `pytest-cov`
+* `nose`
+
+They can be installed automatically by creating the `happy-dev` environment
+from [environment-dev.yml](environment-dev.yml).
 
 ## Development Workflow
 

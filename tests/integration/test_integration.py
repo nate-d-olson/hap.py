@@ -10,6 +10,7 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
+    compress_and_index_vcf,
     find_reference_file,
     get_bin_dir,
     get_example_dir,
@@ -76,21 +77,11 @@ def test_integration(tmp_path):
 
     # Compress and index VCF files if not already compressed
     if not empty_vcf_gz.exists():
-        cmd = f"cat {empty_vcf} | bgzip > {empty_vcf_gz}"
-        run_shell_command(cmd)
-        cmd = f"tabix -f -p vcf {empty_vcf_gz}"
-        run_shell_command(cmd)
+        compress_and_index_vcf(empty_vcf, output_path=empty_vcf_gz)
 
     # Compress and index the input VCFs
-    cmd = f"cat {lhs_vcf} | bgzip > {lhs_vcf_gz}"
-    run_shell_command(cmd)
-    cmd = f"tabix -f -p vcf {lhs_vcf_gz}"
-    run_shell_command(cmd)
-
-    cmd = f"cat {rhs_vcf} | bgzip > {rhs_vcf_gz}"
-    run_shell_command(cmd)
-    cmd = f"tabix -f -p vcf {rhs_vcf_gz}"
-    run_shell_command(cmd)
+    compress_and_index_vcf(lhs_vcf, output_path=lhs_vcf_gz)
+    compress_and_index_vcf(rhs_vcf, output_path=rhs_vcf_gz)
 
     # Test multimerge functionality
     multimerge_output = tmp_path / "multimerge_output.vcf"
