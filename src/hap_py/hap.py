@@ -192,10 +192,10 @@ def main() -> int:
         "--engine-vcfeval-path",
         dest="engine_vcfeval",
         required=False,
-        default=vcfeval.findVCFEval(),  # Use the function to find rtg
+        default=None,
         help=(
-            'This parameter should give the path to the "rtg" executable. '
-            f"The default is {vcfeval.findVCFEval()}"
+            'Path to the "rtg" executable. If not provided, hap.py will try to '
+            "locate it when vcfeval is run."
         ),
     )
 
