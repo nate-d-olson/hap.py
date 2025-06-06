@@ -31,6 +31,11 @@ import tempfile
 import time
 import traceback
 from typing import List, Optional, Union
+from pathlib import Path
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    __package__ = "hap_py"
 
 scriptDir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 # Update path for Python 3
