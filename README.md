@@ -422,6 +422,10 @@ conda env create -f environment-dev.yml
 micromamba activate happy-dev
 ```
 
+Before running the tests, consult
+[ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for the full list of
+testing dependencies and activation commands.
+
 ### Building from Source (Advanced)
 
 If you need to build from source and `pip install .` does not meet your needs (e.g., you want to customize the build process or are working in an environment without pip):
