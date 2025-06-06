@@ -13,6 +13,7 @@ dependencies:
   - bx-python
   - biopython
   - htslib
+  - bcftools
   - matplotlib
   - seaborn
   - scikit-learn
