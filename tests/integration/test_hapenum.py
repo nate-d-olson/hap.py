@@ -8,7 +8,12 @@ import subprocess
 
 import pytest
 
-from tests.utils import get_bin_dir, get_project_root, run_command
+from tests.utils import (
+    compress_and_index_vcf,
+    get_bin_dir,
+    get_project_root,
+    run_command,
+)
 
 
 @pytest.mark.integration
@@ -36,11 +41,7 @@ def test_hapenum(tmp_path):
     assert expected_dot.exists(), f"Expected dot file {expected_dot} not found"
 
     # Compress and index the VCF file
-    bgzip_cmd = f"cat {refgraph1_vcf} | bgzip > {temp_vcf_gz}"
-    subprocess.run(bgzip_cmd, shell=True, check=True)
-
-    tabix_cmd = f"tabix -p vcf -f {temp_vcf_gz}"
-    subprocess.run(tabix_cmd, shell=True, check=True)
+    compress_and_index_vcf(refgraph1_vcf, output_path=temp_vcf_gz)
 
     # Run hapenum to generate the dot file
     hapenum_exe = bin_dir / "hapenum"

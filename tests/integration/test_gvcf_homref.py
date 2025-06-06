@@ -8,35 +8,11 @@ from pathlib import Path
 import pytest
 
 from tests.utils import (
-    compare_files,
+    compress_and_index_vcf,
     get_bin_dir,
     get_example_dir,
     run_shell_command,
 )
-
-
-def compress_and_index_vcf(vcf_path: Path) -> Path:
-    """Compress and index a VCF file using bgzip and tabix.
-
-    Args:
-        vcf_path: Path to the VCF file to compress
-
-    Returns:
-        Path to the compressed VCF file
-    """
-    gz_path = vcf_path.with_suffix(".vcf.gz")
-
-    # Compress the VCF
-    cmd = f"cat {vcf_path} | bgzip > {gz_path}"
-    returncode, _, stderr = run_shell_command(cmd)
-    assert returncode == 0, f"Failed to compress VCF: {stderr}"
-
-    # Index the compressed VCF
-    cmd = f"tabix -p vcf {gz_path}"
-    returncode, _, stderr = run_shell_command(cmd)
-    assert returncode == 0, f"Failed to index VCF: {stderr}"
-
-    return gz_path
 
 
 @pytest.mark.integration
