@@ -1,11 +1,7 @@
-import sys
 from pathlib import Path
 
 import pytest
 
-# Ensure hap_py package can be imported from src directory
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
 
 from hap_py.haplo.quantify_models import StratificationRegion
 

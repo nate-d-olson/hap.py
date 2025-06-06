@@ -3,16 +3,6 @@ Unit tests for hap.py Tools module.
 """
 
 import os
-import sys
-
-# Add src to path for imports during tests
-sys.path.insert(
-    0,
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "src",
-    ),
-)
 
 import hap_py.tools as Tools
 
