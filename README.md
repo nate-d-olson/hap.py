@@ -51,6 +51,7 @@ More information can be found below in the [usage section](#usage).
   * [OS X](#os-x)
   * [Windows](#windows)
   * [Other requirements](#other-requirements)
+  * [Required system packages](#required-system-packages)
 * [Python 3 Migration](#python-3-migration)
 * [Key Features](#key-features)
 
@@ -551,6 +552,29 @@ All other dependencies can be installed via `pip` or `conda`. Use the
 [environment.yml](environment.yml) file to create a development environment.
 Manual Boost builds are rarely needed—only developers working on the Cython
 extensions may need to provide a custom Boost installation.
+
+### Required system packages
+
+The integration tests rely on several external tools being available on your
+`$PATH`:
+
+- `bcftools`
+- `htslib` (provides `bgzip` and `tabix`)
+- `bgzip`
+- `tabix`
+- `rtg-tools`
+
+Example installation commands:
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install -y bcftools tabix
+
+# Conda
+conda install -c bioconda bcftools htslib rtg-tools
+```
+
+Ensure these executables are discoverable before running the integration tests.
 
 ## Python 3 Migration
 
