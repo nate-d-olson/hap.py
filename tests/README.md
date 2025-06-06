@@ -65,6 +65,12 @@ Tests assume that:
 2. C++ components have been built (for tests with the `cpp` marker)
 3. A reference genome is available (either via `HGREF` environment variable or in the example directory)
 4. `bgzip` and `tabix` executables are available in `build/bin` or on the `PATH`. If not, the helper functions in `tests/utils.py` fall back to `pysam` for compression and indexing.
+5. The `rtg` executable must be available when tests use the `vcfeval` engine.
+Install bgzip/tabix and rtg with:
+```bash
+sudo apt-get install -y tabix
+conda install -c bioconda htslib rtg-tools
+```
 
 ### Building the Project Before Running Tests
 
