@@ -11,7 +11,7 @@ Create and activate a `happy-dev` environment with **conda** or **mamba** for ha
 - **Python Location**: `$CONDA_PREFIX/bin/python`
 - **Package Installation**: Normal install in site-packages
 - **Testing Framework**: pytest 8.3.5
-- **RTG Tools**: Use the `rtg` executable installed in the `happy-dev` conda environment. After activating the environment, run `which rtg` to confirm its location.
+- **RTG Tools**: Use the `rtg` executable installed in the `happy-dev` conda environment. After activating the environment, run `which rtg` to confirm its location. The test suite requires this executable to be available on your `$PATH` or provided via the `RTGTOOLS_PATH` environment variable.
 
 ## System Dependencies
 
