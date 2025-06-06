@@ -6,6 +6,7 @@ Migrated from src/sh/run_leftshift_test.sh
 import filecmp
 import gzip
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
