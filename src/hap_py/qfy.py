@@ -389,7 +389,7 @@ def updateArgs(parser: argparse.ArgumentParser) -> None:
         type=float,
         help="Confidence level for Jeffrey's CI for recall, precision and fraction of non-assessed calls. "
         "Enhanced ROC analysis uses bootstrap sampling to calculate confidence intervals when > 0. "
-        "Common values: 0.05 (95% CI), 0.1 (90% CI). Set to 0 to disable confidence intervals.",
+        "Common values: 0.05 (95%% CI), 0.1 (90%% CI). Set to 0 to disable confidence intervals.",
     )
 
     parser.add_argument(
