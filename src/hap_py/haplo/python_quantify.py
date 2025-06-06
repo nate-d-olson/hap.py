@@ -8,6 +8,7 @@ producing stratification metrics and summary statistics.
 
 import json
 import logging
+import bisect
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -410,9 +411,9 @@ class QuantifyEngine:
         # Add Phase 2 results if ROC analysis was performed
         if self.enable_roc_analysis:
             results["roc_data"] = self.roc_data
-            results["bootstrap_confidence_intervals"] = (
-                self.bootstrap_confidence_intervals
-            )
+            results[
+                "bootstrap_confidence_intervals"
+            ] = self.bootstrap_confidence_intervals
             if self.quality_stratification:
                 results["quality_metrics"] = self.quality_metrics
 
@@ -756,42 +757,69 @@ class QuantifyEngine:
     def _find_overlapping_matches(
         self, truth_df: pd.DataFrame, query_df: pd.DataFrame, existing_matches: list
     ) -> list:
-        """Find overlapping variants that may represent the same biological variation."""
-        matches = []
+        """Find overlapping variants that may represent the same biological variation.
 
-        # Get already matched indices
+        This implementation avoids comparing every truth variant against every
+        query variant by building per-chromosome indexes of query variant
+        positions. Only variants with potentially overlapping coordinates are
+        evaluated.
+        """
+
+        matches: list = []
+
+        # Build position-sorted index of query variants per chromosome
+        query_index = {}
+        for chrom, chrom_df in query_df.groupby("chrom"):
+            starts = chrom_df["pos"].astype(int).to_numpy()
+            ends = (
+                chrom_df["pos"] + chrom_df["ref"].astype(str).str.len() - 1
+            ).to_numpy()
+            idxs = chrom_df.index.to_numpy()
+            order = starts.argsort()
+            query_index[chrom] = {
+                "starts": starts[order],
+                "ends": ends[order],
+                "idxs": idxs[order],
+            }
+
+        # Already matched indices
         matched_truth = {m[0] for m in existing_matches}
         matched_query = {m[1] for m in existing_matches}
 
-        # Find overlapping variants
+        window = 1000  # search window in bp around the truth variant
+
         for truth_idx, truth_row in truth_df.iterrows():
             if truth_idx in matched_truth:
                 continue
 
-            truth_start = truth_row["pos"]
-            truth_end = truth_row["pos"] + len(truth_row["ref"]) - 1
+            chrom = truth_row["chrom"]
+            qdata = query_index.get(chrom)
+            if qdata is None:
+                continue
 
-            for query_idx, query_row in query_df.iterrows():
+            truth_start = int(truth_row["pos"])
+            truth_end = truth_start + len(str(truth_row["ref"])) - 1
+
+            starts = qdata["starts"]
+            ends = qdata["ends"]
+            qidxs = qdata["idxs"]
+
+            left = bisect.bisect_left(starts, truth_start - window)
+            right = bisect.bisect_right(starts, truth_end + window, lo=left)
+
+            for i in range(left, right):
+                query_idx = int(qidxs[i])
                 if query_idx in matched_query:
                     continue
 
-                if truth_row["chrom"] != query_row["chrom"]:
-                    continue
+                query_start = int(starts[i])
+                query_end = int(ends[i])
 
-                query_start = query_row["pos"]
-                query_end = query_row["pos"] + len(query_row["ref"]) - 1
-
-                # Check for overlap
                 if truth_start <= query_end and query_start <= truth_end:
-                    # For overlapping variants, also check allele compatibility
-                    # Only match if the alleles are compatible or represent equivalent changes
+                    query_row = query_df.loc[query_idx]
                     if self._are_alleles_compatible(truth_row, query_row):
-                        # Calculate overlap confidence based on position proximity and allele similarity
                         distance = abs(truth_start - query_start)
-                        confidence = max(
-                            0.1, 1.0 - (distance / 50.0)
-                        )  # Confidence decreases with distance
-
+                        confidence = max(0.1, 1.0 - (distance / 50.0))
                         matches.append((truth_idx, query_idx, "overlap", confidence))
 
         return matches
