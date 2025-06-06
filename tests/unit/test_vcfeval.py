@@ -54,19 +54,24 @@ class TestVCFEval(unittest.TestCase):
 
     def test_findVCFEval(self):
         """Test the findVCFEval function."""
-        # Test when has_vcfeval is False
-        with patch("hap_py.haplo.vcfeval.has_vcfeval", False), patch(
-            "os.path.isfile", return_value=False
-        ), patch("os.access", return_value=False):
-            result = vcfeval.findVCFEval()
-            self.assertEqual(result, "rtg")
+        # Scenario 1: no executable present should raise FileNotFoundError
+        with patch("hap_py.haplo.vcfeval.has_vcfeval", False), patch.dict(
+            os.environ, {}, clear=True
+        ), patch("shutil.which", return_value=None):
+            with self.assertRaises(FileNotFoundError):
+                vcfeval.findVCFEval()
 
-        # Test when external RTG tools are found (current setup)
-        # Don't mock anything to use actual path detection
+        # Scenario 2: shutil.which returns a path
+        fake_path = "/tmp/fake_rtg"
+        with patch("hap_py.haplo.vcfeval.has_vcfeval", False), patch.dict(
+            os.environ, {}, clear=True
+        ), patch("shutil.which", return_value=fake_path):
+            result = vcfeval.findVCFEval()
+            self.assertEqual(result, fake_path)
+
+        # Scenario 3: external RTG tools are found (current environment)
         result = vcfeval.findVCFEval()
-        # Should return actual path to RTG tools or "rtg" as fallback
         self.assertTrue(isinstance(result, str))
-        # If RTG is found, it should be an absolute path
         if result != "rtg":
             self.assertTrue(os.path.isabs(result))
             self.assertTrue(result.endswith("rtg"))
