@@ -15,9 +15,10 @@ def test_qfy_basic(tmp_path):
     """Test basic qfy.py functionality with a GA4GH VCF file."""
     # Create a mock GA4GH VCF with expected fields
     ga4gh_vcf = tmp_path / "ga4gh.vcf"
-    with open(ga4gh_vcf, "w") as f:
+    with open(ga4gh_vcf, "w", encoding="utf-8") as f:
         f.write(
             """##fileformat=VCFv4.2
+##INFO=<ID=BS,Number=1,Type=Integer,Description="Benchmarking superlocus ID">
 ##INFO=<ID=Regions,Number=.,Type=String,Description="Regions">
 ##INFO=<ID=Subtype,Number=1,Type=String,Description="Variant subtype">
 ##INFO=<ID=Type,Number=1,Type=String,Description="Variant type">
@@ -25,12 +26,18 @@ def test_qfy_basic(tmp_path):
 ##INFO=<ID=FP,Number=0,Type=Flag,Description="False positive">
 ##INFO=<ID=FN,Number=0,Type=Flag,Description="False negative">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=BD,Number=1,Type=String,Description="Decision">
+##FORMAT=<ID=BK,Number=1,Type=String,Description="Decision subtype">
+##FORMAT=<ID=BI,Number=1,Type=String,Description="Additional info">
+##FORMAT=<ID=QQ,Number=1,Type=Float,Description="Quality">
+##FORMAT=<ID=BVT,Number=1,Type=String,Description="Variant type">
+##FORMAT=<ID=BLT,Number=1,Type=String,Description="Location type">
 ##contig=<ID=chr1,length=248956422>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TRUTH	QUERY
-chr1	100	.	A	T	.	PASS	Type=SNP;Subtype=SNP;TP	GT	0/1	0/1
-chr1	200	.	G	C	.	PASS	Type=SNP;Subtype=SNP;TP	GT	1/1	0/1
-chr1	300	.	C	G	.	PASS	Type=SNP;Subtype=SNP;FN	GT	0/1	./.
-chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tTRUTH\tQUERY
+chr1\t100\t.\tA\tT\t50\tPASS\tBS=1;Type=SNP;Subtype=SNP;TP\tGT:BD:BK:BI:QQ:BVT:BLT\t0/1:TP:gm:tv:100:SNP:het\t0/1:TP:gm:tv:100:SNP:het
+chr1\t200\t.\tG\tC\t50\tPASS\tBS=2;Type=SNP;Subtype=SNP;TP\tGT:BD:BK:BI:QQ:BVT:BLT\t1/1:TP:gm:tv:100:SNP:homalt\t0/1:TP:gm:tv:90:SNP:het
+chr1\t300\t.\tC\tG\t50\tPASS\tBS=3;Type=SNP;Subtype=SNP;FN\tGT:BD:BK:BI:QQ:BVT:BLT\t0/1:FN:gm:tv:80:SNP:het\t./.:.:.:.:.:.:.
+chr1\t400\t.\tT\tA\t50\tPASS\tBS=4;Type=SNP;Subtype=SNP;FP\tGT:BD:BK:BI:QQ:BVT:BLT\t./.:.:.:.:.:.:.\t0/1:FP:gm:tv:70:SNP:het
 """
         )
 
@@ -53,6 +60,8 @@ chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP	GT	./.	0/1
         str(ga4gh_vcf),
         "-o",
         output_prefix,
+        "-t",
+        "ga4gh",
     ]
 
     result = subprocess.run(cmd, env=env, capture_output=True, text=True)
@@ -75,9 +84,10 @@ def test_qfy_roc(tmp_path):
     """Test qfy.py ROC functionality."""
     # Create a mock GA4GH VCF with QQ scores for ROC
     ga4gh_vcf = tmp_path / "ga4gh_roc.vcf"
-    with open(ga4gh_vcf, "w") as f:
+    with open(ga4gh_vcf, "w", encoding="utf-8") as f:
         f.write(
             """##fileformat=VCFv4.2
+##INFO=<ID=BS,Number=1,Type=Integer,Description="Benchmarking superlocus ID">
 ##INFO=<ID=Regions,Number=.,Type=String,Description="Regions">
 ##INFO=<ID=Subtype,Number=1,Type=String,Description="Variant subtype">
 ##INFO=<ID=Type,Number=1,Type=String,Description="Variant type">
@@ -86,13 +96,19 @@ def test_qfy_roc(tmp_path):
 ##INFO=<ID=FN,Number=0,Type=Flag,Description="False negative">
 ##INFO=<ID=QQ,Number=1,Type=Float,Description="Quality score for ROC">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=BD,Number=1,Type=String,Description="Decision">
+##FORMAT=<ID=BK,Number=1,Type=String,Description="Decision subtype">
+##FORMAT=<ID=BI,Number=1,Type=String,Description="Additional info">
+##FORMAT=<ID=QQ,Number=1,Type=Float,Description="Quality">
+##FORMAT=<ID=BVT,Number=1,Type=String,Description="Variant type">
+##FORMAT=<ID=BLT,Number=1,Type=String,Description="Location type">
 ##contig=<ID=chr1,length=248956422>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TRUTH	QUERY
-chr1	100	.	A	T	.	PASS	Type=SNP;Subtype=SNP;TP;QQ=100	GT	0/1	0/1
-chr1	200	.	G	C	.	PASS	Type=SNP;Subtype=SNP;TP;QQ=90	GT	1/1	0/1
-chr1	300	.	C	G	.	PASS	Type=SNP;Subtype=SNP;FN;QQ=80	GT	0/1	./.
-chr1	400	.	T	A	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=70	GT	./.	0/1
-chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tTRUTH\tQUERY
+chr1\t100\t.\tA\tT\t50\tPASS\tBS=1;Type=SNP;Subtype=SNP;TP;QQ=100\tGT:BD:BK:BI:QQ:BVT:BLT\t0/1:TP:gm:tv:100:SNP:het\t0/1:TP:gm:tv:100:SNP:het
+chr1\t200\t.\tG\tC\t50\tPASS\tBS=2;Type=SNP;Subtype=SNP;TP;QQ=90\tGT:BD:BK:BI:QQ:BVT:BLT\t1/1:TP:gm:tv:100:SNP:homalt\t0/1:TP:gm:tv:90:SNP:het
+chr1\t300\t.\tC\tG\t50\tPASS\tBS=3;Type=SNP;Subtype=SNP;FN;QQ=80\tGT:BD:BK:BI:QQ:BVT:BLT\t0/1:FN:gm:tv:80:SNP:het\t./.:.:.:.:.:.:.
+chr1\t400\t.\tT\tA\t50\tPASS\tBS=4;Type=SNP;Subtype=SNP;FP;QQ=70\tGT:BD:BK:BI:QQ:BVT:BLT\t./.:.:.:.:.:.:.\t0/1:FP:gm:tv:70:SNP:het
+chr1\t500\t.\tG\tT\t50\tPASS\tBS=5;Type=SNP;Subtype=SNP;FP;QQ=50\tGT:BD:BK:BI:QQ:BVT:BLT\t./.:.:.:.:.:.:.\t0/1:FP:gm:tv:50:SNP:het
 """
         )
 
@@ -115,6 +131,8 @@ chr1	500	.	G	T	.	PASS	Type=SNP;Subtype=SNP;FP;QQ=50	GT	./.	0/1
         str(ga4gh_vcf),
         "-o",
         output_prefix,
+        "-t",
+        "ga4gh",
         "--roc",
         "QQ",  # Use QQ field for ROC curve
     ]

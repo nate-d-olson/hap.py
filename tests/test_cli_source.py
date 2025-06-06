@@ -85,6 +85,8 @@ def run_all_tests():
             script_dir / "hap.py", ["--invalid-option"], expected_exit_code=1
         ):
             success = False
+        if not test_cli_script(script_dir / "hap.py", ["--check-deps"]):
+            success = False
 
     return success
 

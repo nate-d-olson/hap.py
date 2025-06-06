@@ -11,6 +11,7 @@ dependencies:
   - scipy
   - bx-python
   - biopython
+  - htslib
   - rtg-tools
   - pip
   - pip:

@@ -7,7 +7,21 @@ This directory contains tests for the hap.py project. The tests are organized in
 
 ## Running Tests
 
-Tests can be run using pytest:
+Before running the test suite it is recommended to activate the conda environment
+defined in `environment-dev.yml`:
+
+```bash
+conda env create -f environment-dev.yml    # one-time setup
+conda activate happy-dev
+```
+
+Example:
+
+```bash
+conda activate happy-dev && pytest
+```
+
+Tests can then be run using pytest:
 
 ```bash
 # Run all tests

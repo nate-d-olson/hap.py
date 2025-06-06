@@ -89,6 +89,7 @@ chrQ  19    T    TGTGTG          0/1
 
 ```bash
 # Command to run hap.py for complex comparison (example)
+export RTG=./rtg-core-<ver>/rtg  # path to bundled RTG Tools if available
 ./hap.py truth.vcf query.vcf -o output/prefix -r ref.fa --engine=vcfeval --eval-outside-conf
 ```
 
@@ -140,8 +141,16 @@ hap.py relies on the external [RTG vcfeval](https://github.com/RealTimeGenomics/
 binary when using the ``--engine=vcfeval`` option. The executable is located by
 checking the ``RTG`` or ``RTGTOOLS_PATH`` environment variables and then falling
 back to ``rtg`` on the ``PATH``. If the executable cannot be found, hap.py will
-raise an error. Set ``RTG`` or ``RTGTOOLS_PATH`` to the full path of the
-``rtg`` binary if it is not available globally.
+raise an error.
+
+Set ``RTG`` or ``RTGTOOLS_PATH`` to the full path of the ``rtg`` binary if it is
+not available globally. If this repository includes a directory like
+``rtg-core-<ver>``, you can point the environment variable to the bundled
+``rtg`` script:
+
+```bash
+export RTG=/path/to/hap.py/rtg-core-<ver>/rtg
+```
 
 ### Variant preprocessing
 
@@ -366,10 +375,31 @@ cd hap.py
 pip install .
 ```
 
+### Prerequisite Tools
+
+The `bgzip` and `tabix` utilities from **htslib** are required for compressing
+and indexing VCF files. When running with `--engine=vcfeval`, the `rtg`
+executable from **rtg-tools** must also be installed.
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install -y tabix
+
+# Conda
+conda install -c bioconda htslib rtg-tools
+```
+
+
+
 This will build all necessary components and install the Python package with
 command-line entry points. For most users, installing via `pip` or with
 `conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
 are only required when contributing to the Cython extensions.
+
+Prebuilt wheels for Linux and macOS are built on our CI infrastructure and
+published to PyPI for each release. These wheels include the compiled C++
+extensions, so installing with `pip` on a supported platform does not require a
+C++ toolchain.
 
 ### Using Conda
 
@@ -453,6 +483,9 @@ After installation, the `hap.py` command-line tool will be available.
 
 ```bash
 hap.py --help # Show help message
+
+# Verify that external dependencies are available
+hap.py --check-deps
 
 # Example: Compare a VCF file against a truth VCF
 hap.py truth.vcf.gz query.vcf.gz -r reference.fa -o output_prefix

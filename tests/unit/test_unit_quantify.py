@@ -8,16 +8,12 @@ it correctly quantifies variant calls in VCF files.
 
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
-# Add src to sys.path to allow importing hap_py
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
 
 from hap_py.haplo.python_quantify import QuantifyEngine
 
@@ -431,12 +427,9 @@ chr1	100	.	A	T	60	PASS	.	GT	0/1
                     pytest.skip("_are_alleles_compatible method not found")
 
             finally:
-                # Clean up temp files
-                try:
-                    os.unlink(truth_f.name)
-                    os.unlink(query_f.name)
-                except OSError:
-                    pass
+                # Clean up temp files and surface any errors
+                os.unlink(truth_f.name)
+                os.unlink(query_f.name)
 
     def test_variant_classification(self):
         """Test the _classify_variant_type helper method."""

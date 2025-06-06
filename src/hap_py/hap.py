@@ -75,6 +75,14 @@ def main() -> int:
     )
 
     parser.add_argument(
+        "--check-deps",
+        dest="check_deps",
+        action="store_true",
+        default=False,
+        help="Check for required external tools and exit.",
+    )
+
+    parser.add_argument(
         "-r",
         "--reference",
         dest="ref",
@@ -192,10 +200,10 @@ def main() -> int:
         "--engine-vcfeval-path",
         dest="engine_vcfeval",
         required=False,
-        default=vcfeval.findVCFEval(),  # Use the function to find rtg
+        default=None,
         help=(
-            'This parameter should give the path to the "rtg" executable. '
-            f"The default is {vcfeval.findVCFEval()}"
+            'Path to the "rtg" executable. If not provided, hap.py will try to '
+            "locate it when vcfeval is run."
         ),
     )
 
@@ -257,6 +265,22 @@ def main() -> int:
     print(f"Hap.py {version}")
     if args.version:
         exit(0)
+
+    if args.check_deps:
+        from .tools import check_dependencies
+
+        deps = check_dependencies()
+        for tool, present in deps.items():
+            status = "found" if present else "missing"
+            print(f"{tool}: {status}")
+            if not present:
+                if tool == "rtg":
+                    print(
+                        "  Install RTG Tools from https://github.com/RealTimeGenomics/rtg-tools"
+                    )
+                else:
+                    print(f"  Install {tool} via your system package manager or conda")
+        return 0
 
     if args.roc:
         args.write_vcf = True
