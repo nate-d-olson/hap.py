@@ -18,6 +18,7 @@ dependencies:
   - scikit-learn
   - pytest
   - pytest-cov
+  - pytest-benchmark
   - nose
   - pip
   - pip:
