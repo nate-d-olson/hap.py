@@ -5,19 +5,11 @@ Unit tests for the Haplo.vcfeval module.
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
 
-sys.path.insert(
-    0,
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-        "src",
-    ),
-)
 
 from hap_py.haplo import vcfeval
 

@@ -1,12 +1,8 @@
 import json
 import os
-import sys
 import tempfile
 from pathlib import Path
 
-# Add src to sys.path to allow importing hap_py
-project_root_path = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root_path / "src"))
 
 from hap_py.tools.vcfextract import extract_header, extractHeadersJSON
 
