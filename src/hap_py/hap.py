@@ -55,7 +55,7 @@ except ImportError:
     parent_dir = Path(__file__).parent
     sys.path.insert(0, str(parent_dir))
     sys.path.insert(0, str(parent_dir.parent))  # Add src directory
-    
+
     import pre
     import qfy
     from external.rtg_manager import get_rtg_path
