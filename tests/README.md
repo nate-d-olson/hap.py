@@ -85,17 +85,20 @@ Tests assume that:
 
 ### Building the Project Before Running Tests
 
-Before running tests, especially integration tests, you need to build the project:
+Before running tests, especially integration tests, you must build the C++ components. From the project root run:
 
 ```bash
-# Build the project in a temporary directory
-python install.py /tmp/build
+cmake -B build -S .
+cmake --build build
+```
 
-# Run tests
+This places the compiled binaries in `build/bin`. Certain tests rely on these executables, so ensure they are built before running:
+
+```bash
 pytest
 ```
 
-Integration tests rely on the built executables and libraries, which are expected to be in the `build/bin` directory. If you run tests without building the project first, you'll see errors like:
+If the binaries are missing you may see errors like:
 
 ```
 AssertionError: hap.py failed with error: No such file or directory
