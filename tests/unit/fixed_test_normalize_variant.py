@@ -1,5 +1,8 @@
 import tempfile
 
+import pytest
+
+pytest.importorskip("pysam")
 import pysam
 
 from hap_py.haplo.python_preprocess import PreprocessEngine

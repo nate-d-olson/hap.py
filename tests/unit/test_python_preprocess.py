@@ -7,8 +7,10 @@ import os
 import tempfile
 from pathlib import Path
 
-import pysam
 import pytest
+
+pytest.importorskip("pysam")
+import pysam
 
 from hap_py.haplo.python_preprocess import DecomposeLevel, PreprocessEngine
 
