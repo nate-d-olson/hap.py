@@ -2,8 +2,12 @@
 
 """Version information for hap.py"""
 
-# Version string
-version = "0.3.15-dev"
+# Import version from the main package
+try:
+    from .._version import version
+except ImportError:
+    # Fallback version if _version.py is not available
+    version = "0.4.0"
 
 # Feature flags
 has_vcfeval = True  # RTG tools are now available

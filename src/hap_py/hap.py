@@ -35,37 +35,44 @@ import traceback
 from pathlib import Path
 
 # Modern imports using the new package structure
-try:
-    # When run as module
-    from . import pre, qfy
-    from .external.rtg_manager import get_rtg_path
-    from .haplo import gvcf2bed, vcfeval
-    from .tools import bcftools, vcfextract
-    from .tools.bcftools import bedOverlapCheck
-    from .tools.fastasize import fastaContigLengths
-    from .tools.parallel import getPool
-    from .tools.sessioninfo import sessionInfo
-    from .tools.version import version
-except ImportError:
-    # When run directly or as script
-    import sys
-    from pathlib import Path
+def _setup_imports():
+    """Setup imports to work both as module and script."""
+    try:
+        # When run as module
+        from . import pre, qfy
+        from .external.rtg_manager import get_rtg_path
+        from .haplo import gvcf2bed, vcfeval
+        from .tools import bcftools, vcfextract
+        from .tools.bcftools import bedOverlapCheck
+        from .tools.fastasize import fastaContigLengths
+        from .tools.parallel import getPool
+        from .tools.sessioninfo import sessionInfo
+        from .tools.version import version
+        return pre, qfy, get_rtg_path, gvcf2bed, vcfeval, bcftools, vcfextract, bedOverlapCheck, fastaContigLengths, getPool, sessionInfo, version
+    except ImportError:
+        # When run directly or as script
+        import sys
+        from pathlib import Path
 
-    # Add the hap_py package to the path
-    parent_dir = Path(__file__).parent
-    sys.path.insert(0, str(parent_dir))
-    sys.path.insert(0, str(parent_dir.parent))  # Add src directory
+        # Add the hap_py package to the path
+        parent_dir = Path(__file__).parent.absolute()
+        sys.path.insert(0, str(parent_dir))
+        
+        import hap_py.pre as pre
+        import hap_py.qfy as qfy
+        from hap_py.external.rtg_manager import get_rtg_path
+        from hap_py.haplo import gvcf2bed, vcfeval
+        from hap_py.tools import bcftools, vcfextract
+        from hap_py.tools.bcftools import bedOverlapCheck
+        from hap_py.tools.fastasize import fastaContigLengths
+        from hap_py.tools.parallel import getPool
+        from hap_py.tools.sessioninfo import sessionInfo
+        from hap_py.tools.version import version
+        return pre, qfy, get_rtg_path, gvcf2bed, vcfeval, bcftools, vcfextract, bedOverlapCheck, fastaContigLengths, getPool, sessionInfo, version
 
-    import pre
-    import qfy
-    from external.rtg_manager import get_rtg_path
-    from haplo import gvcf2bed, vcfeval
-    from tools import bcftools, vcfextract
-    from tools.bcftools import bedOverlapCheck
-    from tools.fastasize import fastaContigLengths
-    from tools.parallel import getPool
-    from tools.sessioninfo import sessionInfo
-    from tools.version import version
+
+# Import all necessary modules
+pre, qfy, get_rtg_path, gvcf2bed, vcfeval, bcftools, vcfextract, bedOverlapCheck, fastaContigLengths, getPool, sessionInfo, version = _setup_imports()
 
 
 def main() -> int:
