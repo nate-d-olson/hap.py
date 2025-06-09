@@ -38,6 +38,7 @@ from pathlib import Path
 try:
     # When run as module
     from . import pre, qfy
+    from .external.rtg_manager import get_rtg_path
     from .haplo import gvcf2bed, vcfeval
     from .tools import bcftools, vcfextract
     from .tools.bcftools import bedOverlapCheck
@@ -50,9 +51,14 @@ except ImportError:
     import sys
     from pathlib import Path
 
-    sys.path.insert(0, str(Path(__file__).parent))
+    # Add the hap_py package to the path
+    parent_dir = Path(__file__).parent
+    sys.path.insert(0, str(parent_dir))
+    sys.path.insert(0, str(parent_dir.parent))  # Add src directory
+    
     import pre
     import qfy
+    from external.rtg_manager import get_rtg_path
     from haplo import gvcf2bed, vcfeval
     from tools import bcftools, vcfextract
     from tools.bcftools import bedOverlapCheck
@@ -193,18 +199,13 @@ def main() -> int:
         dest="engine",
         default="vcfeval",
         choices=["vcfeval"],
-        help="Comparison engine to use. Only vcfeval is supported in Python 3.",
+        help="Comparison engine to use. Only vcfeval is supported in >= 0.4.0.",
     )
 
     parser.add_argument(
         "--engine-vcfeval-path",
-        dest="engine_vcfeval",
-        required=False,
-        default=vcfeval.findVCFEval(),  # Use the function to find rtg
-        help=(
-            'This parameter should give the path to the "rtg" executable. '
-            f"The default is {vcfeval.findVCFEval()}"
-        ),
+        default=None,
+        help="Path to rtg executable (auto-detected by default)",
     )
 
     parser.add_argument(
@@ -316,6 +317,10 @@ def main() -> int:
         raise FileNotFoundError(f"Input file {args.vcf1} does not exist.")
     if not os.path.exists(args.vcf2):
         raise FileNotFoundError(f"Input file {args.vcf2} does not exist.")
+
+    # Automatically set RTG path if not specified
+    if args.engine == "vcfeval" and args.engine_vcfeval_path is None:
+        args.engine_vcfeval_path = get_rtg_path()
 
     tempfiles = []
 

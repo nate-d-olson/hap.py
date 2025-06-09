@@ -81,6 +81,7 @@ Homepage = "https://github.com/nate-d-olson/hap.py"
 "hap.py" = "hap_py.hap:main"
 "quantify" = "hap_py.qfy:main"
 "preprocess" = "hap_py.pre:main"
+"hap-py-install-rtg" = "hap_py.tools.installer:install"
 
 [tool.black]
 line-length = 88
@@ -124,6 +125,7 @@ module = [
     "pysam.*"
 ]
 ignore_missing_imports = true
+
 
 [tool.setuptools.packages.find]
 where = ["src"]

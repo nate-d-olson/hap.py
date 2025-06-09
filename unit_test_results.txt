@@ -1,0 +1,51 @@
+.................................................s...................... [ 80%]
+.........FFFFF...                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ TestVCFEval.test_findVCFEval _________________________
+tests/unit/test_vcfeval.py:69: in test_findVCFEval
+    result = vcfeval.findVCFEval()
+             ^^^^^^^^^^^^^^^^^^^^^
+src/hap_py/haplo/vcfeval.py:54: in findVCFEval
+    return get_rtg_path()
+           ^^^^^^^^^^^^^^
+src/hap_py/external/rtg_manager.py:106: in get_rtg_path
+    return rtg_manager.get_rtg_path()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/hap_py/external/rtg_manager.py:47: in get_rtg_path
+    raise RuntimeError(
+E   RuntimeError: Failed to install RTG Tools. Please install manually and set RTG_PATH environment variable.
+__________________ TestVCFEval.test_runVCFEval_default_params __________________
+tests/unit/test_vcfeval.py:176: in test_runVCFEval_default_params
+    result = vcfeval.runVCFEval(
+src/hap_py/haplo/vcfeval.py:79: in runVCFEval
+    starttime = time.time()
+                ^^^^
+E   NameError: name 'time' is not defined
+_________________ TestVCFEval.test_runVCFEval_input_validation _________________
+tests/unit/test_vcfeval.py:105: in test_runVCFEval_input_validation
+    vcfeval.runVCFEval(
+src/hap_py/haplo/vcfeval.py:79: in runVCFEval
+    starttime = time.time()
+                ^^^^
+E   NameError: name 'time' is not defined
+__________________ TestVCFEval.test_runVCFEval_missing_output __________________
+tests/unit/test_vcfeval.py:267: in test_runVCFEval_missing_output
+    result = vcfeval.runVCFEval(
+src/hap_py/haplo/vcfeval.py:79: in runVCFEval
+    starttime = time.time()
+                ^^^^
+E   NameError: name 'time' is not defined
+________________ TestVCFEval.test_runVCFEval_subprocess_errors _________________
+tests/unit/test_vcfeval.py:236: in test_runVCFEval_subprocess_errors
+    vcfeval.runVCFEval(
+src/hap_py/haplo/vcfeval.py:79: in runVCFEval
+    starttime = time.time()
+                ^^^^
+E   NameError: name 'time' is not defined
+=========================== short test summary info ============================
+FAILED tests/unit/test_vcfeval.py::TestVCFEval::test_findVCFEval - RuntimeErr...
+FAILED tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_default_params
+FAILED tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_input_validation
+FAILED tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_missing_output
+FAILED tests/unit/test_vcfeval.py::TestVCFEval::test_runVCFEval_subprocess_errors
+5 failed, 83 passed, 1 skipped in 17.01s

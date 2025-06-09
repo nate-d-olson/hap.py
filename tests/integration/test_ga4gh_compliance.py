@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from hap_py.quantify.ga4gh import GA4GHMetrics, GA4GHStratification
+from hap_py.haplo.ga4gh_compliance import GA4GHMetrics, GA4GHStratification
 
 
 @pytest.fixture

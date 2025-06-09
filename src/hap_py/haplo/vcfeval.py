@@ -32,6 +32,8 @@ import time
 from argparse import Namespace
 from typing import List, Optional
 
+from ..external.rtg_manager import get_rtg_path
+
 # Set up versioning
 try:
     from ..tools import version
@@ -46,57 +48,10 @@ def findVCFEval() -> str:
     """Return default version of rtgtools if hap.py was built with rtgtools included.
 
     Returns:
-        Path to rtg executable or 'rtg' if not found
+        Path to rtg executable, automatically downloaded if needed
     """
-    # Always check for our included RTG tools first, regardless of has_vcfeval flag
-    script_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-
-    # For modernized version, look in external/rtg-tools-3.12.1/
-    project_root = os.path.abspath(
-        os.path.join(
-            script_dir,  # haplo
-            "..",  # hap_py
-            "..",  # src
-            "..",  # project root
-        )
-    )
-
-    # Check for RTG tools in external directory (modernized version)
-    external_rtg = os.path.join(project_root, "external", "rtg-tools-3.12.1", "rtg")
-    if os.path.isfile(external_rtg) and os.access(external_rtg, os.X_OK):
-        logging.info(f"Using RTG tools from external directory: {external_rtg}")
-        return external_rtg
-
-    # Fallback to legacy paths
-    base = os.path.abspath(
-        os.path.join(
-            script_dir,  # Haplo
-            "..",  # python
-            "..",  # src
-            "..",  # hap.py-base
-            "libexec",
-            "rtg-tools-install",
-        )
-    )
-    # prefer wrapper when it's there
-    bfile = os.path.join(base, "rtg-wrapper.sh")
-    bfile2 = os.path.join(base, "rtg")
-    if os.path.isfile(bfile) and os.access(bfile, os.X_OK):
-        logging.info(f"Using included RTG tools wrapper: {bfile}")
-        return bfile
-    elif os.path.isfile(bfile2) and os.access(bfile2, os.X_OK):
-        logging.info(f"Using included RTG tools binary: {bfile2}")
-        return bfile2
-    else:
-        # Fallback to checking if has_vcfeval is set
-        if has_vcfeval:
-            logging.warning(
-                f"Could not find our included version of rtg-tools at {base} or {external_rtg}. "
-                "To use vcfeval for comparison, you might have to specify "
-                "its location on the command line."
-            )
-        # default: return
-        return "rtg"
+    # This will handle downloading RTG if necessary
+    return get_rtg_path()
 
 
 def runVCFEval(
@@ -194,7 +149,7 @@ def runVCFEval(
                 args.engine_vcfeval_template = template_dir
 
                 # Quote paths for shell safety
-                quoted_engine = shlex.quote(args.engine_vcfeval)
+                quoted_engine = shlex.quote(findVCFEval())
                 quoted_template = shlex.quote(args.engine_vcfeval_template)
                 quoted_ref = shlex.quote(args.ref)
 
@@ -236,7 +191,7 @@ def runVCFEval(
             args.pass_only = False
 
         # Quote paths for shell safety
-        quoted_engine = shlex.quote(args.engine_vcfeval)
+        quoted_engine = shlex.quote(findVCFEval())
         quoted_vcf1 = shlex.quote(vcf1)
         quoted_vcf2 = shlex.quote(vcf2)
         quoted_template = shlex.quote(args.engine_vcfeval_template)
