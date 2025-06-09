@@ -71,16 +71,34 @@ def find_reference_file() -> Optional[str]:
 
 
 def check_tool_availability(tool_name: str) -> bool:
-    """Check if a tool is available in the bin directory.
+    """Check if a tool is available.
+
+    The helper first looks for the executable in ``build/bin`` and then
+    falls back to ``shutil.which`` to search the ``PATH``.
 
     Args:
         tool_name: Name of the tool to check
 
     Returns:
-        True if the tool is available, False otherwise
+        ``True`` if the tool is available, ``False`` otherwise
     """
+
     tool_path = get_bin_dir() / tool_name
-    return tool_path.exists()
+    if tool_path.exists() and os.access(tool_path, os.X_OK):
+        return True
+
+    return shutil.which(tool_name) is not None
+
+
+def require_tools(*tool_names: str) -> None:
+    """Skip the current test if any of the specified tools are missing."""
+
+    missing = [t for t in tool_names if not check_tool_availability(t)]
+    if missing:
+        import pytest
+
+        tools = ", ".join(missing)
+        pytest.skip(f"Required tool(s) not available: {tools}")
 
 
 def compare_files(file1: Path, file2: Path, ignore_comments: bool = False) -> bool:

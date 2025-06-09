@@ -11,6 +11,7 @@ from tests.utils import (
     get_bin_dir,
     get_example_dir,
     get_python_executable,
+    require_tools,
     run_shell_command,
 )
 
@@ -23,6 +24,9 @@ def test_happy_pg_test(tmp_path):
     bin_dir = get_bin_dir()
     example_dir = get_example_dir()
     python_exe = get_python_executable()
+
+    # Skip if required external tools are missing
+    require_tools("bcftools", "bgzip", "tabix")
 
     # Prepare file paths
     reference_fa = example_dir / "chr21.fa"

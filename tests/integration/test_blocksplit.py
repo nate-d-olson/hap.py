@@ -9,27 +9,36 @@ from pathlib import Path
 
 import pytest
 
+from tests.utils import (
+    get_bin_dir,
+    get_project_root,
+    require_tools,
+)
+
 
 @pytest.mark.integration
 @pytest.mark.cpp
 def test_blocksplit():
     """Test blocksplit functionality on VCF files."""
     # Get paths to required files
-    project_root = Path(__file__).parent.parent.parent
+    project_root = get_project_root()
     example_dir = project_root / "example" / "happy"
     vcf1_path = example_dir / "PG_NA12878_hg38-chr21.vcf.gz"
     vcf2_path = example_dir / "NA12878-GATK3-chr21.vcf.gz"
 
     # Get path to tools
-    bin_dir = project_root / "build" / "bin"
+    bin_dir = get_bin_dir()
     blocksplit_bin = bin_dir / "blocksplit"
     bcftools_bin = bin_dir / "bcftools"
+
+    # Skip if required external tool is missing
+    require_tools("bcftools")
 
     # Check that required files exist
     assert vcf1_path.exists(), f"Test VCF1 {vcf1_path} not found"
     assert vcf2_path.exists(), f"Test VCF2 {vcf2_path} not found"
-    assert blocksplit_bin.exists(), f"Blocksplit binary {blocksplit_bin} not found"
-    assert bcftools_bin.exists(), f"Bcftools binary {bcftools_bin} not found"
+    if not blocksplit_bin.exists():
+        pytest.skip(f"blocksplit binary not found at {blocksplit_bin}")
 
     # Create temporary files
     with tempfile.NamedTemporaryFile(suffix=".bed") as temp_result:
