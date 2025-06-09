@@ -8,7 +8,12 @@ import subprocess
 
 import pytest
 
-from tests.utils import get_bin_dir, get_project_root, run_command
+from tests.utils import (
+    get_bin_dir,
+    get_project_root,
+    require_tools,
+    run_command,
+)
 
 
 @pytest.mark.integration
@@ -76,6 +81,9 @@ def test_multimerge_import(tmp_path):
 
     # Define path to multimerge binary
     multimerge_bin = bin_dir / "multimerge"
+
+    # Skip if required external tools are missing
+    require_tools("bgzip", "tabix")
 
     # Skip test if binary doesn't exist
     if not multimerge_bin.exists():
