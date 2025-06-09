@@ -126,7 +126,14 @@ class MetricsCalculator:
     @staticmethod
     def _calculate_metrics_for_subset(subset_df: pd.DataFrame) -> QuantifyMetrics:
         """Calculate metrics for a subset of variants."""
-        decision_counts = subset_df["benchmark_decision"].value_counts()
+        decision_col = "benchmark_decision"
+        if decision_col not in subset_df.columns:
+            for alt_col in ["BD", "benchmark_decision", "decision"]:
+                if alt_col in subset_df.columns:
+                    decision_col = alt_col
+                    break
+
+        decision_counts = subset_df.get(decision_col, pd.Series(dtype=object)).value_counts()
 
         tp_count = decision_counts.get("TP", 0)
         fp_count = decision_counts.get("FP", 0)
@@ -192,3 +199,27 @@ class MetricsCalculator:
             )
 
         return pd.DataFrame(results)
+
+    @staticmethod
+    def calculate_summary_metrics(variant_df: pd.DataFrame) -> Dict[str, float]:
+        """Return summary metrics for a set of variants."""
+        metrics = MetricsCalculator._calculate_metrics_for_subset(variant_df)
+
+        return {
+            "truth_total": metrics.total_truth,
+            "truth_tp": metrics.tp_count,
+            "truth_fn": metrics.fn_count,
+            "query_total": metrics.total_query,
+            "query_tp": metrics.tp_count,
+            "query_fp": metrics.fp_count,
+            "fp_gt": 0,
+            "fp_al": 0,
+            "recall": metrics.recall,
+            "precision": metrics.precision,
+            "frac_na": 0.0,
+            "f1_score": metrics.f1_score,
+            "truth_titv": 0.0,
+            "query_titv": 0.0,
+            "truth_het_hom": 0.0,
+            "query_het_hom": 0.0,
+        }

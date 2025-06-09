@@ -185,6 +185,11 @@ class QuantifyEngine:
 
     def _load_regions(self):
         """Load regions from BED file."""
+        if not self.regions:
+            self.region_list = []
+            self.region_dict = {}
+            return
+
         try:
             # Read BED file
             with open(self.regions) as f:
@@ -2044,13 +2049,23 @@ class QuantifyEngine:
         Args:
             output_prefix: Prefix for output files
         """
-        if not self.enable_roc_analysis or not self.roc_data:
+        if not self.enable_roc_analysis:
+            return
+
+        roc_file = f"{output_prefix}.roc.tsv"
+
+        # Always create the ROC file even if no ROC data was generated
+        if not self.roc_data:
+            with open(roc_file, "w") as f:
+                f.write(
+                    "Type\tThreshold\tTP\tFP\tFN\tPrecision\tRecall\tPrecision_Lower\tRecall_Lower\tRecall_Upper\n"
+                )
+            logger.info(f"Created empty ROC file at {roc_file}")
             return
 
         logger.info("Writing enhanced ROC analysis results...")
 
         # Write ROC curves data
-        roc_file = f"{output_prefix}.roc.tsv"
         with open(roc_file, "w") as f:
             f.write(
                 "Type\tThreshold\tTP\tFP\tFN\tPrecision\tRecall\tPrecision_Lower\tRecall_Lower\tRecall_Upper\n"

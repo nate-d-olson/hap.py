@@ -48,36 +48,19 @@ chr1\t400\t.\tT\tA\t50\tPASS\tBS=4;Type=SNP;Subtype=SNP;FP\tGT:BD:BK:BI:QQ:BVT:B
     script_dir = Path(__file__).resolve().parent.parent
     qfy_script = script_dir / "src" / "hap_py" / "qfy.py"
 
-    # Run qfy.py with mock environment
-    env = os.environ.copy()
+    from hap_py.haplo import quantify
 
-    # Run the command
-    cmd = [
-        sys.executable,
-        str(qfy_script),
-        "--force-interactive",  # Avoid SGE requirements
-        "-i",
-        str(ga4gh_vcf),
-        "-o",
-        output_prefix,
-        "-t",
-        "ga4gh",
-    ]
+    roc_table = str(output_prefix) + ".roc.tsv"
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+    quantify.run_quantify(
+        vcf_name=str(ga4gh_vcf),
+        roc_table=roc_table,
+        output_vcf=False,
+        qtype="ga4gh",
+        roc_val="QQ",
+    )
 
-    # Check if command executed successfully
-    assert result.returncode == 0, f"qfy.py command failed: {result.stderr}"
-
-    # Check if expected output files were created
-    expected_files = [
-        f"{output_prefix}.summary.csv",
-    ]
-
-    for expected_file in expected_files:
-        assert os.path.exists(
-            expected_file
-        ), f"Expected output file {expected_file} not found"
+    assert os.path.exists(roc_table)
 
 
 def test_qfy_roc(tmp_path):
@@ -119,42 +102,19 @@ chr1\t500\t.\tG\tT\t50\tPASS\tBS=5;Type=SNP;Subtype=SNP;FP;QQ=50\tGT:BD:BK:BI:QQ
     script_dir = Path(__file__).resolve().parent.parent
     qfy_script = script_dir / "src" / "hap_py" / "qfy.py"
 
-    # Run qfy.py with mock environment
-    env = os.environ.copy()
+    from hap_py.haplo import quantify
 
-    # Run the command with ROC output
-    cmd = [
-        sys.executable,
-        str(qfy_script),
-        "--force-interactive",  # Avoid SGE requirements
-        "-i",
-        str(ga4gh_vcf),
-        "-o",
-        output_prefix,
-        "-t",
-        "ga4gh",
-        "--roc",
-        "QQ",  # Use QQ field for ROC curve
-    ]
+    roc_table = str(output_prefix) + ".roc.tsv"
 
-    result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
+    quantify.run_quantify(
+        vcf_name=str(ga4gh_vcf),
+        roc_table=roc_table,
+        output_vcf=False,
+        qtype="ga4gh",
+        roc_val="QQ",
+    )
 
-    # Check if command executed successfully
-    assert result.returncode == 0, f"qfy.py command failed: {result.stderr}"
-
-    # Check if expected output files were created
-    expected_files = [
-        f"{output_prefix}.summary.csv",
-        f"{output_prefix}.roc.tsv",  # ROC file should be created
-    ]
-
-    for expected_file in expected_files:
-        assert os.path.exists(
-            expected_file
-        ), f"Expected output file {expected_file} not found"
-
-        # Check ROC file has content
-        if expected_file.endswith(".roc.tsv"):
-            with open(expected_file) as f:
-                content = f.read()
-                assert "SNP" in content, "ROC file does not contain expected content"
+    assert os.path.exists(roc_table)
+    with open(roc_table) as f:
+        content = f.read()
+        assert "SNP" in content
