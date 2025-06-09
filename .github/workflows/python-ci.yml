@@ -44,7 +44,7 @@ jobs:
 
     - name: Install project with dependencies
       run: |
-        pip install -e .[dev] # Installs hap.py in development mode with test dependencies
+        pip install -e .[dev,bio] # Install hap.py with optional bio deps for tests
 
     - name: Add RTG tools to PATH
       run: |

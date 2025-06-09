@@ -54,7 +54,7 @@ jobs:
 
         # Install the wheel and dev dependencies
         pip install dist/*.whl
-        pip install .[dev]
+        pip install .[dev,bio]
 
     - name: Lint with Black and Ruff
       run: |

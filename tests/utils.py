@@ -406,8 +406,9 @@ def compress_and_index_vcf(vcf_path: Path, output_path: Optional[Path] = None) -
         with open(output_path, "wb") as out_f:
             subprocess.run(bgzip_cmd, check=True, stdout=out_f)
     else:
-        import pysam
+        import pytest
 
+        pysam = pytest.importorskip("pysam")
         pysam.tabix_compress(str(vcf_path), str(output_path), force=True)
 
     tabix_cmd = None
@@ -419,8 +420,9 @@ def compress_and_index_vcf(vcf_path: Path, output_path: Optional[Path] = None) -
     if tabix_cmd:
         subprocess.run(tabix_cmd, check=True)
     else:
-        import pysam
+        import pytest
 
+        pysam = pytest.importorskip("pysam")
         pysam.tabix_index(str(output_path), preset="vcf", force=True)
 
     return output_path
