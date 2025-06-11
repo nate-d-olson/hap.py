@@ -18,13 +18,13 @@ import json
 import logging
 import os
 import shlex
-import subprocess
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import pysam
 
 from .metrics_calculator import MetricsCalculator
 
@@ -193,55 +193,20 @@ def _merge_vcfs(vcfs: List[str], outvcf: str) -> None:
         with contextlib.suppress(Exception):
             os.unlink(outvcf)
 
-    cmd_line = ["bcftools", "concat", "-a"]
-    cmd_line.extend(vcfs)
-    cmd_line.extend(["-o", outvcf])
+    # Concatenate VCFs using pysam.  This assumes all VCFs share the same header
+    # which is true for our generated temp files.
+    with pysam.VariantFile(vcfs[0]) as template:
+        with pysam.VariantFile(outvcf, "w", header=template.header) as out:
+            for vcf in vcfs:
+                with pysam.VariantFile(vcf) as f:
+                    for rec in f.fetch():
+                        out.write(rec)
 
-    cmd_line_str = _make_cmdline(cmd_line)
-    logging.info(cmd_line_str)
-
-    try:
-        po = subprocess.Popen(
-            cmd_line_str,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-        )
-
-        stdout, stderr = po.communicate()
-        return_code = po.returncode
-
-        if return_code != 0:
-            logging.error(f"bcftools concat error: {stderr}")
-            raise Exception(f"Failed to concatenate {str(vcfs)}")
-    except Exception as e:
-        logging.error(f"Command execution failed: {str(e)}")
-        raise Exception(f"Failed to concatenate {str(vcfs)}: {str(e)}")
-
-    # index vcf
-    cmd_line = ["bcftools", "index", outvcf]
-
-    cmd_line_str = _make_cmdline(cmd_line)
-    logging.info(cmd_line_str)
-
-    po = subprocess.Popen(
-        cmd_line_str,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    )
-
-    stdout, stderr = po.communicate()
-
-    po.wait()
-
-    return_code = po.returncode
-
-    if return_code != 0:
-        logging.error(f"bcftools index error: {stderr}")
-        logging.warning(f"Failed to index {outvcf}")
+    if outvcf.endswith(".gz"):
+        try:
+            pysam.tabix_index(outvcf, preset="vcf", force=True)
+        except Exception as e:
+            logging.warning(f"Failed to index {outvcf}: {e}")
 
 
 def _write_outfiles(
