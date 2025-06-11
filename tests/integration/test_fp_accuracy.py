@@ -14,6 +14,7 @@ from tests.utils import (
     get_bin_dir,
     get_project_root,
     get_python_executable,
+    require_tools,
     run_shell_command,
 )
 
@@ -32,12 +33,15 @@ def extract_and_filter_vcf(gz_file: Path, output_file: Path) -> None:
 
 
 @pytest.mark.integration
-def test_fp_region_accuracy(tmp_path):
+def test_fp_region_accuracy(tmp_path, rtg_executable):
     """Test if FP regions are processed accurately."""
     # Get paths to required files and tools
     bin_dir = get_bin_dir()
     project_root = get_project_root()
     python_exe = get_python_executable()
+
+    # Skip if required external tools are missing
+    require_tools("rtg", "bcftools", "bgzip", "tabix")
 
     # Set up paths to data files
     data_dir = project_root / "src" / "data" / "fp_region_accuracy"
@@ -68,6 +72,8 @@ def test_fp_region_accuracy(tmp_path):
         "chrQ",
         "-V",
         "--force-interactive",
+        "--engine-vcfeval-path",
+        rtg_executable,
     ]
 
     cmd_str = " ".join(happy_cmd)
