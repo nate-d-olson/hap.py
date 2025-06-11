@@ -6,7 +6,6 @@ Migrated from src/sh/run_leftshift_test.sh
 import filecmp
 import gzip
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -20,7 +19,6 @@ def test_leftshift(tmp_path):
     # Get paths to required files
     project_root = get_project_root()
     src_data_dir = project_root / "src" / "data" / "leftshifting_example"
-    compare_script = project_root / "src" / "sh" / "compare_extended.py"
 
     # Input files
     truth_vcf = src_data_dir / "truth.vcf"
@@ -65,17 +63,11 @@ def test_leftshift(tmp_path):
     assert result.returncode == 0, f"hap.py failed with left-shifting: {result.stderr}"
 
     # Compare extended files
-    compare_cmd = [
-        sys.executable,
-        str(compare_script),
-        str(output_extended),
-        str(expected_extended),
-    ]
+    import pandas as pd
 
-    compare_result = subprocess.run(compare_cmd, capture_output=True, text=True)
-    assert (
-        compare_result.returncode == 0
-    ), f"Extended CSV comparison failed: {compare_result.stderr}"
+    df_actual = pd.read_csv(output_extended)
+    df_expected = pd.read_csv(expected_extended)
+    pd.testing.assert_frame_equal(df_actual, df_expected)
 
     # Compare VCF files - extract non-header lines from the gzipped VCF
     with gzip.open(output_vcf_gz, "rt") as f_gz:

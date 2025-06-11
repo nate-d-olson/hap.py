@@ -167,8 +167,17 @@ class QuantifyEngine:
         required_info = ["BS"]
         missing_info = [f for f in required_info if f not in header.info]
 
-        required_format = ["GT", "BD", "BK", "BI", "QQ", "BVT", "BLT"]
+        required_format = ["GT", "BD", "BK", "BI", "QQ"]
         missing_format = [f for f in required_format if f not in header.formats]
+
+        # BVT/BLT are optional in the input and will be added if missing
+        optional_format = ["BVT", "BLT"]
+        missing_optional = [f for f in optional_format if f not in header.formats]
+        if missing_optional:
+            logger.debug(
+                "Optional GA4GH fields missing in input VCF: %s",
+                ", ".join(missing_optional),
+            )
 
         required_samples = ["TRUTH", "QUERY"]
         missing_samples = [s for s in required_samples if s not in header.samples]
@@ -606,7 +615,11 @@ class QuantifyEngine:
             out_vcf = pysam.VariantFile(output_path, "w", header=header)
 
             for _, row in df.iterrows():
-                alleles = (row["ref"],) + tuple(row["alt"].split(",")) if row["alt"] else (row["ref"],)
+                alleles = (
+                    (row["ref"],) + tuple(row["alt"].split(","))
+                    if row["alt"]
+                    else (row["ref"],)
+                )
                 rec = out_vcf.new_record(
                     contig=row["chrom"],
                     start=int(row["pos"]) - 1,

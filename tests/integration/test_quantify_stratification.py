@@ -19,7 +19,6 @@ def test_quantify_stratification(tmp_path):
     project_root = get_project_root()
     example_dir = project_root / "example" / "happy"
     compare_summaries_script = project_root / "src" / "sh" / "compare_summaries.py"
-    compare_extended_script = project_root / "src" / "sh" / "compare_extended.py"
 
     # Input files
     reference = example_dir / "hg38.chr21.fa"
@@ -88,17 +87,8 @@ def test_quantify_stratification(tmp_path):
     )
 
     # Compare extended files
-    compare_extended_cmd = [
-        sys.executable,
-        str(compare_extended_script),
-        str(output_extended),
-        str(expected_extended),
-    ]
+    import pandas as pd
 
-    compare_extended_result = subprocess.run(
-        compare_extended_cmd, capture_output=True, text=True
-    )
-    assert compare_extended_result.returncode == 0, (
-        f"Extended CSV comparison failed: {compare_extended_result.stderr}\n"
-        f"Check diff {output_extended} {expected_extended}"
-    )
+    df_actual = pd.read_csv(output_extended)
+    df_expected = pd.read_csv(expected_extended)
+    pd.testing.assert_frame_equal(df_actual, df_expected)

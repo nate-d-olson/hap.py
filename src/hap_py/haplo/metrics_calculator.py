@@ -297,8 +297,18 @@ class MetricsCalculator:
         else:
             metrics["frac_na"] = 0.0
 
-        truth_variants = df[(df.get("TP", False)) | (df.get("FN", False))]
-        query_variants = df[(df.get("TP", False)) | (df.get("FP", False))]
+        tp_mask = df.get("TP")
+        if tp_mask is None:
+            tp_mask = pd.Series(False, index=df.index)
+        fn_mask = df.get("FN")
+        if fn_mask is None:
+            fn_mask = pd.Series(False, index=df.index)
+        fp_mask = df.get("FP")
+        if fp_mask is None:
+            fp_mask = pd.Series(False, index=df.index)
+
+        truth_variants = df[tp_mask.astype(bool) | fn_mask.astype(bool)]
+        query_variants = df[tp_mask.astype(bool) | fp_mask.astype(bool)]
 
         metrics["truth_titv"] = MetricsCalculator._titv_ratio(truth_variants)
         metrics["query_titv"] = MetricsCalculator._titv_ratio(query_variants)
