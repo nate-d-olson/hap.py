@@ -30,8 +30,8 @@ import sys
 import tempfile
 import time
 import traceback
-from typing import List, Optional, Union
 from pathlib import Path
+from typing import List, Optional, Union
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -56,7 +56,6 @@ try:
     from .tools import vcfextract
     from .tools.bcftools import preprocessVCF, runBcftools
     from .tools.fastasize import fastaContigLengths
-    from .tools.version import version
 except ImportError:
     # When run directly or as script
     import sys
@@ -68,7 +67,6 @@ except ImportError:
     from tools import vcfextract
     from tools.bcftools import preprocessVCF, runBcftools
     from tools.fastasize import fastaContigLengths
-    from tools.version import version
 
 
 def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
@@ -489,6 +487,7 @@ def main() -> int:
     """
     if "--version" in sys.argv or "-v" in sys.argv:
         from .tools.version import version
+
         print(f"pre.py {version}")
         return 0
 
@@ -588,7 +587,6 @@ def main() -> int:
             logging.error(f"Unknown arguments specified: {unknown_args}")
         parser.print_help()
         exit(0)
-
 
     args.input = args.input[0]
     args.output = args.output[0]
