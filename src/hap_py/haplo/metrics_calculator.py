@@ -263,16 +263,13 @@ class MetricsCalculator:
             "query_fp": float(fp),
         }
 
-        if "BK" in df.columns:
+        if "BK" in df.columns and "FP" in df.columns:
+            fp_mask = df["FP"].astype(bool)
             metrics["fp_gt"] = float(
-                (
-                    (df.get("FP") == True) & (df["BK"].astype(str).str.contains("gm"))
-                ).sum()
+                (fp_mask & df["BK"].astype(str).str.contains("gm")).sum()
             )
             metrics["fp_al"] = float(
-                (
-                    (df.get("FP") == True) & (df["BK"].astype(str).str.contains("am"))
-                ).sum()
+                (fp_mask & df["BK"].astype(str).str.contains("am")).sum()
             )
         else:
             metrics["fp_gt"] = 0.0

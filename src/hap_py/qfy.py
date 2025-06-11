@@ -34,8 +34,8 @@ import tempfile
 import traceback
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def _json_default(obj):
@@ -58,7 +58,6 @@ try:
     from .haplo import quantify as quantify_module
     from .tools import fastasize, vcfextract
     from .tools.metric import dataframeToMetricsTable, makeMetricsObject
-    from .tools.version import version
 except ImportError:
     # When run directly or as script
     import sys
@@ -69,7 +68,6 @@ except ImportError:
     from haplo import quantify as quantify_module
     from tools import fastasize, vcfextract
     from tools.metric import dataframeToMetricsTable, makeMetricsObject
-    from tools.version import version
 
 
 def run_quantify_command(args: argparse.Namespace) -> None:
