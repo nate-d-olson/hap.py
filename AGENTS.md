@@ -24,7 +24,7 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
 - [x] **Core modernization** – Migrated codebase to Python 3, introduced a modern package structure (`pyproject.toml`), and added type hints and docstrings for maintainability. Improved error handling and logging throughout the code.
 - [x] **Testing framework update** – Converted all tests to use `pytest` (from legacy shell scripts and Python 2 `unittest` style), and configured code quality tools (Black, Ruff, isort, mypy) with pre-commit hooks.
 - [x] **Critical fixes implemented** – Resolved numerous issues discovered during modernization, including variant normalization errors, VCF header parsing (FILTER field detection), external tool (RTG) detection logic, and test import path problems.
-- [x] **Build verification** – Ensured all expected binary scripts are produced and up-to-date (e.g. `hap.py`, `hapenum`, `hapcmp`, `multimerge`, `qfy.py` wrappers).
+- [x] **Build verification** – Ensured all expected binary scripts are produced and up-to-date (e.g. `hap.py`, `multimerge`, `qfy.py` wrapper). Legacy tools `hapcmp` and `hapenum` are no longer built.
 
 ### In Progress
 - [ ] **C++ modernization & performance** – Optimize any remaining C/C++ components and consider reintroducing C++ only where performance dictates. Improve memory usage and parallelization in analysis algorithms to handle large genomic datasets efficiently.
@@ -49,7 +49,7 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
 - C++ compiler (GCC 7+ or Clang 10+)  
 - Git  
 - **Environment management:** micromamba (recommended) or conda/mamba  
-- **Bioinformatics tools:** Ensure `bcftools`, `samtools`, `tabix` are installed (for full test coverage)
+- **Bioinformatics tools:** Ensure `bcftools` and `samtools` are installed for certain tests. `bgzip`/`tabix` are optional as the code now defaults to the `pysam` Python implementation.
 
 ### Initial Setup
 1. **Clone the repository and navigate to it:**
@@ -342,9 +342,15 @@ The following notable changes and fixes have been applied during the latest deve
 - **RTG path detection** – Improved how the code locates the RTG toolkit. The function `findVCFEval()` in `vcfeval.py` now checks the project’s bundled `rtg` path (in `build/external/rtg-tools`) in addition to checking the system PATH. This prevents false "executable not found" warnings when RTG is actually available in the expected location.
 - **Suppressing false warnings** – Updated the package initialization (`hap_py/__init__.py`) to only warn about missing RTG tools if neither the PATH nor the bundled location has the executables. This removed redundant warnings when running tests.
 - **Test package structure** – Added missing `__init__.py` files in the `tests/` directories (such as `tests/` and `tests/integration/`). This resolved import errors like `ModuleNotFoundError: No module named 'tests.utils'` by properly treating test directories as Python packages.
-- **Binary output verification** – Confirmed that all expected binary scripts are present in `build/bin/` after building. This includes `hap.py`, `hapenum`, `hapcmp`, `multimerge`, and the `qfy.py` wrapper. Ensuring these exist helped validate the build process.
+- **Binary output verification** – Confirmed that all expected binary scripts are present in `build/bin/` after building. This includes `hap.py`, `multimerge`, and the `qfy.py` wrapper. Legacy binaries `hapcmp` and `hapenum` are no longer produced.
 - **Variant normalization fix** – Fixed an off-by-one error in the `normalize_variant` function (a test was expecting position 101 but the code returned 102). The logic was adjusted so that variant normalization now matches the expected behavior in tests.
 - **VCF header check** – Modified the `_check_header` method in the VCF comparison module to handle scenarios where the VCF `FILTER` field may be missing. Tests expecting a strict check on FILTER were updated to either include the field or the code was made more flexible, in line with real-world VCFs.
 - **Integration test enhancements** – Updated integration tests to consistently pass the `--engine-vcfeval-path` when using the RTG engine, ensuring the hap.py CLI knows where to find the `rtg` binary. The `get_rtg_path()` helper in `conftest.py` was also improved: it now respects an `RTG_PATH` environment variable and uses `shutil.which` to locate the RTG executable if not explicitly set, providing more robust test configuration.
 - **Mocking and patching in tests** – Resolved an issue in a test (`test_runVCFEval_missing_output`) by correcting the order of `@patch` decorators. We noted that when multiple patches are applied, the order of arguments in the test function is the reverse of the patch application order. This detail was important to get the test working correctly and has been documented to avoid confusion in the future.
+
+- **Deprecated tools removed** – Legacy binaries `hapcmp` and `hapenum` along with their tests have been removed. Documentation now notes their exclusion.
+- **GA4GH annotation support** – Quantification writes GA4GH fields (`BD`, `BK`, `BI`, `BVT`, `BLT`, `QQ`) to output VCFs using a Python implementation.
+- **Header comparisons** – Integration tests ignore VCF header lines when comparing outputs, matching the behavior of the original shell scripts.
+- **Default compression with pysam** – Compression and indexing of VCF files use `pysam` by default; `bgzip` and `tabix` are optional fallbacks.
+
 

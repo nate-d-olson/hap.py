@@ -59,13 +59,10 @@ The track for `hc.vcf.gz` in this screenshot:
 Debugging Reference Graphs
 --------------------------
 
-This package includes the `hapenum` tool, which can generate dot files for
-VCF regions (input must be gzipped+tabixed):
-
-```bash
-${hap.py}/bin/hapenum -r reference.fasta input.vcf.gz \
-    --output-dot graph.dot -l chr1:1-1000 && dot -Tsvg graph.dot > graph.svg
-```
+The legacy repository included a `hapenum` tool to generate dot files for VCF
+regions. This helper is no longer shipped with the modernized codebase. Use
+`vcf2dot.py` or other visualization utilities if you require reference graph
+plots.
 
 Another test to perform on regions of interest in a VCF is to check which haplotype
 pairs (assuming a diploid genome, we must find two non-exclusive paths in the graph
