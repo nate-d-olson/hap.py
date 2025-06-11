@@ -236,8 +236,10 @@ def run_quantify_command(args: argparse.Namespace) -> None:
         print("Benchmarking Summary:")
         print(essential_numbers.to_string(index=False))
 
-    # keep this for verbose output
-    if not args.verbose:
+    # Remove intermediate ROC table only if it wasn't requested
+    # (historical behaviour deleted it in quiet mode, which caused
+    # tests expecting the file to fail)
+    if not args.verbose and not args.do_roc:
         with contextlib.suppress(Exception):
             os.unlink(roc_table)
 
