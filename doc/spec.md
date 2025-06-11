@@ -94,15 +94,12 @@ To create an index for your reference file, run
 Also, all the tools below require input VCFs to be bgzipped and indexed,
 otherwise they will fail.
 
-### Enumerate haplotypes: `hapenum`
+### Enumerate haplotypes
 
-Input: a VCF file, a (small) region in the genome.
-
-Outputs:
-
-* all possible Haplotype sequences described by the VCF (e.g. exactly two
-   for phased diploid VCF files).
-* a dot file showing the [reference graph](refgraph.md)
+The previous implementation provided a `hapenum` utility to enumerate
+possible haplotypes for a region. This helper has been removed from the
+modernized project. Similar functionality can be achieved with third party
+tools such as ``bcftools`` or ``whatshap`` if needed.
 
 ### Enumerate haplotype pairs: `dipenum`
 

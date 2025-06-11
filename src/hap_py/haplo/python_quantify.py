@@ -578,11 +578,67 @@ class QuantifyEngine:
             output_path: Path for output VCF file
         """
         try:
-            # For now, just copy the input VCF to output
-            # In a full implementation, this would write the processed variants
-            import shutil
+            template_vcf = pysam.VariantFile(self.truth_vcf)
+            header = template_vcf.header.copy()
 
-            shutil.copy2(self.truth_vcf, output_path)
+            ga4gh_formats = {
+                "BD": ("1", "String", "Decision for call (TP/FP/FN/N)"),
+                "BK": (
+                    "1",
+                    "String",
+                    "Subtype for decision (match/mismatch type)",
+                ),
+                "BI": ("1", "String", "Additional comparison information"),
+                "QQ": ("1", "Float", "Variant quality for ROC creation."),
+                "BVT": ("1", "String", "High-level variant type (SNP|INDEL)."),
+                "BLT": (
+                    "1",
+                    "String",
+                    "High-level location type (het|homref|hetalt|homalt|nocall).",
+                ),
+            }
+
+            for fid, (num, typ, desc) in ga4gh_formats.items():
+                if fid not in header.formats:
+                    header.formats.add(fid, num, typ, desc)
+
+            out_vcf = pysam.VariantFile(output_path, "w", header=header)
+
+            for _, row in df.iterrows():
+                alleles = (row["ref"],) + tuple(row["alt"].split(",")) if row["alt"] else (row["ref"],)
+                rec = out_vcf.new_record(
+                    contig=row["chrom"],
+                    start=int(row["pos"]) - 1,
+                    id=row.get("id") or ".",
+                    alleles=alleles,
+                    qual=row.get("qual"),
+                )
+
+                for filt in row.get("filter", []):
+                    if filt:
+                        rec.filter.add(filt)
+
+                if "gt" in row:
+                    gt = tuple(
+                        int(a) if a != "." else None
+                        for a in str(row["gt"]).replace("|", "/").split("/")
+                    )
+                    rec.samples[0]["GT"] = gt
+
+                rec.samples[0]["BD"] = row.get("BD", ".")
+                rec.samples[0]["BVT"] = row.get("BVT", ".")
+                rec.samples[0]["BLT"] = row.get("BLT", ".")
+
+                if "BK" in row:
+                    rec.samples[0]["BK"] = row["BK"]
+                if "BI" in row:
+                    rec.samples[0]["BI"] = row["BI"]
+                if "QQ" in row:
+                    rec.samples[0]["QQ"] = row["QQ"]
+
+                out_vcf.write(rec)
+
+            out_vcf.close()
             logger.info(f"Output VCF written to {output_path}")
         except Exception as e:
             logger.error(f"Error writing output VCF: {e}")
@@ -656,6 +712,10 @@ class QuantifyEngine:
         # Benchmarking Variant Type (BVT)
         truth_df["BVT"] = truth_df.apply(self._classify_variant_type, axis=1)
         query_df["BVT"] = query_df.apply(self._classify_variant_type, axis=1)
+
+        # Benchmarking Location Type (BLT)
+        truth_df["BLT"] = truth_df.apply(self._classify_location_type, axis=1)
+        query_df["BLT"] = query_df.apply(self._classify_location_type, axis=1)
 
         # Quality Quantiles (QQ) - based on QUAL field if available
         if "qual" in query_df.columns:
@@ -1350,6 +1410,20 @@ class QuantifyEngine:
         if ref_len < alt_len:
             return "INS"
         return "COMPLEX"
+
+    def _classify_location_type(self, row: pd.Series) -> str:
+        """Classify location type for BLT field based on genotype."""
+        gt = str(row.get("gt", "./."))
+        alleles = gt.replace("|", "/").split("/")
+        if all(a == "." for a in alleles):
+            return "nocall"
+        if all(a == "0" for a in alleles):
+            return "homref"
+        if len(set(alleles)) == 1 and alleles[0] != "0":
+            return "homalt"
+        if len(set(alleles)) > 1 and "0" not in alleles:
+            return "hetalt"
+        return "het"
 
     def _have_similar_sequence_impact(self, var1: pd.Series, var2: pd.Series) -> bool:
         """
