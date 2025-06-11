@@ -45,7 +45,7 @@ def test_variant_filtering(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        str(get_bin_dir() / "hap.py"),
+        "hap.py",
         str(per_sample_ft_lhs_vcf),
         str(per_sample_ft_rhs_vcf),
         "-o",
@@ -93,7 +93,7 @@ def test_haploid_variants(tmp_path):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        str(get_bin_dir() / "hap.py"),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-o",
