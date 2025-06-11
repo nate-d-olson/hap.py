@@ -240,41 +240,40 @@ def mkdir_p(path: str) -> None:
 
 
 class BGZipFile:
-    """BGZip file helper"""
+    """BGZip file helper using ``pysam``.
 
-    def __init__(self, filename: str, force: bool = False):
-        """Make a subprocess for bgzip
+    The previous implementation spawned the external ``bgzip`` executable via
+    ``subprocess``.  ``pysam`` provides the same functionality natively, so we
+    use :class:`pysam.BGZFile` instead to remove the dependency on the external
+    tool.
+    """
 
-        Args:
-            filename: name of the output file
-            force: true to overwrite if file exists
+    def __init__(self, filename: str, force: bool = False) -> None:
+        """Create a BGZipFile.
+
+        Parameters
+        ----------
+        filename
+            Name of the output file.
+        force
+            Overwrite existing file if ``True``.
         """
+
         if os.path.exists(filename) and not force:
             raise Exception(f"File {filename} exists, use force=True to overwrite")
 
-        self.write_file = open(filename, "wb")
-        zip_pipe = subprocess.Popen(
-            ["bgzip", "-f"],
-            stdin=subprocess.PIPE,
-            stdout=self.write_file,
-            stderr=subprocess.PIPE,
-            shell=True,
-        )
-        self.zip_pipe = zip_pipe
+        # ``pysam.BGZFile`` handles compression internally
+        self.write_file = pysam.BGZFile(filename, "wb")
         self.name = filename
 
     def close(self) -> None:
-        """Close the file handle and subprocess."""
-        self.zip_pipe.stdin.flush()
-        self.zip_pipe.stdin.close()
-        self.zip_pipe.wait()
+        """Close the file handle."""
         self.write_file.flush()
         self.write_file.close()
 
-    def write(self, *args, **kwargs) -> None:
+    def write(self, *args, **kwargs) -> None:  # type: ignore[override]
         """Write to the BGZipped file."""
         if isinstance(args[0], str):
-            # Convert string to bytes for Python 3
-            self.zip_pipe.stdin.write(args[0].encode("utf-8"))
+            self.write_file.write(args[0].encode("utf-8"))
         else:
-            self.zip_pipe.stdin.write(*args, **kwargs)
+            self.write_file.write(*args, **kwargs)

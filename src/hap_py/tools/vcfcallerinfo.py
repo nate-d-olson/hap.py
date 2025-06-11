@@ -10,10 +10,11 @@
 
 import contextlib
 import json
-import logging
 import os
 import subprocess
 import tempfile
+
+import pysam
 
 
 class CallerInfo:
@@ -141,40 +142,24 @@ class CallerInfo:
         """Extract aligner information from a BAM file
         :param bamfile: name of BAM file
         """
-        sp = subprocess.Popen(
-            "samtools view -H '%s'" % bamfile,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        o, e = sp.communicate()
+        # ``pysam`` can read BAM headers directly; avoid external ``samtools``.
+        try:
+            bam = pysam.AlignmentFile(bamfile, "rb")
+        except Exception as ex:
+            raise Exception(f"Failed to open {bamfile}: {ex}") from ex
 
-        if sp.returncode != 0:
-            raise Exception(f"Samtools call failed: {o} / {e}")
-
-        for line in o.split("\n"):
-            if not line.startswith("@PG"):
-                continue
-            try:
-                # noinspection PyTypeChecker
-                x = dict(y.split(":", 1) for y in line.split("\t")[1:])
-            except Exception:
-                logging.warn("Unable to parse SAM/BAM header line: %s" % line)
-                continue
+        for pg in bam.header.to_dict().get("PG", []):
             cp = ["unknown", "unknown", ""]
-            try:
-                cp[0] = x["PN"]
-            except Exception:
-                try:
-                    cp[0] = x["ID"]
-                    if "-" in cp[0]:
-                        cp[0] = cp[0].split("-")[0]
-                except Exception:
-                    pass
-            with contextlib.suppress(Exception):
-                cp[1] = x["VN"]
+            name = pg.get("PN") or pg.get("ID")
+            if name:
+                cp[0] = name.split("-")[0]
 
             with contextlib.suppress(Exception):
-                cp[2] = x["CL"]
+                cp[1] = pg.get("VN", "unknown")
+
+            with contextlib.suppress(Exception):
+                cp[2] = pg.get("CL", "")
 
             self.aligners.append(cp)
+
+        bam.close()

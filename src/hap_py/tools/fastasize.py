@@ -22,13 +22,11 @@
 # Peter Krusche <pkrusche@illumina.com>
 #
 
-import contextlib
 import logging
 import os
-import shlex
-import subprocess
-import tempfile
 from typing import Dict, List
+
+import pysam
 
 
 def fastaContigLengths(fastafile: str) -> Dict[str, int]:
@@ -57,79 +55,41 @@ def fastaContigLengths(fastafile: str) -> Dict[str, int]:
 
 
 def fastaNonNContigLengths(fastafile: str) -> Dict[str, int]:
-    """Return contig lengths in a fasta file excluding
-    N bases.
+    """Return contig lengths in a FASTA file excluding N bases.
 
-    Args:
-        fastafile: Path to the FASTA file
+    The original implementation relied on ``grep``/``wc`` and ``samtools faidx``
+    subprocess calls.  ``pysam`` exposes the same functionality directly, so we
+    iterate over each contig and count the number of A/C/G/T characters.
 
-    Returns:
-        Dictionary mapping contig names to non-N lengths
+    Parameters
+    ----------
+    fastafile
+        Path to the FASTA file (must be indexed).
+
+    Returns
+    -------
+    Dict[str, int]
+        Mapping of contig names to non-N base counts. A special key ``"all"``
+        contains the total count across all contigs.
     """
-    # FIXME -- this could be made more efficient by using Python code
-    #          instead of calling out
-    #
-    # NOTE: This code uses a subprocess call to 'grep' which counts the number of
-    # non-N characters in the FASTA file for each contig.
-    fd, temp_path = tempfile.mkstemp(prefix="fasta_tmp")
-    os.close(fd)
+
+    if not os.path.exists(fastafile + ".fai"):
+        raise Exception(f"Fasta file {fastafile} is not indexed")
+
+    result: Dict[str, int] = {}
+    total = 0
+
+    fasta = pysam.FastaFile(fastafile)
     try:
-        cmd_line = "cat {} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c > {}".format(
-            shlex.quote(fastafile),
-            shlex.quote(temp_path),
-        )
-        logging.info(cmd_line)
-
-        po = subprocess.Popen(
-            cmd_line,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-        )
-
-        stdout, stderr = po.communicate()
-
-        po.wait()
-
-        return_code = po.returncode
-
-        if return_code != 0:
-            logging.error("cat | grep | tr | wc error: %s" % stderr)
-            raise Exception("Failed to count non-N bases in %s" % fastafile)
-
-        value = int(open(temp_path, encoding="utf-8").read().strip())
-        result = {"all": value}
-
-        # also figure contig-by-contig
-        contigs = fastaContigLengths(fastafile)
-        for contig in contigs:
-            cmd_line = f"samtools faidx {shlex.quote(fastafile)} {shlex.quote(contig)} | grep -v '>' | tr -cd 'ACGTacgt' | wc -c"
-            logging.debug(cmd_line)
-
-            po = subprocess.Popen(
-                cmd_line,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-            )
-
-            stdout, stderr = po.communicate()
-
-            po.wait()
-
-            return_code = po.returncode
-
-            if return_code != 0:
-                logging.error("samtools faidx | grep | tr | wc error: %s" % stderr)
-                raise Exception(f"Failed to count non-N bases in {fastafile}:{contig}")
-
-            result[contig] = int(stdout.strip())
+        for contig in fasta.references:
+            seq = fasta.fetch(contig).upper()
+            count = sum(base in "ACGT" for base in seq)
+            result[contig] = count
+            total += count
     finally:
-        with contextlib.suppress(Exception):
-            os.unlink(temp_path)
+        fasta.close()
 
+    result["all"] = total
     return result
 
 

@@ -13,8 +13,9 @@ import gzip
 import json
 import logging
 import re
-import subprocess
 from typing import Any, Dict, List, Optional, Union
+
+import pysam
 
 
 def field(val: str) -> Union[int, float, str, List[Any]]:
@@ -207,17 +208,11 @@ def extract_header(
         if file_handle:
             file_handle.close()
 
-    # Add tabix information if available
+    # Add tabix information if available using pysam
     try:
-        import subprocess
-
-        tabix_output = subprocess.check_output(
-            ["tabix", "-l", filename], text=True, stderr=subprocess.PIPE
-        )
-        chromosomes = [
-            line.strip() for line in tabix_output.split("\n") if line.strip()
-        ]
-        result["tabix"] = {"chromosomes": chromosomes}
+        tbx = pysam.TabixFile(filename)
+        result["tabix"] = {"chromosomes": list(tbx.contigs)}
+        tbx.close()
     except Exception:
         result["tabix"] = None
 
@@ -238,30 +233,24 @@ def extract_variants(
         region: Region to extract from, e.g. chr1:1000-2000
         extract_samples: When true, extract sample information
         sample_names: List of sample names to extract (None = all samples)
-        tabix_path: Path to tabix executable
+        tabix_path: Deprecated and ignored. ``pysam`` is used instead.
 
     Returns:
         List of variant records as dictionaries
     """
-    if not tabix_path:
-        # Try to find tabix in PATH
-        tabix_path = "tabix"  # Assume it's in PATH
-
-    command = [tabix_path, filename]
+    # Use pysam to read the bgzipped + indexed VCF instead of spawning tabix
+    tbx = pysam.TabixFile(filename)
 
     if region:
-        command.append(region)
+        iterator = tbx.fetch(region=region)
+    else:
+        iterator = tbx.fetch()
 
     result = []
 
-    p = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
-    )
-
     header = extract_header(filename, extract_columns=True)
     columns = header.get("columns", [])
-
-    for line in p.stdout:
+    for line in iterator:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -306,14 +295,7 @@ def extract_variants(
 
         result.append(record)
 
-    # Check for errors
-    stderr_output = p.stderr.read()
-    if stderr_output:
-        logging.warning(f"Tabix stderr: {stderr_output}")
-
-    exit_code = p.wait()
-    if exit_code != 0:
-        logging.error(f"Tabix exited with code {exit_code}")
+    tbx.close()
 
     return result
 
