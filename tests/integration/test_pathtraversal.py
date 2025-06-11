@@ -12,6 +12,7 @@ from tests.utils import (
     compare_summary_files,
     get_project_root,
     get_python_executable,
+    get_src_data_dir,
     run_command,
 )
 
@@ -22,9 +23,9 @@ def test_pathtraversal(tmp_path):
     # Get paths to required files and tools
     project_root = get_project_root()
     src_dir = project_root / "src"
-    data_dir = src_dir / "data" / "pathtraversal"
+    data_dir = get_src_data_dir() / "pathtraversal"
     python_exe = get_python_executable()
-    happy_script = src_dir / "python" / "hap.py"
+    happy_script = project_root / "src" / "hap_py" / "hap.py"
     compare_script = src_dir / "sh" / "compare_summaries.py"
 
     # Input files

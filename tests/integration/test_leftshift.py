@@ -10,15 +10,14 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import get_bin_dir, get_project_root
+from tests.utils import get_src_data_dir
 
 
 @pytest.mark.integration
 def test_leftshift(tmp_path):
     """Test left-shifting functionality in hap.py."""
     # Get paths to required files
-    project_root = get_project_root()
-    src_data_dir = project_root / "src" / "data" / "leftshifting_example"
+    src_data_dir = get_src_data_dir() / "leftshifting_example"
 
     # Input files
     truth_vcf = src_data_dir / "truth.vcf"

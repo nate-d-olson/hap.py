@@ -17,6 +17,7 @@ from tests.utils import (
 
 @pytest.mark.integration
 @pytest.mark.cpp
+@pytest.mark.slow
 def test_performance_vcf(tmp_path):
     """Test performance and consistency between simplecmp and hapcmp on VCF"""
     # Get paths to required files and tools
@@ -99,6 +100,7 @@ def test_performance_vcf(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.cpp
+@pytest.mark.slow
 def test_performance_gvcf(tmp_path):
     """Test performance and consistency between simplecmp and hapcmp on GVCF"""
     # Get paths to required files and tools
@@ -181,6 +183,7 @@ def test_performance_gvcf(tmp_path):
 
 @pytest.mark.integration
 @pytest.mark.cpp
+@pytest.mark.slow
 def test_performance_gvcf_comparison(tmp_path):
     """Test performance and consistency between simplecmp and hapcmp on GVCF"""
     # Get paths to required files and tools

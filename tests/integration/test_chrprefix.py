@@ -13,8 +13,8 @@ import pytest
 from tests.utils import (
     compare_files_content,
     get_bin_dir,
-    get_project_root,
     get_python_executable,
+    get_src_data_dir,
     validate_output_files,
 )
 
@@ -23,8 +23,7 @@ from tests.utils import (
 def test_numeric_chrs(tmp_path, rtg_executable):
     """Test chr prefix detection with numeric chromosomes."""
     # Get paths to required files
-    project_root = get_project_root()
-    src_data_dir = project_root / "src" / "data" / "numeric_chrs"
+    src_data_dir = get_src_data_dir() / "numeric_chrs"
     # Using CLI commands instead of script paths
 
     # Input files
@@ -106,8 +105,7 @@ def test_numeric_chrs(tmp_path, rtg_executable):
 def test_chr_prefixed(tmp_path, rtg_executable):
     """Test chr prefix detection with 'chr' prefixed chromosomes."""
     # Get paths to required files
-    project_root = get_project_root()
-    src_data_dir = project_root / "src" / "data" / "numeric_chrs"
+    src_data_dir = get_src_data_dir() / "numeric_chrs"
     # Using CLI commands instead of script paths
 
     # Input files
@@ -182,8 +180,7 @@ def test_mixed_chr_prefix(tmp_path, rtg_executable):
     """Test chr prefix detection with mixed chromosome naming \\
     (chr in truth, numeric in query)."""
     # Get paths to required files
-    project_root = get_project_root()
-    src_data_dir = project_root / "src" / "data" / "numeric_chrs"
+    src_data_dir = get_src_data_dir() / "numeric_chrs"
     # Using CLI commands instead of script paths
 
     # Input files - mixing chr in truth with numeric in query

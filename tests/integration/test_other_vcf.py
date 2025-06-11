@@ -15,9 +15,8 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
-    get_project_root,
+    get_src_data_dir,
     run_command,
 )
 
@@ -26,10 +25,8 @@ from tests.utils import (
 def test_variant_filtering(tmp_path):
     """Test reading and detecting problematic records"""
     # Get paths to required files and tools
-    project_root = get_project_root()
-
     # Define file paths for the test
-    data_dir = project_root / "src" / "data"
+    data_dir = get_src_data_dir()
     per_sample_ft_lhs_vcf = data_dir / "per_sample_ft_lhs.vcf"
     per_sample_ft_rhs_vcf = data_dir / "per_sample_ft_rhs.vcf"
     reference = data_dir / "chrQ.fa"

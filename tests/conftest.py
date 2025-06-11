@@ -104,6 +104,9 @@ def project_root():
 @pytest.fixture(scope="session")
 def example_dir(project_root):
     """Provide example data directory."""
+    candidate = project_root / "tests" / "data" / "example"
+    if candidate.exists():
+        return candidate
     return project_root / "example"
 
 

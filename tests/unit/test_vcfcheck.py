@@ -8,11 +8,11 @@ it correctly validates VCF files.
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
 from hap_py.haplo.python_vcfcheck import VCFChecker
+from tests.utils import get_example_dir
 
 
 class TestVCFChecker:
@@ -22,8 +22,7 @@ class TestVCFChecker:
     def example_vcf(self):
         """Fixture to provide path to example VCF file."""
         # Use a VCF file from the example directory
-        project_root = Path(__file__).parent.parent.parent
-        example_dir = project_root / "example"
+        example_dir = get_example_dir()
         vcf_path = example_dir / "hc.vcf.gz"
 
         if not vcf_path.exists():
@@ -34,8 +33,7 @@ class TestVCFChecker:
     @pytest.fixture
     def example_ref(self):
         """Fixture to provide path to example reference FASTA file."""
-        project_root = Path(__file__).parent.parent.parent
-        example_dir = project_root / "example"
+        example_dir = get_example_dir()
         ref_path = example_dir / "chr21.fa"
 
         if not ref_path.exists():

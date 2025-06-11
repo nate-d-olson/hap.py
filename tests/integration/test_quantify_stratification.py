@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import get_project_root
+from tests.utils import get_example_dir, get_project_root
 
 
 @pytest.mark.integration
@@ -17,7 +17,7 @@ def test_quantify_stratification(tmp_path):
     """Test stratified counting with quantify functionality in hap.py."""
     # Get paths to required files
     project_root = get_project_root()
-    example_dir = project_root / "example" / "happy"
+    example_dir = get_example_dir() / "happy"
     compare_summaries_script = project_root / "src" / "sh" / "compare_summaries.py"
 
     # Input files

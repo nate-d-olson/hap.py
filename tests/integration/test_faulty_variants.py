@@ -10,15 +10,14 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import get_bin_dir
+from tests.utils import get_bin_dir, get_src_data_dir
 
 
 @pytest.mark.integration
 def test_faulty_variant_handling(temp_dir, rtg_executable):
     """Test handling of faulty variants."""
     # Get paths to reference files
-    project_root = Path(__file__).parent.parent.parent
-    src_data_dir = project_root / "src" / "data" / "open_indel"
+    src_data_dir = get_src_data_dir() / "open_indel"
     test_vcf = src_data_dir / "test.vcf"
     test_q_vcf = src_data_dir / "test_q.vcf"
     test_q_failure_vcf = src_data_dir / "test_q_failure.vcf"
@@ -99,8 +98,7 @@ def test_faulty_variant_handling(temp_dir, rtg_executable):
 def test_faulty_variant_pre_py(temp_dir):
     """Test handling of faulty variants in pre.py."""
     # Get paths to reference files
-    project_root = Path(__file__).parent.parent.parent
-    src_data_dir = project_root / "src" / "data"
+    src_data_dir = get_src_data_dir()
     faulty_vcf = src_data_dir / "faulty.vcf"
     reference = src_data_dir / "chrQ.fa"
 

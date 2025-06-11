@@ -8,35 +8,33 @@ it correctly performs haplotype comparison.
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
 from src.hap_py.haplo.python_hapcmp import HaploComparator, HaplotypeBlock
+from tests.utils import get_example_dir
 
 
 @pytest.fixture
 def reference_path():  # Reverted rename
     """Path to a small reference FASTA file for testing."""
-    project_root = Path(__file__).resolve().parent.parent.parent
-    return str(project_root / "example" / "chr21.fa")
+    return str(get_example_dir() / "chr21.fa")
 
 
 @pytest.fixture
 def example_vcf_paths():  # Reverted rename
     """Paths to example VCF files for testing."""
-    project_root = Path(__file__).resolve().parent.parent.parent
+    example_dir = get_example_dir()
     return (
-        str(project_root / "example" / "hc.vcf.gz"),
-        str(project_root / "example" / "PG_hc.vcf.gz"),
+        str(example_dir / "hc.vcf.gz"),
+        str(example_dir / "PG_hc.vcf.gz"),
     )
 
 
 @pytest.fixture
 def example_bed_path():  # Reverted rename
     """Path to an example BED file defining regions."""
-    project_root = Path(__file__).resolve().parent.parent.parent
-    return str(project_root / "example" / "hc.bed")
+    return str(get_example_dir() / "hc.bed")
 
 
 @pytest.fixture

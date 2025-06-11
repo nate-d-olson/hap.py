@@ -12,8 +12,8 @@ from tests.utils import (
     compare_files,
     compare_summary_files,
     get_bin_dir,
-    get_project_root,
     get_python_executable,
+    get_src_data_dir,
     require_tools,
     run_shell_command,
 )
@@ -37,14 +37,13 @@ def test_fp_region_accuracy(tmp_path, rtg_executable):
     """Test if FP regions are processed accurately."""
     # Get paths to required files and tools
     bin_dir = get_bin_dir()
-    project_root = get_project_root()
     python_exe = get_python_executable()
 
     # Skip if required external tools are missing
     require_tools("rtg", "bcftools", "bgzip", "tabix")
 
     # Set up paths to data files
-    data_dir = project_root / "src" / "data" / "fp_region_accuracy"
+    data_dir = get_src_data_dir() / "fp_region_accuracy"
     truth_vcf = data_dir / "truth.vcf"
     query_vcf = data_dir / "query.vcf"
     fp_bed = data_dir / "fp.bed"

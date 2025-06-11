@@ -17,6 +17,7 @@ from tests.utils import (
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 def test_small_giab_rtg(tmp_path, rtg_executable, reference_file):
     """Test small GiaB/RTG comparison"""
     # Skip test if reference file is not available
@@ -71,6 +72,7 @@ def test_small_giab_rtg(tmp_path, rtg_executable, reference_file):
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 def test_large_giab_rtg_chr21(tmp_path, rtg_executable, reference_file):
     """Test large GiaB/RTG comparison on chromosome 21"""
     # Skip test if reference file is not available
@@ -134,6 +136,7 @@ def test_large_giab_rtg_chr21(tmp_path, rtg_executable, reference_file):
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 def test_large_giab_rtg_chr1(tmp_path, rtg_executable, reference_file):
     """Test large GiaB/RTG comparison on chromosome 1"""
     # Skip test if reference file is not available

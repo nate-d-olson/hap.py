@@ -16,6 +16,11 @@ def get_project_root() -> Path:
     return Path(__file__).parent.parent
 
 
+def get_test_data_dir() -> Path:
+    """Return the root directory for test data."""
+    return get_project_root() / "tests" / "data"
+
+
 def get_build_dir() -> Path:
     """Return the build directory."""
     return get_project_root() / "build"
@@ -28,7 +33,18 @@ def get_bin_dir() -> Path:
 
 def get_example_dir() -> Path:
     """Return the example directory."""
+    candidate = get_test_data_dir() / "example"
+    if candidate.exists():
+        return candidate
     return get_project_root() / "example"
+
+
+def get_src_data_dir() -> Path:
+    """Return the src data directory used by tests."""
+    candidate = get_test_data_dir() / "src"
+    if candidate.exists():
+        return candidate
+    return get_project_root() / "src" / "data"
 
 
 def run_command(cmd: List[str], check: bool = True) -> subprocess.CompletedProcess:
@@ -421,6 +437,8 @@ def compress_and_index_vcf(vcf_path: Path, output_path: Optional[Path] = None) -
         if tabix_cmd:
             subprocess.run(tabix_cmd, check=True)
         else:
-            raise RuntimeError("Neither pysam nor bgzip/tabix available for compression")
+            raise RuntimeError(
+                "Neither pysam nor bgzip/tabix available for compression"
+            )
 
     return output_path
