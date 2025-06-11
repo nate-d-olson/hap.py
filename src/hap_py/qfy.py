@@ -34,7 +34,18 @@ import tempfile
 import traceback
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+
+
+def _json_default(obj):
+    """Helper to serialize numpy types."""
+    if isinstance(obj, (np.integer, np.floating)):
+        return obj.item()
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -47,7 +58,6 @@ try:
     from .haplo import quantify as quantify_module
     from .tools import fastasize, vcfextract
     from .tools.metric import dataframeToMetricsTable, makeMetricsObject
-    from .tools.version import version
 except ImportError:
     # When run directly or as script
     import sys
@@ -58,7 +68,6 @@ except ImportError:
     from haplo import quantify as quantify_module
     from tools import fastasize, vcfextract
     from tools.metric import dataframeToMetricsTable, makeMetricsObject
-    from tools.version import version
 
 
 def run_quantify_command(args: argparse.Namespace) -> None:
@@ -236,10 +245,7 @@ def run_quantify_command(args: argparse.Namespace) -> None:
         print("Benchmarking Summary:")
         print(essential_numbers.to_string(index=False))
 
-    # keep this for verbose output
-    if not args.verbose:
-        with contextlib.suppress(Exception):
-            os.unlink(roc_table)
+    # Retain intermediate ROC table for downstream use
 
     for t in list(res.keys()):
         metrics_output["metrics"].append(dataframeToMetricsTable("roc." + t, res[t]))
@@ -249,7 +255,7 @@ def run_quantify_command(args: argparse.Namespace) -> None:
         with gzip.open(
             args.reports_prefix + ".metrics.json.gz", "wt", encoding="utf-8"
         ) as fp:
-            json.dump(metrics_output, fp)
+            json.dump(metrics_output, fp, default=_json_default)
 
 
 # Provide backwards compatibility alias
@@ -414,6 +420,7 @@ def main() -> int:
     """
     if "--version" in sys.argv or "-v" in sys.argv:
         from .tools.version import version
+
         print(f"qfy.py {version}")
         return 0
 
@@ -538,7 +545,6 @@ def main() -> int:
             logging.error(f"Unknown arguments specified: {unknown_args}")
         parser.print_help()
         exit(0)
-
 
     if args.fp_bedfile and args.preprocessing_truth_confregions:
         conf_temp = gvcf2bed.gvcf2bed(
