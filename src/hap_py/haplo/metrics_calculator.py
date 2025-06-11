@@ -192,3 +192,124 @@ class MetricsCalculator:
             )
 
         return pd.DataFrame(results)
+
+    @staticmethod
+    def _titv_ratio(variants: pd.DataFrame) -> float:
+        """Calculate transition/transversion ratio for SNPs."""
+        if variants is None or variants.empty:
+            return float("nan")
+
+        snps = variants[
+            (variants["REF"].str.len() == 1) & (variants["ALT"].str.len() == 1)
+        ]
+        if snps.empty:
+            return float("nan")
+
+        transitions = 0
+        transversions = 0
+        for ref, alt in zip(snps["REF"].str.upper(), snps["ALT"].str.upper()):
+            pair = (ref, alt)
+            if pair in [("A", "G"), ("G", "A"), ("C", "T"), ("T", "C")]:
+                transitions += 1
+            else:
+                transversions += 1
+
+        if transversions == 0:
+            return float("inf") if transitions > 0 else float("nan")
+
+        return transitions / transversions
+
+    @staticmethod
+    def _het_hom_ratio(gt_series: pd.Series) -> float:
+        """Calculate heterozygous/homozygous ratio from genotype strings."""
+        if gt_series is None or gt_series.empty:
+            return float("nan")
+
+        het = 0
+        hom = 0
+        for gt in gt_series.astype(str):
+            if gt in {"./.", ".", ""}:
+                continue
+            gts = gt.replace("|", "/").split("/")
+            if len(gts) < 2:
+                continue
+            if gts[0] == gts[1]:
+                hom += 1
+            else:
+                het += 1
+
+        if hom == 0:
+            return float("inf") if het > 0 else float("nan")
+
+        return het / hom
+
+    @staticmethod
+    def calculate_summary_metrics(df: pd.DataFrame) -> Dict[str, float]:
+        """Calculate summary metrics from a GA4GH annotated DataFrame."""
+
+        tp = int(df.get("TP", 0).sum()) if "TP" in df.columns else 0
+        fp = int(df.get("FP", 0).sum()) if "FP" in df.columns else 0
+        fn = int(df.get("FN", 0).sum()) if "FN" in df.columns else 0
+
+        truth_total = tp + fn
+        query_total = tp + fp
+
+        metrics: Dict[str, float] = {
+            "truth_total": float(truth_total),
+            "truth_tp": float(tp),
+            "truth_fn": float(fn),
+            "query_total": float(query_total),
+            "query_tp": float(tp),
+            "query_fp": float(fp),
+        }
+
+        if "BK" in df.columns:
+            metrics["fp_gt"] = float(
+                (
+                    (df.get("FP") == True) & (df["BK"].astype(str).str.contains("gm"))
+                ).sum()
+            )
+            metrics["fp_al"] = float(
+                (
+                    (df.get("FP") == True) & (df["BK"].astype(str).str.contains("am"))
+                ).sum()
+            )
+        else:
+            metrics["fp_gt"] = 0.0
+            metrics["fp_al"] = 0.0
+
+        precision = tp / query_total if query_total > 0 else 0.0
+        recall = tp / truth_total if truth_total > 0 else 0.0
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if precision + recall > 0
+            else 0.0
+        )
+
+        metrics.update(
+            {
+                "precision": precision,
+                "recall": recall,
+                "f1_score": f1,
+            }
+        )
+
+        if "BD" in df.columns and len(df) > 0:
+            na_count = df["BD"].isna().sum() + (df["BD"] == ".").sum()
+            metrics["frac_na"] = na_count / len(df)
+        else:
+            metrics["frac_na"] = 0.0
+
+        truth_variants = df[(df.get("TP", False)) | (df.get("FN", False))]
+        query_variants = df[(df.get("TP", False)) | (df.get("FP", False))]
+
+        metrics["truth_titv"] = MetricsCalculator._titv_ratio(truth_variants)
+        metrics["query_titv"] = MetricsCalculator._titv_ratio(query_variants)
+        metrics["truth_het_hom"] = MetricsCalculator._het_hom_ratio(
+            truth_variants.get("gt")
+        )
+        metrics["query_het_hom"] = MetricsCalculator._het_hom_ratio(
+            query_variants.get("gt")
+        )
+
+        return metrics

@@ -56,7 +56,6 @@ chr1\t400\t.\tT\tA\t50\tPASS\tBS=4;Type=SNP;Subtype=SNP;FP\tGT:BD:BK:BI:QQ:BVT:B
         sys.executable,
         str(qfy_script),
         "--force-interactive",  # Avoid SGE requirements
-        "-i",
         str(ga4gh_vcf),
         "-o",
         output_prefix,
@@ -127,7 +126,6 @@ chr1\t500\t.\tG\tT\t50\tPASS\tBS=5;Type=SNP;Subtype=SNP;FP;QQ=50\tGT:BD:BK:BI:QQ
         sys.executable,
         str(qfy_script),
         "--force-interactive",  # Avoid SGE requirements
-        "-i",
         str(ga4gh_vcf),
         "-o",
         output_prefix,

@@ -444,7 +444,8 @@ class QuantifyEngine:
             self._open_vcfs()
 
             # Load regions if specified
-            self._load_regions()
+            if self.regions:
+                self._load_regions()
 
             # For xcmp results, we typically work with a single comparison VCF
             # that contains both truth and query information
