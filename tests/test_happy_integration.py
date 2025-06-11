@@ -71,7 +71,7 @@ def test_happy_with_bed_file(
 
     # Get the path to the hap.py script
     script_dir = Path(__file__).resolve().parent.parent
-    happy_script = script_dir / "src" / "python" / "hap.py"
+    happy_script = script_dir / "src" / "hap_py" / "hap.py"
 
     # Run hap.py with mock environment
     env = os.environ.copy()
