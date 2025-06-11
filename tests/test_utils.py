@@ -47,6 +47,10 @@ def setup_python_path():
 
 def get_example_data_dir() -> Path:
     """Get the example data directory path."""
+    candidate = get_project_root() / "tests" / "data" / "example"
+    if candidate.exists():
+        return candidate
+
     path = get_project_root() / "example"
     if not path.exists():
         raise RuntimeError(f"Example data directory not found at {path}")

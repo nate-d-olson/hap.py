@@ -5,13 +5,12 @@ Migrated from src/sh/run_blocksplit_test.sh
 
 import subprocess
 import tempfile
-from pathlib import Path
 
 import pytest
 
 from tests.utils import (
     get_bin_dir,
-    get_project_root,
+    get_example_dir,
     require_tools,
 )
 
@@ -21,8 +20,7 @@ from tests.utils import (
 def test_blocksplit():
     """Test blocksplit functionality on VCF files."""
     # Get paths to required files
-    project_root = get_project_root()
-    example_dir = project_root / "example" / "happy"
+    example_dir = get_example_dir() / "happy"
     vcf1_path = example_dir / "PG_NA12878_hg38-chr21.vcf.gz"
     vcf2_path = example_dir / "NA12878-GATK3-chr21.vcf.gz"
 

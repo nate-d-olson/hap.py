@@ -9,7 +9,6 @@ it correctly quantifies variant calls in VCF files.
 import json
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -18,6 +17,7 @@ pytest.importorskip("pytest_benchmark")
 import pandas as pd
 
 from hap_py.haplo.python_quantify import QuantifyEngine
+from tests.utils import get_example_dir
 
 
 class TestQuantifyEngine:
@@ -27,8 +27,7 @@ class TestQuantifyEngine:
     def example_vcfs(self):
         """Fixture to provide paths to example VCF files."""
         # Use VCF files from the example directory
-        project_root = Path(__file__).parent.parent.parent
-        example_dir = project_root / "example"
+        example_dir = get_example_dir()
 
         truth_vcf = example_dir / "chr21.refcalls.vcf.gz"
         query_vcf = example_dir / "chr21.refcalls.vcf.gz"  # Using same file for testing
@@ -44,8 +43,7 @@ class TestQuantifyEngine:
     @pytest.fixture
     def example_ref(self):
         """Fixture to provide path to example reference FASTA file."""
-        project_root = Path(__file__).parent.parent.parent
-        example_dir = project_root / "example"
+        example_dir = get_example_dir()
         ref_path = example_dir / "chr21.fa"
 
         if not ref_path.exists():

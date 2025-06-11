@@ -10,7 +10,7 @@ import pytest
 
 from tests.utils import (
     get_bin_dir,
-    get_project_root,
+    get_src_data_dir,
     require_tools,
     run_command,
 )
@@ -21,9 +21,8 @@ from tests.utils import (
 def test_multimerge_basic(tmp_path):
     """Test basic multimerge functionality (test 1)."""
     # Get paths to required files and tools
-    project_root = get_project_root()
     bin_dir = get_bin_dir()
-    src_data_dir = project_root / "src" / "data"
+    src_data_dir = get_src_data_dir()
 
     # Define input and output files
     merge1_vcf = src_data_dir / "merge1.vcf.gz"
@@ -69,9 +68,8 @@ def test_multimerge_basic(tmp_path):
 def test_multimerge_import(tmp_path):
     """Test multimerge data import functionality."""
     # Get paths to required files and tools
-    project_root = get_project_root()
     bin_dir = get_bin_dir()
-    src_data_dir = project_root / "src" / "data"
+    src_data_dir = get_src_data_dir()
 
     # Define input and output files
     import_errors_vcf = src_data_dir / "import_errors.vcf.gz"
