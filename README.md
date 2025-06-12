@@ -379,9 +379,11 @@ pip install .
 
 ### Prerequisite Tools
 
-The `bgzip` and `tabix` utilities from **htslib** are required for compressing
-and indexing VCF files. When running with `--engine=vcfeval`, the `rtg`
-executable from **rtg-tools** must also be installed.
+The `bgzip` and `tabix` utilities from **htslib** are optional. By default
+hap.py uses `pysam` for compression and indexing, but it can fall back to
+these command line tools if they are available. When running with
+`--engine=vcfeval`, the `rtg` executable from **rtg-tools** must also be
+installed.
 
 ```bash
 # Debian/Ubuntu
@@ -393,15 +395,13 @@ conda install -c bioconda htslib rtg-tools
 
 
 
-This will build all necessary components and install the Python package with
-command-line entry points. For most users, installing via `pip` or with
-`conda env create -f environment.yml` is sufficient. A C++ compiler and Boost
-are only required when contributing to the Cython extensions.
+Installing with `pip` builds the Python package and bundled C++ components.
+For most users, running `pip install hap.py` or creating the provided
+`environment.yml` is sufficient. A compiler is only required when developing the
+Cython extensions.
 
-Prebuilt wheels for Linux and macOS are built on our CI infrastructure and
-published to PyPI for each release. These wheels include the compiled C++
-extensions, so installing with `pip` on a supported platform does not require a
-C++ toolchain.
+Prebuilt wheels for Linux and macOS are available on PyPI, so installing on a
+supported platform does not require a full C++ toolchain.
 
 ### Using Conda
 
@@ -497,7 +497,8 @@ hap.py truth.vcf.gz query.vcf.gz -r reference.fa -o output_prefix
 
 ## Legacy Installation (Deprecated)
 
-The old `install.py` script is deprecated and will be removed in v1.0.0. Please migrate to using `pip install .` as described above.
+The old `install.py` installer has been removed. Install hap.py with `pip`
+as shown above.
 
 ## System requirements
 
@@ -512,29 +513,18 @@ can be carried out on a desktop system.
 
 ### Linux
 
-%%TODO%% Update based on CI/CD once there is a functional new version
-
-Tested on:
-
-```text
-Ubuntu 12.04,14.04,16.04,18.04
-CentOS 6.x, 7.x
-```
+Tested on Ubuntu 18.04+ and CentOS 7 or newer.
 
 If you plan to build the optional C++/Cython extensions yourself, a C++14
 compiler such as a recent g++ or Clang is required.
 
-### OS X
+### macOS
 
-%%TODO%% Update based on CI/CD once there is a functional new version
-
-Hap.py builds and passes basic tests on OS X 10.9+, but full WGS analyses are not tested for this platform.
+Hap.py builds and passes basic tests on macOS 10.15+. Full WGS analyses are not routinely tested on this platform.
 
 ### Windows
 
-%%TODO%% Update based on CI/CD once there is a functional new version
-
-Hap.py is not tested on Windows. The main dependency that fails compilation is htslib. Given a build
+Hap.py is not regularly tested on Windows. The main dependency that fails compilation is htslib. Given a build
 of htslib and pysam, using hap.py on Windows should be possible.
 
 ### Other requirements
