@@ -8,16 +8,13 @@
 # this distribution):
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
-#
-# 9/9/2014
-#
-# Diploid VCF File Comparison
-#
-# Usage:
-#
-# For usage instructions run with option --help
-#
-# Author:
+
+"""Command line interface for hap.py.
+
+This module provides the :func:`main` entry point for comparing diploid
+VCF files using hap.py. It replaces the original C++ command line and is
+documented for the Sphinx API reference.
+"""
 #
 # Peter Krusche <pkrusche@illumina.com>
 #
@@ -67,6 +64,12 @@ except ImportError:
 
 
 def main() -> int:
+    """Run the hap.py command line.
+
+    Returns:
+        int: Zero on success, non-zero on failure.
+    """
+
     parser = argparse.ArgumentParser("Haplotype Comparison")
 
     # input

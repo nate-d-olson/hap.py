@@ -9,6 +9,8 @@
 #
 # https://github.com/Illumina/licenses/blob/master/Simplified-BSD-License.txt
 
+"""Utility helpers for running functions in parallel."""
+
 import gc
 import logging
 import multiprocessing
@@ -139,7 +141,7 @@ def runParallel(
     func_info = {"fun": fun, "args": args, "kwargs": kwargs}
 
     if pool:
-        # Use izip in Python 2, but in Python 3 zip is already lazy
+        # zip returns an iterator in Python 3
         result = pool.map(parMapper, zip(par, repeat(func_info)))
     else:
         # Sequential execution

@@ -18,6 +18,13 @@
 # For usage instructions run with option --help
 #
 # Author:
+
+"""Utility functions for preprocessing VCF files before comparison.
+
+The :mod:`pre` module contains helpers used by the hap.py command line to
+normalize and filter VCFs. Functions defined here are documented so they can
+be included in the Sphinx API reference.
+"""
 #
 # Peter Krusche <pkrusche@illumina.com>
 #
@@ -70,7 +77,7 @@ except ImportError:
 
 
 def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
-    """returns if list of chr names has a chr prefix or not"""
+    """Determine whether chromosome names use the ``chr`` prefix."""
 
     noprefix = [*list(map(str, list(range(23)))), "X", "Y", "MT"]
     withprefix = ["chr" + x for x in [*list(map(str, list(range(23)))), "X", "Y", "M"]]
@@ -283,7 +290,7 @@ def preprocess(
 
 
 def preprocessWrapper(args: argparse.Namespace) -> None:
-    """wrapper for running in parallel"""
+    """Wrapper to run :func:`preprocess` in parallel workers."""
 
     starttime = time.time()
     logging.info(f"Preprocessing {args.input}")
@@ -316,7 +323,7 @@ def preprocessWrapper(args: argparse.Namespace) -> None:
 
 
 def updateArgs(parser: argparse.ArgumentParser) -> None:
-    """update command line parser with preprocessing args"""
+    """Add preprocessing options to an ``argparse`` parser."""
 
     parser.add_argument(
         "--location",
