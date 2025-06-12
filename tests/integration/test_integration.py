@@ -12,7 +12,6 @@ from tests.utils import (
     compare_summary_files,
     compress_and_index_vcf,
     find_reference_file,
-    get_bin_dir,
     get_example_dir,
     get_python_executable,
     run_shell_command,
@@ -53,9 +52,7 @@ def compare_vcf_files(file1: Path, file2: Path) -> bool:
 def test_integration(tmp_path):
     """Test hap.py integration with different input configurations."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Set up paths to example files
     integration_dir = example_dir / "integration"
@@ -86,7 +83,9 @@ def test_integration(tmp_path):
     # Test multimerge functionality
     multimerge_output = tmp_path / "multimerge_output.vcf"
     multimerge_cmd = [
-        str(bin_dir / "multimerge"),
+        get_python_executable(),
+        "-m",
+        "hap_py.utils.multimerge",
         str(lhs_vcf_gz),
         str(rhs_vcf_gz),
         "-o",
@@ -108,8 +107,7 @@ def test_integration(tmp_path):
     # Test hap.py with empty truth file
     empty_truth_output = output_prefix.with_suffix(".e0")
     empty_truth_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         "-r",
@@ -131,8 +129,7 @@ def test_integration(tmp_path):
     # Test hap.py with empty query file
     empty_query_output = output_prefix.with_suffix(".e1")
     empty_query_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         "-r",
@@ -153,8 +150,7 @@ def test_integration(tmp_path):
 
     # Test standard hap.py
     standard_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         "-r",
@@ -182,8 +178,7 @@ def test_integration(tmp_path):
     # Test unhappy mode
     unhappy_output = output_prefix.with_suffix(".unhappy")
     unhappy_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         "-r",
@@ -212,8 +207,7 @@ def test_integration(tmp_path):
     # Test pass-only mode
     pass_output = output_prefix.with_suffix(".pass")
     pass_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         "-r",

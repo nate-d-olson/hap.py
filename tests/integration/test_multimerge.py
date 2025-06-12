@@ -9,7 +9,7 @@ import subprocess
 import pytest
 
 from tests.utils import (
-    get_bin_dir,
+    get_python_executable,
     get_src_data_dir,
     require_tools,
     run_command,
@@ -21,7 +21,6 @@ from tests.utils import (
 def test_multimerge_basic(tmp_path):
     """Test basic multimerge functionality (test 1)."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     src_data_dir = get_src_data_dir()
 
     # Define input and output files
@@ -31,16 +30,13 @@ def test_multimerge_basic(tmp_path):
     expected_merge_vcf = src_data_dir / "expected_merge.vcf"
     temp_vcf = tmp_path / "temp.vcf"
 
-    # Define path to multimerge binary
-    multimerge_bin = bin_dir / "multimerge"
-
-    # Skip test if binary doesn't exist
-    if not multimerge_bin.exists():
-        pytest.skip(f"multimerge binary not found at {multimerge_bin}")
+    # Use Python module implementation
 
     # Run the multimerge command
     cmd = [
-        str(multimerge_bin),
+        get_python_executable(),
+        "-m",
+        "hap_py.utils.multimerge",
         f"{merge1_vcf}:NA12877",
         f"{merge2_vcf}:NA12878",
         "-o",
@@ -68,7 +64,6 @@ def test_multimerge_basic(tmp_path):
 def test_multimerge_import(tmp_path):
     """Test multimerge data import functionality."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     src_data_dir = get_src_data_dir()
 
     # Define input and output files
@@ -77,15 +72,8 @@ def test_multimerge_import(tmp_path):
     expected_import_vcf = src_data_dir / "expected_importtest.vcf"
     temp_vcf = tmp_path / "temp_import.vcf"
 
-    # Define path to multimerge binary
-    multimerge_bin = bin_dir / "multimerge"
-
     # Skip if required external tools are missing
     require_tools("bgzip", "tabix")
-
-    # Skip test if binary doesn't exist
-    if not multimerge_bin.exists():
-        pytest.skip(f"multimerge binary not found at {multimerge_bin}")
 
     # Ensure the input file is prepared with bgzip and tabix
     # In a real test, we'd check if these steps are needed, but for demonstration:
@@ -99,7 +87,9 @@ def test_multimerge_import(tmp_path):
 
     # Run the multimerge command
     cmd = [
-        str(multimerge_bin),
+        get_python_executable(),
+        "-m",
+        "hap_py.utils.multimerge",
         f"{import_errors_vcf}:NA12877",
         "-o",
         str(temp_vcf),

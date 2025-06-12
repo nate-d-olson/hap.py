@@ -10,10 +10,8 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
     get_project_root,
-    get_python_executable,
     run_shell_command,
 )
 
@@ -24,9 +22,7 @@ def test_quantify_test(tmp_path):
     """Test quantification and GA4GH intermediate file format compliance."""
     # Get paths to required files and tools
     get_project_root()
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Prepare file paths
     reference_fa = example_dir / "chr21.fa"
@@ -41,8 +37,7 @@ def test_quantify_test(tmp_path):
 
     # Run hap.py
     hap_py_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         str(truth_vcf),
@@ -74,8 +69,7 @@ def test_quantify_test(tmp_path):
     # Run qfy.py for re-quantification using GA4GH spec
     qfy_output_prefix = output_prefix.with_suffix(".qfy")
     qfy_cmd = [
-        python_exe,
-        str(bin_dir / "qfy.py"),
+        "quantify",
         str(output_prefix.with_suffix(".vcf.gz")),
         "-o",
         str(qfy_output_prefix),

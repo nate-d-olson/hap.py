@@ -11,8 +11,6 @@ import pytest
 from tests.utils import (
     compare_files,
     compare_summary_files,
-    get_bin_dir,
-    get_python_executable,
     get_src_data_dir,
     require_tools,
     run_shell_command,
@@ -36,9 +34,6 @@ def extract_and_filter_vcf(gz_file: Path, output_file: Path) -> None:
 def test_fp_region_accuracy(tmp_path, rtg_executable):
     """Test if FP regions are processed accurately."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
-    python_exe = get_python_executable()
-
     # Skip if required external tools are missing
     require_tools("rtg", "bcftools", "bgzip", "tabix")
 
@@ -56,8 +51,7 @@ def test_fp_region_accuracy(tmp_path, rtg_executable):
 
     # Run hap.py with FP region
     happy_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
