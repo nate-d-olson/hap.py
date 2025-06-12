@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.utils import get_bin_dir, get_src_data_dir
+from tests.utils import get_src_data_dir
 
 
 @pytest.mark.integration
@@ -42,7 +42,7 @@ def test_faulty_variant_handling(temp_dir, rtg_executable):
 
     # Test 1: hap.py with valid inputs
     cmd = [
-        str(get_bin_dir() / "hap.py"),
+        "hap.py",
         str(test_vcf),
         str(test_q_vcf),
         "-o",
@@ -74,7 +74,7 @@ def test_faulty_variant_handling(temp_dir, rtg_executable):
 
     # Test 2: hap.py with faulty inputs - should fail
     cmd = [
-        str(get_bin_dir() / "hap.py"),
+        "hap.py",
         str(test_vcf),
         str(test_q_failure_vcf),
         "-o",
@@ -111,7 +111,7 @@ def test_faulty_variant_pre_py(temp_dir):
 
     # Run pre.py with faulty input - should fail
     cmd = [
-        str(get_bin_dir() / "preprocess"),
+        "preprocess",
         str(faulty_vcf),
         str(output_file),
         "--reference",

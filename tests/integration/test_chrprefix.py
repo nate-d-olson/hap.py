@@ -12,8 +12,6 @@ import pytest
 
 from tests.utils import (
     compare_files_content,
-    get_bin_dir,
-    get_python_executable,
     get_src_data_dir,
     validate_output_files,
 )
@@ -49,11 +47,8 @@ def test_numeric_chrs(tmp_path, rtg_executable):
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
     # Run hap.py on numeric chromosome files using CLI command
-    python_exe = get_python_executable()
-    hap_py_script = get_bin_dir() / "hap.py"
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -131,11 +126,8 @@ def test_chr_prefixed(tmp_path, rtg_executable):
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
     # Run hap.py on chr-prefixed files using CLI command
-    python_exe = get_python_executable()
-    hap_py_script = get_bin_dir() / "hap.py"
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",
@@ -206,11 +198,8 @@ def test_mixed_chr_prefix(tmp_path, rtg_executable):
     output_summary = Path(str(output_prefix) + ".summary.csv")
 
     # Run hap.py with mixed chromosome naming using CLI command
-    python_exe = get_python_executable()
-    hap_py_script = get_bin_dir() / "hap.py"
     cmd = [
-        python_exe,
-        str(hap_py_script),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",

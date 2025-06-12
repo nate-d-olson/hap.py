@@ -7,8 +7,8 @@ import pytest
 
 from tests.utils import (
     compress_and_index_vcf,
-    get_bin_dir,
     get_example_dir,
+    get_python_executable,
     run_shell_command,
 )
 
@@ -17,7 +17,6 @@ from tests.utils import (
 def test_gvcf_homref(tmp_path):
     """Test multimerge functionality with homref blocks."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
 
     # Set up paths
@@ -35,7 +34,9 @@ def test_gvcf_homref(tmp_path):
 
     # Run multimerge with homref options
     multimerge_cmd = [
-        str(bin_dir / "multimerge"),
+        get_python_executable(),
+        "-m",
+        "hap_py.utils.multimerge",
         str(homref_vcf_gz),
         str(homref2_vcf_gz),
         "-o",
@@ -59,7 +60,6 @@ def test_gvcf_homref(tmp_path):
 def test_gvcf_homref_with_variants(tmp_path):
     """Test multimerge functionality with homref blocks and variants."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
 
     # Set up paths
@@ -75,7 +75,9 @@ def test_gvcf_homref_with_variants(tmp_path):
 
     # Run multimerge with homref and variants options
     multimerge_cmd = [
-        str(bin_dir / "multimerge"),
+        get_python_executable(),
+        "-m",
+        "hap_py.utils.multimerge",
         f"{call_merge_vcf_gz}:*",
         "-o",
         str(output_vcf),

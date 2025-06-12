@@ -11,7 +11,6 @@ import pytest
 
 from tests.utils import (
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
     run_command,
 )
@@ -44,7 +43,7 @@ def test_decomp(tmp_path, rtg_executable, reference_file):
 
     # Run hap.py with the same parameters as in the shell script
     cmd = [
-        str(get_bin_dir() / "hap.py"),
+        "hap.py",
         str(truth_vcf),
         str(query_vcf),
         "-f",

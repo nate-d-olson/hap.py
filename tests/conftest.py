@@ -63,6 +63,19 @@ def get_rtg_path():
         print(f"Found RTG tools at {rtg_path}")
         return str(rtg_path)
 
+    # Look in the user's home directory and common subdirectories
+    home = Path.home()
+    home_candidates = [
+        home / "rtg",
+        home / "rtg" / "rtg",
+        home / "bin" / "rtg",
+        home / ".local" / "bin" / "rtg",
+        home / ".local" / "rtg" / "rtg",
+    ]
+    for candidate in home_candidates:
+        if candidate.exists():
+            return str(candidate)
+
     # Try project root (where the rtg symlink might be)
     rtg_path = project_root / "rtg"
     if rtg_path.exists():

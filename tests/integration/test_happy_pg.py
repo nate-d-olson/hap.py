@@ -8,9 +8,7 @@ import pytest
 from tests.utils import (
     check_vcfeval_availability,
     compare_summary_files,
-    get_bin_dir,
     get_example_dir,
-    get_python_executable,
     require_tools,
     run_shell_command,
 )
@@ -21,9 +19,7 @@ from tests.utils import (
 def test_happy_pg_test(tmp_path):
     """Test PG evaluation for hap.py with different engine options."""
     # Get paths to required files and tools
-    bin_dir = get_bin_dir()
     example_dir = get_example_dir()
-    python_exe = get_python_executable()
 
     # Skip if required external tools are missing
     require_tools("bcftools", "bgzip", "tabix")
@@ -50,8 +46,7 @@ def test_happy_pg_test(tmp_path):
     # If vcfeval is available, run hap.py with vcfeval engine
     if has_vcfeval:
         vcfeval_cmd = [
-            python_exe,
-            str(bin_dir / "hap.py"),
+            "hap.py",
             "-l",
             "chr21",
             str(truth_vcf),
@@ -79,8 +74,7 @@ def test_happy_pg_test(tmp_path):
 
     # Run standard hap.py
     standard_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         str(truth_vcf),
@@ -107,8 +101,7 @@ def test_happy_pg_test(tmp_path):
 
     # Run hap.py with pass-only option
     pass_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         str(truth_vcf),
@@ -136,8 +129,7 @@ def test_happy_pg_test(tmp_path):
 
     # Run hap.py with unhappy and ROC option
     unhappy_cmd = [
-        python_exe,
-        str(bin_dir / "hap.py"),
+        "hap.py",
         "-l",
         "chr21",
         str(truth_vcf),
