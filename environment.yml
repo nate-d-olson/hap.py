@@ -13,7 +13,6 @@ dependencies:
   - bx-python
   - biopython
   - htslib
-  - rtg-tools
   - pip
   - pip:
       - .[cpp]

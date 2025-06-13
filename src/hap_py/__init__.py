@@ -1,4 +1,9 @@
-# Initialize hap_py package
+"""Initialization for the :mod:`hap_py` package.
+
+This module exposes the package version as ``__version__`` and performs
+basic checks for optional dependencies when hap.py is imported. The
+docstring is used by the Sphinx documentation build.
+"""
 
 # Import version information
 try:
