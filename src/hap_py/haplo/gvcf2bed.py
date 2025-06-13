@@ -39,6 +39,11 @@ def gvcf2bed(
     Returns:
         Path to temporary BED file containing confident regions
     """
+    # TODO: ``ref`` argument is currently unused. Integrating reference-based
+    # validation would make this function more robust.
+    # TODO: The current implementation loads all variants into memory before
+    # merging. Streaming the input VCF would reduce peak memory usage for large
+    # files.
     logging.info(f"Converting VCF to BED regions: {vcf}")
 
     # Create temporary output file
