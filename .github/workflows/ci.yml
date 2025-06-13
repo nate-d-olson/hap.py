@@ -2,9 +2,9 @@ name: Python CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev-code, dev-copilot  ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev-codex, dev-copilot ]
 
 jobs:
   build_and_test:
