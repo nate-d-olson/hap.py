@@ -50,6 +50,9 @@ def runShellCommand(*args: str) -> CommandOutput:
     cmd_line = " ".join(qargs)
     logging.info(cmd_line)
 
+    # TODO: consider using ``subprocess.run`` with ``check=True`` for
+    # simpler error handling and to avoid potential security issues
+    # with ``shell=True``.
     po = subprocess.Popen(
         cmd_line,
         shell=True,

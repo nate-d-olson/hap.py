@@ -2,7 +2,7 @@ name: Python CI
 
 on:
   push:
-    branches: [ main, dev-code, dev-copilot  ]
+    branches: [ main, dev-code, dev-codex, dev-copilot ]
   pull_request:
     branches: [ main, dev-codex, dev-copilot ]
 
