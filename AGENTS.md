@@ -9,14 +9,14 @@ globs: *
 hap.py is a bioinformatics tool for benchmarking small variant calls, widely used for evaluating the accuracy of variant callers in the genomics community. The original codebase used Python 2 (now end-of-life) and had outdated dependencies. This fork aims to modernize the codebase for continued use and development.
 
 ## Repository Structure
-- `src/`: Main source code directory  
-  - `hap_py/`: Core Python package (modernized from the original `src/python` code)  
-  - `c++/`: (Legacy) C++ algorithms (most have been reimplemented in Python for maintainability)  
-  - `sh/`: Shell scripts for testing and utility functions  
-  - `data/`: Reference data files for examples and tests  
-- `external/`: External dependencies (e.g. bundled tools like htslib, rtg-tools)  
-- `example/`: Example usage data and test data sets  
-- `tests/`: Unit and integration tests  
+- `src/`: Main source code directory
+  - `hap_py/`: Core Python package (modernized from the original `src/python` code)
+  - `c++/`: (Legacy) C++ algorithms (most have been reimplemented in Python for maintainability)
+  - `sh/`: Shell scripts for testing and utility functions
+  - `data/`: Reference data files for examples and tests
+- `external/`: External dependencies (e.g. bundled tools like htslib, rtg-tools)
+- `example/`: Example usage data and test data sets
+- `tests/`: Unit and integration tests
 - `scripts/`: Development and build scripts
 
 ## Project Status and Roadmap
@@ -28,27 +28,27 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
 
 ### In Progress
 - [ ] **C++ modernization & performance** – Optimize any remaining C/C++ components and consider reintroducing C++ only where performance dictates. Improve memory usage and parallelization in analysis algorithms to handle large genomic datasets efficiently.
-- [ ] **`quantify` module implementation** – Finalize the modernization of the `quantify` benchmarking module in phases:  
-    - [x] *Phase 1:* Core variant matching functionality (`_match_variants`) – **Completed.**  
-    - [ ] *Phase 2:* Enhanced ROC analysis (methods like `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, etc.) – **In Progress.**  
-    - [ ] *Phase 3:* Superlocus analysis – **Planned.**  
-    - [ ] *Phase 4:* Scaling and performance optimization for large datasets – **Planned.**  
-    - [ ] *Phase 5:* GA4GH compliance and standards support – **Planned.**  
+- [ ] **`quantify` module implementation** – Finalize the modernization of the `quantify` benchmarking module in phases:
+    - [x] *Phase 1:* Core variant matching functionality (`_match_variants`) – **Completed.**
+    - [ ] *Phase 2:* Enhanced ROC analysis (methods like `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, etc.) – **In Progress.**
+    - [ ] *Phase 3:* Superlocus analysis – **Planned.**
+    - [ ] *Phase 4:* Scaling and performance optimization for large datasets – **Planned.**
+    - [ ] *Phase 5:* GA4GH compliance and standards support – **Planned.**
     *(Phase 1 is complete with tests passing; Phases 2–5 are upcoming development focus.)*
 - [ ] **Integration test stabilization** – Continue resolving failing integration tests related to reference data handling, output file expectations (e.g. presence of `roc.tsv`), and external tool invocation to ensure the test suite passes reliably.
 
 ### Future Plans
-- [ ] **CI/CD pipeline** – Set up continuous integration (automated testing, linting) and continuous deployment for the project.  
-- [ ] **Containerization** – Provide Docker or Conda environments for easier deployment and reproducibility of hap.py in different systems.  
+- [ ] **CI/CD pipeline** – Set up continuous integration (automated testing, linting) and continuous deployment for the project.
+- [ ] **Containerization** – Provide Docker or Conda environments for easier deployment and reproducibility of hap.py in different systems.
 - [ ] **Documentation** – Expand user documentation and tutorials (e.g. README updates, example usage guides) once the codebase changes stabilize.
 
 ## Development Environment Setup
 ### Prerequisites
-- Python 3.8+ (recommend Python 3.11 for best compatibility)  
-- CMake 3.10+  
-- C++ compiler (GCC 7+ or Clang 10+)  
-- Git  
-- **Environment management:** micromamba (recommended) or conda/mamba  
+- Python 3.8+ (recommend Python 3.11 for best compatibility)
+- CMake 3.10+
+- C++ compiler (GCC 7+ or Clang 10+)
+- Git
+- **Environment management:** micromamba (recommended) or conda/mamba
 - **Bioinformatics tools:** Ensure `bcftools` and `samtools` are installed for certain tests. `bgzip`/`tabix` are optional as the code now defaults to the `pysam` Python implementation.
 
 ### Initial Setup
@@ -56,33 +56,33 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
    ```bash
    git clone <repository-url>
    cd hap.py
-   ```  
+   ```
 2. **Create and activate the development environment:**
    - Using **micromamba** (recommended):
      ```bash
      micromamba create -n happy-dev python=3.11
      micromamba activate happy-dev
-     ```  
+     ```
    - Using **venv** (alternative):
      ```bash
      python3 -m venv .venv
      source .venv/bin/activate  # (Windows: .venv\Scripts\activate)
-     ```  
+     ```
    **Important:** For all development work, use the `happy-dev` environment:
    ```bash
    micromamba activate happy-dev
-   ```  
+   ```
 3. **Install project in development mode with dependencies:**
    ```bash
    pip install -e ".[dev,cpp]"
    # Install pre-commit hooks for code quality
    pre-commit install
-   ```  
+   ```
 4. **Build external dependencies (if any):**
    ```bash
    cmake -B build -S .
    cmake --build build
-   ```  
+   ```
 5. **Configure environment variables (if needed):**
    ```bash
    # Example: reference genome path for tests
@@ -91,10 +91,10 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
 
 ### Code Quality Tools
 The project uses several tools to maintain code quality and style:
-- **Black** – code formatter (with 88-character line limit)  
-- **Ruff** – linter for Python (fast, includes flake8/pyflakes checks)  
-- **isort** – import statement sorter (configurations compatible with Black)  
-- **mypy** – static type checker for Python  
+- **Black** – code formatter (with 88-character line limit)
+- **Ruff** – linter for Python (fast, includes flake8/pyflakes checks)
+- **isort** – import statement sorter (configurations compatible with Black)
+- **mypy** – static type checker for Python
 - **pre-commit** – framework for running linters/formatters on each commit
 
 ### Running Code Quality Checks
@@ -118,65 +118,65 @@ pre-commit run --all-files
 
 ## Testing
 ### Test Structure
-- **Unit tests:** `tests/unit/` cover individual modules and functions (fast, isolated tests).  
-- **Integration tests:** `tests/integration/` cover end-to-end scenarios and require external tools or data.  
+- **Unit tests:** `tests/unit/` cover individual modules and functions (fast, isolated tests).
+- **Integration tests:** `tests/integration/` cover end-to-end scenarios and require external tools or data.
 - **Shared test utilities:** `tests/utils.py` provides common helper functions for tests, with configuration in `conftest.py`.
 
 ### Running Tests
 > **Note:** Always activate the `happy-dev` environment before running tests:
 > ```bash
 > micromamba activate happy-dev
-> ``` 
+> ```
 
 - **Run all unit tests:**
   ```bash
   pytest tests/unit/ -v
-  ```  
+  ```
 - **Run a specific unit test file:**
   ```bash
   pytest tests/unit/test_vcfeval.py -v
-  ```  
+  ```
 - **Run with coverage:**
   ```bash
   pytest tests/unit/ --cov=hap_py --cov-report=html
-  ```  
+  ```
 - **Run all integration tests** (requires external tools like RTG and access to example data):
   ```bash
   pytest tests/integration/ -v
-  ```  
+  ```
 - **Run a specific integration test:**
   ```bash
   pytest tests/integration/test_performance.py -v
-  ```  
+  ```
 - **Skip slow tests** (skip tests marked as slow):
   ```bash
   pytest tests/integration/ -v -m "not slow"
-  ```  
+  ```
 - **Run full test suite (all tests):**
   ```bash
   pytest tests/ -v
-  ```  
+  ```
   (Use `-n auto` with `pytest-xdist` to run tests in parallel, if installed.)
 
 ### Test Markers
-- `@pytest.mark.integration` – marks tests that require external tools or large data.  
-- `@pytest.mark.slow` – marks long-running tests.  
+- `@pytest.mark.integration` – marks tests that require external tools or large data.
+- `@pytest.mark.slow` – marks long-running tests.
 - `@pytest.mark.cpp` – marks tests that depend on C++ components (if any remain; many C++ parts have been replaced with Python).
 
 ### Common Test Issues (from Modernization)
 During the transition from Python 2 to Python 3 and restructuring of the project, a few common issues were addressed:
-1. **Import paths** – The package name changed. For example:  
+1. **Import paths** – The package name changed. For example:
    ```python
    # Old import style (pre-modernization)
    import haplo.vcfeval
 
    # New import style (post-modernization)
    import hap_py.haplo.vcfeval
-   ```  
+   ```
    Ensure tests use the updated `hap_py` package imports. Also verify that each package directory contains an `__init__.py` (so Python recognizes the package).
 2. **Module not found errors** – Double-check that the `src/hap_py/` directory is on the Python path during testing. Installing in dev mode (`pip install -e .`) or using `pytest` from the repo root helps set this up. Missing `__init__.py` files in `tests/` subdirectories can also cause import errors (make sure `tests/` and its subfolders have `__init__.py`).
 3. **String vs. bytes** – Use utility functions to handle byte strings vs Unicode strings. For instance, the project provides `ensure_str()` and `ensure_bytes()` in `hap_py.haplo.string_handling`. Use these when reading outputs from subprocesses to avoid type mismatches between Python 3 (which uses Unicode `str`) and older code expecting bytes.
-4. **File path differences** – Use `pathlib.Path` for file paths to ensure cross-platform compatibility:  
+4. **File path differences** – Use `pathlib.Path` for file paths to ensure cross-platform compatibility:
    ```python
    from pathlib import Path
 
@@ -185,26 +185,26 @@ During the transition from Python 2 to Python 3 and restructuring of the project
 
    # New way:
    test_file = Path(__file__).parent / "data" / "test.vcf"
-   ```  
+   ```
    This makes path manipulations clearer and OS-agnostic.
-5. **External tool availability** – Tests relying on external tools (e.g., `bcftools`, `rtg`) should check for tool presence and skip if not available:  
+5. **External tool availability** – Tests relying on external tools (e.g., `bcftools`, `rtg`) should check for tool presence and skip if not available:
    ```python
    import shutil, pytest
    if not shutil.which("bcftools"):
        pytest.skip("bcftools not available")
-   ```  
+   ```
    Also ensure the RTG tools are built (expected at `build/external/rtg-tools/rtg`). If not present, tests should be skipped or the build instructions should be followed.
 
 ### Debugging Test Failures
 When a test fails, consider the following steps to diagnose the issue:
-1. **Check Python path and installation** – Confirm you are running tests in the correct environment and that `hap_py` is installed. For example:  
+1. **Check Python path and installation** – Confirm you are running tests in the correct environment and that `hap_py` is installed. For example:
    ```python
    import sys, hap_py
    print("Python path:", sys.path)
    print("hap_py location:", hap_py.__file__)
-   ```  
+   ```
    Running `pip list | grep hap-py` can also verify that the package is installed in the environment.
-2. **Verify external dependencies** – Ensure that required external tools and data are available:  
+2. **Verify external dependencies** – Ensure that required external tools and data are available:
    ```bash
    # List expected build outputs
    ls build/external/
@@ -213,10 +213,10 @@ When a test fails, consider the following steps to diagnose the issue:
    bcftools --version
    samtools --version
    ```
-3. **Run tests with verbose output** – Use `-s` (do not capture output) and `--tb=long` (full traceback) to get more insight into test failures:  
+3. **Run tests with verbose output** – Use `-s` (do not capture output) and `--tb=long` (full traceback) to get more insight into test failures:
    ```bash
    pytest tests/integration/test_some_failure.py -v -s --tb=long
-   ```  
+   ```
    This can reveal detailed error messages from subprocesses or assertion failures.
 
 ## Build and Installation
@@ -353,4 +353,23 @@ The following notable changes and fixes have been applied during the latest deve
 - **Header comparisons** – Integration tests ignore VCF header lines when comparing outputs, matching the behavior of the original shell scripts.
 - **Default compression with pysam** – Compression and indexing of VCF files use `pysam` by default; `bgzip` and `tabix` are optional fallbacks.
 
+## Unit Test Coverage Plan
 
+The goal is to rely on unit tests for most functionality. Add focused tests for
+new Python modules and edge cases. Integration tests should eventually be used
+only for a lightweight verification of the `hap.py` command line interface.
+
+To increase unit test coverage:
+
+1. Port complex logic from integration tests into unit tests. Target modules
+   like `python_preprocess`, `vcfeval`, and CLI wrappers.
+2. Use fixtures in `tests/conftest.py` to supply small reference files and VCF
+   examples rather than large example data.
+3. Mock external dependencies (pysam, subprocess) to isolate code paths.
+4. Keep a minimal set of integration tests for the overall command line tools
+   as sanity checks.
+5. Add unit tests for helper modules in `hap_py.tools` such as `bcftools`
+   and `bedintervaltree` to exercise parsing and interval logic.
+6. Incrementally convert integration test logic to smaller unit tests that
+   focus on specific functions. Use the integration suite only to verify
+   the `hap.py` CLI behaves correctly end-to-end.

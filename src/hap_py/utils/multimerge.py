@@ -34,7 +34,10 @@ def _merge_records(
     opened_vcfs: list[tuple[pysam.VariantFile, str]] = []
     records: dict[tuple[str, int, str], pysam.VariantRecord] = {}
 
-    # Open all VCFs first to build the combined header
+    # Open all VCFs first to build the combined header.
+    # TODO: The current implementation only preserves genotype (GT) fields and
+    # ignores other annotations. A more complete merge should handle all INFO
+    # and FORMAT fields consistently.
     for vcf_path, sample in inputs:
         vcf = _read_vcf(vcf_path)
         opened_vcfs.append((vcf, sample))
@@ -50,6 +53,8 @@ def _merge_records(
             header.add_sample(sample)
 
     for vcf, sample in opened_vcfs:
+        # TODO: Streaming records would avoid constructing a potentially large
+        # in-memory dictionary when merging many files.
         for rec in vcf.fetch():
             key = (rec.chrom, rec.pos, rec.ref)
             if key not in records:

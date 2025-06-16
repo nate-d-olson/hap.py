@@ -18,8 +18,7 @@ from hap_py.haplo.python_preprocess import DecomposeLevel, PreprocessEngine
 @pytest.fixture
 def reference_path():
     """Path to a small reference FASTA file for testing."""
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    path = repo_root / "example" / "example.fa"
+    path = Path("tests/data/common/test.fa")
     assert path.exists(), f"Reference FASTA not found at {path}"
     # Ensure the .fai index exists or can be created by pysam
     if not (path.with_suffix(path.suffix + ".fai")).exists():
@@ -35,10 +34,9 @@ def reference_path():
 
 
 @pytest.fixture
-def example_vcf_path():
+def example_vcf_path(example_dir):
     """Path to an example VCF file for testing."""
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    path = repo_root / "example" / "example.vcf.gz"
+    path = example_dir / "example.vcf.gz"
     assert path.exists(), f"Example VCF not found at {path}"
     # Ensure the .tbi index exists or can be created by pysam
     if not (path.with_suffix(path.suffix + ".tbi")).exists():
