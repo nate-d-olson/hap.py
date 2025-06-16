@@ -80,7 +80,14 @@ GA4GH_TOOLS = ["bgzip", "tabix", "rtg"]
 
 
 def check_dependencies() -> dict:
-    """Return a mapping of external tools and whether they are available."""
+    """Check availability of bundled external tools.
+
+    Returns
+    -------
+    dict
+        Mapping of tool names to a boolean indicating if the executable can be
+        located.
+    """
     results = {}
     for tool in GA4GH_TOOLS:
         if tool == "rtg":

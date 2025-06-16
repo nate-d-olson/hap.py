@@ -1,0 +1,6 @@
+site_name: hap.py
+nav:
+  - Home: docs/index.md
+  - Architecture: docs/architecture.md
+  - User Manual: doc/happy.md
+  - Quantify Module: doc/quantify.md

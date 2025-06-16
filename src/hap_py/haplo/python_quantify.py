@@ -64,20 +64,30 @@ class QuantifyEngine:
         roc_bootstrap_samples: int = 1000,  # Phase 2: Bootstrap samples for confidence intervals
         quality_stratification: bool = True,  # Phase 2: Enable quality-based stratification
     ):
-        """
-        Initialize the quantify engine.
+        """Initialize the quantification engine.
 
-        Args:
-            truth_vcf: Path to truth VCF file
-            query_vcf: Path to query/test VCF file
-            reference: Path to reference FASTA file (optional)
-            regions: BED file with regions to quantify (optional)
-            apply_filters: Whether to apply filters from VCF
-            output_vtc: Whether to output variant truth categories
-            quantify_method: Quantification method - 'xcmp' or 'ga4gh'
-            enable_roc_analysis: Enable Phase 2 ROC analysis with confidence intervals
-            roc_bootstrap_samples: Number of bootstrap samples for confidence intervals
-            quality_stratification: Enable quality score-based stratification
+        Parameters
+        ----------
+        truth_vcf : str
+            Path to the truth VCF file.
+        query_vcf : str
+            Path to the query VCF produced by a variant caller.
+        reference : str, optional
+            Reference FASTA used for context (``None`` for no reference).
+        regions : str, optional
+            BED file restricting analysis to specific regions.
+        apply_filters : bool, default ``False``
+            Skip records that have failing FILTER flags.
+        output_vtc : bool, default ``False``
+            Write variant truth categories to an output VCF.
+        quantify_method : str, default ``"xcmp"``
+            Quantification strategy to use (``"xcmp"`` or ``"ga4gh"``).
+        enable_roc_analysis : bool, default ``True``
+            Generate ROC metrics as part of the analysis.
+        roc_bootstrap_samples : int, default ``1000``
+            Number of bootstrap samples used when estimating confidence intervals.
+        quality_stratification : bool, default ``True``
+            Produce stratifications based on variant quality.
         """
         self.truth_vcf = truth_vcf
         self.query_vcf = query_vcf
