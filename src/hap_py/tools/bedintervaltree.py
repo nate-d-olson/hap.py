@@ -19,6 +19,10 @@ from bx.intervals.intersection import Interval, IntervalTree
 class BedIntervalTree:
     """Reads in a BED file and converts it to an interval tree for searching"""
 
+    # TODO: ``bx-python`` interval trees are somewhat heavy-weight for simple
+    # region queries. Evaluate alternatives like ``pybedtools`` or ``numpy``
+    # based approaches to reduce memory overhead for very large BED files.
+
     def __init__(self):
         self.tree = defaultdict(IntervalTree)
         self.intCount = 0

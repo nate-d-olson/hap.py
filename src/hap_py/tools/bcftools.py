@@ -29,16 +29,22 @@ scriptDir = os.path.abspath(os.path.dirname(__file__))
 
 
 def runShellCommand(*args: str) -> CommandOutput:
-    """Run a shell command (e.g. bcf tools), and return output
+    """Execute a command line program and capture its output.
 
-    Args:
-        *args: Command arguments
+    Parameters
+    ----------
+    *args : str
+        Individual command line arguments forming the command to run.
 
-    Returns:
-        Tuple of (stdout, stderr, return_code)
+    Returns
+    -------
+    Tuple[str, str, int]
+        Standard output, standard error and the exit code from the command.
 
-    Raises:
-        Exception: If command execution fails with non-zero return code
+    Raises
+    ------
+    Exception
+        If the command exits with a non-zero return code.
     """
     qargs = []
     for a in args:
@@ -50,6 +56,9 @@ def runShellCommand(*args: str) -> CommandOutput:
     cmd_line = " ".join(qargs)
     logging.info(cmd_line)
 
+    # TODO: consider using ``subprocess.run`` with ``check=True`` for
+    # simpler error handling and to avoid potential security issues
+    # with ``shell=True``.
     po = subprocess.Popen(
         cmd_line,
         shell=True,

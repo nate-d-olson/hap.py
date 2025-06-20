@@ -32,6 +32,9 @@ som.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 
 More information can be found below in the [usage section](#usage).
 
+Additional documentation, including an architecture overview, is available in
+the `docs/` directory and can be built locally using **MkDocs**.
+
 ## Contents
 
 * [Motivation](#motivation)

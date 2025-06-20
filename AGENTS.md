@@ -358,3 +358,18 @@ The following notable changes and fixes have been applied during the latest deve
 The goal is to rely on unit tests for most functionality. Add focused tests for
 new Python modules and edge cases. Integration tests should eventually be used
 only for a lightweight verification of the `hap.py` command line interface.
+
+To increase unit test coverage:
+
+1. Port complex logic from integration tests into unit tests. Target modules
+   like `python_preprocess`, `vcfeval`, and CLI wrappers.
+2. Use fixtures in `tests/conftest.py` to supply small reference files and VCF
+   examples rather than large example data.
+3. Mock external dependencies (pysam, subprocess) to isolate code paths.
+4. Keep a minimal set of integration tests for the overall command line tools
+   as sanity checks.
+5. Add unit tests for helper modules in `hap_py.tools` such as `bcftools`
+   and `bedintervaltree` to exercise parsing and interval logic.
+6. Incrementally convert integration test logic to smaller unit tests that
+   focus on specific functions. Use the integration suite only to verify
+   the `hap.py` CLI behaves correctly end-to-end.
