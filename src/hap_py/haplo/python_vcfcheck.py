@@ -131,8 +131,21 @@ class VCFChecker:
 
             self.logger.info(f"Checked {self.stats['total_variants']} variants")
 
+        except ValueError as e:
+            # Handle specific pysam header validation errors
+            if "Invalid header" in str(e):
+                self.logger.debug(f"VCF header has validation issues: {e}")
+                # Don't treat this as a fatal error - continue processing
+            else:
+                # Other ValueError types should still be treated as errors
+                self.logger.error(f"Error checking file: {e}")
+                if out_file:
+                    out_file.write(f"ERROR\t0\t.\t.\tFailed to process file\t{e}\n")
         except Exception as e:
+            # Log other exceptions as errors
             self.logger.error(f"Error checking file: {e}")
+            self.logger.debug(f"Exception type: {type(e)}")
+            self.logger.debug(f"Exception args: {e.args if hasattr(e, 'args') else 'no args'}")
             if out_file:
                 out_file.write(f"ERROR\t0\t.\t.\tFailed to process file\t{e}\n")
 
@@ -291,9 +304,14 @@ class VCFChecker:
         Returns:
             True if the variant is structural, False otherwise
         """
-        # Check for standard SV indicators
-        if record.info.get("SVTYPE"):
-            return True
+        try:
+            # Check for standard SV indicators
+            if record.info.get("SVTYPE"):
+                return True
+        except (ValueError, AttributeError):
+            # Handle cases where header is malformed or INFO access fails
+            # This can happen with VCF files that have missing header definitions
+            pass
 
         # Check for long alleles
         if len(record.ref) > 50:

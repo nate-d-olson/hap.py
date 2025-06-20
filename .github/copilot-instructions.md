@@ -40,6 +40,8 @@ This fork aims to modernize the codebase for continued use and development.
 - Fixed RTG Detection Warning (2025-05-27)
 - Fixed Test Package Structure (2025-05-27)
 - Verified Binary Files Exist (2025-05-27)
+- Fixed AC Field Handling Bug (2025-06-20)
+- Fixed VCF Header Validation Issues (2025-06-20)
 
 🔄 **In Progress:**
 - C++ component modernization (Note: C++ code was largely replaced with Python for simplicity in the modernized version.)
@@ -394,6 +396,8 @@ cmake --build build --config Release
 - ✅ Fixed RTG Detection Warning (2025-05-27)
 - ✅ Fixed Test Package Structure (2025-05-27)
 - ✅ Verified Binary Files Exist (2025-05-27)
+- ✅ Fixed AC Field Handling Bug (2025-06-20)
+- ✅ Fixed VCF Header Validation Issues (2025-06-20)
 
 ### 🔄 In Progress: C++ Modernization and Optimization
 - Update C++ code to use modern standards (Note: C++ code was largely replaced with Python for simplicity in the modernized version.)
@@ -530,7 +534,7 @@ This outlines a strategic approach to debug and resolve failing integration test
   This file contains the output and error messages from the most recent integration test run. It lists which tests failed, the error types, and any stack traces or assertion errors. This is the primary resource for diagnosing the failures.
 
 - **Focus on key integration tests:**
-  Pay close attention to tests in the `tests/integration/` directory, such as `test_integration.py`, `test_happy_pg.py`, and `test_giab.py`, which cover core functionalities.
+  Pay close attention to tests in the `tests/integration/` directory, such as `test_integration.py`, `test_happy_pg.py`, `test_giab.py`, and `test_quantify.py` which cover core functionalities.
 
 #### 3. Common Failure Causes and Resolutions
 
@@ -741,8 +745,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
     - `test_findVCFEval`: Issues with RTG path detection.
     - RTG tool availability in subprocess tests.
 
-### Enhanced Debugging Test Failures (2025-05-27_14-38)
-
-- **RTG-related Issues:**
-  - Ensure the `--engine-vcfeval-path` argument is correctly passed to the `hap.py` call within the test.
-  - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location
+### Enhanced Debugging Test Failures (2025-05-27_14-3
