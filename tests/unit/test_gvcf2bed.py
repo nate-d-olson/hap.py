@@ -24,7 +24,6 @@ def create_vcf(path: Path) -> None:
         rec2.samples["SAMPLE"]["GT"] = (0, 1)
         out.write(rec2)
 
-
 def create_overlap_vcf(path: Path) -> None:
     """Create a VCF with adjacent confident calls."""
     header = pysam.VariantHeader()
