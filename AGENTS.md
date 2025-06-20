@@ -11,52 +11,29 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
 ## Repository Structure
 - `src/`: Main source code directory
   - `hap_py/`: Core Python package (modernized from the original `src/python` code)
-  - `c++/`: (Legacy) C++ algorithms (most have been reimplemented in Python for maintainability)
-  - `sh/`: Shell scripts for testing and utility functions
-  - `data/`: Reference data files for examples and tests
-- `external/`: External dependencies (e.g. bundled tools like htslib, rtg-tools)
 - `example/`: Example usage data and test data sets
 - `tests/`: Unit and integration tests
 - `scripts/`: Development and build scripts
 
 ## Project Status and Roadmap
-### Completed Tasks
-- [x] **Core modernization** – Migrated codebase to Python 3, introduced a modern package structure (`pyproject.toml`), and added type hints and docstrings for maintainability. Improved error handling and logging throughout the code.
-- [x] **Testing framework update** – Converted all tests to use `pytest` (from legacy shell scripts and Python 2 `unittest` style), and configured code quality tools (Black, Ruff, isort, mypy) with pre-commit hooks.
-- [x] **Critical fixes implemented** – Resolved numerous issues discovered during modernization, including variant normalization errors, VCF header parsing (FILTER field detection), external tool (RTG) detection logic, and test import path problems.
-- [x] **Build verification** – Ensured all expected binary scripts are produced and up-to-date (e.g. `hap.py`, `multimerge`, `qfy.py` wrapper). Legacy tools `hapcmp` and `hapenum` are no longer built.
 
-### In Progress
-- [ ] **C++ modernization & performance** – Optimize any remaining C/C++ components and consider reintroducing C++ only where performance dictates. Improve memory usage and parallelization in analysis algorithms to handle large genomic datasets efficiently.
-- [ ] **`quantify` module implementation** – Finalize the modernization of the `quantify` benchmarking module in phases:
-    - [x] *Phase 1:* Core variant matching functionality (`_match_variants`) – **Completed.**
-    - [ ] *Phase 2:* Enhanced ROC analysis (methods like `_perform_roc_analysis()`, `_perform_quality_stratification()`, `_generate_roc_curve()`, etc.) – **In Progress.**
-    - [ ] *Phase 3:* Superlocus analysis – **Planned.**
-    - [ ] *Phase 4:* Scaling and performance optimization for large datasets – **Planned.**
-    - [ ] *Phase 5:* GA4GH compliance and standards support – **Planned.**
-    *(Phase 1 is complete with tests passing; Phases 2–5 are upcoming development focus.)*
-- [ ] **Integration test stabilization** – Continue resolving failing integration tests related to reference data handling, output file expectations (e.g. presence of `roc.tsv`), and external tool invocation to ensure the test suite passes reliably.
-
-### Future Plans
 - [ ] **CI/CD pipeline** – Set up continuous integration (automated testing, linting) and continuous deployment for the project.
 - [ ] **Containerization** – Provide Docker or Conda environments for easier deployment and reproducibility of hap.py in different systems.
 - [ ] **Documentation** – Expand user documentation and tutorials (e.g. README updates, example usage guides) once the codebase changes stabilize.
 
 ## Development Environment Setup
-### Prerequisites
-- Python 3.8+ (recommend Python 3.11 for best compatibility)
-- CMake 3.10+
-- C++ compiler (GCC 7+ or Clang 10+)
-- Git
-- **Environment management:** micromamba (recommended) or conda/mamba
+
+- **Environment management:** micromamba (recommended) or conda/mamba, dependencies in `environment.yml`
 - **Bioinformatics tools:** Ensure `bcftools` and `samtools` are installed for certain tests. `bgzip`/`tabix` are optional as the code now defaults to the `pysam` Python implementation.
 
 ### Initial Setup
+
 1. **Clone the repository and navigate to it:**
    ```bash
    git clone <repository-url>
    cd hap.py
    ```
+
 2. **Create and activate the development environment:**
    - Using **micromamba** (recommended):
      ```bash
@@ -68,29 +45,18 @@ hap.py is a bioinformatics tool for benchmarking small variant calls, widely use
      python3 -m venv .venv
      source .venv/bin/activate  # (Windows: .venv\Scripts\activate)
      ```
-   **Important:** For all development work, use the `happy-dev` environment:
-   ```bash
-   micromamba activate happy-dev
-   ```
+
 3. **Install project in development mode with dependencies:**
    ```bash
-   pip install -e ".[dev,cpp]"
+   pip install -e ".[dev]"
    # Install pre-commit hooks for code quality
    pre-commit install
    ```
-4. **Build external dependencies (if any):**
-   ```bash
-   cmake -B build -S .
-   cmake --build build
-   ```
-5. **Configure environment variables (if needed):**
-   ```bash
-   # Example: reference genome path for tests
-   export HGREF="/path/to/reference/genome.fa"
-   ```
 
 ### Code Quality Tools
+
 The project uses several tools to maintain code quality and style:
+
 - **Black** – code formatter (with 88-character line limit)
 - **Ruff** – linter for Python (fast, includes flake8/pyflakes checks)
 - **isort** – import statement sorter (configurations compatible with Black)
@@ -98,6 +64,7 @@ The project uses several tools to maintain code quality and style:
 - **pre-commit** – framework for running linters/formatters on each commit
 
 ### Running Code Quality Checks
+
 Use the following commands to format, lint, and type-check the code:
 ```bash
 # Format code
@@ -117,16 +84,20 @@ pre-commit run --all-files
 ```
 
 ## Testing
+
 ### Test Structure
+
 - **Unit tests:** `tests/unit/` cover individual modules and functions (fast, isolated tests).
 - **Integration tests:** `tests/integration/` cover end-to-end scenarios and require external tools or data.
 - **Shared test utilities:** `tests/utils.py` provides common helper functions for tests, with configuration in `conftest.py`.
 
 ### Running Tests
-> **Note:** Always activate the `happy-dev` environment before running tests:
-> ```bash
-> micromamba activate happy-dev
-> ```
+
+**Note:** Always activate the `happy-dev` environment before running tests:
+
+```bash
+micromamba activate happy-dev
+```
 
 - **Run all unit tests:**
   ```bash

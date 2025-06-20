@@ -745,6 +745,4 @@ When running `rtg format`, the command fails if the SDF template directory alrea
 
 - **RTG-related Issues:**
   - Ensure the `--engine-vcfeval-path` argument is correctly passed to the `hap.py` call within the test.
-  - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location.
-
-### Implementation Details:
+  - Verify that the `findVCFEval` function in `vcfeval.py` correctly identifies the RTG executable. It should check both the system's PATH and the project's included RTG tools location

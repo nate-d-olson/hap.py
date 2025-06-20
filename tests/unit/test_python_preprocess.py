@@ -394,3 +394,91 @@ chr1\t300\t.\tG\tC\t40\tPASS\t.\tGT\t0/1
     os.remove(output_vcf)
     if os.path.exists(output_vcf + ".tbi"):
         os.remove(output_vcf + ".tbi")
+
+
+def test_ac_field_decomposition(reference_path):
+    """Test that AC fields are correctly decomposed for multi-allelic variants."""
+    # Create a test VCF with multi-allelic variant having AC and AF fields
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".vcf", delete=False) as f:
+        f.write(
+            """##fileformat=VCFv4.2
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Allele count in genotypes">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total depth">
+##contig=<ID=chr1,length=1000000>
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE1
+chr1\t100\t.\tA\tT,C\t50\tPASS\tAC=3,2;AF=0.3,0.2;AN=10;DP=100\tGT\t1/2
+"""
+        )
+        input_vcf = f.name
+
+    try:
+        # Test the preprocessing engine with decomposition
+        engine = PreprocessEngine(
+            input_vcf=input_vcf,
+            reference_fasta=reference_path,
+            decompose_level=1,  # Force decomposition
+        )
+
+        output_file = engine.process()
+
+        # Verify the decomposed output
+        vcf_reader = pysam.VariantFile(output_file)
+        records = list(vcf_reader)
+        vcf_reader.close()
+
+        assert len(records) == 2, f"Expected 2 decomposed records, got {len(records)}"
+
+        # Test first decomposed record (A->T)
+        record1 = records[0]
+        assert record1.ref == "A"
+        assert record1.alts[0] == "T"
+
+        # Extract AC value (handle pysam tuple wrapping)
+        ac1 = record1.info.get("AC")
+        if isinstance(ac1, tuple) and len(ac1) == 1:
+            ac1 = ac1[0]
+        assert ac1 == 3, f"Expected AC=3 for first record, got {ac1}"
+
+        # Extract AF value
+        af1 = record1.info.get("AF")
+        if isinstance(af1, tuple) and len(af1) == 1:
+            af1 = af1[0]
+        assert abs(af1 - 0.3) < 0.001, f"Expected AF=0.3 for first record, got {af1}"
+
+        # Test second decomposed record (A->C)
+        record2 = records[1]
+        assert record2.ref == "A"
+        assert record2.alts[0] == "C"
+
+        # Extract AC value
+        ac2 = record2.info.get("AC")
+        if isinstance(ac2, tuple) and len(ac2) == 1:
+            ac2 = ac2[0]
+        assert ac2 == 2, f"Expected AC=2 for second record, got {ac2}"
+
+        # Extract AF value
+        af2 = record2.info.get("AF")
+        if isinstance(af2, tuple) and len(af2) == 1:
+            af2 = af2[0]
+        assert abs(af2 - 0.2) < 0.001, f"Expected AF=0.2 for second record, got {af2}"
+
+        # Verify that non-allele-specific fields (AN, DP) are preserved
+        assert record1.info.get("AN") == 10
+        assert record1.info.get("DP") == 100
+        assert record2.info.get("AN") == 10
+        assert record2.info.get("DP") == 100
+
+        # Verify decomposition statistics
+        assert engine.stats["decomposed_variants"] == 1
+
+    finally:
+        # Clean up
+        os.remove(input_vcf)
+        if 'output_file' in locals() and os.path.exists(output_file):
+            os.remove(output_file)
+            tbi_file = output_file + '.tbi'
+            if os.path.exists(tbi_file):
+                os.remove(tbi_file)

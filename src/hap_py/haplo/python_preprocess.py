@@ -469,45 +469,70 @@ class PreprocessEngine:
             for f in record.filter.keys():
                 new_record.filter.add(f)
 
-            # Copy all INFO fields
+            # Copy all INFO fields with proper decomposition handling
             for key, value in record.info.items():
                 if key in new_record.header.info:
                     try:
-                        new_record.info[key] = value
+                        # Get the field definition to understand expected format
+                        field_info = new_record.header.info.get(key)
+
+                        # Special handling for fields that vary by allele count
+                        if (
+                            field_info
+                            and field_info.number == "A"
+                            and isinstance(value, (list, tuple))
+                        ):
+                            # Number=A fields have one value per alternative allele
+                            # For decomposed records, use only the value for this alt allele
+                            if len(value) > i and i < len(record.alts):
+                                # Extract single value, not as tuple
+                                new_record.info[key] = value[i]
+                            else:
+                                logger.warning(
+                                    f"AC field {key} has insufficient values for alt allele {i}"
+                                )
+                                continue
+                        elif (
+                            field_info
+                            and field_info.number == "R"
+                            and isinstance(value, (list, tuple))
+                        ):
+                            # Number=R fields have one value per allele (ref + alts)
+                            # For decomposed records, use ref value (index 0) and this alt (index i+1)
+                            if len(value) > i + 1:
+                                new_record.info[key] = (value[0], value[i + 1])
+                            else:
+                                logger.warning(
+                                    f"R field {key} has insufficient values for alt allele {i}"
+                                )
+                                continue
+                        elif (
+                            field_info
+                            and field_info.number == "G"
+                            and isinstance(value, (list, tuple))
+                        ):
+                            # Number=G fields have one value per genotype
+                            # This is complex for decomposition, skip for now
+                            logger.debug(f"Skipping G field {key} during decomposition")
+                            continue
+                        else:
+                            # For other fields, copy as-is
+                            new_record.info[key] = value
+
                     except Exception as e:
                         logger.warning(
                             f"Failed to set INFO field {key}={value} (type: {type(value)}): {e}"
                         )
-                        # Get the field definition to understand expected format
-                        field_info = new_record.header.info.get(key)
-                        if field_info and isinstance(value, (list, tuple)):
-                            # Handle based on the field's Number and Type
-                            if field_info.number == 1 and len(value) == 1:
-                                # Single value field - extract the value
+                        # Fallback handling for problematic fields
+                        if isinstance(value, (list, tuple)) and len(value) == 1:
+                            try:
                                 new_record.info[key] = value[0]
-                            elif (
-                                field_info.type in ("Integer", "Float")
-                                and len(value) == 1
-                            ):
-                                # Numeric field with single value
-                                new_record.info[key] = value[0]
-                            elif field_info.type == "String" and field_info.number in (
-                                ".",
-                                "A",
-                                "R",
-                                "G",
-                            ):
-                                # Multi-value string field - join with commas
-                                new_record.info[key] = ",".join(str(v) for v in value)
-                            elif len(value) == 1:
-                                # Default: single value
-                                new_record.info[key] = value[0]
-                            else:
-                                # Multiple values - convert to tuple for pysam
-                                new_record.info[key] = tuple(value)
+                            except Exception:
+                                logger.warning(f"Skipping problematic INFO field {key}")
+                                continue
                         else:
-                            # Fallback conversion
-                            new_record.info[key] = str(value)
+                            logger.warning(f"Skipping problematic INFO field {key}")
+                            continue
 
             # Add decomposition INFO
             new_record.info["DECOMPOSED"] = True
