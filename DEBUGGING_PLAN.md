@@ -58,6 +58,77 @@ WARNING:hap_py.haplo.python_preprocess:Failed to set INFO field AC=(1, 1) (type:
    python -m hap_py.haplo.python_preprocess tests/data/multi_allelic.vcf.gz -r ref.fa
    ```
 
+## ✅ AC Field Handling Bug - FIXED
+
+**Date Fixed**: June 20, 2025  
+**Status**: Completed
+
+### Problem Description
+
+Multiple integration tests were failing with AC field tuple handling errors:
+
+```text
+WARNING:hap_py.haplo.python_preprocess:Failed to set INFO field AC=(1, 1) (type: <class 'tuple'>): values expected to be 1-tuple, given len=2
+ERROR:root:Python preprocess failed for /path/to/file.vcf.gz:chr21: values expected to be 1-tuple, given len=2
+```
+
+**Affected Tests:**
+
+- `test_happy_pg_test`
+- `test_quantify_test`
+- `test_large_giab_rtg_chr21`
+- `test_large_giab_rtg_chr1`
+
+### Root Cause
+
+In `src/hap_py/haplo/python_preprocess.py`, the `decompose_variant()` method incorrectly handled INFO fields with `Number=A` (allele-specific fields like AC). When decomposing multi-allelic variants:
+
+1. AC field contained multiple values: `AC=3,2` (one per alternative allele)
+2. The code tried to copy the entire tuple `(3, 2)` to each decomposed record
+3. Pysam expected only single values for each bi-allelic record
+
+### Solution Implemented
+
+Updated the INFO field handling logic in `decompose_variant()` to properly handle VCF field number specifications:
+
+- **Number=A fields** (like AC, AF): Extract the specific value for each alternative allele
+- **Number=R fields**: Handle ref + alt values appropriately  
+- **Number=G fields**: Skip during decomposition (complex genotype-specific)
+- **Other fields**: Copy as-is
+
+### Code Changes
+
+**File**: `src/hap_py/haplo/python_preprocess.py`  
+**Method**: `decompose_variant()` lines 473-520
+
+**Key Fix**:
+
+```python
+# Special handling for fields that vary by allele count
+if field_info and field_info.number == "A" and isinstance(value, (list, tuple)):
+    # Number=A fields have one value per alternative allele
+    # For decomposed records, use only the value for this alt allele
+    if len(value) > i and i < len(record.alts):
+        new_record.info[key] = value[i]  # Extract single value for this alt
+```
+
+### Validation
+
+1. ✅ Created comprehensive unit test: `test_ac_field_decomposition()`
+2. ✅ All existing Python preprocessing unit tests pass
+3. ✅ AC field values correctly split: `AC=3,2` → first record gets `AC=3`, second gets `AC=2`
+4. ✅ AF field values correctly split: `AF=0.3,0.2` → first record gets `AF=0.3`, second gets `AF=0.2`
+5. ✅ Non-allele-specific fields (AN, DP) preserved correctly in all records
+
+### Additional Fixes
+
+- Fixed pytest.ini invalid log format configuration
+- Applied code formatting with pre-commit hooks
+
+### Result
+
+The AC field handling error is resolved, enabling proper decomposition of multi-allelic variants with allele-specific INFO fields according to VCF 4.2 specification.
+
 ### 1.2 VCF Header Validation Issues
 
 **Issue**: Header validation errors causing integration test failures
