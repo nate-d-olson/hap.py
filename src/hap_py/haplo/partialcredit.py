@@ -29,9 +29,10 @@ import tempfile
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from ..tools.bcftools import concatenateParts, runBcftools
-from ..tools.parallel import getPool, runParallel
-from ..tools.vcfextract import extractHeadersJSON
+from hap_py.tools.bcftools import concatenateParts, runBcftools
+from hap_py.tools.parallel import getPool, runParallel
+from hap_py.tools.vcfextract import extractHeadersJSON
+
 from .python_preprocess import DecomposeLevel, PreprocessEngine
 
 

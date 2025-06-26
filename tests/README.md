@@ -107,3 +107,33 @@ AssertionError: hap.py failed with error: No such file or directory
 ## GitHub Actions CI
 
 The CI pipeline builds the project and runs the tests in the GitHub Actions environment. See the `.github/workflows` directory for the configuration.
+
+---
+
+## Integration Test Audit and Categorization
+
+The following table categorizes each integration test as "critical" (retain as end-to-end) or "replaceable" (refactor/replace with more focused tests), with rationale:
+
+| Test File                        | Category      | Rationale                                                                 |
+|-----------------------------------|--------------|--------------------------------------------------------------------------|
+| test_giab.py                      | Critical     | Validates end-to-end comparison with reference data (GiaB workflow)      |
+| test_integration.py               | Critical     | General integration of main workflow                                     |
+| test_integration_refactored.py    | Critical     | Modernized integration test for main workflow                            |
+| test_multimerge_refactored.py     | Critical     | Modernized integration for multimerge workflow                           |
+| test_blocksplit.py                | Replaceable  | Can be covered by unit/component tests                                   |
+| test_multimerge.py                | Replaceable  | Can be covered by unit/component tests                                   |
+| test_chrprefix.py                 | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_decomp.py                    | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_faulty_variants.py           | Replaceable  | Tests error handling, suitable for unit/component test                   |
+| test_fp_accuracy.py               | Replaceable  | Can be covered by targeted unit/component tests                          |
+| test_gvcf_homref.py               | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_happy_pg.py                  | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_integration_quantify.py      | Replaceable  | Can be covered by targeted unit/component tests                          |
+| test_leftshift.py                 | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_other_vcf.py                 | Replaceable  | Tests specific feature, suitable for unit/component test                 |
+| test_pathtraversal.py             | Replaceable  | Tests error/path handling, suitable for unit/component test              |
+| test_performance.py               | Replaceable  | Performance test, not required as end-to-end in CI                       |
+| test_quantify_stratification.py   | Replaceable  | Can be covered by targeted unit/component tests                          |
+| test_roc_analysis.py              | Replaceable  | Can be covered by targeted unit/component tests                          |
+
+**Note:** Only the tests marked "Critical" should be retained as true end-to-end integration tests. All others should be refactored or replaced with more focused, robust tests as per the modernization plan.

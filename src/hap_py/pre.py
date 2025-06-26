@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# type: ignore
 #
 # Copyright (c) 2010-2015 Illumina, Inc.
 # All rights reserved.
@@ -38,7 +39,7 @@ import tempfile
 import time
 import traceback
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -64,32 +65,33 @@ try:
     from .tools.bcftools import preprocessVCF, runBcftools
     from .tools.fastasize import fastaContigLengths
 except ImportError:
-    # When run directly or as script
-    import sys
-    from pathlib import Path
-
-    sys.path.insert(0, str(Path(__file__).parent))
-    from haplo import partialcredit
-    from haplo.python_vcfcheck import VCFChecker
-    from tools import vcfextract
-    from tools.bcftools import preprocessVCF, runBcftools
-    from tools.fastasize import fastaContigLengths
+    pass
 
 
-def hasChrPrefix(chrlist: List[str]) -> Optional[bool]:
+def hasChrPrefix(chrlist: Iterable[str]) -> Optional[bool]:
     """Determine whether chromosome names use the ``chr`` prefix."""
 
-    noprefix = [*list(map(str, list(range(23)))), "X", "Y", "MT"]
-    withprefix = ["chr" + x for x in [*list(map(str, list(range(23)))), "X", "Y", "M"]]
+    # Lists of chromosomes with and without 'chr' prefix
+    noprefix = [*map(str, range(23)), "X", "Y", "MT"]
+    withprefix = ["chr" + x for x in [*map(str, range(23)), "X", "Y", "M"]]
 
-    count_noprefix = len(list(set(noprefix) & set(chrlist)))
-    count_prefix = len(list(set(withprefix) & set(chrlist)))
+    count_noprefix = len(set(noprefix) & set(chrlist))
+    count_prefix = len(set(withprefix) & set(chrlist))
 
-    # None == undecided
-    if count_prefix == count_noprefix:
+    # If no matches at all, undecided
+    if count_prefix == 0 and count_noprefix == 0:
         return None
 
-    return count_noprefix < count_prefix
+    # Only prefixed names
+    if count_prefix > 0 and count_noprefix == 0:
+        return True
+
+    # Only non-prefixed names
+    if count_noprefix > 0 and count_prefix == 0:
+        return False
+
+    # Mixed prefixes and non-prefixes
+    return None
 
 
 def preprocess(

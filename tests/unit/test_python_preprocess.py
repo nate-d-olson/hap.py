@@ -477,8 +477,8 @@ chr1\t100\t.\tA\tT,C\t50\tPASS\tAC=3,2;AF=0.3,0.2;AN=10;DP=100\tGT\t1/2
     finally:
         # Clean up
         os.remove(input_vcf)
-        if 'output_file' in locals() and os.path.exists(output_file):
+        if "output_file" in locals() and os.path.exists(output_file):
             os.remove(output_file)
-            tbi_file = output_file + '.tbi'
+            tbi_file = output_file + ".tbi"
             if os.path.exists(tbi_file):
                 os.remove(tbi_file)

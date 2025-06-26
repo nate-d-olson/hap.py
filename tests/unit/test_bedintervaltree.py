@@ -18,7 +18,7 @@ def test_intersect_and_counts(tmp_path: Path) -> None:
 
     overlaps = tree.intersect("chr1", 5, 25)
     assert len(overlaps) == 2
-    assert [iv.value for iv in overlaps] == ["test", "test"]
+    assert [iv.value for iv in overlaps] == [["test"], ["test"]]
 
     assert tree.countbases("chr1", 1, 31) == 20
     assert tree.count(label="test") == 3

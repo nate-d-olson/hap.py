@@ -132,7 +132,6 @@ micromamba activate happy-dev
 ### Test Markers
 - `@pytest.mark.integration` – marks tests that require external tools or large data.
 - `@pytest.mark.slow` – marks long-running tests.
-- `@pytest.mark.cpp` – marks tests that depend on C++ components (if any remain; many C++ parts have been replaced with Python).
 
 ### Common Test Issues (from Modernization)
 During the transition from Python 2 to Python 3 and restructuring of the project, a few common issues were addressed:
@@ -228,14 +227,6 @@ python -m build  # requires build tool (pip install build)
 pip install dist/hap.py-*.whl
 ```
 
-### C++ Components Build
-If there are C++ components or external tools requiring compilation:
-```bash
-cmake -B build -S .
-cmake --build build --config Release
-```
-*(This builds the project using CMake. Make sure CMake finds all required dependencies.)*
-
 ## Troubleshooting Common Issues
 ### Import Errors
 1. **Virtual environment not activated** – Always ensure you have `happy-dev` activated when working. If you encounter module import errors, double-check that you're using the intended Python environment.
@@ -244,7 +235,7 @@ cmake --build build --config Release
 4. **Conflicting module names** – Ensure there's no naming conflict (e.g., a script named `hap.py` in the working directory can shadow the package). Running tests from the repository root (so that `hap_py` package is found first) can help.
 
 ### External Tool Errors
-1. **Build artifacts missing** – If tests fail due to missing tools (e.g., `rtg` not found), ensure you ran the CMake build (`cmake --build ...`) to compile external dependencies. Check `build/external/` for expected directories (like `rtg-tools`).
+1. **Build artifacts missing** – If tests fail due to missing tools (e.g., `rtg` not found), ensure external dependencies have been built. Check `build/external/` for expected directories (like `rtg-tools`).
 2. **PATH not configured** – The `rtg` tool (and others like bcftools) need to be in your PATH for certain tests. You may need to update `PATH` to include the `external/` tools or specify their location via environment variables or test arguments.
 3. **Tool installation** – Confirm that external bioinformatics tools are installed and accessible. If a tool is not installed, either install it or skip the tests requiring it (pytest will skip tests marked accordingly if the tool is missing, as configured).
 
@@ -310,10 +301,10 @@ Integration tests can be complex due to external dependencies and large data. Us
 ## Recent Fixes and Notes (May 2025)
 The following notable changes and fixes have been applied during the latest development cycle:
 - **RTG template directory creation** – Fixed an issue with the `rtg format` command failing when a temporary SDF directory already existed. We replaced the use of `tempfile.NamedTemporaryFile` with `tempfile.mkdtemp` in `hap_py.haplo.vcfeval.runVCFEval`, ensuring a unique directory is created for RTG and preventing collisions.
-- **RTG path detection** – Improved how the code locates the RTG toolkit. The function `findVCFEval()` in `vcfeval.py` now checks the project’s bundled `rtg` path (in `build/external/rtg-tools`) in addition to checking the system PATH. This prevents false "executable not found" warnings when RTG is actually available in the expected location.
+- **RTG path detection** – Improved how the code locates the RTG toolkit. The function `findVCFEval()` in `vcfeval.py` now checks the project's bundled `rtg` path (in `build/external/rtg-tools`) in addition to checking the system PATH. This prevents false "executable not found" warnings when RTG is actually available in the expected location.
 - **Suppressing false warnings** – Updated the package initialization (`hap_py/__init__.py`) to only warn about missing RTG tools if neither the PATH nor the bundled location has the executables. This removed redundant warnings when running tests.
 - **Test package structure** – Added missing `__init__.py` files in the `tests/` directories (such as `tests/` and `tests/integration/`). This resolved import errors like `ModuleNotFoundError: No module named 'tests.utils'` by properly treating test directories as Python packages.
-- **Binary output verification** – Confirmed that all expected binary scripts are present in `build/bin/` after building. This includes `hap.py`, `multimerge`, and the `qfy.py` wrapper. Legacy binaries `hapcmp` and `hapenum` are no longer produced.
+- **Binary output verification** – Confirmed that all expected binary scripts are present in `build/bin/` after building. This includes `hap.py`, `multimerge`, and the `qfy.py` wrapper.
 - **Variant normalization fix** – Fixed an off-by-one error in the `normalize_variant` function (a test was expecting position 101 but the code returned 102). The logic was adjusted so that variant normalization now matches the expected behavior in tests.
 - **VCF header check** – Modified the `_check_header` method in the VCF comparison module to handle scenarios where the VCF `FILTER` field may be missing. Tests expecting a strict check on FILTER were updated to either include the field or the code was made more flexible, in line with real-world VCFs.
 - **Integration test enhancements** – Updated integration tests to consistently pass the `--engine-vcfeval-path` when using the RTG engine, ensuring the hap.py CLI knows where to find the `rtg` binary. The `get_rtg_path()` helper in `conftest.py` was also improved: it now respects an `RTG_PATH` environment variable and uses `shutil.which` to locate the RTG executable if not explicitly set, providing more robust test configuration.

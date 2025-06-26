@@ -107,6 +107,10 @@ class PreprocessEngine:
             raise ValueError(f"Failed to open input VCF: {e}")
 
         try:
+            if not os.path.exists(self.reference_fasta):
+                raise ValueError(
+                    f"Missing required reference file: {self.reference_fasta}"
+                )
             self.reference = FastaFile(self.reference_fasta)
             logger.info(f"Opened reference: {self.reference_fasta}")
         except Exception as e:
@@ -677,8 +681,10 @@ class PreprocessEngine:
             f"haploid_x={self.haploid_x}"
         )
 
-        # Process each variant
-        for record in self.vcf_in:
+        # Process variants in sorted order by contig and position
+        records = list(self.vcf_in)
+        records.sort(key=lambda r: (r.contig, r.pos))
+        for record in records:
             self.stats["total_variants"] += 1
 
             # Skip if variant doesn't pass filters

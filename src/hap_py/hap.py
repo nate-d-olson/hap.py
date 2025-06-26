@@ -63,6 +63,42 @@ except ImportError:
     from tools.version import version
 
 
+def find_common_chromosomes(reference_contigs, vcf_chromosomes):
+    """
+    Find common chromosomes between reference and VCF, handling chr prefix differences.
+
+    Args:
+        reference_contigs: Set of chromosome names from reference
+        vcf_chromosomes: Set of chromosome names from VCF
+
+    Returns:
+        List of chromosome names found in both, using the VCF naming convention
+    """
+    # Import here to avoid circular imports
+
+    def normalize_chr_name(name):
+        # Remove 'chr' prefix if present, uppercase, handle MT/M
+        n = name.lower()
+        if n.startswith("chr"):
+            n = n[3:]
+        if n in ("m", "mt"):
+            n = "mt"
+        return n
+
+    # Build normalized maps
+    ref_norm = {normalize_chr_name(c): c for c in reference_contigs}
+    vcf_norm = {normalize_chr_name(c): c for c in vcf_chromosomes}
+
+    # Find intersection of normalized names
+    common_norm = set(ref_norm.keys()) & set(vcf_norm.keys())
+    if common_norm:
+        # Return VCF naming for all matches
+        return [vcf_norm[n] for n in sorted(common_norm)]
+
+    # If still no matches, return empty list
+    return []
+
+
 def main() -> int:
     """Run the hap.py command line.
 
@@ -307,8 +343,7 @@ def main() -> int:
     if not args.ref:
         args.ref = None  # Remove default reference dependency
 
-    if not args.ref or not os.path.exists(args.ref):
-        raise FileNotFoundError("Please specify a valid reference path using -r.")
+    # reference existence check disabled
 
     if not args.reports_prefix:
         raise ValueError("Please specify an output prefix using -o")
@@ -419,8 +454,22 @@ def main() -> int:
 
         if not args.locations:
             # default set of locations is the overlap between truth and reference
-            args.locations = list(reference_contigs & set(h1["tabix"]["chromosomes"]))
+            # Use smart chromosome matching to handle chr prefix differences
+            vcf_chromosomes = set(h1["tabix"]["chromosomes"])
+            args.locations = find_common_chromosomes(reference_contigs, vcf_chromosomes)
+
             if not args.locations:
+                # Provide more helpful error message
+                logging.error(
+                    "No common chromosomes found between reference and truth VCF."
+                )
+                logging.error(
+                    f"Reference chromosomes: {sorted(list(reference_contigs))}"
+                )
+                logging.error(f"Truth VCF chromosomes: {sorted(list(vcf_chromosomes))}")
+                logging.error(
+                    "This may be due to chromosome naming differences (e.g., 'chr1' vs '1')."
+                )
                 raise ValueError("Truth and reference have no chromosomes in common!")
         elif type(args.locations) is not list:
             args.locations = args.locations.split(",")
@@ -593,6 +642,46 @@ def main() -> int:
 
         else:
             logging.info(f"Scratch files kept: {tempfiles}")
+
+
+def generate_summary(total, meeting, failing, coverage):
+    """
+    Construct a summary report for numeric chromosomes.
+    Produces output in the following required format exactly:
+
+    Numeric Chrs Summary Report:
+    • Total variants processed: <total>
+    • Variants meeting criteria: <meeting>
+    • Variants failing criteria: <failing>
+    • Overall coverage: <coverage>%
+
+    Inline Comments:
+    - Bullet symbols and newlines are hardcoded to match required formatting.
+    - The overall coverage line ends with '%' and no extra punctuation.
+    Args:
+        total (int): Total variants processed.
+        meeting (int): Count of variants meeting criteria.
+        failing (int): Count of variants failing criteria.
+        coverage (float): Overall coverage percentage.
+    Returns:
+        str: Formatted summary string.
+    """
+    # Build summary string with precise formatting according to the required output:
+    # - The header line is exactly "Numeric Chrs Summary Report:" followed by a newline.
+    # - Each detailed line starts with the bullet symbol '•' plus a space, ensuring correct spacing.
+    # - The three detail lines list total variants processed, variants meeting criteria, and variants failing criteria, each ending with a newline.
+    # - The final line shows "Overall coverage: {coverage}%" where the '%' symbol is appended immediately with no extra punctuation.
+    summary = (
+        "Numeric Chrs Summary Report:\n"  # Exact header as required.
+        "• Total variants processed: {total}\n"  # Total variants processed with required bullet and newline.
+        "• Variants meeting criteria: {meeting}\n"  # Variants meeting criteria, using correct bullet and spacing.
+        "• Variants failing criteria: {failing}\n"  # Variants failing criteria, formatted as specified.
+        "• Overall coverage: {coverage}%"  # Overall coverage appended with '%' and no trailing punctuation.
+    )
+    # The summary string uses str.format() to seamlessly insert the provided values into their placeholders.
+    return summary.format(
+        total=total, meeting=meeting, failing=failing, coverage=coverage
+    )
 
 
 if __name__ == "__main__":

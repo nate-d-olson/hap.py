@@ -228,30 +228,7 @@ chr1	275	325
     return str(bed_file)
 
 
-@pytest.fixture
-def mock_rtg_tools(tmp_path):
-    """
-    Create a mock RTG Tools directory for testing.
-
-    Returns:
-        str: Path to the mock RTG Tools directory
-    """
-    # Create a mock RTG Tools directory
-    rtg_dir = tmp_path / "rtg"
-    rtg_dir.mkdir()
-
-    # Create a mock RTG executable
-    rtg_exe = rtg_dir / "rtg"
-    with open(rtg_exe, "w") as f:
-        f.write(
-            """#!/bin/sh
-echo "RTG Tools mock implementation"
-echo "Command: $@"
-exit 0
-"""
-        )
-
-    # Make the mock executable executable
-    os.chmod(rtg_exe, 0o755)
-
-    return str(rtg_dir)
+@pytest.fixture(scope="session")
+def open_indel_dir(project_root):
+    """Provide open_indel data directory for faulty variants tests."""
+    return project_root / "tests" / "data" / "src" / "open_indel"

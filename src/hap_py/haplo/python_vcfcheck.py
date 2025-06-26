@@ -134,7 +134,7 @@ class VCFChecker:
         except ValueError as e:
             # Handle specific pysam header validation errors
             if "Invalid header" in str(e):
-                self.logger.debug(f"VCF header has validation issues: {e}")
+                self.logger.debug(f"VCF header validation issue (non-fatal): {e}")
                 # Don't treat this as a fatal error - continue processing
             else:
                 # Other ValueError types should still be treated as errors
@@ -143,11 +143,17 @@ class VCFChecker:
                     out_file.write(f"ERROR\t0\t.\t.\tFailed to process file\t{e}\n")
         except Exception as e:
             # Log other exceptions as errors
-            self.logger.error(f"Error checking file: {e}")
-            self.logger.debug(f"Exception type: {type(e)}")
-            self.logger.debug(f"Exception args: {e.args if hasattr(e, 'args') else 'no args'}")
-            if out_file:
-                out_file.write(f"ERROR\t0\t.\t.\tFailed to process file\t{e}\n")
+            if "Invalid header" in str(e):
+                self.logger.debug(f"VCF header validation issue (non-fatal): {e}")
+                # Don't treat this as a fatal error - continue processing
+            else:
+                self.logger.error(f"Error checking file: {e}")
+                self.logger.debug(f"Exception type: {type(e)}")
+                self.logger.debug(
+                    f"Exception args: {e.args if hasattr(e, 'args') else 'no args'}"
+                )
+                if out_file:
+                    out_file.write(f"ERROR\t0\t.\t.\tFailed to process file\t{e}\n")
 
         finally:
             if out_file:

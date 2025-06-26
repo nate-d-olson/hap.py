@@ -62,3 +62,9 @@ bin*
 .specstory/**
 .venv/
 requirements-dev.txt
+env/**
+# Log and temp files
+*.log
+*.xml
+nohup.out
+integration_test_output.txt
