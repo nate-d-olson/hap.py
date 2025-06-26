@@ -1,63 +1,105 @@
 # Haplotype Comparison Tools (hap.py)
 
-Peter Krusche <pkrusche@illumina.com>
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+[![PyPI Version](https://img.shields.io/pypi/v/hap_py.svg)](https://pypi.org/project/hap_py/)
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](LICENSE.txt)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-This is a set of programs based on [htslib](https://github.com/samtools/htslib)
-to benchmark variant calls against gold standard truth datasets.
+A modern Python implementation of tools for benchmarking variant calls against gold standard truth datasets.
 
-> **Note:** This project has been migrated to Python 3.
-> See the [Python 3 migration guide](doc/python3_migration.md)
-> for details about the migration and compatibility. Legacy helpers `hapcmp` and
-> `hapenum` are no longer included in this fork.
+**Key Features**:
+- 🐍 Pure Python implementation with optional C++ extensions for performance
+- 📊 Comprehensive variant comparison metrics and reporting
+- 🔄 Support for complex variant representations and haplotypes
+- 🧪 Extensive test suite with high coverage
+- 📦 Easy installation via pip
+- 🚀 Optimized for modern Python (3.8+)
 
-To compare a VCF against a gold standard dataset, use the following command line
-to perform genotype-level haplotype comparison.
+> **Note**: This is a modernized fork of the original hap.py project, focusing on maintainability and Python 3 support.
+> Legacy helpers `hapcmp` and `hapenum` are no longer included in this fork.
+
+## Quick Start
+
+### Installation
 
 ```bash
-# Python 3 version
-python3 /path/to/hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+# Install from PyPI
+pip install hap_py
 
-# Or if installed via pip
-hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+# Or install from source
+git clone https://github.com/nate-d-olson/hap.py.git
+cd hap.py
+pip install -e .
 ```
 
-We also have a script to perform comparisons only based on chromosome, position,
-and allele identity. This comparison will not resolve haplotypes and only verify
-that the same alleles were observed at the same positions (e.g. for comparison
-of somatic callsets).
+### Basic Usage
+
+To compare a VCF against a gold standard dataset, use the following command to perform genotype-level haplotype comparison:
 
 ```bash
+# Basic usage
+hap.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
+
+# For detailed help
+hap.py --help
+```
+
+### Somatic Variant Comparison
+
+For comparing somatic variant calls, we provide `som.py` which performs position-based comparison without resolving haplotypes. This is particularly useful for somatic variant calling where phasing information is less critical.
+
+```bash
+# Compare somatic variant calls
 som.py truth.vcf query.vcf -f confident.bed -o output_prefix -r reference.fa
 ```
 
-More information can be found below in the [usage section](#usage).
+## Features
 
-Additional documentation, including an architecture overview, is available in
-the `docs/` directory and can be built locally using **MkDocs**.
+### Core Functionality
 
-## Contents
+- **Haplotype-Aware Comparison**: Accurate benchmarking of complex variant representations
+- **Somatic Variant Analysis**: Specialized tools for somatic variant comparison
+- **Variant Normalization**: Consistent representation of equivalent variants
+- **Comprehensive Metrics**: Detailed performance statistics and quality metrics
 
-* [Motivation](#motivation)
-* [Complex variant comparison](#complex-variant-comparison)
-* [Variant preprocessing](#variant-preprocessing)
-* [Variant counting](#variant-counting)
-* [Enhanced ROC Analysis](#enhanced-roc-analysis-and-statistical-confidence)
-* [Usage](#usage)
-  * [hap.py](#happy)
-  * [som.py](#sompy)
-* [Installation](#installation)
-  * [Building from Source (Advanced)](#building-from-source-advanced)
-* [Quick Start](#quick-start)
-* [Legacy Installation (Deprecated)](#legacy-installation-deprecated)
-* [System requirements](#system-requirements)
-  * [Hardware](#hardware)
-  * [Linux](#linux)
-  * [OS X](#os-x)
-  * [Windows](#windows)
-  * [Other requirements](#other-requirements)
-  * [Required system packages](#required-system-packages)
-* [Python 3 Migration](#python-3-migration)
-* [Key Features](#key-features)
+### Advanced Features
+
+- **Region-based Analysis**: Focus on specific genomic regions using BED files
+- **Stratification**: Performance breakdown by variant type and genomic context
+- **Parallel Processing**: Efficient handling of whole-genome datasets
+- **Extensible Architecture**: Plugin system for custom comparison methods
+
+## Documentation
+
+For detailed documentation, please refer to:
+
+- [User Guide](doc/happy.md) - Comprehensive guide to using hap.py
+- [Somatic Variant Analysis](doc/sompy.md) - Special considerations for somatic variants
+- [Variant Normalization](doc/normalisation.md) - Details on variant representation
+- [Performance Tuning](doc/microbench.md) - Optimization guide for large datasets
+
+Additional documentation, including an architecture overview, is available in the `docs/` directory and can be built locally using **MkDocs**.
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+  - [Installation](#installation)
+  - [Basic Usage](#basic-usage)
+- [Features](#features)
+  - [Core Functionality](#core-functionality)
+  - [Advanced Features](#advanced-features)
+- [Documentation](#documentation)
+- [Motivation](#motivation)
+  - [Complex Variant Comparison](#complex-variant-comparison)
+  - [Variant Preprocessing](#variant-preprocessing)
+  - [Variant Counting](#variant-counting)
+  - [Enhanced ROC Analysis](#enhanced-roc-analysis-and-statistical-confidence)
+- [System Requirements](#system-requirements)
+  - [Hardware](#hardware)
+  - [Software Dependencies](#software-dependencies)
+- [Contributing](#contributing)
+- [License](#license)
+- [Citing hap.py](#citing-happy)
 
 ## Motivation
 
@@ -419,6 +461,17 @@ conda activate hap-py
 The provided `environment.yml` installs hap.py with the optional C++ extras and
 includes `rtg-tools` from the Bioconda channel.
 
+For a development environment with additional tools (e.g., for ROC analysis and testing),
+use `environment-dev.yml`:
+
+```bash
+micromamba env create -f environment-dev.yml
+# or
+conda env create -f environment-dev.yml
+
+micromamba activate happy-dev
+```
+
 To install with optional dependencies for C++/Cython extensions (recommended for performance) or development tools:
 
 ```bash
@@ -440,21 +493,6 @@ Debian/Ubuntu systems the required packages can be installed with:
 
 ```bash
 sudo apt-get install -y build-essential python3-dev cmake zlib1g-dev libbz2-dev
-```
-
-### Development environment
-
-An `environment-dev.yml` file is provided for creating a conda or
-micromamba environment with optional packages used for ROC analysis and
-testing (Matplotlib, Seaborn, scikit-learn, etc.). Create the environment
-with:
-
-```bash
-micromamba env create -f environment-dev.yml
-# or
-conda env create -f environment-dev.yml
-
-micromamba activate happy-dev
 ```
 
 Before running the tests, consult
@@ -498,10 +536,7 @@ hap.py truth.vcf.gz query.vcf.gz -r reference.fa -o output_prefix
 
 (Further examples and detailed usage can be found in the documentation.)
 
-## Legacy Installation (Deprecated)
 
-The old `install.py` installer has been removed. Install hap.py with `pip`
-as shown above.
 
 ## System requirements
 
@@ -534,9 +569,7 @@ of htslib and pysam, using hap.py on Windows should be possible.
 
 Hap.py requires a human genome reference sequence which contains at least
 chromosomes `1-22`, `X`, `Y`, and `M`. The chromosomes should be named
-`chr1`-`chr22`, `chrX`, `chrY`, `chrM`. A helper script
-[src/sh/make_hg19.sh](src/sh/make_hg19.sh) can be used to create such a
-reference. Point the tests to your reference with
+`chr1`-`chr22`, `chrX`, `chrY`, `chrM`. Point the tests to your reference with
 
 ```bash
 export HGREF=<path-to-reference.fa>
@@ -572,24 +605,38 @@ Ensure these executables are discoverable before running the integration tests.
 
 ## Python 3 Migration
 
-This project is undergoing a migration to Python 3. Key goals include:
+This project has been migrated to Python 3. Please see the [Python 3 migration guide](doc/python3_migration.md) for details.
 
-* Full Python 3.7+ compatibility.
-* Modernized build system using `pyproject.toml` (PEP 517/518).
-* Improved packaging and installation via `pip`.
-* Adoption of modern Python development practices (type hinting, linting, automated testing).
+## Citing hap.py
 
-For more details, see:
+If you use hap.py in your research, please cite the original publication:
 
-* [Python 3 Migration Guide](doc/python3_migration.md) - Comprehensive guide covering migration status, tools, and technical details.
+```
+Krusche, P., Trigg, L., Boutros, P.C. et al.
+Best practices for benchmarking germline small-variant calls in human genomes.
+Nat Biotechnol 37, 555–560 (2019).
+https://doi.org/10.1038/s41587-019-0054-x
+```
 
-## Key Features
+BibTeX entry:
+```bibtex
+@article{krusche2019best,
+  title={Best practices for benchmarking germline small-variant calls in human genomes},
+  author={Krusche, Peter and Trigg, Len and Boutros, Paul C and Mason, Christopher E and De La Vega, Francisco M and Moore, Barry L and Gonzalez-Porta, Mar and Eberle, Michael A and Tezak, Ziv and Lababidi, Samir and others},
+  journal={Nature biotechnology},
+  volume={37},
+  number={5},
+  pages={555--560},
+  year={2019},
+  publisher={Nature Publishing Group US New York}
+}
+```
 
-* Python 3.7+ compatibility
-* Focus on vcfeval as the primary comparison engine
-* Stratified performance metrics using BED files
-* Improved build system and dependency management
-* Better string handling and error reporting
+## License
+
+This project is licensed under the BSD 3-Clause License - see the [LICENSE.txt](LICENSE.txt) file for details.
+
+
 
 ## Quick Start
 

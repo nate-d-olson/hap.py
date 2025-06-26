@@ -111,6 +111,8 @@ class QuantifyEngine:
         self.truth_variants: List[Dict[str, Any]] = []
         self.query_variants: List[Dict[str, Any]] = []
         self.region_list: List[Tuple[str, int, int]] = []
+        self.truth_df: Optional[pd.DataFrame] = None
+        self.query_df: Optional[pd.DataFrame] = None
         self.region_dict: Dict[str, List[Tuple[int, int]]] = {}
 
         # Results storage
@@ -589,16 +591,20 @@ class QuantifyEngine:
             logger.error(f"Error applying BED stratification: {e}")
             return df
 
-    def write_output_vcf(self, df: pd.DataFrame, output_path: str) -> None:
+    def write_output_vcf(
+        self, df: pd.DataFrame, output_path: str, template_path: Optional[str] = None
+    ) -> None:
         """
         Write processed variants to output VCF file.
 
         Args:
             df: DataFrame with variant information
             output_path: Path for output VCF file
+            template_path: Path to VCF file to use as a header template.
+                           If None, uses self.query_vcf.
         """
         try:
-            template_vcf = pysam.VariantFile(self.truth_vcf)
+            template_vcf = pysam.VariantFile(template_path or self.query_vcf)
             header = template_vcf.header.copy()
 
             ga4gh_formats = {
@@ -711,7 +717,11 @@ class QuantifyEngine:
         # Track benchmarking decisions (BD, BVT, QQ fields)
         self._track_benchmarking_decisions(truth_df, query_df)
 
-        # Update variant lists with enhanced match information
+        # Store annotated dataframes for stratification and metrics
+        self.truth_df = truth_df
+        self.query_df = query_df
+
+        # Update variant lists for compatibility with ROC analysis methods
         self.truth_variants = truth_df.to_dict("records")
         self.query_variants = query_df.to_dict("records")
 
@@ -1493,18 +1503,23 @@ class QuantifyEngine:
 
     def _calculate_metrics(self):
         """Calculate performance metrics."""
+        if self.truth_df is None or self.query_df is None:
+            logger.error("DataFrames not available for metrics calculation.")
+            self.metrics = {}
+            return
+
         # Count TP, FP, FN
-        tp = sum(1 for v in self.truth_variants if v["match"])
-        fp = sum(1 for v in self.query_variants if not v["match"])
-        fn = sum(1 for v in self.truth_variants if not v["match"])
+        tp = int(self.truth_df["match"].sum())
+        fn = len(self.truth_df) - tp
+        fp = len(self.query_df) - int(self.query_df["match"].sum())
 
         # Calculate precision, recall, F1
-        precision = tp / (tp + fp) if tp + fp > 0 else 0
-        recall = tp / (tp + fn) if tp + fn > 0 else 0
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = (
             2 * precision * recall / (precision + recall)
-            if precision + recall > 0
-            else 0
+            if (precision + recall) > 0
+            else 0.0
         )
 
         # Store metrics
@@ -1512,122 +1527,84 @@ class QuantifyEngine:
             "TP": tp,
             "FP": fp,
             "FN": fn,
-            "PRECISION": precision,
-            "RECALL": recall,
-            "F1": f1,
+            "PRECISION": float(precision),
+            "RECALL": float(recall),
+            "F1": float(f1),
         }
 
     def _stratify_results(self):
-        """Stratify results by variant type and other attributes."""
-        # Initialize stratifications
+        """Stratify results by variant type and other attributes using pandas."""
+        if self.truth_df is None or self.query_df is None:
+            logger.warning("DataFrames not available for stratification. Skipping.")
+            self.stratifications = {}
+            return
+
         self.stratifications = {"variant_type": {}, "indel_size": {}, "zygosity": {}}
 
-        # Stratify by variant type
-        for type_value in ["SNP", "INS", "DEL", "MNP", "COMPLEX"]:
-            # Filter variants by type
-            truth_of_type = [v for v in self.truth_variants if v["type"] == type_value]
-            query_of_type = [v for v in self.query_variants if v["type"] == type_value]
+        # Helper function to calculate metrics for a stratum
+        def calculate_stratum_metrics(truth_subset, query_subset):
+            tp = int(truth_subset["match"].sum())
+            fn = len(truth_subset) - tp
+            fp = len(query_subset) - int(query_subset["match"].sum())
 
-            # Calculate metrics for this type
-            tp = sum(1 for v in truth_of_type if v["match"])
-            fp = sum(1 for v in query_of_type if not v["match"])
-            fn = sum(1 for v in truth_of_type if not v["match"])
-
-            precision = tp / (tp + fp) if tp + fp > 0 else 0
-            recall = tp / (tp + fn) if tp + fn > 0 else 0
+            precision = tp / (tp + fp) if tp + fp > 0 else 0.0
+            recall = tp / (tp + fn) if tp + fn > 0 else 0.0
             f1 = (
                 2 * precision * recall / (precision + recall)
-                if precision + recall > 0
-                else 0
+                if (precision + recall) > 0
+                else 0.0
             )
-
-            # Store metrics
-            self.stratifications["variant_type"][type_value] = {
+            return {
                 "TP": tp,
                 "FP": fp,
                 "FN": fn,
-                "PRECISION": precision,
-                "RECALL": recall,
-                "F1": f1,
+                "PRECISION": float(precision),
+                "RECALL": float(recall),
+                "F1": float(f1),
             }
+
+        # Stratify by variant type (using BVT field)
+        all_types = pd.concat([self.truth_df["BVT"], self.query_df["BVT"]]).unique()
+        for type_value in all_types:
+            if pd.isna(type_value):
+                continue
+            truth_subset = self.truth_df[self.truth_df["BVT"] == type_value]
+            query_subset = self.query_df[self.query_df["BVT"] == type_value]
+            self.stratifications["variant_type"][type_value] = (
+                calculate_stratum_metrics(truth_subset, query_subset)
+            )
 
         # Stratify by indel size
+        indel_truth = self.truth_df[
+            self.truth_df["BVT"].isin(["INS", "DEL", "COMPLEX"])
+        ]
+        indel_query = self.query_df[
+            self.query_df["BVT"].isin(["INS", "DEL", "COMPLEX"])
+        ]
         for size_range in [(1, 5), (6, 15), (16, 50), (51, float("inf"))]:
-            range_name = (
-                f"{size_range[0]}-{size_range[1]}"
-                if size_range[1] != float("inf")
-                else f"{size_range[0]}+"
-            )
+            min_len, max_len = size_range
+            range_name = f"{min_len}-{max_len if max_len != float('inf') else '+'}"
 
-            # Filter indels by size
-            truth_indels = [
-                v
-                for v in self.truth_variants
-                if v["is_indel"] and size_range[0] <= v["length"] <= size_range[1]
+            truth_subset = indel_truth[
+                (indel_truth["length"] >= min_len) & (indel_truth["length"] <= max_len)
             ]
-            query_indels = [
-                v
-                for v in self.query_variants
-                if v["is_indel"] and size_range[0] <= v["length"] <= size_range[1]
+            query_subset = indel_query[
+                (indel_query["length"] >= min_len) & (indel_query["length"] <= max_len)
             ]
 
-            # Calculate metrics for this size range
-            tp = sum(1 for v in truth_indels if v["match"])
-            fp = sum(1 for v in query_indels if not v["match"])
-            fn = sum(1 for v in truth_indels if not v["match"])
-
-            precision = tp / (tp + fp) if tp + fp > 0 else 0
-            recall = tp / (tp + fn) if tp + fn > 0 else 0
-            f1 = (
-                2 * precision * recall / (precision + recall)
-                if precision + recall > 0
-                else 0
-            )
-
-            # Store metrics
-            self.stratifications["indel_size"][range_name] = {
-                "TP": tp,
-                "FP": fp,
-                "FN": fn,
-                "PRECISION": precision,
-                "RECALL": recall,
-                "F1": f1,
-            }
+            if not truth_subset.empty or not query_subset.empty:
+                self.stratifications["indel_size"][range_name] = (
+                    calculate_stratum_metrics(truth_subset, query_subset)
+                )
 
         # Stratify by zygosity
-        for zygosity in ["HET", "HOM"]:
-            is_hom = zygosity == "HOM"
-
-            # Filter variants by zygosity
-            truth_zyg = [
-                v for v in self.truth_variants if v.get("is_hom", False) == is_hom
-            ]
-            query_zyg = [
-                v for v in self.query_variants if v.get("is_hom", False) == is_hom
-            ]
-
-            # Calculate metrics for this zygosity
-            tp = sum(1 for v in truth_zyg if v["match"])
-            fp = sum(1 for v in query_zyg if not v["match"])
-            fn = sum(1 for v in truth_zyg if not v["match"])
-
-            precision = tp / (tp + fp) if tp + fp > 0 else 0
-            recall = tp / (tp + fn) if tp + fn > 0 else 0
-            f1 = (
-                2 * precision * recall / (precision + recall)
-                if precision + recall > 0
-                else 0
-            )
-
-            # Store metrics
-            self.stratifications["zygosity"][zygosity] = {
-                "TP": tp,
-                "FP": fp,
-                "FN": fn,
-                "PRECISION": precision,
-                "RECALL": recall,
-                "F1": f1,
-            }
+        for zygosity, is_hom_val in [("HET", False), ("HOM", True)]:
+            if "is_hom" in self.truth_df.columns and "is_hom" in self.query_df.columns:
+                truth_subset = self.truth_df[self.truth_df["is_hom"] == is_hom_val]
+                query_subset = self.query_df[self.query_df["is_hom"] == is_hom_val]
+                self.stratifications["zygosity"][zygosity] = calculate_stratum_metrics(
+                    truth_subset, query_subset
+                )
 
     def write_results(self, output_prefix: str):
         """
@@ -1669,13 +1646,13 @@ class QuantifyEngine:
 
         logger.info(f"Wrote summary to {summary_file}")
 
-        # Write VTC (variant truth categories) if requested
+        # Write annotated VCF with benchmarking fields if requested
         if self.output_vtc:
-            self._write_vtc(output_prefix)
-
-        # Write Phase 2 ROC analysis results if enabled
-        if self.enable_roc_analysis:
-            self._write_roc_results(output_prefix)
+            query_df = pd.DataFrame(self.query_variants)
+            output_vcf_path = f"{output_prefix}.annotated.vcf.gz"
+            self.write_output_vcf(
+                df=query_df, output_path=output_vcf_path, template_path=self.query_vcf
+            )
 
         # Write Phase 2 ROC analysis results if enabled
         if self.enable_roc_analysis:
@@ -1788,10 +1765,8 @@ class QuantifyEngine:
 
     def _perform_quality_stratification(self):
         """
-        Stratify variants by quality score and calculate metrics for each bin.
-
-        This method creates quality bins and calculates metrics (TP, FP, FN, precision,
-        recall, F1) for each bin.
+        Stratify variants by quality score and calculate metrics for each bin,
+        stratified by variant type.
 
         Returns:
             None - Results are stored in self.quality_metrics
@@ -1807,64 +1782,80 @@ class QuantifyEngine:
             {"name": "Q40+", "min": 40, "max": float("inf")},
         ]
 
-        bin_metrics = {}
+        # Define variant types for stratification
+        variant_types_to_stratify = {
+            "SNP": ["SNP"],
+            "INDEL": ["INS", "DEL", "MNP", "COMPLEX"],
+            "ALL": ["SNP", "INS", "DEL", "MNP", "COMPLEX"],
+        }
 
-        # Process each quality bin
-        for bin_info in quality_bins:
-            bin_name = bin_info["name"]
-            min_qual = bin_info["min"]
-            max_qual = bin_info["max"]
+        strat_metrics = {}
 
-            # Filter variants by quality
-            bin_variants = [
-                v
-                for v in self.query_variants
-                if min_qual <= v.get("qual", 0) < max_qual
+        for type_name, bvt_values in variant_types_to_stratify.items():
+            strat_metrics[type_name] = {}
+
+            # Filter variants by type
+            truth_of_type = [
+                v for v in self.truth_variants if v.get("BVT") in bvt_values
             ]
+            query_of_type = [
+                v for v in self.query_variants if v.get("BVT") in bvt_values
+            ]
+            total_truth_of_type = len(truth_of_type)
 
-            # Calculate metrics for this bin
-            tp = sum(1 for v in bin_variants if v.get("match", False))
-            fp = len(bin_variants) - tp
+            if total_truth_of_type == 0 and not query_of_type:
+                continue
 
-            # Find truth variants that would match to variants in this bin
-            truth_variant_ids = {
-                v.get("truth_variant_id") for v in bin_variants if v.get("match", False)
-            }
-            fn = sum(
-                1 for v in self.truth_variants if v.get("id") not in truth_variant_ids
-            )
+            for bin_info in quality_bins:
+                bin_name = bin_info["name"]
+                min_qual = bin_info["min"]
+                max_qual = bin_info["max"]
 
-            # Calculate precision, recall, F1
-            precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-            recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-            f1 = (
-                2 * (precision * recall) / (precision + recall)
-                if (precision + recall) > 0
-                else 0.0
-            )
+                # Filter query variants by quality bin
+                bin_variants = [
+                    v for v in query_of_type if min_qual <= v.get("qual", 0) < max_qual
+                ]
 
-            # Store metrics for this bin
-            bin_metrics[bin_name] = {
-                "quality_range": f"{min_qual}-{max_qual if max_qual != float('inf') else '∞'}",
-                "TP": tp,
-                "FP": fp,
-                "FN": fn,
-                "PRECISION": precision,
-                "RECALL": recall,
-                "F1": f1,
-                "variant_count": len(bin_variants),
-            }
+                # Calculate metrics for this bin
+                tp = sum(1 for v in bin_variants if v.get("match", False))
+                fp = len(bin_variants) - tp
+                fn = total_truth_of_type - tp
 
-            logger.debug(
-                f"Bin {bin_name}: {tp} TP, {fp} FP, {fn} FN, Precision: {precision:.4f}, Recall: {recall:.4f}"
-            )
+                # Calculate precision, recall, F1
+                precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+                recall = tp / total_truth_of_type if total_truth_of_type > 0 else 0.0
+                f1 = (
+                    2 * (precision * recall) / (precision + recall)
+                    if (precision + recall) > 0
+                    else 0.0
+                )
 
+                # Store metrics for this bin
+                strat_metrics[type_name][bin_name] = {
+                    "quality_range": f"{min_qual}-{max_qual if max_qual != float('inf') else '∞'}",
+                    "TP": tp,
+                    "FP": fp,
+                    "FN": fn,
+                    "PRECISION": precision,
+                    "RECALL": recall,
+                    "F1": f1,
+                    "variant_count": len(bin_variants),
+                }
+
+                logger.debug(
+                    f"Bin {bin_name} ({type_name}): {tp} TP, {fp} FP, {fn} FN, Precision: {precision:.4f}, Recall: {recall:.4f}"
+                )
+
+        # Store the quality metrics with both strat_metrics and bin_metrics
         self.quality_metrics = {
-            "bin_metrics": bin_metrics,
+            "strat_metrics": strat_metrics,
+            "bin_metrics": strat_metrics,  # Add bin_metrics as an alias to strat_metrics for backward compatibility
             "total_variants": len(self.query_variants),
         }
 
-        logger.info(f"Quality stratification completed for {len(quality_bins)} bins")
+        logger.info(
+            f"Quality stratification completed for {len(quality_bins)} bins across {len(variant_types_to_stratify)} types."
+        )
 
     def _generate_roc_curve(self, variant_type: str, bvt_values: list):
         """
@@ -2151,7 +2142,7 @@ class QuantifyEngine:
         roc_file = f"{output_prefix}.roc.tsv"
         with open(roc_file, "w") as f:
             f.write(
-                "Type\tThreshold\tTP\tFP\tFN\tPrecision\tRecall\tPrecision_Lower\tRecall_Lower\tRecall_Upper\n"
+                "Type\tThreshold\tTP\tFP\tFN\tPrecision\tRecall\tPrecision_Lower\tPrecision_Upper\tRecall_Lower\tRecall_Upper\n"
             )
 
             for variant_type in ["snp", "indel", "all"]:
@@ -2189,18 +2180,25 @@ class QuantifyEngine:
         logger.info(f"Wrote ROC curves to {roc_file}")
 
         # Write quality stratification results
-        if self.quality_stratification and hasattr(self, "quality_metrics"):
+        if (
+            self.quality_stratification
+            and hasattr(self, "quality_metrics")
+            and self.quality_metrics.get("strat_metrics")
+        ):
             quality_file = f"{output_prefix}.quality_stratification.tsv"
             with open(quality_file, "w") as f:
                 f.write(
-                    "Quality_Bin\tQuality_Range\tTP\tFP\tFN\tPrecision\tRecall\tF1\tVariant_Count\n"
+                    "Type\tQuality_Bin\tQuality_Range\tTP\tFP\tFN\tPrecision\tRecall\tF1\tVariant_Count\n"
                 )
 
-                for bin_name, metrics in self.quality_metrics["bin_metrics"].items():
-                    f.write(
-                        f"{bin_name}\t{metrics['quality_range']}\t{metrics['TP']}\t{metrics['FP']}\t{metrics['FN']}\t"
-                        f"{metrics['PRECISION']:.4f}\t{metrics['RECALL']:.4f}\t{metrics['F1']:.4f}\t{metrics['variant_count']}\n"
-                    )
+                for type_name, type_metrics in self.quality_metrics[
+                    "strat_metrics"
+                ].items():
+                    for bin_name, metrics in type_metrics.items():
+                        f.write(
+                            f"{type_name}\t{bin_name}\t{metrics['quality_range']}\t{metrics['TP']}\t{metrics['FP']}\t{metrics['FN']}\t"
+                            f"{metrics['PRECISION']:.4f}\t{metrics['RECALL']:.4f}\t{metrics['F1']:.4f}\t{metrics['variant_count']}\n"
+                        )
 
             logger.info(f"Wrote quality stratification to {quality_file}")
 
@@ -2288,7 +2286,7 @@ class QuantifyEngine:
         variant_types = {
             "snp": ["SNP"],
             "indel": ["INS", "DEL"],
-            "all": ["SNP", "INS", "DEL", "OTHER"],
+            "all": ["SNP", "INS", "DEL", "MNP", "COMPLEX"],
         }
 
         # Generate ROC curves for each variant type

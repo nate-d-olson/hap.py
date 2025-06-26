@@ -1,10 +1,6 @@
-import gzip
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
-from tests.utils import compare_summary_files, find_reference_file, get_example_dir
 
 
 @pytest.fixture

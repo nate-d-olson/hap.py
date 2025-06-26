@@ -4,8 +4,6 @@ Unit/component tests for variant decomposition functionality, refactored from in
 These tests focus on the core decomposition logic, using in-memory or temporary files, and do not rely on subprocess or external binaries.
 """
 
-from pathlib import Path
-
 import pytest
 
 # Import the relevant decomposition logic if available

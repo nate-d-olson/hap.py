@@ -867,7 +867,7 @@ def run_quantify(
         # Write output VCF if requested
         if output_vcf and isinstance(output_vcf, str):
             logger.info(f"Writing output VCF to {output_vcf}")
-            engine.write_output_vcf(df, output_vcf)
+            engine.write_output_vcf(df, output_vcf, template_path=vcf_name)
 
         logger.info("Quantify analysis completed successfully")
 

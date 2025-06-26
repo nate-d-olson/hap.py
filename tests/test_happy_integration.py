@@ -6,9 +6,33 @@ and produce the expected output files.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+
+def find_executable(executable_name):
+    """Find the full path to an executable."""
+    # For java, prioritize system java
+    if executable_name == "java":
+        path = shutil.which(executable_name)
+        if path:
+            return path
+
+    # First, check the micromamba environment
+    micromamba_prefix = os.environ.get("MAMBA_ROOT_PREFIX")
+    if micromamba_prefix:
+        path = Path(micromamba_prefix) / "bin" / executable_name
+        if path.exists():
+            return str(path)
+
+    # If not in micromamba, check the system PATH
+    path = shutil.which(executable_name)
+    if path:
+        return path
+
+    raise FileNotFoundError(f"{executable_name} not found in micromamba env or PATH.")
 
 
 def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
@@ -25,6 +49,11 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
 
     # Run hap.py with mock environment to avoid requirement C++ components
     env = os.environ.copy()
+    bcftools_path = find_executable("bcftools")
+    rtg_tools_path = str(
+        Path(__file__).resolve().parent.parent / "scripts" / "rtg_wrapper.sh"
+    )
+    env["PATH"] = os.path.dirname(bcftools_path) + os.pathsep + env["PATH"]
 
     # Run the command
     cmd = [
@@ -39,6 +68,8 @@ def test_happy_basic_cli(sample_vcf_files, sample_reference, tmp_path):
         output_prefix,
         "--engine",
         "vcfeval",
+        "--engine-vcfeval-path",
+        rtg_tools_path,
     ]
 
     result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
@@ -75,6 +106,11 @@ def test_happy_with_bed_file(
 
     # Run hap.py with mock environment
     env = os.environ.copy()
+    bcftools_path = find_executable("bcftools")
+    rtg_tools_path = str(
+        Path(__file__).resolve().parent.parent / "scripts" / "rtg_wrapper.sh"
+    )
+    env["PATH"] = os.path.dirname(bcftools_path) + os.pathsep + env["PATH"]
 
     # Run the command with BED file
     cmd = [
@@ -91,6 +127,8 @@ def test_happy_with_bed_file(
         bed_file,  # Add confident regions BED file
         "--engine",
         "vcfeval",
+        "--engine-vcfeval-path",
+        rtg_tools_path,
     ]
 
     result = subprocess.run(cmd, env=env, capture_output=True, text=True, check=False)
@@ -123,6 +161,8 @@ def test_error_handling(sample_vcf_files, tmp_path):
 
     # Run hap.py with mock environment
     env = os.environ.copy()
+    bcftools_path = find_executable("bcftools")
+    env["PATH"] = os.path.dirname(bcftools_path) + os.pathsep + env["PATH"]
 
     # Run the command with non-existent reference
     cmd = [

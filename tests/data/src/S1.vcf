@@ -93,7 +93,7 @@
 ##contig=<ID=chrY,length=59373566>
 ##gvcftools_cmdline="/illumina/development/Isis/2.2.13/gatk_to_gvcf --chrom-depth-file=/illumina/builds/platinumgenomes/Platinum_Genomes_Short_Insert/bwa_0.6.1/NA12877/Data/Intensities/BaseCalls/Alignment/NA12877_S1.bam.depth --no-default-filters --min-qd 2.0000 --min-gqx 30.0000 --min-mq 20.0000"
 ##gvcftools_version="v0.8"
-##reference=file:///illumina/development/Isis/Genomes/Homo_sapiens/UCSC/hg19/Sequence/WholeGenomeFASTA/genome.fa
+##reference=../../example/example.fa
 ##source=GATK 1.6
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA12877
 chr1	10001	.	T	.	.	LowMQ	.	GT:DP:GQX:MQ	0/0:50:30:12

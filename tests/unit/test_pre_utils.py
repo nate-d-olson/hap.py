@@ -38,6 +38,6 @@ def test_hasChrPrefix_mixed_unequal_counts():
 @pytest.mark.unit
 def test_hasChrPrefix_accepts_set_input():
     # Iterable types like set should be accepted
-    assert hasChrPrefix(set(["1", "2", "3"])) is False
+    assert hasChrPrefix({"1", "2", "3"}) is False
     # Iterable types like set should be accepted
-    assert hasChrPrefix(set(["1", "2", "3"])) is False
+    assert hasChrPrefix({"1", "2", "3"}) is False

@@ -69,29 +69,50 @@ except ImportError:
 
 
 def hasChrPrefix(chrlist: Iterable[str]) -> Optional[bool]:
-    """Determine whether chromosome names use the ``chr`` prefix."""
+    """Determine whether chromosome names use the ``chr`` prefix.
 
-    # Lists of chromosomes with and without 'chr' prefix
-    noprefix = [*map(str, range(23)), "X", "Y", "MT"]
-    withprefix = ["chr" + x for x in [*map(str, range(23)), "X", "Y", "M"]]
+    Args:
+        chrlist: Iterable of chromosome names to check
 
-    count_noprefix = len(set(noprefix) & set(chrlist))
-    count_prefix = len(set(withprefix) & set(chrlist))
+    Returns:
+        bool: True if most chromosome names use 'chr' prefix
+              False if most chromosome names don't use 'chr' prefix
+              None if there's a tie or no standard chromosomes found
+    """
+    # Convert to list in case it's an iterator
+    chrlist = list(chrlist)
 
-    # If no matches at all, undecided
+    # Count prefixed and non-prefixed standard chromosome names
+    count_prefix = 0
+    count_noprefix = 0
+
+    # Standard chromosome names (without 'chr' prefix)
+    standard_chroms = {*map(str, range(1, 23)), "X", "Y", "MT", "M"}
+
+    for chrom in chrlist:
+        # Check if it's a standard chromosome name (with or without 'chr')
+        if chrom in standard_chroms:
+            count_noprefix += 1
+        elif chrom.startswith("chr"):
+            base_chrom = chrom[3:]
+            if base_chrom in standard_chroms or (
+                base_chrom == "M" and "MT" in standard_chroms
+            ):
+                count_prefix += 1
+
+    # If no standard chromosomes found, return None (undecided)
     if count_prefix == 0 and count_noprefix == 0:
         return None
 
-    # Only prefixed names
-    if count_prefix > 0 and count_noprefix == 0:
+    # More prefixed than non-prefixed
+    if count_prefix > count_noprefix:
         return True
-
-    # Only non-prefixed names
-    if count_noprefix > 0 and count_prefix == 0:
+    # More non-prefixed than prefixed
+    elif count_noprefix > count_prefix:
         return False
-
-    # Mixed prefixes and non-prefixes
-    return None
+    # Equal counts of prefixed and non-prefixed
+    else:
+        return None
 
 
 def preprocess(

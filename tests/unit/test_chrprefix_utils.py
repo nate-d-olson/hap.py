@@ -1,5 +1,3 @@
-import pytest
-
 from src.hap_py.pre import hasChrPrefix
 
 
@@ -31,7 +29,7 @@ def test_hasChrPrefix_without_prefix():
 def test_hasChrPrefix_mixed():
     chroms = ["chr1", "2", "chrX", "Y", "MT"]
     # When counts are equal, returns None
-    assert hasChrPrefix(chroms) is None
+    assert hasChrPrefix(chroms) is False
 
 
 def test_fixChrPrefix_add():

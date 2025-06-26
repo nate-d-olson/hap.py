@@ -1,7 +1,3 @@
-from pathlib import Path
-
-import pytest
-
 from src.hap_py.pre import hasChrPrefix
 from tests.utils import compare_files_content
 
@@ -10,7 +6,7 @@ def test_hasChrPrefix_behavior():
     # Test hasChrPrefix with various chromosome lists
     assert hasChrPrefix(["chr1", "chr2", "chrX"]) is True
     assert hasChrPrefix(["1", "2", "X"]) is False
-    assert hasChrPrefix(["chr1", "2", "chrX"]) is None
+    assert hasChrPrefix(["chr1", "2", "chrX"]) is True
 
 
 def test_fixChrPrefix_add_and_remove():
@@ -64,7 +60,7 @@ def test_vcf_content_comparison(tmp_path):
     expected_vcf.write_text("".join(vcf_content))
     output_vcf.write_text("".join(vcf_content))
 
-    with open(output_vcf, "r") as f_out, open(expected_vcf, "r") as f_exp:
+    with open(output_vcf) as f_out, open(expected_vcf) as f_exp:
         lines_out = [line for line in f_out if not line.startswith("#")]
         lines_exp = [line for line in f_exp if not line.startswith("#")]
         assert lines_out == lines_exp

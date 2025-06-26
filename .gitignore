@@ -61,6 +61,7 @@ build*
 bin*
 .specstory/**
 .venv/
+.venv_pip
 requirements-dev.txt
 env/**
 # Log and temp files
